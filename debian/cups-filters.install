@@ -1,0 +1,8 @@
+etc/fonts/conf.d/99pdftoopvp.conf
+usr/lib/cups/backend/*
+usr/lib/cups/filter/*
+usr/share/cups/*
+../local/*.ppd usr/share/ppd/cups-filters/
+../local/*.convs usr/share/cups/mime/
+../local/textonly usr/lib/cups/filter/
+../*.ppd-updater usr/share/cups/ppd-updaters/
