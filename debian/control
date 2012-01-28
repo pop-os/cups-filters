@@ -78,13 +78,13 @@ Description: OpenPrinting CUPS Filters - Development files for the library
  Header files to develop applications (CUPS filters, printer drivers) using
  libcupsfilters.
 
-Package: cups-filters-dbg
-Priority: extra
-Section: debug
-Architecture: any
-Depends: ${shlibs:Depends},
-  ${misc:Depends},
-  cups-filters (= ${binary:Version}) | libcupsfilters1 (= ${binary:Version})
-Description: OpenPrinting CUPS Filters - Debugging symbols
- This package provides the debugging symbols for OpenPrinting
- CUPS Filters.
+#Package: cups-filters-dbg
+#Priority: extra
+#Section: debug
+#Architecture: any
+#Depends: ${shlibs:Depends},
+#  ${misc:Depends},
+#  cups-filters (= ${binary:Version}) | libcupsfilters1 (= ${binary:Version})
+#Description: OpenPrinting CUPS Filters - Debugging symbols
+# This package provides the debugging symbols for OpenPrinting
+# CUPS Filters.
