@@ -34,9 +34,9 @@ Package: libcupsfilters1
 Priority: optional
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: cups-filters
 Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, 
+ ${misc:Depends}
 Multi-Arch: same
 Description: OpenPrinting CUPS Filters - Shared library
  This library contains functions commonly used by the CUPS filters
@@ -48,28 +48,32 @@ Package: cups-filters
 Priority: optional
 Section: net
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends},
- ghostscript (>= 9.02~), ttf-freefont
-Recommends: colord, foomatic-filters (>= 4.0), 
+Depends: ${shlibs:Depends}, 
+ ${misc:Depends},
+ ghostscript (>= 9.02~),
+ ttf-freefont
+Recommends: colord, 
+ foomatic-filters (>= 4.0), 
  ghostscript-cups (>= 9.02~)
-Suggests: cups-bsd, foomatic-db-compressed-ppds | foomatic-db,
- hplip, cups-driver-gutenprint, cups-pdf, udev, smbclient
-Replaces: cups (<< 1.5.0-16), cups-common (<< 1.5.0-16), ghostscript-cups (<< 9.02~)
-Breaks: cups (<< 1.5.0-16), cups-common (<< 1.5.0-16), ghostscript-cups (<< 9.02~)
+Suggests: foomatic-db-compressed-ppds | foomatic-db
+Replaces: cups (<< 1.5.0-16), 
+ cups-common (<< 1.5.0-16),
+ ghostscript-cups (<< 9.02~)
+Breaks: cups (<< 1.5.0-16), 
+ cups-common (<< 1.5.0-16),
+ ghostscript-cups (<< 9.02~)
 Description: OpenPrinting CUPS Filters
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
  printing workflow.
- .
- On Debian and Ubuntu this package is required when using CUPS 1.5.0-16 and
- later.
 
-Package: libcupsfilters1-dev
+Package: libcupsfilters-dev
 Priority: optional
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcupsfilters1 (= ${binary:Version})
-Provides: libcupsfilters-dev
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ libcupsfilters1 (= ${binary:Version})
 Description: OpenPrinting CUPS Filters - Development files for the library
  Header files to develop applications (CUPS filters, printer drivers) using
  libcupsfilters.
@@ -78,7 +82,9 @@ Package: cups-filters-dbg
 Priority: extra
 Section: debug
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, cups-filters (= ${binary:Version}) | libcupsfilters1 (= ${binary:Version})
+Depends: ${shlibs:Depends},
+  ${misc:Depends},
+  cups-filters (= ${binary:Version}) | libcupsfilters1 (= ${binary:Version})
 Description: OpenPrinting CUPS Filters - Debugging symbols
  This package provides the debugging symbols for OpenPrinting
  CUPS Filters.

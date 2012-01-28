@@ -53,7 +53,7 @@ binary-post-install/cups-filters::
 	# root:dialout and thus not accessible as user lp
 	chmod go-x debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
 
-binary-post-install/libcupsfilters1-dev::
+binary-post-install/libcupsfilters-dev::
 	mkdir -p debian/$(cdbs_curpkg)/usr/include/cups-filters/
 	install -m 644 cupsfilters/driver.h debian/$(cdbs_curpkg)/usr/include/cups-filters/
 	install -m 644 cupsfilters/image.h debian/$(cdbs_curpkg)/usr/include/cups-filters/
