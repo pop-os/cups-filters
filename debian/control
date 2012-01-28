@@ -19,7 +19,7 @@ Build-Depends:
  ghostscript (>= 9.05~),
  poppler-utils,
  liblcms2-dev,
- libpoppler-dev (>= 0.18.0),
+ libpoppler-dev (>= 0.16.0),
  libjpeg-dev,
  libpng12-dev,
  libtiff4-dev,
