@@ -1,0 +1,9 @@
+cups-filters (1.0~b1-1) experimental; urgency=low
+
+  * Initial Release. This is a splitout of all filters which are currently
+    being shipped by the "cups" package but are not provided by upstream any
+    more. These now have a new home at openprinting.org. Upload to
+    experimental for getting it through NEW, then cups and cups-filters will
+    be uploaded to unstable in lockstep.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sat, 28 Jan 2012 13:13:07 +0100

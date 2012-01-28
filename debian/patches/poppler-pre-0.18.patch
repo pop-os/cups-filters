@@ -1,0 +1,16 @@
+Description: Build with poppler < 0.18.
+Author: Martin Pitt <mpitt@debian.org>
+Forwarded: No, Debian specific until Debian gets current poppler
+
+Index: cups-filters-1.0~b1/pdftoopvp/OPVPOutputDev.cxx
+===================================================================
+--- cups-filters-1.0~b1.orig/pdftoopvp/OPVPOutputDev.cxx	2012-01-27 00:32:53.000000000 +0100
++++ cups-filters-1.0~b1/pdftoopvp/OPVPOutputDev.cxx	2012-01-28 13:02:14.302522927 +0100
+@@ -273,7 +273,6 @@
+ #if HAVE_FREETYPE_FREETYPE_H || HAVE_FREETYPE_H
+ 				    globalParams->getEnableFreeType(),
+ 				    gFalse,
+-				    gFalse,
+ #endif
+ 				    globalParams->getAntialias());
+   for (i = 0; i < nT3Fonts; ++i) {
