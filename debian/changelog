@@ -1,8 +1,8 @@
-cups-filters (1.0~b1-3) UNRELEASED; urgency=low
+cups-filters (1.0~b1-3) unstable; urgency=low
 
   * debian/control: Add missing libijs-dev build dependency.
 
- -- Martin Pitt <mpitt@debian.org>  Mon, 30 Jan 2012 07:02:17 +0100
+ -- Martin Pitt <mpitt@debian.org>  Mon, 30 Jan 2012 07:21:37 +0100
 
 cups-filters (1.0~b1-2) unstable; urgency=low
 
