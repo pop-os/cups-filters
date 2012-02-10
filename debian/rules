@@ -16,7 +16,7 @@ export LC_MESSAGES=C
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
-DEB_CONFIGURE_EXTRA_FLAGS := --with-optim=$(DEB_OPTFLAGS) --libdir=/usr/lib/$(DEB_HOST_MULTIARCH) --mandir=/usr/share/man --enable-static --enable-debug --with-pdftops=/usr/bin/gs
+DEB_CONFIGURE_EXTRA_FLAGS := --with-optim=$(DEB_OPTFLAGS) --libdir=/usr/lib/$(DEB_HOST_MULTIARCH) --mandir=/usr/share/man --enable-static --enable-debug
 
 DEB_MAKE_INSTALL_TARGET := install BUILDROOT=$(DEB_DESTDIR)
 DEB_INSTALL_CHANGELOGS_ALL := CHANGES.txt
@@ -50,27 +50,11 @@ binary-post-install/cups-filters::
 	   install -D -m 644 debian/local/apport-hook.py debian/$(cdbs_curpkg)/usr/share/apport/package-hooks/source_cups-filters.py; \
 	fi
 
-	# Modify the cost factor for the Poppler-based pdftoraster filter of
-	# the PDF filter add-on so that Ghostscript's gstoraster gets preferred.
-	# (This will get merged upstream in 1.0b2)
-	sed -i -r -e '/\spdftoraster$$/ { s/66/100/ }' \
-	  $(DEB_DESTDIR)/../cups-filters/usr/share/cups/mime/cupsfilters.convs
-
-	# Install documentation of the PDF CUPS filters
-	# (This will get merged upstream in 1.0b2)
+	# Install example files
 	mkdir -p $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/
-	install -m 644 debian/local/README.pdf-filters $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/
-	#install -m 644 filter/test.sh $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/texttopdf-text.sh
+	install -m 644 filter/test.sh $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/texttopdf-text.sh
 	install -m 644 ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/
 
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod go-x debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
-
-binary-post-install/libcupsfilters-dev::
-	mkdir -p debian/$(cdbs_curpkg)/usr/include/cups-filters/
-	install -m 644 cupsfilters/driver.h debian/$(cdbs_curpkg)/usr/include/cups-filters/
-	install -m 644 cupsfilters/image.h debian/$(cdbs_curpkg)/usr/include/cups-filters/
-	mkdir -p debian/$(cdbs_curpkg)/usr/lib/$(DEB_HOST_MULTIARCH)/
-	cp -d cupsfilters/libcupsfilters.so debian/$(cdbs_curpkg)/usr/lib/$(DEB_HOST_MULTIARCH)/
-	install -m 644 cupsfilters/libcupsfilters.a debian/$(cdbs_curpkg)/usr/lib/$(DEB_HOST_MULTIARCH)/

@@ -1,3 +1,18 @@
+cups-filters (1.0-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - cups-filters 1.0 release
+     - Use Ghostscript as default renderer when building pdftops (LP: #926068).
+     - Build system and documentation fixes
+     - Incorporated distro patches upstream: Cost factor 100 for pdftoraster,
+       installation of C headers, PDF filter documentation
+  * debian/rules: Removed extra rules for working around build system bugs
+    in 1.0b1.
+  * debian/libcupsfilters-dev.install: Install the files via this .install file
+    now and not via debian/rules.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 10 Feb 2012 12:18:31 +0100
+
 cups-filters (1.0~b1-3) unstable; urgency=low
 
   * debian/control: Add missing libijs-dev build dependency.
