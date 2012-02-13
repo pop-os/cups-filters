@@ -1,11 +1,23 @@
-cups-filters (1.0-1) UNRELEASED; urgency=low
+cups-filters (1.0.1-1) UNRELEASED; urgency=low
 
   * New upstream release
-     - cups-filters 1.0 release
+     - cups-filters 1.0.1 release
+     - Included the textonly filter, Red Hat's driver for text-only printers.
+     - Install sample PPD file for pdftoijs (for HP PhotoSmart Pro B8300).
+     - Added cupsfilters.drv, providing support for the HP DesignJet 600,
+       750C, 1050C, 4000, T1100, T790.
+     - Added texttops and imagetops filters for backward compatibility
+       (Closes: #658258).
      - Use Ghostscript as default renderer when building pdftops (LP: #926068).
      - Build system and documentation fixes
      - Incorporated distro patches upstream: Cost factor 100 for pdftoraster,
        installation of C headers, PDF filter documentation
+  * debian/local/text*, debian/local/README.pdf-filters: Removed, incorporated
+    upstream.
+  * debian/cups-filters.ppd-updater: Updated appropriate to changes in the
+    upstream package.
+  * debian/cups-filters.install: Updated due to upstream inclusion of
+    textonly filter.
   * debian/rules: Removed extra rules for working around build system bugs
     in 1.0b1.
   * debian/libcupsfilters-dev.install: Install the files via this .install file

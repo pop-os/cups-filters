@@ -50,11 +50,6 @@ binary-post-install/cups-filters::
 	   install -D -m 644 debian/local/apport-hook.py debian/$(cdbs_curpkg)/usr/share/apport/package-hooks/source_cups-filters.py; \
 	fi
 
-	# Install example files
-	mkdir -p $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/
-	install -m 644 filter/test.sh $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/texttopdf-text.sh
-	install -m 644 ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd $(DEB_DESTDIR)/../cups-filters/usr/share/doc/cups-filters/examples/
-
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod go-x debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
