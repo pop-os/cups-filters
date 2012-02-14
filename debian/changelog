@@ -1,4 +1,4 @@
-cups-filters (1.0.1-1) UNRELEASED; urgency=low
+cups-filters (1.0.1-1) unstable; urgency=low
 
   * New upstream release
      - cups-filters 1.0.1 release
@@ -23,7 +23,7 @@ cups-filters (1.0.1-1) UNRELEASED; urgency=low
   * debian/libcupsfilters-dev.install: Install the files via this .install file
     now and not via debian/rules.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 10 Feb 2012 12:18:31 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 14 Feb 2012 07:23:51 +0100
 
 cups-filters (1.0~b1-3) unstable; urgency=low
 
