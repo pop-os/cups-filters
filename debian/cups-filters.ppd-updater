@@ -1,2 +1,2 @@
-DRIVER_REGEXP=lsb/usr/cups-filters/
+DRIVER_REGEXP='drv:///cupsfilters.drv/|lsb/usr/cupsfilters/'
 GENNICKNAME_REGEXP=
