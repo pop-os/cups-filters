@@ -20,7 +20,7 @@ dnl Set the name of the config header file...
 AC_CONFIG_HEADER(config.h)
 
 dnl Version number information...
-CUPSFILTERS_VERSION="1.0b1"
+CUPSFILTERS_VERSION="1.0.1"
 AC_SUBST(CUPSFILTERS_VERSION)
 AC_DEFINE_UNQUOTED(CUPSFILTERS_SVERSION, "CUPS v$CUPSFILTERS_VERSION")
 
@@ -58,6 +58,7 @@ AC_PATH_PROG(RMDIR,rmdir)
 AC_PATH_PROG(SED,sed)
 AC_PATH_PROG(GS,gs)
 AC_PATH_PROG(PS2PS,ps2ps)
+AC_PATH_PROG(PDF2PS,pdf2ps)
 
 AC_MSG_CHECKING(for install-sh script)
 INSTALL="`pwd`/install-sh"
