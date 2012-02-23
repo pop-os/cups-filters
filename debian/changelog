@@ -1,3 +1,20 @@
+cups-filters (1.0.2-1) unstable; urgency=low
+
+  [ Till Kamppeter ]
+  * New upstream release
+     - cups-filters 1.0.2 release
+     - bannertopdf fixes
+  * debian/local/default-testpage.pdf, debian/source/include-binaries: Added
+    Ubuntu-branded test page template.
+  * debian/rules: Replace the upstream test page template by the Ubuntu-branded
+    one if the package is built under Ubuntu.
+
+  [ Martin Pitt ]
+  * debian/control: Build-depend on libpoppler-private-dev for the impending
+    poppler 0.18 transition. Thanks Pino Toscano! (Closes: #660989)
+
+ -- Martin Pitt <mpitt@debian.org>  Thu, 23 Feb 2012 14:48:00 +0100
+
 cups-filters (1.0.1-1) unstable; urgency=low
 
   * New upstream release
