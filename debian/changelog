@@ -1,4 +1,4 @@
-cups-filters (1.0.2-1) UNRELEASED; urgency=low
+cups-filters (1.0.2-1) unstable; urgency=low
 
   [ Till Kamppeter ]
   * New upstream release
@@ -13,7 +13,7 @@ cups-filters (1.0.2-1) UNRELEASED; urgency=low
   * debian/control: Build-depend on libpoppler-private-dev for the impending
     poppler 0.18 transition. Thanks Pino Toscano! (Closes: #660989)
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 23 Feb 2012 13:11:51 +0100
+ -- Martin Pitt <mpitt@debian.org>  Thu, 23 Feb 2012 14:48:00 +0100
 
 cups-filters (1.0.1-1) unstable; urgency=low
 
