@@ -1,3 +1,9 @@
+cups-filters (1.0.2-1bzr1) precise; urgency=low
+
+  * debian/control: Added explicit build dependency on libfontconfig1-dev.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 23 Feb 2012 17:50:04 +0100
+
 cups-filters (1.0.2-1) unstable; urgency=low
 
   [ Till Kamppeter ]
