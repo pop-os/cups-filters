@@ -26,7 +26,8 @@ Build-Depends:
  libcups2-dev,
  libcupsimage2-dev,
  libijs-dev,
- zlib1g-dev
+ zlib1g-dev,
+ libfontconfig1-dev
 Homepage: http://www.openprinting.org/
 Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
