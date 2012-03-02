@@ -1,8 +1,14 @@
-cups-filters (1.0.2-2) UNRELEASED; urgency=low
+cups-filters (1.0.3-0ubuntu1) precise; urgency=low
 
+  * New upstream release
+     - cups-filters 1.0.3 release
+     - bannertopdf fixes: Scale test page template to fit the job's page size,
+       get and display full page geometry information, draw the frame which
+       marks the printable area 1pt smaller, to assure that it gets completely
+       visible (LP: #921073).
   * debian/control: Added explicit build dependency on libfontconfig1-dev.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 23 Feb 2012 17:40:51 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
 
 cups-filters (1.0.2-1) unstable; urgency=low
 
