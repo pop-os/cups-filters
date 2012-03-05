@@ -1,5 +1,5 @@
 Source: cups-filters
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Priority: optional
 Section: net
 Maintainer: Debian CUPS Maintainers <pkg-cups-devel@lists.alioth.debian.org>
