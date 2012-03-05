@@ -24,7 +24,7 @@ Build-Depends:
  libpng-dev | libpng12-dev,
  libtiff5-dev | libtiff-dev,
  libcups2-dev,
- libcupsimage2-dev,
+ libcupsimage2-dev (>= 1.5.2-6~),
  libijs-dev,
  zlib1g-dev,
  libfontconfig1-dev
