@@ -22,7 +22,7 @@ Build-Depends:
  libpoppler-private-dev (>= 0.16.0),
  libjpeg-dev,
  libpng-dev | libpng12-dev,
- libtiff4-dev,
+ libtiff5-dev | libtiff-dev,
  libcups2-dev,
  libcupsimage2-dev,
  libijs-dev,

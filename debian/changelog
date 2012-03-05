@@ -13,6 +13,8 @@ cups-filters (1.0.3-1) UNRELEASED; urgency=low
   [ Martin Pitt ]
   * debian/control: Build against libpng-dev, with an alternative to the older
     libpng12-dev. (Closes: #662295)
+  * debian/control: Prefer building against libtiff5-dev if available, falling  
+    back to libtiff-dev.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
 
