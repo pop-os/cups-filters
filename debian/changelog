@@ -19,6 +19,7 @@ cups-filters (1.0.3-1) UNRELEASED; urgency=low
     dpkg-buildflags. Bump dpkg-dev build dependency to (>= 1.16.1~) for this.
   * debian/copyright: Update Format header for official copyright format 1.0.
   * debian/control: Bump Standards-Version to 3.9.3.
+  * debian/rules: Drop LC_MESSAGES setting, leftover from cups.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
 
