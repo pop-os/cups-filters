@@ -1,4 +1,4 @@
-cups-filters (1.0.3-0ubuntu1) precise; urgency=low
+cups-filters (1.0.3-1) UNRELEASED; urgency=low
 
   * New upstream release
      - cups-filters 1.0.3 release
@@ -7,6 +7,7 @@ cups-filters (1.0.3-0ubuntu1) precise; urgency=low
        marks the printable area 1pt smaller, to assure that it gets completely
        visible (LP: #921073).
   * debian/control: Added explicit build dependency on libfontconfig1-dev.
+    (Closes: #661127)
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
 
