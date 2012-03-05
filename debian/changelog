@@ -17,6 +17,7 @@ cups-filters (1.0.3-1) UNRELEASED; urgency=low
     back to libtiff-dev.
   * debian/control, debian/rules: Move from hardening-wrapper to using
     dpkg-buildflags. Bump dpkg-dev build dependency to (>= 1.16.1~) for this.
+  * debian/copyright: Update Format header for official copyright format 1.0.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
 
