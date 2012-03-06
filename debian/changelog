@@ -1,6 +1,8 @@
 cups-filters (1.0.3-1) UNRELEASED; urgency=low
 
   [ Till Kamppeter ]
+  * debian/local/default-testpage.pdf: Added missing "Q" operator to the end of
+    the page. This broke N-up printing with pdftopdf (LP: #939530).
   * New upstream release
      - cups-filters 1.0.3 release
      - bannertopdf fixes: Scale test page template to fit the job's page size,
