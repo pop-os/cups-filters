@@ -1,24 +1,24 @@
-cups-filters (1.0.4-1) UNRELEASED; urgency=low
+cups-filters (1.0.4-1) unstable; urgency=low
 
   [ Till Kamppeter ]
   * New upstream release
-     - cups-filters 1.0.4 release
-     - texttopdf: Fall back to altermative fonts via fontconfig if the
-       FreeMono TrueType fonts are not installed (Closes: #495598,
-       Closes: #662660).
-     - bannertopdf: Fix off-by-one error in page duplication
-     - bannertopdf: Put indirect references to streams into the page's
-       contents
-     - bannertopdf: Let byte offsets for the Xref table of the PDF output
-       being determined correctly also when the output goes to stdout
-       (LP: #939735).
-     - bannertopdf: Output multiple copies of the test page if duplex
-       and/or N-up is chosen, to let the test page appear on all possible
-       positions of the sheet (LP: #939530).
-     - bannertopdf: Scale test page template to fit the job's page size,
-       get and display full page geometry information, draw the frame which
-       marks the printable area 1pt smaller, to assure that it gets completely
-       visible (LP: #921073).
+    - cups-filters 1.0.4 release
+    - texttopdf: Fall back to altermative fonts via fontconfig if the
+      FreeMono TrueType fonts are not installed (Closes: #495598,
+      Closes: #662660).
+    - bannertopdf: Fix off-by-one error in page duplication
+    - bannertopdf: Put indirect references to streams into the page's
+      contents
+    - bannertopdf: Let byte offsets for the Xref table of the PDF output
+      being determined correctly also when the output goes to stdout
+      (LP: #939735).
+    - bannertopdf: Output multiple copies of the test page if duplex
+      and/or N-up is chosen, to let the test page appear on all possible
+      positions of the sheet (LP: #939530).
+    - bannertopdf: Scale test page template to fit the job's page size,
+      get and display full page geometry information, draw the frame which
+      marks the printable area 1pt smaller, to assure that it gets completely
+      visible (LP: #921073).
   * debian/local/default-testpage.pdf: Added missing "Q" operator to the end of
     the page. This broke N-up printing with pdftopdf (LP: #939530).
   * debian/control: Added explicit build dependency on libfontconfig1-dev.
@@ -41,7 +41,7 @@ cups-filters (1.0.4-1) UNRELEASED; urgency=low
     against a version which does not conflict on the libtiff?-dev build
     dependency.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  1 Mar 2012 18:35:51 +0100
+ -- Martin Pitt <mpitt@debian.org>  Wed, 07 Mar 2012 14:36:49 +0100
 
 cups-filters (1.0.2-1) unstable; urgency=low
 
