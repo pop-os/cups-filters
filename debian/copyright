@@ -1,4 +1,4 @@
-Format: http://dep.debian.net/deps/dep5/
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: cups-filters
 Upstream-Contact: OpenPrinting <printing-architecture@lists.linux-foundation.org>
 Source: http://www.openprinting.org/download/cups-filters/

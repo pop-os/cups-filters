@@ -1,5 +1,5 @@
 Source: cups-filters
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Priority: optional
 Section: net
 Maintainer: Debian CUPS Maintainers <pkg-cups-devel@lists.alioth.debian.org>
@@ -12,7 +12,7 @@ Build-Depends:
  autotools-dev,
  cdbs (>= 0.4.93~),
  debhelper (>= 9~),
- hardening-wrapper,
+ dpkg-dev (>= 1.16.1~),
  patch,
  pkg-config,
  sharutils,
@@ -21,12 +21,13 @@ Build-Depends:
  liblcms2-dev,
  libpoppler-private-dev (>= 0.16.0),
  libjpeg-dev,
- libpng12-dev,
- libtiff4-dev,
+ libpng-dev | libpng12-dev,
+ libtiff5-dev | libtiff-dev,
  libcups2-dev,
- libcupsimage2-dev,
+ libcupsimage2-dev (>= 1.5.2-6~),
  libijs-dev,
- zlib1g-dev
+ zlib1g-dev,
+ libfontconfig1-dev
 Homepage: http://www.openprinting.org/
 Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
@@ -52,7 +53,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
  ghostscript (>= 9.02~),
- ttf-freefont
+ ttf-freefont | fonts-liberation | ttf-dejavu
 Recommends: colord, 
  foomatic-filters (>= 4.0), 
  ghostscript-cups (>= 9.02~)
