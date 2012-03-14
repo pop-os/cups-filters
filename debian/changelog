@@ -1,3 +1,15 @@
+cups-filters (1.0.5-1) unstable; urgency=low
+
+  * New upstream release
+    - cups-filters 1.0.5 release
+    - pdftops: Added insertion of workaround PostScript code for printers
+      with bugs in their PS interpreters (LP: #950713, LP: #951627).
+    - parallel backend: Break infinite loop (LP: #936647).
+    - texttopdf: Complete the implementation of fontconfig-based font
+      selection (Closes: #663070).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 14 Mar 2012 11:43:22 +0100
+
 cups-filters (1.0.4-1) unstable; urgency=low
 
   [ Till Kamppeter ]
