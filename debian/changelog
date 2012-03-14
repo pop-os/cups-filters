@@ -1,4 +1,4 @@
-cups-filters (1.0.5-1) UNRELEASED; urgency=low
+cups-filters (1.0.5-1) unstable; urgency=low
 
   * New upstream release
     - cups-filters 1.0.5 release
@@ -8,7 +8,7 @@ cups-filters (1.0.5-1) UNRELEASED; urgency=low
     - texttopdf: Complete the implementation of fontconfig-based font
       selection (Closes: #663070).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 14 Mar 2012 11:23:07 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 14 Mar 2012 11:43:22 +0100
 
 cups-filters (1.0.4-1) unstable; urgency=low
 
