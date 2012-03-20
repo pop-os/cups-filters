@@ -1,3 +1,13 @@
+cups-filters (1.0.7-0bzr1) precise; urgency=low
+
+  * New upstream release
+     - cups-filters 1.0.7 release
+     - pdftops: Added debug mode for investigating PostScript printer
+       incompatibilities and interpreter bugs. Now sending a job with
+       "lpr -o psdebug" makes the filter sending uncompressed PostScript.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 20 Mar 2012 18:41:56 +0100
+
 cups-filters (1.0.6-0bzr1) precise; urgency=low
 
   * New upstream release
