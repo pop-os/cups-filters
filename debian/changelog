@@ -1,3 +1,25 @@
+cups-filters (1.0.6-0bzr1) precise; urgency=low
+
+  * New upstream release
+     - cups-filters 1.0.6 release
+     - pdftops: Additional workaround for a bug in the PostsSript interpreters
+       of Brother printers, calling Ghostscript with special command line
+       options (LP: #955553).
+     - pdftopdf: Correct handling of PJL output and page_log messages on
+       native PDF printers and on printers using a driver after pdftopdf
+       (including PostScript printers).
+     - texttopdf: Full fontconfig support, several bug fixes and improvements
+       to make the output work on more different PDF interpreters, including
+       built-in interpreters in printers.
+     - Fixed cupsfilters.drv PPD generator and rastertopclx filter to make the
+       supported HP DesignJet printers actually work.
+     - parallel backend: Use same method as CUPS to overcome infinite loop
+       on side channel errors (LP: #936647, CUPS STR #4044).
+     - "make clean" and "make distclesn" work also correctly now when called
+       repeatedly (Closes: #663564).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 20 Mar 2012 12:34:56 +0100
+
 cups-filters (1.0.5-1) unstable; urgency=low
 
   * New upstream release
