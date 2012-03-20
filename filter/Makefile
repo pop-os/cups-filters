@@ -82,6 +82,7 @@ SCRIPTS	=	\
 		textonly
 
 PPDFILES =	\
+		HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 		HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
 		textonly.ppd
 
@@ -101,6 +102,7 @@ all:	$(TARGETS)
 #
 
 clean:
+	$(MAKE) -C fontembed $@
 	$(RM) $(OBJS) $(TARGETS)
 	$(RM) */*.d
 	$(RM) */*.o
@@ -325,6 +327,7 @@ pdftoijs:	pdftoijs.o
 #
 
 fontembed/libfontembed.a:
+	echo Building $@...
 	$(MAKE) -C fontembed
 
 texttopdf:	texttopdf.o textcommon.o common.o pdfutils.o fontembed/libfontembed.a
