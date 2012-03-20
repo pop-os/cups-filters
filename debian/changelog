@@ -1,7 +1,10 @@
-cups-filters (1.0.6-1) unstable; urgency=low
+cups-filters (1.0.7-1) UNRELEASED; urgency=low
 
   * New upstream release
-     - cups-filters 1.0.6 release
+     - cups-filters 1.0.7 release
+     - pdftops: Added debug mode for investigating PostScript printer
+       incompatibilities and interpreter bugs. Now sending a job with
+       "lpr -o psdebug" makes the filter sending uncompressed PostScript.
      - pdftops: Additional workaround for a bug in the PostsSript interpreters
        of Brother printers, calling Ghostscript with special command line
        options (LP: #955553).
