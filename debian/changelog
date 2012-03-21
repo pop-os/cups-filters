@@ -1,4 +1,4 @@
-cups-filters (1.0.7-1) UNRELEASED; urgency=low
+cups-filters (1.0.7-1) unstable; urgency=low
 
   * New upstream release
      - cups-filters 1.0.7 release
@@ -21,7 +21,7 @@ cups-filters (1.0.7-1) UNRELEASED; urgency=low
      - "make clean" and "make distclesn" work also correctly now when called
        repeatedly (Closes: #663564).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 20 Mar 2012 12:34:56 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 21 Mar 2012 09:18:55 +0100
 
 cups-filters (1.0.5-1) unstable; urgency=low
 
