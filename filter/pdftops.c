@@ -527,6 +527,32 @@ main(int  argc,				/* I - Number of command-line args */
   pdf_argv[pdf_argc++] = filename;
   pdf_argv[pdf_argc++] = (char *)"-";
 #else
+ /*
+  * PostScript debug mode: If you send a job with "lpr -o psdebug" Ghostscript
+  * will not compress pages and fonts, so that the PostScript code can get
+  * analysed. This is especially important if a PostScript printer errors or
+  * misbehaves on Ghostscript's output.
+  */
+  val = cupsGetOption("psdebug", num_options, options);
+  if (val && strcasecmp(val, "no") && strcasecmp(val, "off") &&
+      strcasecmp(val, "false"))
+  {
+    fprintf(stderr, "DEBUG: Deactivated compression of pages and fonts in Ghostscript's PostScript output (\"psdebug\" debug mode)\n");
+    pdf_argv[pdf_argc++] = (char *)"-dCompressPages=false";
+    pdf_argv[pdf_argc++] = (char *)"-dCompressFonts=false";
+  }
+ /*
+  * The PostScript interpreters on Brother printers (BR-Script) have a bug in
+  * their CCITTFaxDecode filter. So we do not CCITT-compress bitmap glyphs and
+  * images if the PostScript is for a Brother printer.
+  */
+  if (ppd && ppd->manufacturer &&
+      !strncasecmp(ppd->manufacturer, "Brother", 7))
+  {
+    fprintf(stderr, "DEBUG: Deactivated CCITT compression of glyphs and images as workaround for Brother printers\n");
+    pdf_argv[pdf_argc++] = (char *)"-dNoT3CCITT";
+    pdf_argv[pdf_argc++] = (char *)"-dEncodeMonoImages=false";
+  }
   pdf_argv[pdf_argc++] = (char *)"-c";
   pdf_argv[pdf_argc++] = (char *)"save pop";
   pdf_argv[pdf_argc++] = (char *)"-f";
@@ -677,8 +703,8 @@ main(int  argc,				/* I - Number of command-line args */
 
 	  if (!strncasecmp(ppd->manufacturer, "Kyocera", 7))
 	  {
-	    puts("% ===== Workaround insertion by pdftops CUPS filter =====");
 	    fprintf(stderr, "DEBUG: Inserted workaround PostScript code for Kyocera printers\n");
+	    puts("% ===== Workaround insertion by pdftops CUPS filter =====");
 	    puts("% Kyocera's PostScript interpreter crashes on early name binding,");
 	    puts("% so eliminate all \"bind\"s by redifining \"bind\" to no-op");
 	    puts("/bind {} bind def");
