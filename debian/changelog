@@ -1,6 +1,13 @@
-cups-filters (1.0.8-1) UNRELEASED; urgency=low
+cups-filters (1.0.9-1) UNRELEASED; urgency=low
 
   * New upstream release
+     - Deactivated NIME conversion rules which are not used by the PDF-
+       based printing workflow.
+     - Cleaned up sample PPD file HP-Color_LaserJet_CM3530_MFP-PDF.ppd.
+     - imagetopdf: Added support for native PDF printers.
+     - imagetopdf, imagetoraster: Let image input "scale to fit"
+       by default. This makes photo printing via AirPrint work,
+       as the iOS devices send JPEG but do not allow setting options.
      - pdftops: Generally do not compress fonts and images, and
        also do not do CCITT compression for bitmap glyphs to make
        the PostScript output more compatible with buggy PostScript
@@ -8,7 +15,7 @@ cups-filters (1.0.8-1) UNRELEASED; urgency=low
        many more different printer models. Problems were also
        discovered on HP and not only on Brother (LP: #960666).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 22 Mar 2012 09:13:55 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 26 Mar 2012 20:12:55 +0200
 
 cups-filters (1.0.7-1) unstable; urgency=low
 
