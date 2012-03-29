@@ -1,8 +1,14 @@
-cups-filters (1.0.9-1) UNRELEASED; urgency=low
+cups-filters (1.0.11-1) UNRELEASED; urgency=low
 
   * New upstream release
+     - Updated all code copied from Poppler to the current state of Poppler,
+       to fix any bugs or security vulnerabilities which were in that
+       Poppler code.
+     - Made Poppler-based PDF filters building with various versions of
+       Poppler.
      - Deactivated NIME conversion rules which are not used by the PDF-
        based printing workflow.
+     - Added generic PPD for native PDF printers.
      - Cleaned up sample PPD file HP-Color_LaserJet_CM3530_MFP-PDF.ppd.
      - imagetopdf: Added support for native PDF printers.
      - imagetopdf, imagetoraster: Let image input "scale to fit"
