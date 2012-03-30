@@ -26,20 +26,6 @@ DEB_DH_INSTALL_SOURCEDIR := debian/tmp
 DPKG_GENSYMBOLS_CHECK_LEVEL=4
 export DPKG_GENSYMBOLS_CHECK_LEVEL
 
-post-patches::
-	set -e; if dpkg --compare-versions `dpkg-query -W --showformat '$${Version}' libpoppler-dev` lt 0.18 && ! [ -e debian/patches/stamp-poppler-applied ]; then \
-	    echo '---- Applying poppler < 0.18 patch'; \
-	    patch -p1 --no-backup-if-mismatch < debian/patches/poppler-pre-0.18.patch; \
-	    touch debian/patches/stamp-poppler-applied; \
-	fi
-
-clean::
-	if [ -e debian/patches/stamp-poppler-applied ]; then \
-	    echo '---- Unapplying poppler < 0.18 patch'; \
-	    patch -Rp1 --no-backup-if-mismatch < debian/patches/poppler-pre-0.18.patch; \
-	    rm debian/patches/stamp-poppler-applied; \
-	fi
-
 cleanbuilddir::
 	[ ! -f Makedefs ] || make distclean
 
