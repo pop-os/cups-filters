@@ -1,4 +1,4 @@
-cups-filters (1.0.11-1) UNRELEASED; urgency=low
+cups-filters (1.0.11-1) unstable; urgency=low
 
   [ Till Kamppeter ]
   * New upstream release
@@ -26,7 +26,7 @@ cups-filters (1.0.11-1) UNRELEASED; urgency=low
   * Drop debian/patches/poppler-pre-0.18.patch and patch machinery around it.
     It's not necessary with the current upstream version any more.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 26 Mar 2012 20:12:55 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 30 Mar 2012 08:49:48 +0200
 
 cups-filters (1.0.7-1) unstable; urgency=low
 
