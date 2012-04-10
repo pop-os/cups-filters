@@ -1,3 +1,17 @@
+cups-filters (1.0.14-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - pdftops: Determine printing resolution from the PPD file and supply
+       it on the Ghostscript or pdftops (Poppler) command line, so that
+       the renderer does the image rendering with a resolution matching the
+       printer's resolution. This avoids too slow processing of the jobs
+       by the printer's built-in PostScript interpreter. In addition
+       a default resolution of 300 dpi is used for PPDs without any hint
+       of the printer's resolution, as most PostScript lasers use multiples
+       of 300 dpi as resolution (LP: #977912).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 10 Apr 2012 19:40:11 +0200
+
 cups-filters (1.0.13-1) unstable; urgency=low
 
   * New upstream release
