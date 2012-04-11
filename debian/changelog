@@ -1,6 +1,12 @@
-cups-filters (1.0.14-1) UNRELEASED; urgency=low
+cups-filters (1.0.15-1) UNRELEASED; urgency=low
 
   * New upstream release
+     - pdftops: Suppress image compression only for Brother printers as they
+       really need this measure to print at all. This accelerates printer-
+       internal job processing on most other printers (tested on HP and
+       Kyocera). Also suppress page compression on Kyocera printers, this
+       works around a bug in Kyocera's PostScript interpreters which makes
+       printing pages with images very slow (LP: #977912).
      - pdftops: Determine printing resolution from the PPD file and supply
        it on the Ghostscript or pdftops (Poppler) command line, so that
        the renderer does the image rendering with a resolution matching the
@@ -10,7 +16,7 @@ cups-filters (1.0.14-1) UNRELEASED; urgency=low
        of the printer's resolution, as most PostScript lasers use multiples
        of 300 dpi as resolution (LP: #977912).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 10 Apr 2012 19:40:11 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 11 Apr 2012 22:40:11 +0200
 
 cups-filters (1.0.13-1) unstable; urgency=low
 
