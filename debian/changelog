@@ -1,3 +1,26 @@
+cups-filters (1.0.16-1) unstable; urgency=low
+
+  * New upstream release
+     - pdftopdf: Fixed segmentation faults when using N-up with certain PDF
+       files (LP: #980673) and when calling pdftopdf manually without
+       specifyting a PPD file.
+     - pdftops: Suppress image compression only for Brother printers as they
+       really need this measure to print at all. This accelerates printer-
+       internal job processing on most other printers (tested on HP and
+       Kyocera). Also suppress page compression on Kyocera printers, this
+       works around a bug in Kyocera's PostScript interpreters which makes
+       printing pages with images very slow (LP: #977912).
+     - pdftops: Determine printing resolution from the PPD file and supply
+       it on the Ghostscript or pdftops (Poppler) command line, so that
+       the renderer does the image rendering with a resolution matching the
+       printer's resolution. This avoids too slow processing of the jobs
+       by the printer's built-in PostScript interpreter. In addition
+       a default resolution of 300 dpi is used for PPDs without any hint
+       of the printer's resolution, as most PostScript lasers use multiples
+       of 300 dpi as resolution (LP: #977912).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 16 Apr 2012 12:36:03 +0200
+
 cups-filters (1.0.13-1) unstable; urgency=low
 
   * New upstream release

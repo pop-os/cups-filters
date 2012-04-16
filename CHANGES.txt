@@ -1,5 +1,31 @@
-CHANGES.txt - OpenPrinting CUPS Filters v1.0.13 - 2012-04-09
+CHANGES.txt - OpenPrinting CUPS Filters v1.0.16 - 2012-04-16
 ------------------------------------------------------------
+
+CHANGES IN V1.0.16
+
+	- pdftopdf: Fixed segmentation faults when using N-up with certain PDF
+	  files (Ubuntu bug #980673) and when calling pdftopdf manually without
+          specifyting a PPD file.
+
+CHANGES IN V1.0.15
+
+	- pdftops: Suppress image compression only for Brother printers as they
+	  really need this measure to print at all. This accelerates printer-
+	  internal job processing on most other printers (tested on HP and
+	  Kyocera). Also suppress page compression on Kyocera printers, this
+	  works around a bug in Kyocera's PostScript interpreters which makes
+	  printing pages with images very slow (Ubuntu bug #977912).
+
+CHANGES IN V1.0.14
+
+	- pdftops: Determine printing resolution from the PPD file and supply
+	  it on the Ghostscript or pdftops (Poppler) command line, so that
+	  the renderer does the image rendering with a resolution matching the
+	  printer's resolution. This avoids too slow processing of the jobs
+	  by the printer's built-in PostScript interpreter. In addition
+	  a default resolution of 300 dpi is used for PPDs without any hint
+	  of the printer's resolution, as most PostScript lasers use multiples
+	  of 300 dpi as resolution (Ubuntu bug #977912).
 
 CHANGES IN V1.0.13
 
