@@ -596,9 +596,7 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 PHPDIR
 PHPCONFIG
-PDFTOPS
-DEFAULT_PDFTOPS
-CUPS_PDFTOPS
+CUPS_POPPLER_PDFTOPS
 CUPS_GHOSTSCRIPT
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
@@ -727,7 +725,10 @@ enable_cms
 with_poppler_source
 enable_zlib
 enable_libjpeg
-with_pdftops
+with_pdftops_renderer
+with_pdftops_maxres
+with_ghostscript
+with_poppler_pdftops
 with_php
 '
       ac_precious_vars='build_alias
@@ -1377,7 +1378,10 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-optim            set optimization flags
   --with-poppler-source=PATH      poppler source directory path
-  --with-pdftops          set pdftops filter (gs,/path/to/gs,pdftops,/path/to/pdftops,none), default=pdftops
+  --with-pdftops-renderer set default renderer for pdftops filter (gs,pdftops), default=gs
+  --with-pdftops-maxres   set default maximum image rendering resolution for pdftops filter (0, 75, 150, 300, 600, 1200, 2400, 4800, 90, 180, 360, 720, 1440, 2880, 5760, unlimited), default=1440
+  --with-ghostscript      set ghostscript path for pdftops filter (gs,/path/to/gs,none), default=gs
+  --with-poppler-pdftops  set Poppler pdftops path for pdftops filter (pdftops,/path/to/pdftops,none), default=pdftops
   --with-php              set PHP interpreter for web interfaces
 
 Some influential environment variables:
@@ -2415,7 +2419,7 @@ esac
 ac_config_headers="$ac_config_headers config.h"
 
 
-CUPSFILTERS_VERSION="1.0.16"
+CUPSFILTERS_VERSION="1.0.18"
 
 cat >>confdefs.h <<_ACEOF
 #define CUPSFILTERS_SVERSION "cups-filters v$CUPSFILTERS_VERSION"
@@ -6992,17 +6996,36 @@ fi
 
 
 
-# Check whether --with-pdftops was given.
-if test "${with_pdftops+set}" = set; then :
-  withval=$with_pdftops;
+# Check whether --with-pdftops-renderer was given.
+if test "${with_pdftops_renderer+set}" = set; then :
+  withval=$with_pdftops_renderer;
 fi
 
 
-PDFTOPS=""
-CUPS_PDFTOPS=""
+# Check whether --with-pdftops-maxres was given.
+if test "${with_pdftops_maxres+set}" = set; then :
+  withval=$with_pdftops_maxres;
+fi
+
+
+# Check whether --with-ghostscript was given.
+if test "${with_ghostscript+set}" = set; then :
+  withval=$with_ghostscript;
+fi
+
+
+# Check whether --with-poppler-pdftops was given.
+if test "${with_poppler_pdftops+set}" = set; then :
+  withval=$with_poppler_pdftops;
+fi
+
+
+CUPS_PDFTOPS_RENDERER=""
+CUPS_PDFTOPS_MAX_RESOLUTION=""
+CUPS_POPPLER_PDFTOPS=""
 CUPS_GHOSTSCRIPT=""
 
-case "x$with_pdftops" in
+case "x$with_ghostscript" in
 	x) # Default/auto
 	# Extract the first word of "gs", so it can be a program name with args.
 set dummy gs; ac_word=$2
@@ -7047,53 +7070,6 @@ fi
 	if test "x$CUPS_GHOSTSCRIPT" != x; then
 		$as_echo "#define HAVE_GHOSTSCRIPT 1" >>confdefs.h
 
-		PDFTOPS="pdftops"
-	else
-		# Extract the first word of "pdftops", so it can be a program name with args.
-set dummy pdftops; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if test "${ac_cv_path_CUPS_PDFTOPS+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $CUPS_PDFTOPS in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_CUPS_PDFTOPS="$CUPS_PDFTOPS" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_path_CUPS_PDFTOPS="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-CUPS_PDFTOPS=$ac_cv_path_CUPS_PDFTOPS
-if test -n "$CUPS_PDFTOPS"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CUPS_PDFTOPS" >&5
-$as_echo "$CUPS_PDFTOPS" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-		if test "x$CUPS_PDFTOPS" != x; then
-			$as_echo "#define HAVE_PDFTOPS 1" >>confdefs.h
-
-			PDFTOPS="pdftops"
-		fi
 	fi
 	;;
 
@@ -7141,31 +7117,39 @@ fi
 	if test "x$CUPS_GHOSTSCRIPT" != x; then
 		$as_echo "#define HAVE_GHOSTSCRIPT 1" >>confdefs.h
 
-		PDFTOPS="pdftops"
 	else
-		as_fn_error "Unable to find gs program!" "$LINENO" 5
-		exit 1
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unable to find gs program!" >&5
+$as_echo "$as_me: WARNING: Unable to find gs program!" >&2;}
 	fi
 	;;
 
 	x/*/gs) # Use /path/to/gs without any check:
-	CUPS_GHOSTSCRIPT="$with_pdftops"
+	CUPS_GHOSTSCRIPT="$with_ghostscript"
 	$as_echo "#define HAVE_GHOSTSCRIPT 1" >>confdefs.h
 
-	PDFTOPS="pdftops"
 	;;
 
-	xpdftops)
+	xno) # --without-ghostscript
+	;;
+
+	*) # Invalid with_ghostscript value
+	as_fn_error "Invalid with-ghostscript value!" "$LINENO" 5
+	exit 1
+	;;
+esac
+
+case "x$with_poppler_pdftops" in
+	x) # Default/auto
 	# Extract the first word of "pdftops", so it can be a program name with args.
 set dummy pdftops; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
-if test "${ac_cv_path_CUPS_PDFTOPS+set}" = set; then :
+if test "${ac_cv_path_CUPS_POPPLER_PDFTOPS+set}" = set; then :
   $as_echo_n "(cached) " >&6
 else
-  case $CUPS_PDFTOPS in
+  case $CUPS_POPPLER_PDFTOPS in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_CUPS_PDFTOPS="$CUPS_PDFTOPS" # Let the user override the test with a path.
+  ac_cv_path_CUPS_POPPLER_PDFTOPS="$CUPS_POPPLER_PDFTOPS" # Let the user override the test with a path.
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -7175,7 +7159,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_path_CUPS_PDFTOPS="$as_dir/$ac_word$ac_exec_ext"
+    ac_cv_path_CUPS_POPPLER_PDFTOPS="$as_dir/$ac_word$ac_exec_ext"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -7186,69 +7170,114 @@ IFS=$as_save_IFS
   ;;
 esac
 fi
-CUPS_PDFTOPS=$ac_cv_path_CUPS_PDFTOPS
-if test -n "$CUPS_PDFTOPS"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CUPS_PDFTOPS" >&5
-$as_echo "$CUPS_PDFTOPS" >&6; }
+CUPS_POPPLER_PDFTOPS=$ac_cv_path_CUPS_POPPLER_PDFTOPS
+if test -n "$CUPS_POPPLER_PDFTOPS"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CUPS_POPPLER_PDFTOPS" >&5
+$as_echo "$CUPS_POPPLER_PDFTOPS" >&6; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 
 
-	if test "x$CUPS_PDFTOPS" != x; then
-		$as_echo "#define HAVE_PDFTOPS 1" >>confdefs.h
+	if test "x$CUPS_POPPLER_PDFTOPS" != x; then
+		$as_echo "#define HAVE_POPPLER_PDFTOPS 1" >>confdefs.h
 
-		PDFTOPS="pdftops"
+	fi
+	;;
+
+	xpdftops)
+	# Extract the first word of "pdftops", so it can be a program name with args.
+set dummy pdftops; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_CUPS_POPPLER_PDFTOPS+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $CUPS_POPPLER_PDFTOPS in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_CUPS_POPPLER_PDFTOPS="$CUPS_POPPLER_PDFTOPS" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_CUPS_POPPLER_PDFTOPS="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+CUPS_POPPLER_PDFTOPS=$ac_cv_path_CUPS_POPPLER_PDFTOPS
+if test -n "$CUPS_POPPLER_PDFTOPS"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CUPS_POPPLER_PDFTOPS" >&5
+$as_echo "$CUPS_POPPLER_PDFTOPS" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+	if test "x$CUPS_POPPLER_PDFTOPS" != x; then
+		$as_echo "#define HAVE_POPPLER_PDFTOPS 1" >>confdefs.h
+
 	else
-		as_fn_error "Unable to find pdftops program!" "$LINENO" 5
-		exit 1
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unable to find Poppler pdftops program!" >&5
+$as_echo "$as_me: WARNING: Unable to find Poppler pdftops program!" >&2;}
 	fi
 	;;
 
 	x/*/pdftops) # Use /path/to/pdftops without any check:
-	CUPS_PDFTOPS="$with_pdftops"
-	$as_echo "#define HAVE_PDFTOPS 1" >>confdefs.h
+	CUPS_POPPLER_PDFTOPS="$with_poppler_pdftops"
+	$as_echo "#define HAVE_POPPLER_PDFTOPS 1" >>confdefs.h
 
-	PDFTOPS="pdftops"
 	;;
 
-	xnone) # Make no pdftops filter if with_pdftops=none:
+	xno) # --without-poppler-pdftops
 	;;
 
-	*) # Invalid with_pdftops value:
-	as_fn_error "Invalid with_pdftops value!" "$LINENO" 5
+	*) # Invalid with_poppler-pdftops value
+	echo "$with_poppler_pdftops"
+	as_fn_error "Invalid with-poppler-pdftops value!" "$LINENO" 5
 	exit 1
 	;;
 esac
 
-if test "x$CUPS_PDFTOPS" != x; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether pdftops supports -origpagesizes" >&5
-$as_echo_n "checking whether pdftops supports -origpagesizes... " >&6; }
-	if ($CUPS_PDFTOPS -h 2>&1 | grep -q -- -origpagesizes); then
+if test "x$CUPS_POPPLER_PDFTOPS" != x; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Poppler pdftops supports -origpagesizes" >&5
+$as_echo_n "checking whether Poppler pdftops supports -origpagesizes... " >&6; }
+	if ($CUPS_POPPLER_PDFTOPS -h 2>&1 | grep -q -- -origpagesizes); then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-		$as_echo "#define HAVE_PDFTOPS_WITH_ORIGPAGESIZES 1" >>confdefs.h
+		$as_echo "#define HAVE_POPPLER_PDFTOPS_WITH_ORIGPAGESIZES 1" >>confdefs.h
 
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	fi
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether pdftops supports -r" >&5
-$as_echo_n "checking whether pdftops supports -r... " >&6; }
-	if ($CUPS_PDFTOPS -h 2>&1 | grep -q -- '-r '); then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Poppler pdftops supports -r" >&5
+$as_echo_n "checking whether Poppler pdftops supports -r... " >&6; }
+	if ($CUPS_POPPLER_PDFTOPS -h 2>&1 | grep -q -- '-r '); then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-		$as_echo "#define HAVE_PDFTOPS_WITH_RESOLUTION 1" >>confdefs.h
+		$as_echo "#define HAVE_POPPLER_PDFTOPS_WITH_RESOLUTION 1" >>confdefs.h
 
 	else
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	fi
-
-	DEFAULT_PDFTOPS=""
-elif test "x$CUPS_GHOSTSCRIPT" != x; then
+fi
+if test "x$CUPS_GHOSTSCRIPT" != x; then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether gs supports the ps2write device" >&5
 $as_echo_n "checking whether gs supports the ps2write device... " >&6; }
 	if ($CUPS_GHOSTSCRIPT -h 2>&1 | grep -q ps2write); then
@@ -7260,11 +7289,58 @@ $as_echo "yes" >&6; }
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 	fi
-
-	DEFAULT_PDFTOPS=""
-else
-	DEFAULT_PDFTOPS="#"
 fi
+
+case "x$with_pdftops_renderer" in
+	x|xgs) # gs
+	CUPS_PDFTOPS_RENDERER=GS
+	if test "x$CUPS_GHOSTSCRIPT" = x; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Default renderer Ghostscript is not available!" >&5
+$as_echo "$as_me: WARNING: Default renderer Ghostscript is not available!" >&2;}
+	fi
+	;;
+
+	xpdftops) # pdftops
+	CUPS_PDFTOPS_RENDERER=PDFTOPS
+	if test "x$CUPS_POPPLER_PDFTOPS" = x; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Default renderer Poppler pdftops is not available!" >&5
+$as_echo "$as_me: WARNING: Default renderer Poppler pdftops is not available!" >&2;}
+	fi
+	;;
+
+	*) # Invalid with_pdftops-renderer value
+	as_fn_error "Invalid with-pdftops-renderer value!" "$LINENO" 5
+	exit 1
+	;;
+esac
+
+case "x$with_pdftops_maxres" in
+
+        x)
+	CUPS_PDFTOPS_MAXRES=1440
+	;;
+
+	x75|x150|x300|x600|x1200|x2400|x4800|x90|x180|x360|x720|x1440|x2880|x5760)
+	CUPS_PDFTOPS_MAXRES=$with_pdftops_maxres
+	;;
+
+	x0|xunlimited|xno)
+	CUPS_PDFTOPS_MAXRES=0
+	;;
+
+	*) # Invalid with_pdftops-renderer value
+	as_fn_error "Invalid with-pdftops-maxres value!" "$LINENO" 5
+	exit 1
+	;;
+esac
+
+cat >>confdefs.h <<_ACEOF
+#define CUPS_PDFTOPS_RENDERER $CUPS_PDFTOPS_RENDERER
+_ACEOF
+
+cat >>confdefs.h <<_ACEOF
+#define CUPS_PDFTOPS_MAX_RESOLUTION $CUPS_PDFTOPS_MAXRES
+_ACEOF
 
 cat >>confdefs.h <<_ACEOF
 #define CUPS_PDFTOPS "$CUPS_PDFTOPS"
@@ -7273,8 +7349,6 @@ _ACEOF
 cat >>confdefs.h <<_ACEOF
 #define CUPS_GHOSTSCRIPT "$CUPS_GHOSTSCRIPT"
 _ACEOF
-
-
 
 
 
