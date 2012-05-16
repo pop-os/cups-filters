@@ -1,4 +1,4 @@
-cups-filters (1.0.18-1) UNRELEASED; urgency=low
+cups-filters (1.0.18-1) unstable; urgency=low
 
   * New upstream release
      - pdftops: Allow selection whether Ghostscript or Poppler is used
@@ -31,7 +31,7 @@ cups-filters (1.0.18-1) UNRELEASED; urgency=low
      - pdftopdf: Fixed segmentation fault when printing selected pages
        ("page-ranges" option, LP: #980673).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 16 May 2012 11:25:03 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 16 May 2012 11:45:03 +0200
 
 cups-filters (1.0.16-2) unstable; urgency=low
 
