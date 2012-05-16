@@ -1,10 +1,37 @@
-cups-filters (1.0.17-1) UNRELEASED; urgency=low
+cups-filters (1.0.18-1) UNRELEASED; urgency=low
 
   * New upstream release
+     - pdftops: Allow selection whether Ghostscript or Poppler is used
+       at runtime, setting the "pdftops-renderer" option to "gs" or
+       "pdftops". This way one can switch to Poppler per-queue if there
+       are incompatibilities with certain PostScript printers.
+     - pdftops: Allow setting an upper limit for the image rendering
+       resolution, also at runtime, setting the option
+       "pdftops-max-image-resolution-default" to the desired limit in dpi.
+       "0" means no limit. Default limit is 1440 dpi. This prevents slow
+       processing by the printer if very high resolutions are used or
+       if the printing resolution is mis-detected by the pdftops filter.
+     - pdftops: Fixed crash by wrong usage of sizeof() function when adding
+       "Collate" to the fifth command line argument for the "pstops" CUPS
+       filter call (LP: #982675).
+     - pdftops: Removed newline from copies value when reading it from
+       the "%%PDFTOPDFNumCopies" entry of the incoming PDF file.
+     - pdftops: Silenced compiler warning about ignoring the return
+       value of the write() function.
+     - pdftops: Added a crash guard.
+     - pdftops: Start determining the printing resolution with
+       cupsRasterInterpretPPD(), this is the most reliable as often
+       the choice names of the "Resolution" option are marketing names
+       with higher numerical values than the actual resolution. Also
+       ignore error exit values of cupsRasterInterpretPPD() as the
+       function can error out after having found the resolution.
+     - pdftops: If printing resolution is determined by
+       cupsRasterInterpretPPD() do not stick on 100 dpi if the
+       resolution cannot be determined (LP: #984082).
      - pdftopdf: Fixed segmentation fault when printing selected pages
        ("page-ranges" option, LP: #980673).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 20 Apr 2012 14:39:03 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 16 May 2012 11:25:03 +0200
 
 cups-filters (1.0.16-2) unstable; urgency=low
 
