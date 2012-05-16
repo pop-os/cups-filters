@@ -1,3 +1,48 @@
+cups-filters (1.0.18-0ubuntu0.1) precise-proposed; urgency=low
+
+  [ Till Kamppeter ]
+  * New upstream release
+     - pdftops: Allow selection whether Ghostscript or Poppler is used
+       at runtime, setting the "pdftops-renderer" option to "gs" or
+       "pdftops". This way one can switch to Poppler per-queue if there
+       are incompatibilities with certain PostScript printers.
+     - pdftops: Allow setting an upper limit for the image rendering
+       resolution, also at runtime, setting the option
+       "pdftops-max-image-resolution-default" to the desired limit in dpi.
+       "0" means no limit.
+     - pdftops: Fixed crash by wrong usage of sizeof() function when adding
+       "Collate" to the fifth command line argument for the "pstops" CUPS
+       filter call (LP: #982675).
+     - pdftops: Removed newline from copies value when reading it from
+       the "%%PDFTOPDFNumCopies" entry of the incoming PDF file.
+     - pdftops: Silenced compiler warning about ignoring the return
+       value of the write() function.
+     - pdftops: Added a crash guard.
+     - pdftops: Start determining the printing resolution with
+       cupsRasterInterpretPPD(), this is the most reliable as often
+       the choice names of the "Resolution" option are marketing names
+       with higher numerical values than the actual resolution. Also
+       ignore error exit values of cupsRasterInterpretPPD() as the
+       function can error out after having found the resolution
+       (LP: #984082).
+     - pdftops: If printing resolution is determined by
+       cupsRasterInterpretPPD() do not stick on 100 dpi if the
+       resolution cannot be determined (LP: #984082).
+  * debian/rules: Set default renderer for the pdftops filter to Poppler
+    due to many printer's buggy interpreters having problems with GhostScript's
+    PostScript and set image rendering resolution limit of the pdftops filter
+    to 360 dpi to prevents slow processing by the printer if very high
+    resolutions are used or if the printing resolution is mis-detected by the
+    pdftops filter (LP: #668800, LP #951627 (comment #30), LP: #998087,
+    LP: #992982 (comments #26, #27, #30, #31), LP: #997728, LP: #994477,
+    LP: #998087, LP: #978120, LP: #862167).
+
+  [ Didier Raboud ]
+  * Drop libtiff5-dev, just use libtiff-dev, this fixes the FTBFS due to
+    incompatibility with cups.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 16 May 2012 11:25:03 +0200
+
 cups-filters (1.0.17-0bzr0.1) precise-proposed; urgency=low
 
   * New upstream release
