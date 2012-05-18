@@ -1,3 +1,12 @@
+cups-filters (1.0.18-2) unstable; urgency=low
+
+  [ Fabian Greffrath ]
+  * Add patch to avoid trimming the results of FcFontSort(), as this may
+    miss some reasonable candidates under certain circumstances. BTW,
+    fix passing a non-pointer as a pointer to "result". (Closes: #670055)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 18 May 2012 15:01:54 +0200
+
 cups-filters (1.0.18-1) unstable; urgency=low
 
   * New upstream release
