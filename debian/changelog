@@ -1,3 +1,9 @@
+cups-filters (1.0.18-2build2) quantal; urgency=low
+
+  * No change rebuild for libpoppler26 (poppler 0.20.1-1ubuntu1)
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Fri, 22 Jun 2012 17:03:31 +1200
+
 cups-filters (1.0.18-2build1) quantal; urgency=low
 
   * No change rebuild for libpoppler25 (poppler 0.20.0-0ubuntu1)
