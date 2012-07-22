@@ -3,40 +3,48 @@ Upstream-Name: cups-filters
 Upstream-Contact: OpenPrinting <printing-architecture@lists.linux-foundation.org>
 Source: http://www.openprinting.org/download/cups-filters/
 
-Files: AUTHORS.txt
- CHANGES.txt
+Files: AUTHORS
+ NEWS
  acloacl.m4
+ autogen.sh
+ compile
+ config.guess
+ config.h.in
+ config.sub
  configure
+ configure.ac
+ depcomp
  install-sh
+ libcupsfilters.pc.in
+ libfontembed.pc.in
+ ltmain.sh
+ m4/*
+ Makefile.am
+ Makefile.in
  debian/*
+ missing
 Copyright: 2012, Till Kamppeter <till.kamppeter@gmail.com>
+	   2012, Tomáš Chvátal <tchvatal@suse.cz>
 License: GPL-2+
 
-Files: debian/local/textonly* debian/local/text.convs
+Files: filter/textonly 
+ ppd/textonly.ppd
 Copyright: 2003-2006 Red Hat, Inc.
  2003-2006 Tim Waugh <twaugh@redhat.com>
 License: GPL-2
 
-Files: config.h.in
- configure.in
- INSTALL.txt
- LICENSE.txt
- README.txt
- Makedefs.in
- Makefile
+Files: INSTALL
+ COPYING
+ README
  backend/*
- config-scripts/*
  scripting/*
  filter/commandtoescpx.c
  filter/commandtopclx.c
  filter/common.c
  filter/common.h
- filter/cupsfilters.convs
- filter/cupsfilters.types
  filter/Dependencies
  filter/escp.h
  filter/imagetoraster.c
- filter/Makefile
  filter/pcl-common.c
  filter/pcl-common.h
  filter/pcl.h
@@ -47,8 +55,18 @@ Files: config.h.in
  filter/rastertopclx.c
  filter/textcommon.c
  filter/textcommon.h
+ mime/cupsfilters.convs
+ mime/cupsfilters.types
 Copyright: 2007-2011, Apple Inc.
  1997-2007, Easy Software Products.
+ 2012, Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2
+
+Files: ppd/Generic-PDF_Printer-PDF.ppd,
+ ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd
+ filter/texttops
+ filter/imagetops
+Copyright: 2012, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
 
 Files: cupsfilters/*
@@ -56,9 +74,9 @@ Copyright: 2007-2011, Apple Inc.
  1997-2007, Easy Software Products.
 License: LGPL-2
 
-Files: filter/fontembed/*
- filter/pdf.utf-8.heavy
- filter/pdf.utf-8.simple
+Files: fontembed/*
+ charset/pdf.utf-8.heavy
+ charset/pdf.utf-8.simple
  filter/pdfutils.c
  filter/pdfutils.h
  filter/test_pdf1.c
@@ -69,7 +87,7 @@ Copyright: 2008, Tobias Hoffmann.
  1993-2007, Easy Software Products.
 License: GPL-2
 
-Files: filter/pstopdf.in
+Files: filter/pstopdf
 Copyright: 2003, Robert Sander <robert.sander@epigenomics.com>
  2008-2012, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
@@ -82,31 +100,29 @@ License: GPL-2
 Files: filter/banner.c
  filter/banner.h
  filter/bannertopdf.c
- filter/classified
- filter/confidential
- filter/default.pdf
- filter/default-testpage.pdf
  filter/pdf.cxx
  filter/pdf.h
- filter/secret
- filter/standard
- filter/testprint
- filter/topsecret
- filter/unclassified
+ banners/*
+ data/*
 Copyright: 2012, Canonical Ltd.
 License: GPL-3
 
-Files: pdftoopvp/*
- pdftopdf/*
+Files: filter/pdftoopvp/*
+ filter/pdftopdf/*
  filter/pdftoraster.cxx
- ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 Copyright: Copyright 2006-2011, BBR Inc. All rights reserved.
 License: Expat
 
 Files: filter/pdftoijs.cxx
+ ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 Copyright: 2008, BBR Inc. All rights reserved.
  2008, Tobias Hoffmann
 License: Expat
+
+Files: drv/*
+Copyright: 2012, Franz Pförtsch <Franz.Pfoertsch@brose.com>
+ 2012, Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2
 
 License: GPL-2
  This program may be distributed and/or modified under the terms of the
