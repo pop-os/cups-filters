@@ -31,6 +31,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_CPP_POPPLER_VERSION_H
+#include "cpp/poppler-version.h"
+#endif
 #include "goo/GooString.h"
 #include "goo/gmem.h"
 #include "Object.h"
@@ -1753,11 +1756,7 @@ int main(int argc, char *argv[]) {
   setErrorFunction(::myErrorFun);
 #endif
   cmsSetLogErrorHandler(lcmsErrorHandler);
-#ifdef GLOBALPARAMS_HAS_A_ARG
-  globalParams = new GlobalParams(0);
-#else
   globalParams = new GlobalParams();
-#endif
   parseOpts(argc, argv);
 
   if (argc == 6) {
@@ -1963,22 +1962,22 @@ err1:
 
 /* replace memory allocation methods for memory check */
 
-void * operator new(size_t size)
+void * operator new(size_t size) throw (std::bad_alloc)
 {
   return gmalloc(size);
 }
 
-void operator delete(void *p)
+void operator delete(void *p) throw ()
 {
   gfree(p);
 }
 
-void * operator new[](size_t size)
+void * operator new[](size_t size) throw (std::bad_alloc)
 {
   return gmalloc(size);
 }
 
-void operator delete[](void *p)
+void operator delete[](void *p) throw ()
 {
   gfree(p);
 }
