@@ -19,6 +19,7 @@ Build-Depends:
  poppler-utils,
  liblcms2-dev,
  libpoppler-private-dev (>= 0.16.0),
+ libpoppler-cpp-dev,
  libjpeg-dev,
  libpng-dev | libpng12-dev,
  libtiff-dev,
