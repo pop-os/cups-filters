@@ -1,8 +1,9 @@
 cups-filters (1.0.20-2) UNRELEASED; urgency=low
 
+  * debian/copyright: Corrections (Closes: 682752).
   * debian/control: Added missing build dependency on libpoppler-cpp-dev.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 23 Jul 2012 17:27:32 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sat, 28 Jul 2012 11:54:32 +0200
 
 cups-filters (1.0.20-1) unstable; urgency=low
 
