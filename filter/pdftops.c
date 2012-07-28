@@ -119,7 +119,6 @@ static void parsePDFTOPDFComment(char *filename)
   if ((fp = fopen(filename,"rb")) == 0) {
     fprintf(stderr, "ERROR: pdftops - cannot open print file \"%s\"\n",
             filename);
-    fclose(fp);
     return;
   }
 
@@ -392,6 +391,10 @@ main(int  argc,				/* I - Number of command-line args */
     */
 
     pstops_options = realloc(pstops_options, strlen(pstops_options) + 9);
+    if (!pstops_options) {
+      fprintf(stderr, "ERROR: Can't allocate pstops_options\n");
+      exit(2);
+    }
     pstops_end = pstops_options + strlen(pstops_options);
     strcpy(pstops_end, " Collate");
   }
@@ -821,6 +824,12 @@ main(int  argc,				/* I - Number of command-line args */
 	  * code with some extra bits.
 	  *
 	  * See https://bugs.launchpad.net/bugs/951627
+	  *
+	  * In addition, at least some of Kyocera's PostScript printers are
+	  * very slow on rendering images which request interpolation. So we
+	  * also add some code to eliminate interpolation requests.
+	  *
+	  * See https://bugs.launchpad.net/bugs/1026974
 	  */
 
 	  if (!strncasecmp(ppd->manufacturer, "Kyocera", 7))
@@ -830,6 +839,16 @@ main(int  argc,				/* I - Number of command-line args */
 	    puts("% Kyocera's PostScript interpreter crashes on early name binding,");
 	    puts("% so eliminate all \"bind\"s by redifining \"bind\" to no-op");
 	    puts("/bind {} bind def");
+	    puts("% Some Kyocera printers have an unacceptably slow implementation");
+	    puts("% of image interpolation.");
+	    puts("/image");
+	    puts("{");
+	    puts("  dup /Interpolate known");
+	    puts("  {");
+	    puts("    dup /Interpolate undef");
+	    puts("  } if");
+	    puts("  systemdict /image get exec");
+	    puts("} def");
 	    puts("% =====");
 	  }
 

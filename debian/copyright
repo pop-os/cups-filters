@@ -3,40 +3,71 @@ Upstream-Name: cups-filters
 Upstream-Contact: OpenPrinting <printing-architecture@lists.linux-foundation.org>
 Source: http://www.openprinting.org/download/cups-filters/
 
-Files: AUTHORS.txt
- CHANGES.txt
- acloacl.m4
- configure
- install-sh
- debian/*
+Files: AUTHORS
+ NEWS
+ autogen.sh
+ config.h.in
+ configure.ac
+ libcupsfilters.pc.in
+ libfontembed.pc.in
+ Makefile.am
 Copyright: 2012, Till Kamppeter <till.kamppeter@gmail.com>
+	   2012, Tomáš Chvátal <tchvatal@suse.cz>
 License: GPL-2+
 
-Files: debian/local/textonly* debian/local/text.convs
+Files: debian/*
+Copyright: 1999-2003, Jeff Licquia <licquia@debian.org>
+	   2003-2007, Kenshi Muto <kmuto@debian.org>
+           2007-2012, Martiin Pitt <mpitt@debian.org>
+           2012, Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2+
+
+Files: aclocal.m4
+ compile
+ config.guess
+ config.sub
+ configure
+ depcomp
+ ltmain.sh
+ Makefile.in
+ missing
+Copyright: 1999-2012, Free Software Foundation, Inc.
+License: GPL-2+
+
+Files: install-sh
+Copyright: 2008-2009, Apple Inc.
+           1991, Massachusetts Institute of Technology
+License: MIT
+
+Files: m4/ac_define_dir.m4
+Copyright: 2006, Stepan Kasal <kasal@ucw.cz>
+           2006, Andreas Schwab <schwab@suse.de>
+           2006, Guido U. Draheim <guidod@gmx.de>
+           2006, Alexandre Oliva
+License: AllPermissive
+
+Files:m4/ax_compare_version.m4
+Copyright: 2008, Tim Toolan <toolan@ele.uri.edu>
+License: ax_compare_version
+
+Files: filter/textonly 
+ ppd/textonly.ppd
 Copyright: 2003-2006 Red Hat, Inc.
  2003-2006 Tim Waugh <twaugh@redhat.com>
 License: GPL-2
 
-Files: config.h.in
- configure.in
- INSTALL.txt
- LICENSE.txt
- README.txt
- Makedefs.in
- Makefile
+Files: INSTALL
+ COPYING
+ README
  backend/*
- config-scripts/*
  scripting/*
  filter/commandtoescpx.c
  filter/commandtopclx.c
  filter/common.c
  filter/common.h
- filter/cupsfilters.convs
- filter/cupsfilters.types
  filter/Dependencies
  filter/escp.h
  filter/imagetoraster.c
- filter/Makefile
  filter/pcl-common.c
  filter/pcl-common.h
  filter/pcl.h
@@ -47,8 +78,18 @@ Files: config.h.in
  filter/rastertopclx.c
  filter/textcommon.c
  filter/textcommon.h
+ mime/cupsfilters.convs
+ mime/cupsfilters.types
 Copyright: 2007-2011, Apple Inc.
  1997-2007, Easy Software Products.
+ 2012, Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2
+
+Files: ppd/Generic-PDF_Printer-PDF.ppd,
+ ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd
+ filter/texttops
+ filter/imagetops
+Copyright: 2012, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
 
 Files: cupsfilters/*
@@ -56,9 +97,8 @@ Copyright: 2007-2011, Apple Inc.
  1997-2007, Easy Software Products.
 License: LGPL-2
 
-Files: filter/fontembed/*
- filter/pdf.utf-8.heavy
- filter/pdf.utf-8.simple
+Files: charset/pdf.utf-8.heavy
+ charset/pdf.utf-8.simple
  filter/pdfutils.c
  filter/pdfutils.h
  filter/test_pdf1.c
@@ -69,7 +109,11 @@ Copyright: 2008, Tobias Hoffmann.
  1993-2007, Easy Software Products.
 License: GPL-2
 
-Files: filter/pstopdf.in
+Files: fontembed/*
+Copyright: 2008,2012 by Tobias Hoffmann
+License: MIT
+
+Files: filter/pstopdf
 Copyright: 2003, Robert Sander <robert.sander@epigenomics.com>
  2008-2012, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
@@ -82,31 +126,33 @@ License: GPL-2
 Files: filter/banner.c
  filter/banner.h
  filter/bannertopdf.c
- filter/classified
- filter/confidential
- filter/default.pdf
- filter/default-testpage.pdf
  filter/pdf.cxx
  filter/pdf.h
- filter/secret
- filter/standard
- filter/testprint
- filter/topsecret
- filter/unclassified
+ banners/*
+ data/*
 Copyright: 2012, Canonical Ltd.
 License: GPL-3
 
-Files: pdftoopvp/*
- pdftopdf/*
+Files: filter/pdftoopvp/*
+ filter/pdftopdf/*
  filter/pdftoraster.cxx
- ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 Copyright: Copyright 2006-2011, BBR Inc. All rights reserved.
 License: Expat
 
+Files: filter/PDFError.h
+Copyright: Copyright 2012, BBR Inc. All rights reserved.
+License: Expat
+
 Files: filter/pdftoijs.cxx
+ ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 Copyright: 2008, BBR Inc. All rights reserved.
  2008, Tobias Hoffmann
 License: Expat
+
+Files: drv/*
+Copyright: 2012, Franz Pförtsch <Franz.Pfoertsch@brose.com>
+ 2012, Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2
 
 License: GPL-2
  This program may be distributed and/or modified under the terms of the
@@ -190,3 +236,19 @@ License: Expat
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+License: MIT
+ Permission to use, copy, modify, distribute, and sell this software and its
+ documentation for any purpose is hereby granted without fee, provided that
+ the above copyright notice appear in all copies and that both that
+ copyright notice and this permission notice appear in supporting
+ documentation, and that the name of M.I.T. not be used in advertising or
+ publicity pertaining to distribution of the software without specific,
+ written prior permission.  M.I.T. makes no representations about the
+ suitability of this software for any purpose.  It is provided "as is"
+ without express or implied warranty.
+
+License: ax_compare_version
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice
+ and this notice are preserved. This file is offered as-is, without any
+ warranty.
