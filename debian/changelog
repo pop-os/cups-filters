@@ -1,3 +1,19 @@
+cups-filters (1.0.22-1) experimental; urgency=low
+
+  * New upstream release
+     - pdftopdf filter replaced by new QPDF-based filter from Tobias
+       Hoffmann's Google Summer of Code project. The former Poppler-based
+       pdftopdf duplicated a lot of Poppler's code. The old filter is
+       still in the package as pdftopdf.old with source code in
+       filter/pdftopdf.old. It will be removed in a later release.
+     - bannertopdf: Page duplication routine fixed.
+     - bannertopdf: Fixed invalid output of a direct stream object.
+     - Added most recent contributors to AUTHORS and COPYING files.
+  * debian/control: Added build dependency on libqpdf-dev.
+  * debian/copyright: Updated for the addition of the new pdftopdf filter.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 20 Aug 2012 14:53:42 +0200
+
 cups-filters (1.0.20-1) experimental; urgency=low
 
   * New upstream release

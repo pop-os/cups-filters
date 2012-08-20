@@ -134,7 +134,7 @@ Copyright: 2012, Canonical Ltd.
 License: GPL-3
 
 Files: filter/pdftoopvp/*
- filter/pdftopdf/*
+ filter/pdftopdf.old/*
  filter/pdftoraster.cxx
 Copyright: Copyright 2006-2011, BBR Inc. All rights reserved.
 License: Expat
@@ -142,6 +142,11 @@ License: Expat
 Files: filter/PDFError.h
 Copyright: Copyright 2012, BBR Inc. All rights reserved.
 License: Expat
+
+Files: filter/pdftopdf/*
+Copyright: Copyright 2006-2011, BBR Inc. All rights reserved.
+ 2012, Tobias Hoffmann
+License: MIT
 
 Files: filter/pdftoijs.cxx
  ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd

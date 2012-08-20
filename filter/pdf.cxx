@@ -82,6 +82,7 @@ extern "C" void pdf_prepend_stream(pdf_t *doc,
     array.arrayAdd(&streamrefobj);
 
     if (contents.isStream()) {
+        pageobj.dictLookupNF("Contents", &contents); // streams must be indirect, i.e. not fetch()-ed
         array.arrayAdd(&contents);
     }
     else if (contents.isArray()) {
@@ -313,8 +314,11 @@ extern "C" void pdf_duplicate_page (pdf_t *doc,
 
     // Since we're dealing with single page pdfs, simply append the same page
     // object to the end of the array
+    // Note: We must make a (shallow) copy of the page object to avoid loops in
+    // the pages tree (not supported by major pdf implementations).
     for (i = 1; i < count; i++) {
-        ref.initRef(pageref->num, pageref->gen);
+        Ref r = xref->addIndirectObject(&page);
+        ref.initRef(r.num, r.gen);
         kids.arrayAdd(&ref);
         ref.free();
     }
