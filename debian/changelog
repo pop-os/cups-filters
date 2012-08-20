@@ -1,4 +1,4 @@
-cups-filters (1.0.22-1) UNRELEASED; urgency=low
+cups-filters (1.0.22-1) experimental; urgency=low
 
   * New upstream release
      - pdftopdf filter replaced by new QPDF-based filter from Tobias
@@ -12,7 +12,7 @@ cups-filters (1.0.22-1) UNRELEASED; urgency=low
   * debian/control: Added build dependency on libqpdf-dev.
   * debian/copyright: Updated for the addition of the new pdftopdf filter.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 20 Aug 2012 14:01:32 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 20 Aug 2012 14:53:42 +0200
 
 cups-filters (1.0.20-1) experimental; urgency=low
 
