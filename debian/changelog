@@ -1,4 +1,4 @@
-cups-filters (1.0.24-1) UNRELEASED; urgency=low
+cups-filters (1.0.24-1) experimental; urgency=low
 
   * New upstream release
      - pdftopdf now generates the necessary pdf comments to disable
@@ -15,7 +15,7 @@ cups-filters (1.0.24-1) UNRELEASED; urgency=low
      - Fixed the requires.private for cupsfilters lib
   * debian/control: Versioned build dependency on libqpdf-dev.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  7 Sep 2012 15:01:42 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 07 Sep 2012 15:32:43 +0200
 
 cups-filters (1.0.22-1) experimental; urgency=low
 
