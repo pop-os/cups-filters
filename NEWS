@@ -1,5 +1,23 @@
-NEWS - OpenPrinting CUPS Filters v1.0.22 - 2012-08-20
+NEWS - OpenPrinting CUPS Filters v1.0.24 - 2012-09-07
 -----------------------------------------------------
+CHANGES IN V1.0.24
+
+        - pdftopdf now generates the necessary pdf comments to disable 
+          duplicate number-up when pdftops is also applied (Bug #1063).
+	- pdftops: Added support for using Adobe Reader (acroread) in command
+	  line mode for turning PDF to PostScript (Bug #1065).
+	- pdftopdf: Fix build on OpenBSD (Bug #1062).
+	- pdftops: Fix stripping of page management options from the pstops
+	  command line which got already applied by pdftopdf. If the name
+	  of the option to be removed is contained in the name of a option
+	  in the command line (like "number-up" in "number-up-layout" or
+	  "scaling" in "Natural-scaling"), this option gets stripped instead
+	  of the correct option (Bug #1064).
+
+CHANGES IN V1.0.23
+
+	- Removed filter/pdftopdf.old
+	- Fixed the requires.private for cupsfilters lib
 
 CHANGES IN V1.0.22
 

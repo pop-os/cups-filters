@@ -62,8 +62,8 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 bin_PROGRAMS = ttfread$(EXEEXT)
-pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf.old$(EXEEXT) \
-	pdftopdf$(EXEEXT) bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
+pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
+	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
 	commandtopclx$(EXEEXT) pdftoijs$(EXEEXT) pdftops$(EXEEXT) \
 	pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
 	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) $(am__EXEEXT_1)
@@ -255,29 +255,6 @@ pdftopdf_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 pdftopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_pdftopdf_old_OBJECTS = pdftopdf_old-parseargs.$(OBJEXT) \
-	pdftopdf_old-PDFFTrueTypeFont.$(OBJEXT) \
-	pdftopdf_old-pdftopdf.$(OBJEXT) \
-	pdftopdf_old-P2PCatalog.$(OBJEXT) \
-	pdftopdf_old-P2PCMap.$(OBJEXT) pdftopdf_old-P2PDoc.$(OBJEXT) \
-	pdftopdf_old-P2PFont.$(OBJEXT) pdftopdf_old-P2PForm.$(OBJEXT) \
-	pdftopdf_old-P2PGfx.$(OBJEXT) \
-	pdftopdf_old-P2PCharCodeToUnicode.$(OBJEXT) \
-	pdftopdf_old-P2PObject.$(OBJEXT) \
-	pdftopdf_old-P2POutput.$(OBJEXT) \
-	pdftopdf_old-P2POutputStream.$(OBJEXT) \
-	pdftopdf_old-P2PPage.$(OBJEXT) \
-	pdftopdf_old-P2PPageTree.$(OBJEXT) \
-	pdftopdf_old-P2PPattern.$(OBJEXT) \
-	pdftopdf_old-P2PResources.$(OBJEXT) \
-	pdftopdf_old-P2PXRef.$(OBJEXT) \
-	pdftopdf_old-UGooString.$(OBJEXT)
-pdftopdf_old_OBJECTS = $(am_pdftopdf_old_OBJECTS)
-pdftopdf_old_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-pdftopdf_old_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftopdf_old_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_pdftops_OBJECTS = pdftops-common.$(OBJEXT) \
 	pdftops-pdftops.$(OBJEXT)
 pdftops_OBJECTS = $(am_pdftops_OBJECTS)
@@ -419,28 +396,26 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(commandtopclx_SOURCES) $(imagetopdf_SOURCES) \
 	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
 	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
-	$(pdftopdf_old_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES)
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(imagetopdf_SOURCES) \
 	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
 	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
-	$(pdftopdf_old_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES)
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -484,6 +459,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CUPSCONFIG = @CUPSCONFIG@
+CUPS_ACROREAD = @CUPS_ACROREAD@
 CUPS_CFLAGS = @CUPS_CFLAGS@
 CUPS_DATADIR = @CUPS_DATADIR@
 CUPS_FONTPATH = @CUPS_FONTPATH@
@@ -927,58 +903,6 @@ pdftoopvp_LDADD = \
 	$(FONTCONFIG_LIBS) \
 	$(LIBPNG_LIBS) \
 	$(POPPLER_LIBS)
-
-pdftopdf_old_SOURCES = \
-	filter/pdftopdf.old/parseargs.cxx \
-	filter/pdftopdf.old/parseargs.h \
-	filter/pdftopdf.old/PDFFTrueTypeFont.cxx \
-	filter/pdftopdf.old/PDFFTrueTypeFont.h \
-	filter/pdftopdf.old/pdftopdf.cxx \
-	filter/pdftopdf.old/P2PCatalog.cxx \
-	filter/pdftopdf.old/P2PCatalog.h \
-	filter/pdftopdf.old/P2PCMap.cxx \
-	filter/pdftopdf.old/P2PCMap.h \
-	filter/pdftopdf.old/P2PDoc.cxx \
-	filter/pdftopdf.old/P2PDoc.h \
-	filter/pdftopdf.old/P2PError.h \
-	filter/pdftopdf.old/P2PFont.cxx \
-	filter/pdftopdf.old/P2PFont.h \
-	filter/pdftopdf.old/P2PForm.cxx \
-	filter/pdftopdf.old/P2PForm.h \
-	filter/pdftopdf.old/P2PGfx.cxx \
-	filter/pdftopdf.old/P2PGfx.h \
-	filter/pdftopdf.old/P2PCharCodeToUnicode.cxx \
-	filter/pdftopdf.old/P2PCharCodeToUnicode.h \
-	filter/pdftopdf.old/P2PMatrix.h \
-	filter/pdftopdf.old/P2PObject.cxx \
-	filter/pdftopdf.old/P2PObject.h \
-	filter/pdftopdf.old/P2POutput.cxx \
-	filter/pdftopdf.old/P2POutput.h \
-	filter/pdftopdf.old/P2POutputStream.cxx \
-	filter/pdftopdf.old/P2POutputStream.h \
-	filter/pdftopdf.old/P2PPage.cxx \
-	filter/pdftopdf.old/P2PPage.h \
-	filter/pdftopdf.old/P2PPageTree.cxx \
-	filter/pdftopdf.old/P2PPageTree.h \
-	filter/pdftopdf.old/P2PPattern.cxx \
-	filter/pdftopdf.old/P2PPattern.h \
-	filter/pdftopdf.old/P2PResources.cxx \
-	filter/pdftopdf.old/P2PResources.h \
-	filter/pdftopdf.old/P2PXRef.cxx \
-	filter/pdftopdf.old/P2PXRef.h \
-	filter/pdftopdf.old/UGooString.cxx \
-	filter/pdftopdf.old/UGooString.h
-
-pdftopdf_old_CFLAGS = \
-	$(CUPS_CFLAGS) \
-	$(POPPLER_CFLAGS) \
-	$(ZLIB_CFLAGS)
-
-pdftopdf_old_CXXFLAGS = $(pdftopdf_old_CFLAGS)
-pdftopdf_old_LDADD = \
-	$(CUPS_LIBS) \
-	$(POPPLER_LIBS) \
-	$(ZLIB_LIBS)
 
 pdftopdf_SOURCES = \
 	filter/pdftopdf/pdftopdf.cc \
@@ -1549,9 +1473,6 @@ pdftoopvp$(EXEEXT): $(pdftoopvp_OBJECTS) $(pdftoopvp_DEPENDENCIES) $(EXTRA_pdfto
 pdftopdf$(EXEEXT): $(pdftopdf_OBJECTS) $(pdftopdf_DEPENDENCIES) $(EXTRA_pdftopdf_DEPENDENCIES) 
 	@rm -f pdftopdf$(EXEEXT)
 	$(AM_V_CXXLD)$(pdftopdf_LINK) $(pdftopdf_OBJECTS) $(pdftopdf_LDADD) $(LIBS)
-pdftopdf.old$(EXEEXT): $(pdftopdf_old_OBJECTS) $(pdftopdf_old_DEPENDENCIES) $(EXTRA_pdftopdf_old_DEPENDENCIES) 
-	@rm -f pdftopdf.old$(EXEEXT)
-	$(AM_V_CXXLD)$(pdftopdf_old_LINK) $(pdftopdf_old_OBJECTS) $(pdftopdf_old_LDADD) $(LIBS)
 pdftops$(EXEEXT): $(pdftops_OBJECTS) $(pdftops_DEPENDENCIES) $(EXTRA_pdftops_DEPENDENCIES) 
 	@rm -f pdftops$(EXEEXT)
 	$(AM_V_CCLD)$(pdftops_LINK) $(pdftops_OBJECTS) $(pdftops_LDADD) $(LIBS)
@@ -1710,25 +1631,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-qpdf_pdftopdf_processor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-qpdf_tools.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-qpdf_xobject.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PCMap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PCatalog.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PDoc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PFont.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PForm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PGfx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PObject.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2POutput.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2POutputStream.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PPage.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PPageTree.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PPattern.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PResources.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-P2PXRef.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-UGooString.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-parseargs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf_old-pdftopdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-pdftops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-strcasestr.Po@am__quote@
@@ -2848,272 +2750,6 @@ pdftopdf-qpdf_cm.obj: filter/pdftopdf/qpdf_cm.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf/qpdf_cm.cc' object='pdftopdf-qpdf_cm.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf-qpdf_cm.obj `if test -f 'filter/pdftopdf/qpdf_cm.cc'; then $(CYGPATH_W) 'filter/pdftopdf/qpdf_cm.cc'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf/qpdf_cm.cc'; fi`
-
-pdftopdf_old-parseargs.o: filter/pdftopdf.old/parseargs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-parseargs.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-parseargs.Tpo -c -o pdftopdf_old-parseargs.o `test -f 'filter/pdftopdf.old/parseargs.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/parseargs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-parseargs.Tpo $(DEPDIR)/pdftopdf_old-parseargs.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/parseargs.cxx' object='pdftopdf_old-parseargs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-parseargs.o `test -f 'filter/pdftopdf.old/parseargs.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/parseargs.cxx
-
-pdftopdf_old-parseargs.obj: filter/pdftopdf.old/parseargs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-parseargs.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-parseargs.Tpo -c -o pdftopdf_old-parseargs.obj `if test -f 'filter/pdftopdf.old/parseargs.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/parseargs.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/parseargs.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-parseargs.Tpo $(DEPDIR)/pdftopdf_old-parseargs.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/parseargs.cxx' object='pdftopdf_old-parseargs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-parseargs.obj `if test -f 'filter/pdftopdf.old/parseargs.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/parseargs.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/parseargs.cxx'; fi`
-
-pdftopdf_old-PDFFTrueTypeFont.o: filter/pdftopdf.old/PDFFTrueTypeFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-PDFFTrueTypeFont.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Tpo -c -o pdftopdf_old-PDFFTrueTypeFont.o `test -f 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/PDFFTrueTypeFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Tpo $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/PDFFTrueTypeFont.cxx' object='pdftopdf_old-PDFFTrueTypeFont.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-PDFFTrueTypeFont.o `test -f 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/PDFFTrueTypeFont.cxx
-
-pdftopdf_old-PDFFTrueTypeFont.obj: filter/pdftopdf.old/PDFFTrueTypeFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-PDFFTrueTypeFont.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Tpo -c -o pdftopdf_old-PDFFTrueTypeFont.obj `if test -f 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Tpo $(DEPDIR)/pdftopdf_old-PDFFTrueTypeFont.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/PDFFTrueTypeFont.cxx' object='pdftopdf_old-PDFFTrueTypeFont.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-PDFFTrueTypeFont.obj `if test -f 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/PDFFTrueTypeFont.cxx'; fi`
-
-pdftopdf_old-pdftopdf.o: filter/pdftopdf.old/pdftopdf.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-pdftopdf.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-pdftopdf.Tpo -c -o pdftopdf_old-pdftopdf.o `test -f 'filter/pdftopdf.old/pdftopdf.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/pdftopdf.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-pdftopdf.Tpo $(DEPDIR)/pdftopdf_old-pdftopdf.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/pdftopdf.cxx' object='pdftopdf_old-pdftopdf.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-pdftopdf.o `test -f 'filter/pdftopdf.old/pdftopdf.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/pdftopdf.cxx
-
-pdftopdf_old-pdftopdf.obj: filter/pdftopdf.old/pdftopdf.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-pdftopdf.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-pdftopdf.Tpo -c -o pdftopdf_old-pdftopdf.obj `if test -f 'filter/pdftopdf.old/pdftopdf.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/pdftopdf.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/pdftopdf.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-pdftopdf.Tpo $(DEPDIR)/pdftopdf_old-pdftopdf.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/pdftopdf.cxx' object='pdftopdf_old-pdftopdf.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-pdftopdf.obj `if test -f 'filter/pdftopdf.old/pdftopdf.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/pdftopdf.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/pdftopdf.cxx'; fi`
-
-pdftopdf_old-P2PCatalog.o: filter/pdftopdf.old/P2PCatalog.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCatalog.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCatalog.Tpo -c -o pdftopdf_old-P2PCatalog.o `test -f 'filter/pdftopdf.old/P2PCatalog.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCatalog.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCatalog.Tpo $(DEPDIR)/pdftopdf_old-P2PCatalog.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCatalog.cxx' object='pdftopdf_old-P2PCatalog.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCatalog.o `test -f 'filter/pdftopdf.old/P2PCatalog.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCatalog.cxx
-
-pdftopdf_old-P2PCatalog.obj: filter/pdftopdf.old/P2PCatalog.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCatalog.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCatalog.Tpo -c -o pdftopdf_old-P2PCatalog.obj `if test -f 'filter/pdftopdf.old/P2PCatalog.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCatalog.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCatalog.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCatalog.Tpo $(DEPDIR)/pdftopdf_old-P2PCatalog.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCatalog.cxx' object='pdftopdf_old-P2PCatalog.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCatalog.obj `if test -f 'filter/pdftopdf.old/P2PCatalog.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCatalog.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCatalog.cxx'; fi`
-
-pdftopdf_old-P2PCMap.o: filter/pdftopdf.old/P2PCMap.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCMap.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCMap.Tpo -c -o pdftopdf_old-P2PCMap.o `test -f 'filter/pdftopdf.old/P2PCMap.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCMap.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCMap.Tpo $(DEPDIR)/pdftopdf_old-P2PCMap.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCMap.cxx' object='pdftopdf_old-P2PCMap.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCMap.o `test -f 'filter/pdftopdf.old/P2PCMap.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCMap.cxx
-
-pdftopdf_old-P2PCMap.obj: filter/pdftopdf.old/P2PCMap.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCMap.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCMap.Tpo -c -o pdftopdf_old-P2PCMap.obj `if test -f 'filter/pdftopdf.old/P2PCMap.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCMap.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCMap.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCMap.Tpo $(DEPDIR)/pdftopdf_old-P2PCMap.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCMap.cxx' object='pdftopdf_old-P2PCMap.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCMap.obj `if test -f 'filter/pdftopdf.old/P2PCMap.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCMap.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCMap.cxx'; fi`
-
-pdftopdf_old-P2PDoc.o: filter/pdftopdf.old/P2PDoc.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PDoc.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PDoc.Tpo -c -o pdftopdf_old-P2PDoc.o `test -f 'filter/pdftopdf.old/P2PDoc.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PDoc.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PDoc.Tpo $(DEPDIR)/pdftopdf_old-P2PDoc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PDoc.cxx' object='pdftopdf_old-P2PDoc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PDoc.o `test -f 'filter/pdftopdf.old/P2PDoc.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PDoc.cxx
-
-pdftopdf_old-P2PDoc.obj: filter/pdftopdf.old/P2PDoc.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PDoc.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PDoc.Tpo -c -o pdftopdf_old-P2PDoc.obj `if test -f 'filter/pdftopdf.old/P2PDoc.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PDoc.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PDoc.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PDoc.Tpo $(DEPDIR)/pdftopdf_old-P2PDoc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PDoc.cxx' object='pdftopdf_old-P2PDoc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PDoc.obj `if test -f 'filter/pdftopdf.old/P2PDoc.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PDoc.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PDoc.cxx'; fi`
-
-pdftopdf_old-P2PFont.o: filter/pdftopdf.old/P2PFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PFont.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PFont.Tpo -c -o pdftopdf_old-P2PFont.o `test -f 'filter/pdftopdf.old/P2PFont.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PFont.Tpo $(DEPDIR)/pdftopdf_old-P2PFont.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PFont.cxx' object='pdftopdf_old-P2PFont.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PFont.o `test -f 'filter/pdftopdf.old/P2PFont.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PFont.cxx
-
-pdftopdf_old-P2PFont.obj: filter/pdftopdf.old/P2PFont.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PFont.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PFont.Tpo -c -o pdftopdf_old-P2PFont.obj `if test -f 'filter/pdftopdf.old/P2PFont.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PFont.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PFont.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PFont.Tpo $(DEPDIR)/pdftopdf_old-P2PFont.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PFont.cxx' object='pdftopdf_old-P2PFont.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PFont.obj `if test -f 'filter/pdftopdf.old/P2PFont.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PFont.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PFont.cxx'; fi`
-
-pdftopdf_old-P2PForm.o: filter/pdftopdf.old/P2PForm.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PForm.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PForm.Tpo -c -o pdftopdf_old-P2PForm.o `test -f 'filter/pdftopdf.old/P2PForm.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PForm.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PForm.Tpo $(DEPDIR)/pdftopdf_old-P2PForm.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PForm.cxx' object='pdftopdf_old-P2PForm.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PForm.o `test -f 'filter/pdftopdf.old/P2PForm.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PForm.cxx
-
-pdftopdf_old-P2PForm.obj: filter/pdftopdf.old/P2PForm.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PForm.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PForm.Tpo -c -o pdftopdf_old-P2PForm.obj `if test -f 'filter/pdftopdf.old/P2PForm.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PForm.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PForm.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PForm.Tpo $(DEPDIR)/pdftopdf_old-P2PForm.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PForm.cxx' object='pdftopdf_old-P2PForm.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PForm.obj `if test -f 'filter/pdftopdf.old/P2PForm.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PForm.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PForm.cxx'; fi`
-
-pdftopdf_old-P2PGfx.o: filter/pdftopdf.old/P2PGfx.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PGfx.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PGfx.Tpo -c -o pdftopdf_old-P2PGfx.o `test -f 'filter/pdftopdf.old/P2PGfx.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PGfx.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PGfx.Tpo $(DEPDIR)/pdftopdf_old-P2PGfx.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PGfx.cxx' object='pdftopdf_old-P2PGfx.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PGfx.o `test -f 'filter/pdftopdf.old/P2PGfx.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PGfx.cxx
-
-pdftopdf_old-P2PGfx.obj: filter/pdftopdf.old/P2PGfx.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PGfx.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PGfx.Tpo -c -o pdftopdf_old-P2PGfx.obj `if test -f 'filter/pdftopdf.old/P2PGfx.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PGfx.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PGfx.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PGfx.Tpo $(DEPDIR)/pdftopdf_old-P2PGfx.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PGfx.cxx' object='pdftopdf_old-P2PGfx.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PGfx.obj `if test -f 'filter/pdftopdf.old/P2PGfx.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PGfx.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PGfx.cxx'; fi`
-
-pdftopdf_old-P2PCharCodeToUnicode.o: filter/pdftopdf.old/P2PCharCodeToUnicode.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCharCodeToUnicode.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Tpo -c -o pdftopdf_old-P2PCharCodeToUnicode.o `test -f 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCharCodeToUnicode.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Tpo $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCharCodeToUnicode.cxx' object='pdftopdf_old-P2PCharCodeToUnicode.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCharCodeToUnicode.o `test -f 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PCharCodeToUnicode.cxx
-
-pdftopdf_old-P2PCharCodeToUnicode.obj: filter/pdftopdf.old/P2PCharCodeToUnicode.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PCharCodeToUnicode.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Tpo -c -o pdftopdf_old-P2PCharCodeToUnicode.obj `if test -f 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Tpo $(DEPDIR)/pdftopdf_old-P2PCharCodeToUnicode.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PCharCodeToUnicode.cxx' object='pdftopdf_old-P2PCharCodeToUnicode.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PCharCodeToUnicode.obj `if test -f 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PCharCodeToUnicode.cxx'; fi`
-
-pdftopdf_old-P2PObject.o: filter/pdftopdf.old/P2PObject.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PObject.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PObject.Tpo -c -o pdftopdf_old-P2PObject.o `test -f 'filter/pdftopdf.old/P2PObject.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PObject.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PObject.Tpo $(DEPDIR)/pdftopdf_old-P2PObject.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PObject.cxx' object='pdftopdf_old-P2PObject.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PObject.o `test -f 'filter/pdftopdf.old/P2PObject.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PObject.cxx
-
-pdftopdf_old-P2PObject.obj: filter/pdftopdf.old/P2PObject.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PObject.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PObject.Tpo -c -o pdftopdf_old-P2PObject.obj `if test -f 'filter/pdftopdf.old/P2PObject.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PObject.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PObject.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PObject.Tpo $(DEPDIR)/pdftopdf_old-P2PObject.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PObject.cxx' object='pdftopdf_old-P2PObject.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PObject.obj `if test -f 'filter/pdftopdf.old/P2PObject.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PObject.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PObject.cxx'; fi`
-
-pdftopdf_old-P2POutput.o: filter/pdftopdf.old/P2POutput.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2POutput.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2POutput.Tpo -c -o pdftopdf_old-P2POutput.o `test -f 'filter/pdftopdf.old/P2POutput.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2POutput.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2POutput.Tpo $(DEPDIR)/pdftopdf_old-P2POutput.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2POutput.cxx' object='pdftopdf_old-P2POutput.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2POutput.o `test -f 'filter/pdftopdf.old/P2POutput.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2POutput.cxx
-
-pdftopdf_old-P2POutput.obj: filter/pdftopdf.old/P2POutput.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2POutput.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2POutput.Tpo -c -o pdftopdf_old-P2POutput.obj `if test -f 'filter/pdftopdf.old/P2POutput.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2POutput.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2POutput.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2POutput.Tpo $(DEPDIR)/pdftopdf_old-P2POutput.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2POutput.cxx' object='pdftopdf_old-P2POutput.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2POutput.obj `if test -f 'filter/pdftopdf.old/P2POutput.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2POutput.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2POutput.cxx'; fi`
-
-pdftopdf_old-P2POutputStream.o: filter/pdftopdf.old/P2POutputStream.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2POutputStream.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2POutputStream.Tpo -c -o pdftopdf_old-P2POutputStream.o `test -f 'filter/pdftopdf.old/P2POutputStream.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2POutputStream.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2POutputStream.Tpo $(DEPDIR)/pdftopdf_old-P2POutputStream.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2POutputStream.cxx' object='pdftopdf_old-P2POutputStream.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2POutputStream.o `test -f 'filter/pdftopdf.old/P2POutputStream.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2POutputStream.cxx
-
-pdftopdf_old-P2POutputStream.obj: filter/pdftopdf.old/P2POutputStream.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2POutputStream.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2POutputStream.Tpo -c -o pdftopdf_old-P2POutputStream.obj `if test -f 'filter/pdftopdf.old/P2POutputStream.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2POutputStream.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2POutputStream.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2POutputStream.Tpo $(DEPDIR)/pdftopdf_old-P2POutputStream.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2POutputStream.cxx' object='pdftopdf_old-P2POutputStream.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2POutputStream.obj `if test -f 'filter/pdftopdf.old/P2POutputStream.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2POutputStream.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2POutputStream.cxx'; fi`
-
-pdftopdf_old-P2PPage.o: filter/pdftopdf.old/P2PPage.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPage.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPage.Tpo -c -o pdftopdf_old-P2PPage.o `test -f 'filter/pdftopdf.old/P2PPage.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPage.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPage.Tpo $(DEPDIR)/pdftopdf_old-P2PPage.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPage.cxx' object='pdftopdf_old-P2PPage.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPage.o `test -f 'filter/pdftopdf.old/P2PPage.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPage.cxx
-
-pdftopdf_old-P2PPage.obj: filter/pdftopdf.old/P2PPage.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPage.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPage.Tpo -c -o pdftopdf_old-P2PPage.obj `if test -f 'filter/pdftopdf.old/P2PPage.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPage.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPage.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPage.Tpo $(DEPDIR)/pdftopdf_old-P2PPage.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPage.cxx' object='pdftopdf_old-P2PPage.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPage.obj `if test -f 'filter/pdftopdf.old/P2PPage.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPage.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPage.cxx'; fi`
-
-pdftopdf_old-P2PPageTree.o: filter/pdftopdf.old/P2PPageTree.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPageTree.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPageTree.Tpo -c -o pdftopdf_old-P2PPageTree.o `test -f 'filter/pdftopdf.old/P2PPageTree.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPageTree.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPageTree.Tpo $(DEPDIR)/pdftopdf_old-P2PPageTree.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPageTree.cxx' object='pdftopdf_old-P2PPageTree.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPageTree.o `test -f 'filter/pdftopdf.old/P2PPageTree.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPageTree.cxx
-
-pdftopdf_old-P2PPageTree.obj: filter/pdftopdf.old/P2PPageTree.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPageTree.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPageTree.Tpo -c -o pdftopdf_old-P2PPageTree.obj `if test -f 'filter/pdftopdf.old/P2PPageTree.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPageTree.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPageTree.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPageTree.Tpo $(DEPDIR)/pdftopdf_old-P2PPageTree.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPageTree.cxx' object='pdftopdf_old-P2PPageTree.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPageTree.obj `if test -f 'filter/pdftopdf.old/P2PPageTree.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPageTree.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPageTree.cxx'; fi`
-
-pdftopdf_old-P2PPattern.o: filter/pdftopdf.old/P2PPattern.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPattern.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPattern.Tpo -c -o pdftopdf_old-P2PPattern.o `test -f 'filter/pdftopdf.old/P2PPattern.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPattern.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPattern.Tpo $(DEPDIR)/pdftopdf_old-P2PPattern.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPattern.cxx' object='pdftopdf_old-P2PPattern.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPattern.o `test -f 'filter/pdftopdf.old/P2PPattern.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PPattern.cxx
-
-pdftopdf_old-P2PPattern.obj: filter/pdftopdf.old/P2PPattern.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PPattern.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PPattern.Tpo -c -o pdftopdf_old-P2PPattern.obj `if test -f 'filter/pdftopdf.old/P2PPattern.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPattern.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPattern.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PPattern.Tpo $(DEPDIR)/pdftopdf_old-P2PPattern.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PPattern.cxx' object='pdftopdf_old-P2PPattern.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PPattern.obj `if test -f 'filter/pdftopdf.old/P2PPattern.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PPattern.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PPattern.cxx'; fi`
-
-pdftopdf_old-P2PResources.o: filter/pdftopdf.old/P2PResources.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PResources.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PResources.Tpo -c -o pdftopdf_old-P2PResources.o `test -f 'filter/pdftopdf.old/P2PResources.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PResources.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PResources.Tpo $(DEPDIR)/pdftopdf_old-P2PResources.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PResources.cxx' object='pdftopdf_old-P2PResources.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PResources.o `test -f 'filter/pdftopdf.old/P2PResources.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PResources.cxx
-
-pdftopdf_old-P2PResources.obj: filter/pdftopdf.old/P2PResources.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PResources.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PResources.Tpo -c -o pdftopdf_old-P2PResources.obj `if test -f 'filter/pdftopdf.old/P2PResources.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PResources.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PResources.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PResources.Tpo $(DEPDIR)/pdftopdf_old-P2PResources.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PResources.cxx' object='pdftopdf_old-P2PResources.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PResources.obj `if test -f 'filter/pdftopdf.old/P2PResources.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PResources.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PResources.cxx'; fi`
-
-pdftopdf_old-P2PXRef.o: filter/pdftopdf.old/P2PXRef.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PXRef.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PXRef.Tpo -c -o pdftopdf_old-P2PXRef.o `test -f 'filter/pdftopdf.old/P2PXRef.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PXRef.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PXRef.Tpo $(DEPDIR)/pdftopdf_old-P2PXRef.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PXRef.cxx' object='pdftopdf_old-P2PXRef.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PXRef.o `test -f 'filter/pdftopdf.old/P2PXRef.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/P2PXRef.cxx
-
-pdftopdf_old-P2PXRef.obj: filter/pdftopdf.old/P2PXRef.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-P2PXRef.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-P2PXRef.Tpo -c -o pdftopdf_old-P2PXRef.obj `if test -f 'filter/pdftopdf.old/P2PXRef.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PXRef.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PXRef.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-P2PXRef.Tpo $(DEPDIR)/pdftopdf_old-P2PXRef.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/P2PXRef.cxx' object='pdftopdf_old-P2PXRef.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-P2PXRef.obj `if test -f 'filter/pdftopdf.old/P2PXRef.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/P2PXRef.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/P2PXRef.cxx'; fi`
-
-pdftopdf_old-UGooString.o: filter/pdftopdf.old/UGooString.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-UGooString.o -MD -MP -MF $(DEPDIR)/pdftopdf_old-UGooString.Tpo -c -o pdftopdf_old-UGooString.o `test -f 'filter/pdftopdf.old/UGooString.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/UGooString.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-UGooString.Tpo $(DEPDIR)/pdftopdf_old-UGooString.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/UGooString.cxx' object='pdftopdf_old-UGooString.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-UGooString.o `test -f 'filter/pdftopdf.old/UGooString.cxx' || echo '$(srcdir)/'`filter/pdftopdf.old/UGooString.cxx
-
-pdftopdf_old-UGooString.obj: filter/pdftopdf.old/UGooString.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf_old-UGooString.obj -MD -MP -MF $(DEPDIR)/pdftopdf_old-UGooString.Tpo -c -o pdftopdf_old-UGooString.obj `if test -f 'filter/pdftopdf.old/UGooString.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/UGooString.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/UGooString.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf_old-UGooString.Tpo $(DEPDIR)/pdftopdf_old-UGooString.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftopdf.old/UGooString.cxx' object='pdftopdf_old-UGooString.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_old_CXXFLAGS) $(CXXFLAGS) -c -o pdftopdf_old-UGooString.obj `if test -f 'filter/pdftopdf.old/UGooString.cxx'; then $(CYGPATH_W) 'filter/pdftopdf.old/UGooString.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftopdf.old/UGooString.cxx'; fi`
 
 pdftoraster-pdftoraster.o: filter/pdftoraster.cxx
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoraster_CXXFLAGS) $(CXXFLAGS) -MT pdftoraster-pdftoraster.o -MD -MP -MF $(DEPDIR)/pdftoraster-pdftoraster.Tpo -c -o pdftoraster-pdftoraster.o `test -f 'filter/pdftoraster.cxx' || echo '$(srcdir)/'`filter/pdftoraster.cxx
