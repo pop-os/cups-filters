@@ -1,3 +1,22 @@
+cups-filters (1.0.24-1) UNRELEASED; urgency=low
+
+  * New upstream release
+     - pdftopdf now generates the necessary pdf comments to disable
+       duplicate number-up when pdftops is also applied (Upstream bug #1063).
+     - pdftops: Added support for using Adobe Reader (acroread) in command
+       line mode for turning PDF to PostScript (Upstream bug #1065).
+     - pdftops: Fix stripping of page management options from the pstops
+       command line which got already applied by pdftopdf. If the name
+       of the option to be removed is contained in the name of a option
+       in the command line (like "number-up" in "number-up-layout" or
+       "scaling" in "Natural-scaling"), this option gets stripped instead
+       of the correct option (Upstream bug #1064).
+     - Removed filter/pdftopdf.old
+     - Fixed the requires.private for cupsfilters lib
+  * debian/control: Versioned build dependency on libqpdf-dev.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  7 Sep 2012 15:01:42 +0200
+
 cups-filters (1.0.22-1) experimental; urgency=low
 
   * New upstream release
