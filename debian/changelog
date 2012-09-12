@@ -1,3 +1,9 @@
+cups-filters (1.0.24-1build1) quantal; urgency=low
+
+  * No-change rebuild for libpoppler27 -> libpoppler28 transition.
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Wed, 12 Sep 2012 16:11:42 +1200
+
 cups-filters (1.0.24-1) experimental; urgency=low
 
   * New upstream release
