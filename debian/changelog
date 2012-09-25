@@ -1,3 +1,10 @@
+cups-filters (1.0.24-2) experimental; urgency=low
+
+  * debian/patches/texttopdf-fix-deficient-string-escaping.patch: Fixed
+    unsufficient string escaping in texttopdf (Upstream bug #1071).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 25 Sep 2012 06:15:07 +0200
+
 cups-filters (1.0.24-1) experimental; urgency=low
 
   * New upstream release
