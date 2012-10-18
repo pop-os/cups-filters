@@ -1,3 +1,9 @@
+cups-filters (1.0.24-3) experimental; urgency=low
+
+  * Add bc to cups-filters' depends as pstopdf uses it.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 18 Oct 2012 11:03:30 +0200
+
 cups-filters (1.0.24-2) experimental; urgency=low
 
   * debian/patches/texttopdf-fix-deficient-string-escaping.patch: Fixed
