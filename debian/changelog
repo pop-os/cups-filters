@@ -1,3 +1,12 @@
+cups-filters (1.0.18-2.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix "debian/copyright is misleading/incomplete": try to get it closer to
+    reality. Most of the work was done by Arthur de Jong, thanks.
+    (Closes: #682752)
+
+ -- gregor herrmann <gregoa@debian.org>  Tue, 20 Nov 2012 20:37:41 +0100
+
 cups-filters (1.0.18-2) unstable; urgency=low
 
   [ Fabian Greffrath ]

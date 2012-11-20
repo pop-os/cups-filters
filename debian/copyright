@@ -5,78 +5,122 @@ Source: http://www.openprinting.org/download/cups-filters/
 
 Files: AUTHORS.txt
  CHANGES.txt
- acloacl.m4
- configure
- install-sh
- debian/*
-Copyright: 2012, Till Kamppeter <till.kamppeter@gmail.com>
-License: GPL-2+
-
-Files: debian/local/textonly* debian/local/text.convs
-Copyright: 2003-2006 Red Hat, Inc.
- 2003-2006 Tim Waugh <twaugh@redhat.com>
-License: GPL-2
-
-Files: config.h.in
- configure.in
  INSTALL.txt
- LICENSE.txt
- README.txt
  Makedefs.in
  Makefile
+ README.txt
  backend/*
  config-scripts/*
- scripting/*
+ config.h.in
+ configure.in
+ filter/Dependencies
+ filter/Makefile
  filter/commandtoescpx.c
  filter/commandtopclx.c
  filter/common.c
  filter/common.h
  filter/cupsfilters.convs
- filter/cupsfilters.types
- filter/Dependencies
  filter/escp.h
  filter/imagetoraster.c
- filter/Makefile
  filter/pcl-common.c
  filter/pcl-common.h
  filter/pcl.h
- filter/pdftops.c
- filter/pdfutils.c
- filter/pdfutils.h
  filter/rastertoescpx.c
  filter/rastertopclx.c
  filter/textcommon.c
  filter/textcommon.h
-Copyright: 2007-2011, Apple Inc.
- 1997-2007, Easy Software Products.
+ scripting/*
+Copyright: 2007-2011 Apple Inc.
+           1997-2007 Easy Software Products
+License: GPL-2
+
+Files: aclocal.m4
+Copyright: 1996-2009 Free Software Foundation, Inc.
+           2004 Scott James Remnant <scott@netsplit.com>
+License: GPL-2+
+
+Files: configure
+Copyright: 1999-2009 Free Software Foundation, Inc.
+License:
+ This configure script is free software; the Free Software Foundation
+ gives unlimited permission to copy, distribute and modify it.
+
+Files: install-sh
+Copyright: 2008-2009 Apple Inc.
+           1991 Massachusetts Institute of Technology
+License: MIT
+
+Files: debian/*
+Copyright: 1999-2003 Jeff Licquia <licquia@debian.org>
+           2003-2007 Kenshi Muto <kmuto@debian.org>
+           2007-2012 Martin Pitt <mpitt@debian.org>
+           2012 Till Kamppeter <till.kamppeter@gmail.com>
+           2009 Canonical Ltd.
+License: GPL-2+
+
+Files: filter/textonly
+ ppd/textonly.ppd
+Copyright: 2003-2006 Red Hat, Inc.
+           2003-2006 Tim Waugh <twaugh@redhat.com>
+License: GPL-2+
+
+Files: filter/pdftops.c
+Copyright: 2007-2011 Apple Inc.
+           1997-2007 Easy Software Products.
+           2012 Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2
+
+Files: filter/texttops.in
+ filter/imagetops.in
+Copyright: 2012 Till Kamppeter <till.kamppeter@gmail.com>
+License: GPL-2+
+
+Files: filter/cupsfilters.types
+Copyright: 2011 Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
 
 Files: cupsfilters/*
-Copyright: 2007-2011, Apple Inc.
- 1997-2007, Easy Software Products.
+Copyright: 2007-2011 Apple Inc.
+           1997-2007 Easy Software Products
 License: LGPL-2
 
 Files: filter/fontembed/*
- filter/pdf.utf-8.heavy
+Copyright: 2008, 2012 Tobias Hoffmann
+License: MIT
+
+Files: filter/pdfutils.h
+  filter/pdfutils.c
+Copyright: 2008 Tobias Hoffmann
+License: GPL-2
+
+Files: filter/pdf.utf-8.heavy
  filter/pdf.utf-8.simple
- filter/pdfutils.c
  filter/pdfutils.h
  filter/test_pdf1.c
  filter/test_pdf2.c
- filter/texttopdf.c
-Copyright: 2008, Tobias Hoffmann.
- 2007, Apple Inc.
- 1993-2007, Easy Software Products.
+Copyright: 2007 Apple Inc.
+           1993-2007 Easy Software Products
 License: GPL-2
 
-Files: filter/pstopdf.in
-Copyright: 2003, Robert Sander <robert.sander@epigenomics.com>
- 2008-2012, Till Kamppeter <till.kamppeter@gmail.com>
+Files:
+ filter/texttopdf.c
+Copyright: 2008-2012 Tobias Hoffmann
+           2007 Apple Inc.
+           1993-2007 Easy Software Products
+License: GPL-2
+
+Files: fontembed/*
+Copyright: 2008, 2012 Tobias Hoffmann
+License: MIT
+
+Files: filter/pstopdf
+Copyright: 2003 Robert Sander <robert.sander@epigenomics.com>
+           2008-2012 Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
 
 Files: filter/imagetopdf.c
-Copyright: 1993-2006, Easy Software Products.
- 2006-2007, BBR Inc.
+Copyright: 1993-2006 Easy Software Products
+           2006-2007 BBR Inc.
 License: GPL-2
 
 Files: filter/banner.c
@@ -84,8 +128,8 @@ Files: filter/banner.c
  filter/bannertopdf.c
  filter/classified
  filter/confidential
- filter/default.pdf
  filter/default-testpage.pdf
+ filter/default.pdf
  filter/pdf.cxx
  filter/pdf.h
  filter/secret
@@ -93,20 +137,117 @@ Files: filter/banner.c
  filter/testprint
  filter/topsecret
  filter/unclassified
-Copyright: 2012, Canonical Ltd.
+Copyright: 2012 Canonical Ltd.
 License: GPL-3
 
-Files: pdftoopvp/*
- pdftopdf/*
- filter/pdftoraster.cxx
- ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
-Copyright: Copyright 2006-2011, BBR Inc. All rights reserved.
+Files: filter/pdftoraster.cxx
+Copyright: 2008-2011 BBR Inc.
 License: Expat
 
-Files: filter/pdftoijs.cxx
-Copyright: 2008, BBR Inc. All rights reserved.
- 2008, Tobias Hoffmann
+Files: filter/PDFError.h
+ pdftoopvp/OPVPError.h
+ pdftopdf/P2PError.h
+Copyright: 2012 BBR Inc.
 License: Expat
+
+Files: filter/pdftopdf/*
+Copyright: 2006-2011 BBR Inc.
+           2012 Tobias Hoffmann
+License: MIT
+
+Files: filter/pdftoijs.cxx
+Copyright: 2008 BBR Inc.
+           2008 Tobias Hoffmann
+License: Expat
+
+Files: pdftoopvp/OPVPOutputDev.cxx
+Copyright: 2003 Glyph & Cog, LLC
+           2005 AXE,Inc.
+License: Expat
+
+Files: pdftoopvp/opvp/opvp.h
+Copyright: 2006 Free Standards Group
+           2006 Fuji Xerox Printing Systems Co., Ltd.
+           2006 Canon Inc.
+           2003-2006 AXE Inc.
+License: Expat
+
+Files: pdftoopvp/opvp/opvp_0_2_0.h
+ pdftoopvp/opvp/opvp_common.h
+Copyright: 2003-2004 AXE, Inc.
+License: Expat
+
+Files: pdftoopvp/pdftoopvp.cxx
+Copyright: 2005 AXE,Inc.
+License: Expat
+
+Files: pdftopdf/P2PCatalog.cxx
+ pdftopdf/P2PCatalog.h
+ pdftopdf/P2PDoc.cxx
+ pdftopdf/P2PDoc.h
+ pdftopdf/P2PFont.cxx
+ pdftopdf/P2PFont.h
+ pdftopdf/P2PMatrix.h
+ pdftopdf/P2PObject.cxx
+ pdftopdf/P2PObject.h
+ pdftopdf/P2POutput.cxx
+ pdftopdf/P2POutput.h
+ pdftopdf/P2POutputStream.cxx
+ pdftopdf/P2POutputStream.h
+ pdftopdf/P2PPage.cxx
+ pdftopdf/P2PPage.h
+ pdftopdf/P2PPageTree.cxx
+ pdftopdf/P2PPageTree.h
+ pdftopdf/P2PPattern.cxx
+ pdftopdf/P2PPattern.h
+ pdftopdf/P2PResources.cxx
+ pdftopdf/P2PResources.h
+ pdftopdf/P2PXRef.cxx
+ pdftopdf/P2PXRef.h
+ pdftopdf/PDFFTrueTypeFont.cxx
+ pdftopdf/PDFFTrueTypeFont.h
+Copyright: 2006-2007 BBR Inc.
+License: Expat
+
+Files: pdftopdf/P2PForm.cxx
+ pdftopdf/P2PForm.h
+Copyright: 2006-2010 BBR Inc.
+License: Expat
+
+Files: pdftopdf/pdftopdf.cxx
+Copyright: 2006-2011 BBR Inc.
+License: Expat
+
+Files: pdftopdf/pdf2pdf.cxx
+Copyright: 2007-2009 BBR Inc.
+License: Expat
+
+Files: pdftopdf/P2PCMap.cxx
+ pdftopdf/P2PCMap.h
+ pdftopdf/P2PCharCodeToUnicode.cxx
+ pdftopdf/P2PCharCodeToUnicode.h
+Copyright: 2001-2003 Glyph & Cog, LLC 
+License: GPL-2+
+
+Files: pdftopdf/P2PGfx.cxx
+ pdftopdf/P2PGfx.h
+ pdftopdf/parseargs.h
+Copyright: 1996-2003 Glyph & Cog, LLC
+License: GPL-2+
+
+Files: pdftopdf/parseargs.cxx
+Copyright: 1996-2003 Glyph & Cog, LLC
+           2008, 2009 Albert Astals Cid <aacid@kde.org>
+License: GPL-2+
+
+Files: pdftopdf/UGooString.cxx
+ pdftopdf/UGooString.h
+Copyright: 2005 Albert Astals Cid <aacid@kde.org>
+License: GPL-2+
+
+Files: pdftopdf/parseargs.h
+Copyright: 2008 Albert Astals Cid <aacid@kde.org>
+License: GPL-2+
 
 License: GPL-2
  This program may be distributed and/or modified under the terms of the
@@ -190,3 +331,13 @@ License: Expat
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+License: MIT
+ Permission to use, copy, modify, distribute, and sell this software and its
+ documentation for any purpose is hereby granted without fee, provided that
+ the above copyright notice appear in all copies and that both that
+ copyright notice and this permission notice appear in supporting
+ documentation, and that the name of M.I.T. not be used in advertising or
+ publicity pertaining to distribution of the software without specific,
+ written prior permission.  M.I.T. makes no representations about the
+ suitability of this software for any purpose.  It is provided "as is"
+ without express or implied warranty.
