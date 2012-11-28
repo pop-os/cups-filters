@@ -228,9 +228,13 @@ void QPDF_PDFTOPDF_PageHandle::mirror() // {{{
     // need to wrap in XObject to keep patterns correct
     // TODO? refactor into internal ..._subpage fn ?
     std::string xoname="/X"+QUtil::int_to_string(no);
-    xobjs[xoname]=makeXObject(page.getOwningQPDF(),page);
 
-    *this=QPDF_PDFTOPDF_PageHandle(page.getOwningQPDF(),orig.width,orig.height);
+    QPDFObjectHandle subpage=get();  // this->page, with rotation
+
+    // replace all our data
+    *this=QPDF_PDFTOPDF_PageHandle(subpage.getOwningQPDF(),orig.width,orig.height);
+
+    xobjs[xoname]=makeXObject(subpage.getOwningQPDF(),subpage); // we can only now set this->xobjs
 
 //    content.append(std::string("1 0 0 1 0 0 cm\n  ");
     content.append(xoname+" Do\n");
@@ -439,7 +443,36 @@ void QPDF_PDFTOPDF_Processor::multiply(int copies,bool collate) // {{{
   }
 }
 // }}}
- 
+
+// TODO? elsewhere?
+void QPDF_PDFTOPDF_Processor::autoRotateAll(bool dst_lscape,Rotation normal_landscape) // {{{
+{
+  assert(pdf);
+
+  const int len=orig_pages.size();
+  for (int iA=0;iA<len;iA++) {
+    QPDFObjectHandle page=orig_pages[iA];
+
+    Rotation src_rot=getRotate(page);
+
+    // copy'n'paste from QPDF_PDFTOPDF_PageHandle::getRect
+    PageRect ret=getBoxAsRect(getTrimBox(page));
+//    ret.translate(-ret.left,-ret.bottom);
+    ret.rotate_move(src_rot,ret.width,ret.height);
+//    ret.scale(getUserUnit(page));
+
+    const bool src_lscape=(ret.width>ret.height);
+    if (src_lscape!=dst_lscape) {
+      Rotation rotation=normal_landscape;
+      // TODO? other rotation direction, e.g. if (src_rot==ROT_0)&&(param.orientation==ROT_270) ... etc.
+      // rotation=ROT_270;
+
+      page.replaceOrRemoveKey("/Rotate",makeRotate(src_rot+rotation));
+    }
+  }
+}
+// }}}
+
 #include "qpdf_cm.h"
 
 // TODO
@@ -464,9 +497,10 @@ void QPDF_PDFTOPDF_Processor::addCM(const char *defaulticc,const char *outputicc
 void QPDF_PDFTOPDF_Processor::setComments(const std::vector<std::string> &comments) // {{{
 {
   extraheader.clear();
-  for (auto &it : comments) {
-    assert(it.at(0)=='%');
-    extraheader.append(it);
+  const int len=comments.size();
+  for (int iA=0;iA<len;iA++) {
+    assert(comments[iA].at(0)=='%');
+    extraheader.append(comments[iA]);
     extraheader.push_back('\n');
   }
 }
