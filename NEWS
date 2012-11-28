@@ -1,5 +1,23 @@
-NEWS - OpenPrinting CUPS Filters v1.0.24 - 2012-09-07
+NEWS - OpenPrinting CUPS Filters v1.0.25 - 2012-11-28
 -----------------------------------------------------
+
+CHANGES IN V1.0.25
+
+	- urftopdf: Newly added filter to convert the URF format which (at
+	  least some) iOS apps send when printing via AirPrint (Bug #1076).
+	- pdftopdf: pdfautorotate functionality has been patched directly 
+	  into pdftopdf (Bug #1080).
+	- pdftopdf: "mirror" produced only empty pages (XObjects not there).
+	- pdftopdf: Fixed segfault on "page-ranges=1-2147483647" (from cups).
+	- pdftopdf: Fixed collate filler insertion.
+	- texttopdf: Fixed deficient string escaping (Bug #1071).
+	- pdftoopvp: Get correct byte order definition when building under
+	  OpenBSD (Bug #1070).
+	- serial backend: Added check for sys/ioctl.h to configure.ac (Bug
+	  #1069).
+	- pdftopdf: Made code building under OpenBSD (Bug #1068).
+	- pdftopdf: Don't expect too much C++11 support for now (Bug #1067).
+
 CHANGES IN V1.0.24
 
         - pdftopdf now generates the necessary pdf comments to disable 

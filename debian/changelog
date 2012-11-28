@@ -1,3 +1,24 @@
+cups-filters (1.0.25-1) experimental; urgency=low
+
+  * New upstream release
+     - urftopdf: Newly added filter to convert the URF format which (at
+       least some) iOS apps send when printing via AirPrint (Upstream bug
+       #1076).
+     - pdftopdf: pdfautorotate functionality has been patched directly
+       into pdftopdf (LP: #1040037, Upstream bug #1080).
+     - pdftopdf: "mirror" produced only empty pages (XObjects not there).
+     - pdftopdf: Fixed segfault on "page-ranges=1-2147483647" (from cups).
+     - pdftopdf: Fixed collate filler insertion.
+     - texttopdf: Fixed deficient string escaping (Upstream bug #1071).
+     - serial backend: Added check for sys/ioctl.h to configure.ac (Upstream bug
+       #1069).
+  * debian/patches/texttopdf-fix-deficient-string-escaping.patch: Removed
+    fix backported from upstream.
+  * debian/rules: Added "DEB_DH_FIXPERMS_ARGS := -Xusr/lib/cups/backend" to not
+    correct the permissions of CUPS backends (LP: #1076786).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 28 Nov 2012 20:14:07 +0100
+
 cups-filters (1.0.24-3) experimental; urgency=low
 
   * Add bc to cups-filters' depends as pstopdf uses it.

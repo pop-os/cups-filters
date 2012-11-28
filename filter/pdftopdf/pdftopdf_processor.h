@@ -15,6 +15,7 @@ struct ProcessingParameters {
       user(0),title(0),
       fitplot(false),
       orientation(ROT_0),normal_landscape(ROT_270),
+      paper_is_landscape(false),
       duplex(false),
       border(NONE),
       reverse(false),
@@ -31,8 +32,10 @@ struct ProcessingParameters {
 
       booklet(BOOKLET_OFF),bookSignature(-1),
 
+      autoRotate(false),
+
       emitJCL(true),deviceCopies(1),deviceReverse(false),
-      setDuplex(false),unsetCollate(false)
+      deviceCollate(false),setDuplex(false)
   {
     page.width=612.0; // letter
     page.height=792.0;
@@ -51,6 +54,7 @@ struct ProcessingParameters {
   bool fitplot;
   PageRect page;
   Rotation orientation,normal_landscape;  // normal_landscape (i.e. default direction) is e.g. needed for number-up=2
+  bool paper_is_landscape;
   bool duplex;
   BorderType border;
   NupParameters nup;
@@ -71,14 +75,15 @@ struct ProcessingParameters {
   BookletMode booklet;
   int bookSignature;
 
+  bool autoRotate;
+
+  // ppd/jcl changes
   bool emitJCL;
   int deviceCopies;
   bool deviceReverse;
-
-  // ppd changes
+  bool deviceCollate;
   bool setDuplex;
   // unsetMirror  (always)
-  bool unsetCollate;
 
   // helper functions
   bool withPage(int outno) const; // 1 based
@@ -124,6 +129,7 @@ public:
 
   virtual void multiply(int copies,bool collate) =0;
 
+  virtual void autoRotateAll(bool dst_lscape,Rotation normal_landscape) =0; // TODO elsewhere?!
   virtual void addCM(const char *defaulticc,const char *outputicc) =0;
 
   virtual void setComments(const std::vector<std::string> &comments) =0;
