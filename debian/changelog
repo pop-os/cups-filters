@@ -1,3 +1,18 @@
+cups-filters (1.0.24-2ubuntu0.1) quantal-proposed; urgency=low
+
+  * debian/patches/pdftopdf-landscape-fix.patch: Auto-rotate functionality
+    added to pdftopdf to print landscape-formatted PDFs (for example from
+    LibreOffice) correctly (LP: #1040037, Upstream bug #1080).
+  * debian/patches/pdftopdf-multiple-copies-collate-fix.patch: The pdftopdf
+    filter started the second copy of a duplex job with an odd number of
+    pages on the back side of the last page of the first copy. Thanks to
+    David Williams from Ricoh for reporting this and to Tobias Hoffmann for
+    fixing this (LP: #1084534).
+  * debian/rules: Added "DEB_DH_FIXPERMS_ARGS := -Xusr/lib/cups/backend" to not
+    correct the permissions of CUPS backends (LP: #1076786).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 29 Nov 2012 16:59:59 +0100
+
 cups-filters (1.0.24-2) experimental; urgency=low
 
   * debian/patches/texttopdf-fix-deficient-string-escaping.patch: Fixed

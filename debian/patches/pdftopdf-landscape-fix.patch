@@ -1,0 +1,149 @@
+--- a/filter/pdftopdf/pdftopdf.cc
++++ b/filter/pdftopdf/pdftopdf.cc
+@@ -323,6 +323,7 @@
+     param.page.width=pagesize->width;
+     param.page.height=pagesize->length;
+   }
++  param.paper_is_landscape=(param.page.width>param.page.height);
+ 
+   PageRect tmp; // borders (before rotation)
+ 
+@@ -489,6 +490,10 @@
+ 
+   // TODO? pdftopdf* ?
+   // TODO?! pdftopdfAutoRotate
++
++  // TODO?!  choose default by whether pdfautoratate filter has already been run (e.g. by mimetype)
++  param.autoRotate=( !is_false(cupsGetOption("pdfAutoRotate",num_options,options)) &&
++                     !is_false(cupsGetOption("pdftopdfAutoRotate",num_options,options)) );
+ }
+ // }}}
+ 
+--- a/filter/pdftopdf/pdftopdf_processor.cc
++++ b/filter/pdftopdf/pdftopdf_processor.cc
+@@ -43,6 +43,9 @@
+   Rotation_dump(orientation);
+   fprintf(stderr,"\n");
+ 
++  fprintf(stderr,"paper_is_landscape: %s\n",
++                 (paper_is_landscape)?"true":"false");
++
+   fprintf(stderr,"duplex: %s\n",
+                  (duplex)?"true":"false");
+ 
+@@ -89,6 +92,9 @@
+   fprintf(stderr,"\nbooklet signature: %d\n",
+                  bookSignature);
+ 
++  fprintf(stderr,"autoRotate: %s\n",
++                 (autoRotate)?"true":"false");
++
+   fprintf(stderr,"emitJCL: %s\n",
+                  (emitJCL)?"true":"false");
+   fprintf(stderr,"deviceCopies: %d\n",
+@@ -149,6 +155,11 @@
+     return false;
+   }
+ 
++  if (param.autoRotate) {
++    const bool dst_lscape=( param.paper_is_landscape==( (param.orientation==ROT_0)||(param.orientation==ROT_180) ) );
++    proc.autoRotateAll(dst_lscape,param.normal_landscape);
++  }
++
+   std::vector<std::shared_ptr<PDFTOPDF_PageHandle>> pages=proc.get_pages();
+   const int numOrigPages=pages.size();
+ 
+--- a/filter/pdftopdf/pdftopdf_processor.h
++++ b/filter/pdftopdf/pdftopdf_processor.h
+@@ -15,6 +15,7 @@
+       user(0),title(0),
+       fitplot(false),
+       orientation(ROT_0),normal_landscape(ROT_270),
++      paper_is_landscape(false),
+       duplex(false),
+       border(NONE),
+       reverse(false),
+@@ -31,6 +32,8 @@
+ 
+       booklet(BOOKLET_OFF),bookSignature(-1),
+ 
++      autoRotate(false),
++
+       emitJCL(true),deviceCopies(1),deviceReverse(false),
+       deviceCollate(false),setDuplex(false)
+   {
+@@ -51,6 +54,7 @@
+   bool fitplot;
+   PageRect page;
+   Rotation orientation,normal_landscape;  // normal_landscape (i.e. default direction) is e.g. needed for number-up=2
++  bool paper_is_landscape;
+   bool duplex;
+   BorderType border;
+   NupParameters nup;
+@@ -71,6 +75,8 @@
+   BookletMode booklet;
+   int bookSignature;
+ 
++  bool autoRotate;
++
+   // ppd/jcl changes
+   bool emitJCL;
+   int deviceCopies;
+@@ -123,6 +129,7 @@
+ 
+   virtual void multiply(int copies,bool collate) =0;
+ 
++  virtual void autoRotateAll(bool dst_lscape,Rotation normal_landscape) =0; // TODO elsewhere?!
+   virtual void addCM(const char *defaulticc,const char *outputicc) =0;
+ 
+   virtual void setComments(const std::vector<std::string> &comments) =0;
+--- a/filter/pdftopdf/qpdf_pdftopdf_processor.cc
++++ b/filter/pdftopdf/qpdf_pdftopdf_processor.cc
+@@ -439,7 +439,36 @@
+   }
+ }
+ // }}}
+- 
++
++// TODO? elsewhere?
++void QPDF_PDFTOPDF_Processor::autoRotateAll(bool dst_lscape,Rotation normal_landscape) // {{{
++{
++  assert(pdf);
++
++  const int len=orig_pages.size();
++  for (int iA=0;iA<len;iA++) {
++    QPDFObjectHandle page=orig_pages[iA];
++
++    Rotation src_rot=getRotate(page);
++
++    // copy'n'paste from QPDF_PDFTOPDF_PageHandle::getRect
++    PageRect ret=getBoxAsRect(getTrimBox(page));
++//    ret.translate(-ret.left,-ret.bottom);
++    ret.rotate_move(src_rot,ret.width,ret.height);
++//    ret.scale(getUserUnit(page));
++
++    const bool src_lscape=(ret.width>ret.height);
++    if (src_lscape!=dst_lscape) {
++      Rotation rotation=normal_landscape;
++      // TODO? other rotation direction, e.g. if (src_rot==ROT_0)&&(param.orientation==ROT_270) ... etc.
++      // rotation=ROT_270;
++
++      page.replaceOrRemoveKey("/Rotate",makeRotate(src_rot+rotation));
++    }
++  }
++}
++// }}}
++
+ #include "qpdf_cm.h"
+ 
+ // TODO
+--- a/filter/pdftopdf/qpdf_pdftopdf_processor.h
++++ b/filter/pdftopdf/qpdf_pdftopdf_processor.h
+@@ -48,6 +48,7 @@
+ 
+   virtual void multiply(int copies,bool collate);
+ 
++  virtual void autoRotateAll(bool dst_lscape,Rotation normal_landscape);
+   virtual void addCM(const char *defaulticc,const char *outputicc);
+ 
+   virtual void setComments(const std::vector<std::string> &comments);

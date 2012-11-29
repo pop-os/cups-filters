@@ -43,6 +43,9 @@ void ProcessingParameters::dump() const // {{{
   Rotation_dump(orientation);
   fprintf(stderr,"\n");
 
+  fprintf(stderr,"paper_is_landscape: %s\n",
+                 (paper_is_landscape)?"true":"false");
+
   fprintf(stderr,"duplex: %s\n",
                  (duplex)?"true":"false");
 
@@ -73,6 +76,10 @@ void ProcessingParameters::dump() const // {{{
 
   fprintf(stderr,"collate: %s\n",
                  (collate)?"true":"false");
+
+  fprintf(stderr,"evenDuplex: %s\n",
+                 (evenDuplex)?"true":"false");
+
 /*
   // std::string pageLabel; // or NULL?  must stay/dup!
   ...
@@ -85,17 +92,19 @@ void ProcessingParameters::dump() const // {{{
   fprintf(stderr,"\nbooklet signature: %d\n",
                  bookSignature);
 
-  fprintf(stderr,"evenDuplex: %s\n",
-                 (evenDuplex)?"true":"false");
+  fprintf(stderr,"autoRotate: %s\n",
+                 (autoRotate)?"true":"false");
 
   fprintf(stderr,"emitJCL: %s\n",
                  (emitJCL)?"true":"false");
   fprintf(stderr,"deviceCopies: %d\n",
                  deviceCopies);
+  fprintf(stderr,"deviceReverse: %s\n",
+                 (deviceReverse)?"true":"false");
+  fprintf(stderr,"deviceCollate: %s\n",
+                 (deviceCollate)?"true":"false");
   fprintf(stderr,"setDuplex: %s\n",
                  (setDuplex)?"true":"false");
-  fprintf(stderr,"unsetCollate: %s\n",
-                 (unsetCollate)?"true":"false");
 }
 // }}}
 
@@ -144,6 +153,11 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
   if (!proc.check_print_permissions()) {
     fprintf(stderr,"Not allowed to print\n");
     return false;
+  }
+
+  if (param.autoRotate) {
+    const bool dst_lscape=( param.paper_is_landscape==( (param.orientation==ROT_0)||(param.orientation==ROT_180) ) );
+    proc.autoRotateAll(dst_lscape,param.normal_landscape);
   }
 
   std::vector<std::shared_ptr<PDFTOPDF_PageHandle>> pages=proc.get_pages();

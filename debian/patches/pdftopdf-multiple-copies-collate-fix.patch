@@ -1,0 +1,279 @@
+--- a/filter/pdftopdf/pdftopdf.cc
++++ b/filter/pdftopdf/pdftopdf.cc
+@@ -30,27 +30,6 @@
+ 
+ // namespace {}
+ 
+-struct PrinterFeatures {
+-  PrinterFeatures() : canCollate(false)
+-  {}
+-// TODO: ppd->manual_copies
+-
+-  bool canCollate;
+-//  bool 
+-};
+-
+-PrinterFeatures getPrinterFeatures(ppd_file_t *ppd)
+-{
+-  PrinterFeatures ret;
+-  if (!ppd) {
+-    return ret;
+-  }
+-/*
+-
+-*/
+-  return ret;
+-}
+-
+ void setFinalPPD(ppd_file_t *ppd,const ProcessingParameters &param)
+ {
+   if ( (param.booklet==BOOKLET_ON)&&(ppdFindOption(ppd,"Duplex")) ) {
+@@ -71,27 +50,12 @@
+     choice->marked=0;
+   }
+ 
+-  // hardware can't collate the way we want it. Thus we collate; printer shall not
+-  if (param.unsetCollate) {
+-    ppdMarkOption(ppd,"Collate","False");
++  // TODO: FIXME:  unify code with emitJCLOptions, which does this "by-hand" now (and makes this code superfluous)
++  if (param.deviceCopies==1) {
++    // make sure any hardware copying is disabled
++    ppdMarkOption(ppd,"Copies","1");
++    ppdMarkOption(ppd,"JCLCopies","1");
+   }
+-
+-#if 0
+-  if (ppd) {
+-    if (ppd->manual_copies) {
+-      // disable any hardware copying
+-      ppdMarkOption(ppd,"Copies","1");
+-      ppdMarkOption(ppd,"JCLCopies","1");
+-    } else {
+-      // use hardware copying
+-      param.deviceCopies=param.numCopies;
+-      param.numCopies=1;
+-    }
+-  }
+-#else
+-  ppdMarkOption(ppd,"Copies","1");
+-  ppdMarkOption(ppd,"JCLCopies","1");
+-#endif
+ }
+ 
+ // for choice, only overwrites ret if found in ppd
+@@ -515,7 +479,8 @@
+ // }}}
+ */
+ 
+-  // make pages a multiple of two (only considered when duplex is on).
++  // make pages a multiple of two (only considered when duplex is on). 
++  // i.e. printer has hardware-duplex, but needs pre-inserted filler pages
+   // FIXME? pdftopdf also supports it as cmdline option (via checkFeature())
+   ppd_attr_t *attr;
+   if ( (attr=ppdFindAttr(ppd,"cupsEvenDuplex",0)) != NULL) {
+@@ -527,11 +492,23 @@
+ }
+ // }}}
+ 
+-void calculate(ppd_file_t *ppd,ProcessingParameters &param)
++static bool printerWillCollate(ppd_file_t *ppd) // {{{
+ {
+-  // First step: no device copies, no device collate, no device reverse.
++  ppd_choice_t *choice;
++
++  if (  ( (choice=ppdFindMarkedChoice(ppd,"Collate")) != NULL)&&
++        (is_true(choice->choice))  ) {
++
++    // printer can collate, but also for the currently marked ppd features?
++    ppd_option_t *opt=ppdFindOption(ppd,"Collate");
++    return (opt)&&(!opt->conflicted);
++  }
++  return false;
++}
++// }}}
+ 
+-// TODO? better
++void calculate(ppd_file_t *ppd,ProcessingParameters &param) // {{{
++{
+   param.deviceReverse=false;
+   if (param.reverse) {
+     // test OutputOrder of hardware (ppd)
+@@ -543,67 +520,51 @@
+       param.evenDuplex=true; // disabled later, if non-duplex
+     }
+   }
+-/*
+-  TODO:
+-    force collate for duplex and not hw-collate
+-
+-  TODO: 
+-
+-  // check collate device
+-  if (P2PDoc::options.collate && !ppd->manual_copies) {
+-    if ((choice = ppdFindMarkedChoice(ppd,"Collate")) != NULL &&
+-       !strcasecmp(choice->choice,"true")) {
+-      ppd_option_t *opt;
+-
+-      if ((opt = ppdFindOption(ppd,"Collate")) != NULL &&
+-        !opt->conflicted) {
+-	deviceCollate = gTrue;
+-      } else {
+-	ppdMarkOption(ppd,"Collate","False");
+-      }
+-    }
+-  }
+-
+-see also setFinalPPD()
+-*/
+ 
+   if (param.numCopies==1) {
+     // collate is not needed
+     param.collate=false; // does not make a big difference for us
+-    param.unsetCollate=true;
+   }
+-/* TODO?
++/* TODO? instead:
+   if (...numOutputPages==1 [after nup,evenDuplex!]) {
+     param.collate=false; // does not make a big difference for us
+-    param.unsetCollate=true; // TODO: is this worth it?
+   }
+ */
+ 
+-  // TODO: other possibility would be: if (param.collate) { param.collate=false; param.unsetCollate=false; }
+-  param.unsetCollate=true;
+-
+-  if ( (param.collate)&&(!param.unsetCollate) ) { // TODO?
+-    param.evenDuplex=true;
++#if 0    // for now
++  // enable hardware copy generation
++  if (ppd) {
++    if (!ppd->manual_copies) {
++      // use hardware copying
++      param.deviceCopies=param.numCopies;
++      param.numCopies=1;
++    } else {
++      param.deviceCopies=1;
++    }
+   }
++#endif 
+ 
+-  if (!param.duplex) {
+-    param.evenDuplex=false;
+-  }
++  setFinalPPD(ppd,param);
+ 
+-  // not needed yet: TODO
+-  // param.deviceCopies=1;
+-  // ppd->manual_copies=1; // ??
++  // check collate device, with current ppd settings
++  if (param.collate) {
++    if (param.deviceCopies==1) { // e.g. ppd->manual_copies
++      param.deviceCollate=false;
++    } else {
++      param.deviceCollate=printerWillCollate(ppd);
++    }
+ 
+-  setFinalPPD(ppd,param); // TODO? elsewhere/outside
+-}
++    if (!param.deviceCollate) {
++      ppdMarkOption(ppd,"Collate","False"); // disable any hardware-collate
++      param.evenDuplex=true; // software collate always needs fillers
++    }
++  }
+ 
+-void dump_options(int num_options,cups_option_t *options)
+-{
+-  fprintf(stderr,"%d options:\n",num_options);
+-  for (int iA=0;iA<num_options;iA++) {
+-    fprintf(stderr,"  %s: %s\n",options[iA].name,options[iA].value);
++  if (!param.duplex) {
++    param.evenDuplex=false;
+   }
+ }
++// }}}
+ 
+ // reads from stdin into temporary file. returns FILE *  or NULL on error 
+ // TODO? to extra file (also used in pdftoijs, e.g.)
+--- a/filter/pdftopdf/pdftopdf_jcl.cc
++++ b/filter/pdftopdf/pdftopdf_jcl.cc
+@@ -4,7 +4,7 @@
+ 
+ #include <string.h>
+ 
+-// TODO: -currently changes ppd.
++// TODO: -currently changes ppd.  (Copies)
+ //
+ static void emitJCLOptions(FILE *fp, ppd_file_t *ppd, int deviceCopies) // {{{
+ {
+@@ -168,7 +168,7 @@
+     snprintf(buf,sizeof(buf),"%d",param.deviceCopies);
+     output.push_back(std::string("%%PDFTOPDFNumCopies : ")+buf);
+ 
+-    if ( (param.collate)&&(!param.unsetCollate) ) {
++    if (param.deviceCollate) {
+       output.push_back("%%PDFTOPDFCollate : true");
+     } else {
+       output.push_back("%%PDFTOPDFCollate : false");
+--- a/filter/pdftopdf/pdftopdf_processor.cc
++++ b/filter/pdftopdf/pdftopdf_processor.cc
+@@ -73,6 +73,10 @@
+ 
+   fprintf(stderr,"collate: %s\n",
+                  (collate)?"true":"false");
++
++  fprintf(stderr,"evenDuplex: %s\n",
++                 (evenDuplex)?"true":"false");
++
+ /*
+   // std::string pageLabel; // or NULL?  must stay/dup!
+   ...
+@@ -85,17 +89,16 @@
+   fprintf(stderr,"\nbooklet signature: %d\n",
+                  bookSignature);
+ 
+-  fprintf(stderr,"evenDuplex: %s\n",
+-                 (evenDuplex)?"true":"false");
+-
+   fprintf(stderr,"emitJCL: %s\n",
+                  (emitJCL)?"true":"false");
+   fprintf(stderr,"deviceCopies: %d\n",
+                  deviceCopies);
++  fprintf(stderr,"deviceReverse: %s\n",
++                 (deviceReverse)?"true":"false");
++  fprintf(stderr,"deviceCollate: %s\n",
++                 (deviceCollate)?"true":"false");
+   fprintf(stderr,"setDuplex: %s\n",
+                  (setDuplex)?"true":"false");
+-  fprintf(stderr,"unsetCollate: %s\n",
+-                 (unsetCollate)?"true":"false");
+ }
+ // }}}
+ 
+--- a/filter/pdftopdf/pdftopdf_processor.h
++++ b/filter/pdftopdf/pdftopdf_processor.h
+@@ -32,7 +32,7 @@
+       booklet(BOOKLET_OFF),bookSignature(-1),
+ 
+       emitJCL(true),deviceCopies(1),deviceReverse(false),
+-      setDuplex(false),unsetCollate(false)
++      deviceCollate(false),setDuplex(false)
+   {
+     page.width=612.0; // letter
+     page.height=792.0;
+@@ -71,14 +71,13 @@
+   BookletMode booklet;
+   int bookSignature;
+ 
++  // ppd/jcl changes
+   bool emitJCL;
+   int deviceCopies;
+   bool deviceReverse;
+-
+-  // ppd changes
++  bool deviceCollate;
+   bool setDuplex;
+   // unsetMirror  (always)
+-  bool unsetCollate;
+ 
+   // helper functions
+   bool withPage(int outno) const; // 1 based
