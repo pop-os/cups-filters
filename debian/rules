@@ -23,6 +23,7 @@ DEB_INSTALL_CHANGELOGS_ALL := NEWS
 
 #DEB_DH_STRIP_ARGS := --dbg-package=cups-filters-dbg
 DEB_DH_INSTALL_SOURCEDIR := debian/tmp
+DEB_DH_FIXPERMS_ARGS := -Xusr/lib/cups/backend
 DPKG_GENSYMBOLS_CHECK_LEVEL=4
 export DPKG_GENSYMBOLS_CHECK_LEVEL
 
@@ -40,4 +41,4 @@ binary-post-install/cups-filters::
 
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
-	chmod go-x debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
+	chmod 700 debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
