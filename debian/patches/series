@@ -1,1 +1,3 @@
 texttopdf-fix-deficient-string-escaping.patch
+pdftopdf-multiple-copies-collate-fix.patch
+pdftopdf-landscape-fix.patch
