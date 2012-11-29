@@ -1,4 +1,4 @@
-cups-filters (1.0.25-0ubuntu1) raring; urgency=low
+cups-filters (1.0.25-1) experimental; urgency=low
 
   * New upstream release
      - urftopdf: Newly added filter to convert the URF format which (at
