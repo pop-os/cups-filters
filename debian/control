@@ -28,7 +28,9 @@ Build-Depends:
  libcupsimage2-dev (>= 1.5.2-6~),
  libijs-dev,
  zlib1g-dev,
- libfontconfig1-dev
+ libfontconfig1-dev,
+ libavahi-common-dev,
+ libavahi-client-dev
 Homepage: http://www.openprinting.org/
 Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
@@ -103,6 +105,20 @@ Depends: ${shlibs:Depends},
  libfontembed1 (= ${binary:Version})
 Description: OpenPrinting CUPS Filters - Development files for font embed library
  Header files to develop applications using libfontembed.
+
+Package: cups-browsed
+Priority: optional
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, 
+ ${misc:Depends},
+ cups
+Description: OpenPrinting CUPS Filters - cups-browsed
+ This package provides cups-browsed, a daemon which browses the Bonjour
+ broadcasts of shared remote CUPS printers and makes the printers
+ available locally, replacing the CUPS broadcasting/browsing which was
+ dropped in CUPS 1.6.x. This way the old behavior of having the remote
+ printers available automatically is now re-implemented with Bonjour.
 
 #Package: cups-filters-dbg
 #Priority: extra
