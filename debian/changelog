@@ -1,4 +1,4 @@
-cups-filters (1.0.27-1) UNRELEASED; urgency=low
+cups-filters (1.0.28-1) UNRELEASED; urgency=low
 
   * New upstream release
      - cups-browsed: Added daemon to browse the Bonjour broadcasts of
@@ -17,7 +17,7 @@ cups-filters (1.0.27-1) UNRELEASED; urgency=low
     started automatically.
   * debian/cups-filters.install: Include files from /usr/bin.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 28 Dec 2012 21:29:07 +0100
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sat, 29 Dec 2012 14:30:07 +0100
 
 cups-filters (1.0.25-1) experimental; urgency=low
 
