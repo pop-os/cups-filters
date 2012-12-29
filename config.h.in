@@ -33,6 +33,9 @@
 /* Define that we provide acroread. */
 #undef HAVE_ACROREAD
 
+/* Define if you have the avahi library */
+#undef HAVE_AVAHI
+
 /* Define if you have Poppler's "cpp/poppler-version.h" header file. */
 #undef HAVE_CPP_POPPLER_VERSION_H
 
