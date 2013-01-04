@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[25])
+m4_define([cups_filters_version_micro],[28])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -192,6 +192,112 @@ AS_IF([test x"$with_tiff" != "xno"], [
 	)
 	AC_SUBST(LIBTIFF_LIBS)
 ])
+
+# ==================================
+# Check for modules needed by utils/
+# ==================================
+
+dnl Check for pkg-config, which is used for some other tests later on...
+AC_PATH_PROG(PKGCONFIG, pkg-config)
+
+dnl Avahi for cups-browsed
+AVAHI_LIBS=""
+AVAHI_CFLAGS=""
+
+AC_ARG_ENABLE([avahi],
+	[AS_HELP_STRING([--disable-avahi], [Disable DNS Service Discovery support using Avahi.])],
+	[enable_avahi="$enableval"],
+	[enable_avahi=yes]
+)
+AM_CONDITIONAL([ENABLE_AVAHI], [test "x$enable_avahi" != "xno"])
+
+AC_ARG_WITH(avahi-libs,
+	[AS_HELP_STRING([--with-avahi-libs], [Set directory for Avahi library.])],
+	AVAHI_LIBS="-L$withval $AVAHI_LIBS",)
+AC_ARG_WITH(avahi-includes,
+	[AS_HELP_STRING([--with-avahi-includes], [Set directory for Avahi includes])],
+	AVAHI_CFLAGS="-I$withval $AVAHI_CFLAGS",)
+
+if test "x$PKGCONFIG" != x -a x$enable_avahi != xno; then
+	AC_MSG_CHECKING(for Avahi)
+	if $PKGCONFIG --exists avahi-client; then
+		AC_MSG_RESULT(yes)
+		AVAHI_CFLAGS="$AVAHI_CFLAGS `$PKGCONFIG --cflags avahi-client`"
+		AVAHI_LIBS="$AVAHI_LIBS `$PKGCONFIG --libs avahi-client`"
+		AC_DEFINE(HAVE_AVAHI, [], [Define if you have the avahi library])
+	else
+		AC_MSG_RESULT(no)
+	fi
+fi
+
+AC_SUBST(AVAHI_LIBS)
+AC_SUBST(AVAHI_CFLAGS)
+
+dnl Setup init.d locations...
+AC_ARG_WITH(rcdir, [AS_HELP_STRING([--with-rcdir], [Set path for rc scripts])],rcdir="$withval",rcdir="")
+AC_ARG_WITH(rclevels, [AS_HELP_STRING([--with-rclevels], [Set run levels for rc scripts])],rclevels="$withval",rclevels="2 3 5")
+AC_ARG_WITH(rcstart, [AS_HELP_STRING([--with-rcstart], [Set start number for rc scripts])],rcstart="$withval",rcstart="99")
+AC_ARG_WITH(rcstop, [AS_HELP_STRING([--with-rcstop], [Set stop number for rc scripts])],rcstop="$withval",rcstop="00")
+
+INITDIR=""
+INITDDIR=""
+RCLEVELS="$rclevels"
+RCSTART="$rcstart"
+RCSTOP="$rcstop"
+
+if test x$rcdir = x; then
+	case "`uname`" in
+		FreeBSD* | OpenBSD* | MirBSD* | ekkoBSD*)
+			# FreeBSD and OpenBSD
+			;;
+
+		Linux | GNU | GNU/k*BSD*)
+			# Linux/HURD seems to choose an init.d directory at random...
+			if test -d /sbin/init.d; then
+				# SuSE
+				INITDIR="/sbin/init.d"
+			else
+				if test -d /etc/init.d; then
+					# Others
+					INITDIR="/etc"
+				else
+					# RedHat
+					INITDIR="/etc/rc.d"
+				fi
+			fi
+			RCSTART="82"
+			RCSTOP="35"
+			;;
+
+		NetBSD*)
+			# NetBSD
+			INITDDIR="/etc/rc.d"
+			;;
+
+		*)
+			INITDIR="/etc"
+			;;
+
+	esac
+elif test "x$rcdir" != xno; then
+	if test "x$rclevels" = x; then
+		INITDDIR="$rcdir"
+	else
+		INITDIR="$rcdir"
+	fi
+fi
+
+AM_CONDITIONAL([RCLINKS], [test "x$INITDDIR" = "x"])
+
+if test "x${INITDIR}" != "x" -a "x${INITDDIR}" = "x"; then
+   INITDDIR="${INITDIR}/init.d"
+fi
+
+AC_SUBST(INITDIR)
+AC_SUBST(INITDDIR)
+AC_SUBST(RCLEVELS)
+AC_SUBST(RCSTART)
+AC_SUBST(RCSTOP)
 
 # ======================================
 # Check for various pdf required modules
@@ -390,6 +496,7 @@ AC_CONFIG_FILES([
 	libcupsfilters.pc
 	libfontembed.pc
 	Makefile
+	utils/cups-browsed
 ])
 AC_OUTPUT
 
@@ -405,6 +512,7 @@ Environment settings:
 Build configuration:
 	cups-config:     ${with_cups_config}
 	font directory:  ${sysconfdir}/${FONTDIR}
+	init directory:  ${INITDDIR}
 	gs-path:         ${with_gs_path}
 	imagefilters:    ${enable_imagefilters}
 	jpeg:            ${with_jpeg}
@@ -415,6 +523,7 @@ Build configuration:
 	php-config:      ${with_php_config}
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
+	avahi:           ${enable_avahi}
 	werror:          ${enable_werror}
 ==============================================================================
 ])
