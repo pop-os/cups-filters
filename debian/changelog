@@ -1,3 +1,24 @@
+cups-filters (1.0.28-1) experimental; urgency=low
+
+  * New upstream release
+     - cups-browsed: Added daemon to browse the Bonjour broadcasts of
+       shared remote CUPS printers and automatically add local raw queues
+       pointing to them, to resemble the behavior of the former CUPS
+       broadcasting/browsing which was dropped in CUPS 1.6. Now remote
+       printers appear as local print queues as before, but with the
+       standardized Bonjour broadcasting (LP: #1086019, LP: #1061063,
+       LP: #1061069).
+  * debian/control: Added build dependencies on Avahi, needed for the new
+    cups-browsed and also a new binary package named cups-browsed.
+  * debian/cups-browsed.install: New cups-browsed binary package.
+  * debian/local/cups-browsed.upstart: Upstart configuration file for
+    cups-browsed.
+  * debian/rules: Added everything needed so that the cups-browsed daemon gets
+    started automatically.
+  * debian/cups-filters.install: Include files from /usr/bin.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 04 Jan 2013 15:19:06 +0100
+
 cups-filters (1.0.25-1) experimental; urgency=low
 
   * New upstream release
