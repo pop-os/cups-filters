@@ -1,3 +1,10 @@
+cups-filters (1.0.28-0ubuntu2) raring; urgency=low
+
+  * debian/local/cups-browsed.upstart: Only start cups-browsed if avahi-daemon
+    is started.
+
+ -- Stéphane Graber <stgraber@ubuntu.com>  Mon, 14 Jan 2013 16:02:16 -0500
+
 cups-filters (1.0.28-0ubuntu1) raring; urgency=low
 
   * New upstream release
