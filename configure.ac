@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[28])
+m4_define([cups_filters_version_micro],[30])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -95,6 +95,10 @@ AC_SUBST(CUPS_LIBS)
 CUPS_DATADIR="`$CUPSCONFIG --datadir`"
 AC_DEFINE_UNQUOTED(CUPS_DATADIR, "$CUPS_DATADIR", [CUPS datadir])
 AC_SUBST(CUPS_DATADIR)
+
+CUPS_SERVERROOT="`$CUPSCONFIG --serverroot`"
+AC_DEFINE_UNQUOTED(CUPS_SERVERROOT, "$CUPS_SERVERROOT", [CUPS serverroot])
+AC_SUBST(CUPS_SERVERROOT)
 
 CUPS_FONTPATH="$CUPS_DATADIR/fonts"
 AC_DEFINE_UNQUOTED(CUPS_FONTPATH, "$CUPS_FONTPATH", [Path to CUPS fonts dir])
@@ -233,6 +237,22 @@ fi
 AC_SUBST(AVAHI_LIBS)
 AC_SUBST(AVAHI_CFLAGS)
 
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.30.2])
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
+PKG_CHECK_MODULES(AVAHI_GLIB, [avahi-glib])
+AC_SUBST(AVAHI_GLIB_CFLAGS)
+AC_SUBST(AVAHI_GLIB_LIBS)
+
+AC_ARG_WITH([browseremoteprotocols],
+	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed.])],
+	[with_browseremoteprotocols="$withval"],
+	[with_browseremoteprotocols=none]
+)
+BROWSEREMOTEPROTOCOLS="$with_browseremoteprotocols"
+AC_SUBST(BROWSEREMOTEPROTOCOLS)
+
 dnl Setup init.d locations...
 AC_ARG_WITH(rcdir, [AS_HELP_STRING([--with-rcdir], [Set path for rc scripts])],rcdir="$withval",rcdir="")
 AC_ARG_WITH(rclevels, [AS_HELP_STRING([--with-rclevels], [Set run levels for rc scripts])],rclevels="$withval",rclevels="2 3 5")
@@ -287,7 +307,7 @@ elif test "x$rcdir" != xno; then
 	fi
 fi
 
-AM_CONDITIONAL([RCLINKS], [test "x$INITDDIR" = "x"])
+AM_CONDITIONAL([RCLINKS], [test "x$INITDIR" != "x"])
 
 if test "x${INITDIR}" != "x" -a "x${INITDDIR}" = "x"; then
    INITDDIR="${INITDIR}/init.d"
@@ -497,6 +517,7 @@ AC_CONFIG_FILES([
 	libfontembed.pc
 	Makefile
 	utils/cups-browsed
+	utils/cups-browsed.conf
 ])
 AC_OUTPUT
 
@@ -524,6 +545,7 @@ Build configuration:
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
 	avahi:           ${enable_avahi}
+	browsing:        ${with_browseremoteprotocols}
 	werror:          ${enable_werror}
 ==============================================================================
 ])

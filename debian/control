@@ -30,7 +30,8 @@ Build-Depends:
  zlib1g-dev,
  libfontconfig1-dev,
  libavahi-common-dev,
- libavahi-client-dev
+ libavahi-client-dev,
+ libavahi-glib-dev
 Homepage: http://www.openprinting.org/
 Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
