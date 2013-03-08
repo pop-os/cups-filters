@@ -20,7 +20,7 @@ Build-Depends:
  liblcms2-dev,
  libpoppler-private-dev (>= 0.16.0),
  libpoppler-cpp-dev,
- libqpdf-dev (>= 3.0.2),
+ libqpdf-dev (>= 4.0.1),
  libjpeg-dev,
  libpng-dev | libpng12-dev,
  libtiff-dev,

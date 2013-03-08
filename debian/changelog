@@ -1,3 +1,10 @@
+cups-filters (1.0.30-0ubuntu2) raring; urgency=low
+
+  * debian/control: Build-depend on libqpdf-dev >= 4.0.1, to make printing
+    filled PDF forms printing via pdftopdf.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  8 Mar 2013 17:37:07 +0100
+
 cups-filters (1.0.30-0ubuntu1) raring; urgency=low
 
   * New upstream release
