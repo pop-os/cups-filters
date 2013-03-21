@@ -72,10 +72,7 @@ pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
-sbin_PROGRAMS = $(am__EXEEXT_2)
-@ENABLE_AVAHI_TRUE@am__append_2 = \
-@ENABLE_AVAHI_TRUE@	cups-browsed
-
+sbin_PROGRAMS = cups-browsed$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
@@ -185,7 +182,6 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
 @ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_1 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
-@ENABLE_AVAHI_TRUE@am__EXEEXT_2 = cups-browsed$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
 am_bannertopdf_OBJECTS = bannertopdf-banner.$(OBJEXT) \
@@ -207,13 +203,11 @@ commandtopclx_DEPENDENCIES = $(am__DEPENDENCIES_1)
 commandtopclx_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(commandtopclx_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__cups_browsed_SOURCES_DIST = utils/cups-browsed.c
-@ENABLE_AVAHI_TRUE@am_cups_browsed_OBJECTS =  \
-@ENABLE_AVAHI_TRUE@	cups_browsed-cups-browsed.$(OBJEXT)
+am_cups_browsed_OBJECTS = cups_browsed-cups-browsed.$(OBJEXT)
 cups_browsed_OBJECTS = $(am_cups_browsed_OBJECTS)
-@ENABLE_AVAHI_TRUE@cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-@ENABLE_AVAHI_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-@ENABLE_AVAHI_TRUE@	$(am__DEPENDENCIES_1)
+cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -434,7 +428,7 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
-	$(commandtopclx_SOURCES) $(am__cups_browsed_SOURCES_DIST) \
+	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
 	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
 	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
@@ -1212,24 +1206,24 @@ texttopdf_LDADD = \
 	$(FONTCONFIG_LIBS) \
 	libfontembed.la
 
-@ENABLE_AVAHI_TRUE@cups_browsed_SOURCES = \
-@ENABLE_AVAHI_TRUE@	utils/cups-browsed.c
+cups_browsed_SOURCES = \
+	utils/cups-browsed.c
 
-@ENABLE_AVAHI_TRUE@cups_browsed_CFLAGS = \
-@ENABLE_AVAHI_TRUE@	$(CUPS_CFLAGS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_CFLAGS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_GLIB_CFLAGS) \
-@ENABLE_AVAHI_TRUE@	$(GLIB_CFLAGS)
+cups_browsed_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	$(AVAHI_CFLAGS) \
+	$(AVAHI_GLIB_CFLAGS) \
+	$(GLIB_CFLAGS)
 
-@ENABLE_AVAHI_TRUE@cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
-@ENABLE_AVAHI_TRUE@cups_browsed_LDADD = \
-@ENABLE_AVAHI_TRUE@	$(CUPS_LIBS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_LIBS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_GLIB_LIBS) \
-@ENABLE_AVAHI_TRUE@	$(GLIB_LIBS)
+cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
+cups_browsed_LDADD = \
+	$(CUPS_LIBS) \
+	$(AVAHI_LIBS) \
+	$(AVAHI_GLIB_LIBS) \
+	$(GLIB_LIBS)
 
-@ENABLE_AVAHI_TRUE@initrcdir = $(INITDDIR)
-@ENABLE_AVAHI_TRUE@initrc_SCRIPTS = utils/cups-browsed
+initrcdir = $(INITDDIR)
+initrc_SCRIPTS = utils/cups-browsed
 
 # ===
 # PPD
@@ -3763,21 +3757,21 @@ distclean-local:
 	rm -rf *.cache *~
 
 install-data-hook:
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	for level in $(RCLEVELS); do \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	done; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc0.d; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
-	$(LN_S) pdf.utf-8.simple \
+@RCLINKS_TRUE@	for level in $(RCLEVELS); do \
+@RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
+@RCLINKS_TRUE@		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
+@RCLINKS_TRUE@		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
+@RCLINKS_TRUE@	done; \
+@RCLINKS_TRUE@	$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc0.d; \
+@RCLINKS_TRUE@	$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
+	$(LN_S) -f pdf.utf-8.simple \
 		$(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 
 uninstall-hook:
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	if test "x$(INITDIR)" != x; then \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(RM) $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d/[SK]??cups-browsed || :; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	fi
+@RCLINKS_TRUE@	if test "x$(INITDIR)" != x; then \
+@RCLINKS_TRUE@		$(RM) $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d/[SK]??cups-browsed || :; \
+@RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
+@RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
