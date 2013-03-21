@@ -1,3 +1,11 @@
+cups-filters (1.0.31-0ubuntu2) raring; urgency=low
+
+  * debian/cups-browsed.install: Install /etc/cups/cups-browsed.conf.
+  * debian/rules: Set default "BrowseRemoteProtocols dnssd" in
+    /etc/cups/cups-browsed.conf.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 21 Mar 2013 17:38:20 +0100
+
 cups-filters (1.0.31-0ubuntu1) raring; urgency=low
 
   * New upstream release
