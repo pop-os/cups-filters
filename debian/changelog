@@ -1,7 +1,20 @@
+cups-filters (1.0.31-0ubuntu1) raring; urgency=low
+
+  * New upstream release
+     - cups-browsed: cups-browsed removed valid local queues pointing to
+       remote queues when cups-browsed did not shut down cleanly after
+       the previous session, leaving the user with missing local accessor
+       queues for some of the remote CUPS queues.
+     - pdftopdf: Improved error output.
+     - pdftopdf: getRotation now handles unusual cases more graceful
+       (LP: #1154318).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 21 Mar 2013 16:38:20 +0100
+
 cups-filters (1.0.30-0ubuntu2) raring; urgency=low
 
   * debian/control: Build-depend on libqpdf-dev >= 4.0.1, to make printing
-    filled PDF forms printing via pdftopdf.
+    filled PDF forms work via pdftopdf.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  8 Mar 2013 17:37:07 +0100
 
@@ -23,7 +36,7 @@ cups-filters (1.0.30-0ubuntu1) raring; urgency=low
      - pdftopdf: Fixed incorrect evenDuplex page insertion (Upstream bug #1088).
      - pdftoopvp: Let it build with Poppler 0.22.x. Thanks to Koji Otani
        from BBR Inc. (Upstream bug #1089).
-  * debian/changelog: Added build dependency on libavahi-glib-dev.
+  * debian/control: Added build dependency on libavahi-glib-dev.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Thu,  7 Mar 2013 19:30:07 +0100
 
