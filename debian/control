@@ -37,7 +37,6 @@ Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
 
 Package: libcupsfilters1
-Priority: optional
 Section: libs
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
@@ -51,7 +50,6 @@ Description: OpenPrinting CUPS Filters - Shared library
  color spaces.
 
 Package: libfontembed1
-Priority: optional
 Section: libs
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
@@ -63,8 +61,6 @@ Description: OpenPrinting CUPS Filters - Font Embed Shared library
  used by CUPS filters.
 
 Package: cups-filters
-Priority: optional
-Section: net
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
@@ -87,7 +83,6 @@ Description: OpenPrinting CUPS Filters
  printing workflow.
 
 Package: libcupsfilters-dev
-Priority: optional
 Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -98,7 +93,6 @@ Description: OpenPrinting CUPS Filters - Development files for the library
  libcupsfilters.
 
 Package: libfontembed-dev
-Priority: optional
 Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -108,8 +102,6 @@ Description: OpenPrinting CUPS Filters - Development files for font embed librar
  Header files to develop applications using libfontembed.
 
 Package: cups-browsed
-Priority: optional
-Section: net
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
