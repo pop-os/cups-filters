@@ -104,7 +104,11 @@ Depends: ${shlibs:Depends},
  ${misc:Depends},
  libfontembed1 (= ${binary:Version})
 Description: OpenPrinting CUPS Filters - Development files for font embed library
- Header files to develop applications using libfontembed.
+ This library contains functions for font embedding in PDF files, commonly
+ used by CUPS filters.
+ .
+ This package contains the header files to develop applications using
+ libfontembed.
 
 Package: cups-browsed
 Architecture: any
