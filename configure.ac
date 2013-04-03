@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[28])
+m4_define([cups_filters_version_micro],[31])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -95,6 +95,10 @@ AC_SUBST(CUPS_LIBS)
 CUPS_DATADIR="`$CUPSCONFIG --datadir`"
 AC_DEFINE_UNQUOTED(CUPS_DATADIR, "$CUPS_DATADIR", [CUPS datadir])
 AC_SUBST(CUPS_DATADIR)
+
+CUPS_SERVERROOT="`$CUPSCONFIG --serverroot`"
+AC_DEFINE_UNQUOTED(CUPS_SERVERROOT, "$CUPS_SERVERROOT", [CUPS serverroot])
+AC_SUBST(CUPS_SERVERROOT)
 
 CUPS_FONTPATH="$CUPS_DATADIR/fonts"
 AC_DEFINE_UNQUOTED(CUPS_FONTPATH, "$CUPS_FONTPATH", [Path to CUPS fonts dir])
@@ -203,6 +207,8 @@ AC_PATH_PROG(PKGCONFIG, pkg-config)
 dnl Avahi for cups-browsed
 AVAHI_LIBS=""
 AVAHI_CFLAGS=""
+AVAHI_GLIB_CFLAGS=""
+AVAHI_GLIB_LIBS=""
 
 AC_ARG_ENABLE([avahi],
 	[AS_HELP_STRING([--disable-avahi], [Disable DNS Service Discovery support using Avahi.])],
@@ -227,11 +233,31 @@ if test "x$PKGCONFIG" != x -a x$enable_avahi != xno; then
 		AC_DEFINE(HAVE_AVAHI, [], [Define if you have the avahi library])
 	else
 		AC_MSG_RESULT(no)
+		enable_avahi=no
 	fi
 fi
 
 AC_SUBST(AVAHI_LIBS)
 AC_SUBST(AVAHI_CFLAGS)
+
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.30.2])
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
+if test "x$PKGCONFIG" != x -a x$enable_avahi != xno; then
+	PKG_CHECK_MODULES(AVAHI_GLIB, [avahi-glib])
+fi
+
+AC_SUBST(AVAHI_GLIB_CFLAGS)
+AC_SUBST(AVAHI_GLIB_LIBS)
+
+AC_ARG_WITH([browseremoteprotocols],
+	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed.])],
+	[with_browseremoteprotocols="$withval"],
+	[with_browseremoteprotocols=none]
+)
+BROWSEREMOTEPROTOCOLS="$with_browseremoteprotocols"
+AC_SUBST(BROWSEREMOTEPROTOCOLS)
 
 dnl Setup init.d locations...
 AC_ARG_WITH(rcdir, [AS_HELP_STRING([--with-rcdir], [Set path for rc scripts])],rcdir="$withval",rcdir="")
@@ -287,7 +313,7 @@ elif test "x$rcdir" != xno; then
 	fi
 fi
 
-AM_CONDITIONAL([RCLINKS], [test "x$INITDDIR" = "x"])
+AM_CONDITIONAL([RCLINKS], [test "x$INITDIR" != "x"])
 
 if test "x${INITDIR}" != "x" -a "x${INITDDIR}" = "x"; then
    INITDDIR="${INITDIR}/init.d"
@@ -497,6 +523,7 @@ AC_CONFIG_FILES([
 	libfontembed.pc
 	Makefile
 	utils/cups-browsed
+	utils/cups-browsed.conf
 ])
 AC_OUTPUT
 
@@ -524,6 +551,7 @@ Build configuration:
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
 	avahi:           ${enable_avahi}
+	browsing:        ${with_browseremoteprotocols}
 	werror:          ${enable_werror}
 ==============================================================================
 ])
