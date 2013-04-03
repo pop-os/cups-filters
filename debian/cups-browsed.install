@@ -1,1 +1,2 @@
 usr/sbin/cups-browsed
+etc/cups/cups-browsed.conf
