@@ -89,8 +89,13 @@ Depends: ${shlibs:Depends},
  ${misc:Depends},
  libcupsfilters1 (= ${binary:Version})
 Description: OpenPrinting CUPS Filters - Development files for the library
- Header files to develop applications (CUPS filters, printer drivers) using
- libcupsfilters.
+ This library contains functions commonly used by the CUPS filters
+ in the OpenPrinting CUPS filters package, currently functions to read
+ several different image formats and to convert bitmaps between different
+ color spaces.
+ .
+ This package contains the header files to develop applications (CUPS
+ filters, printer drivers) using libcupsfilters.
 
 Package: libfontembed-dev
 Section: libdevel
