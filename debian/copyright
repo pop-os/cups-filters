@@ -45,6 +45,10 @@ Copyright: 2006, Stepan Kasal <kasal@ucw.cz>
            2006, Guido U. Draheim <guidod@gmx.de>
            2006, Alexandre Oliva
 License: AllPermissive
+ Copying and distribution of this file, with or without modification,
+ are permitted in any medium without royalty provided the copyright
+ notice and this notice are preserved.  This file is offered as-is,
+ without any warranty.
 
 Files:m4/ax_compare_version.m4
 Copyright: 2008, Tim Toolan <toolan@ele.uri.edu>
@@ -85,7 +89,7 @@ Copyright: 2007-2011, Apple Inc.
  2012, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2
 
-Files: ppd/Generic-PDF_Printer-PDF.ppd,
+Files: ppd/Generic-PDF_Printer-PDF.ppd
  ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd
  filter/texttops
  filter/imagetops
