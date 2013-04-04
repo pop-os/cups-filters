@@ -1,4 +1,4 @@
-cups-filters (1.0.32-0ubuntu1) UNRELEASED; urgency=low
+cups-filters (1.0.32-0ubuntu1) raring; urgency=low
 
   * New upstream bug fix release
      - cups-browsed: Shared algorithm to generate local queues based on
@@ -19,6 +19,11 @@ cups-filters (1.0.32-0ubuntu1) UNRELEASED; urgency=low
      - cups-browsed: Added support for "...:<port>" extensions of
        BrowsePoll addresses. Thanks to Tim Waugh from Red Hat
        (LP: 1159213).
+  * debian/cups-browsed.postinst: Overtake browsing-related directives
+    from /etc/cups/cupsd.conf into /etc/cups/cups-browsed.conf. Comment out
+    directives which introduce CUPS broadcasting/browsing so that users use
+    this deprecated method only if absolutely necessary. Add comments to tell
+    the user about how to use the added lines (LP: #1159213).
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 03 Apr 2013 23:17:06 +0200
 
@@ -28,12 +33,12 @@ cups-filters (1.0.31-1) experimental; urgency=low
      - cups-browsed: cups-browsed removed valid local queues pointing to
        remote queues when cups-browsed did not shut down cleanly after
        the previous session, leaving the user with missing local accessor
-       queues for some of the remote CUPS queues.
+       queues for some of the remote CUPS queues (LP: #1131149).
      - pdftopdf: Improved error output.
      - pdftopdf: getRotation now handles unusual cases more graceful
        (LP: #1154318).
      - cups-browsed: Do not remove a generated local print queue when
-       it was made the system default printer.
+       it was made the system default printer (LP: #1146407).
      - texttopdf: Fixed corrupted pdf when a utf-8 title is given and
        corresponding crash with 'prettyprint' (LP: #1137438).
      - cups-browsed: Added CUPS Broadcasting for sharing local printers
