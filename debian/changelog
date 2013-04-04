@@ -1,4 +1,4 @@
-cups-filters (1.0.32-1) UNRELEASED; urgency=low
+cups-filters (1.0.32-1) experimental; urgency=low
 
   * New upstream bug fix release
      - cups-browsed: Shared algorithm to generate local queues based on
@@ -32,7 +32,7 @@ cups-filters (1.0.32-1) UNRELEASED; urgency=low
   * Use the new fonts-freefont-ttf package name
   * Add simple cups-browsed init script (Closes: #700929)
 
- -- Didier Raboud <odyx@debian.org>  Thu, 04 Apr 2013 13:36:04 +0200
+ -- Didier Raboud <odyx@debian.org>  Thu, 04 Apr 2013 13:51:25 +0200
 
 cups-filters (1.0.31-1) experimental; urgency=low
 
