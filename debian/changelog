@@ -1,4 +1,4 @@
-cups-filters (1.0.32-1) experimental; urgency=low
+cups-filters (1.0.32-1) UNRELEASED; urgency=low
 
   * New upstream bug fix release
      - cups-browsed: Shared algorithm to generate local queues based on
