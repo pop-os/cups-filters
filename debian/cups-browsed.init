@@ -42,7 +42,7 @@ case "$1" in
 	log_end_msg $?
         rm -f $PIDFILE
 	;;
-  restart)
+  restart|force-reload)
 	log_begin_msg "Restarting $DESC: $NAME"
 	if start-stop-daemon --stop --retry 5 --oknodo $SSD_OPTIONS --name $NAME; then
 		start-stop-daemon --start --background $SSD_OPTIONS --exec $DAEMON
@@ -54,7 +54,7 @@ case "$1" in
 	;;
   *)
 	N=/etc/init.d/${0##*/}
-	echo "Usage: $N {start|stop|restart|status}" >&2
+	echo "Usage: $N {start|stop|force-reload|restart|status}" >&2
 	exit 1
 	;;
 esac
