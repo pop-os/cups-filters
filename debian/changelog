@@ -1,4 +1,4 @@
-cups-filters (1.0.32-0ubuntu1) raring; urgency=low
+cups-filters (1.0.32-1) experimental; urgency=low
 
   * New upstream bug fix release
      - cups-browsed: Shared algorithm to generate local queues based on
@@ -18,14 +18,21 @@ cups-filters (1.0.32-0ubuntu1) raring; urgency=low
      - Added more comments and examples to /etc/cups/cups-browsed.conf.
      - cups-browsed: Added support for "...:<port>" extensions of
        BrowsePoll addresses. Thanks to Tim Waugh from Red Hat
-       (LP: 1159213).
-  * debian/cups-browsed.postinst: Overtake browsing-related directives
-    from /etc/cups/cupsd.conf into /etc/cups/cups-browsed.conf. Comment out
-    directives which introduce CUPS broadcasting/browsing so that users use
-    this deprecated method only if absolutely necessary. Add comments to tell
-    the user about how to use the added lines (LP: #1159213).
+       (LP: #1159213).
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 03 Apr 2013 23:17:06 +0200
+  [ Till Kamppeter ]
+  * Let cups-browsed overtake browsing-related directives from
+    /etc/cups/cupsd.conf into /etc/cups/cups-browsed.conf. Comment out
+    directives which introduce CUPS broadcasting/browsing so that users
+    use this deprecated method only if absolutely necessary. Add
+    comments to tell the user about how to use the added lines.
+    (LP: #1159213)
+
+  [ Didier Raboud ]
+  * Use the new fonts-freefont-ttf package name
+  * Add simple cups-browsed init script (Closes: #700929)
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 04 Apr 2013 13:36:04 +0200
 
 cups-filters (1.0.31-1) experimental; urgency=low
 
