@@ -1,3 +1,10 @@
+cups-filters (1.0.33-1) experimental; urgency=low
+
+  * New upstream bug fix release
+     - cups-browsed: Added NULL check (Upstream bug #1106).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 04 Apr 2013 17:33:06 +0200
+
 cups-filters (1.0.32-1) experimental; urgency=low
 
   * New upstream bug fix release
