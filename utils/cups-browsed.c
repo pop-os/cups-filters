@@ -24,6 +24,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <ifaddrs.h>
+#if defined(__OpenBSD__)
+#include <sys/socket.h>
+#endif /* __OpenBSD__ */
 #include <net/if.h>
 #include <netinet/in.h>
 #include <resolv.h>
@@ -663,6 +666,10 @@ void generate_local_queue(const char *host,
       p->uri[3] = 's';
       p->status = STATUS_TO_BE_CREATED;
       p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+      p->host = strdup(remote_host);
+      p->service_name = strdup(name);
+      p->type = strdup(type);
+      p->domain = strdup(domain);
       debug_printf("cups-browsed: Upgrading printer %s (Host: %s) to IPPS. New URI: %s\n",
 		   p->name, p->host, p->uri);
 
@@ -680,6 +687,14 @@ void generate_local_queue(const char *host,
       }
 
     }
+    if (p->host[0] == '\0')
+      p->host = strdup(remote_host);
+    if (p->service_name[0] == '\0' && name)
+      p->service_name = strdup(name);
+    if (p->type[0] == '\0' && type)
+      p->type = strdup(type);
+    if (p->domain[0] == '\0' && domain)
+      p->domain = strdup(domain);
 
   } else {
 
@@ -698,7 +713,7 @@ void generate_local_queue(const char *host,
 	    port, remote_queue);
 
     p = create_local_queue (local_queue_name, uri, remote_host,
-			    name, type, domain);
+			    name ? name : "", type, domain);
     free (uri);
   }
 
@@ -985,7 +1000,7 @@ found_cups_printer (const char *remote_host, const char *uri,
     }
   }
 
-  generate_local_queue(host, port, local_resource, info, "", "");
+  generate_local_queue(host, port, local_resource, info ? info : "", "", "");
 }
 
 static gboolean
