@@ -1,3 +1,20 @@
+cups-filters (1.0.34-1) experimental; urgency=low
+
+  * New upstream bug fix release 1.0.33:
+     - cups-browsed: Added NULL check (Upstream bug #1106).
+  * New upstream bug fix release 1.0.34:
+     - pdftopdf: Fixed duplex printing logic. Before when printing
+       duplex jobs with multiple copies and a odd number of pages,
+       the first page of the second copy got onto the back side of
+       the last page of the first copy, rendering printing more than
+       one copy unusable.
+     - cups-browsed: If a queue left over from the last session
+       gets confirmed, fill in the data structure with the Bonjour
+       parameters, also update the Bonjour parameters if a local
+       queue is upgraded from IPP to IPPS.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 10 Apr 2013 19:53:06 +0200
+
 cups-filters (1.0.32-1) experimental; urgency=low
 
   * New upstream bug fix release
