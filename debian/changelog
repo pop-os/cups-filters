@@ -1,3 +1,11 @@
+cups-filters (1.0.34-0ubuntu1.1) raring-proposed; urgency=low
+
+  * debian/local/cups-browsed.upstart: Give up starting cups-browsed after
+    3 failed attempts in 4 minutes. This avoids infinite respawning when
+    avahi-daemon is not running (LP: #1098756).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 30 Apr 2013 16:05:06 +0200
+
 cups-filters (1.0.34-0ubuntu1) raring; urgency=low
 
   * New upstream bug fix release
