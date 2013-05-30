@@ -1,3 +1,12 @@
+cups-filters (1.0.34-1ubuntu1) saucy; urgency=low
+
+  * Resynchronize on Debian, remaining change:
+  * debian/local/cups-browsed.upstart: Give up starting cups-browsed after
+    3 failed attempts in 4 minutes. This avoids infinite respawning when
+    avahi-daemon is not running (LP: #1098756).
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 30 May 2013 13:33:13 +0200
+
 cups-filters (1.0.34-1) experimental; urgency=low
 
   * New upstream bug fix release 1.0.33:
