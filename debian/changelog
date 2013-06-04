@@ -1,3 +1,14 @@
+cups-filters (1.0.34-2) unstable; urgency=low
+
+  * Upload to unstable.
+
+  [ Till Kamppeter ]
+  * debian/local/cups-browsed.upstart: Give up starting cups-browsed after
+    3 failed attempts in 4 minutes. This avoids infinite respawning when
+    avahi-daemon is not running (LP: #1098756).
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 04 Jun 2013 14:57:22 +0200
+
 cups-filters (1.0.34-1) experimental; urgency=low
 
   * New upstream bug fix release 1.0.33:
