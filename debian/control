@@ -114,7 +114,7 @@ Package: cups-browsed
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
- cups
+Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed
  This package provides cups-browsed, a daemon which browses the Bonjour
  broadcasts of shared remote CUPS printers and makes the printers
