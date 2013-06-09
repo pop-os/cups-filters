@@ -1,3 +1,20 @@
+cups-filters (1.0.34-3) unstable; urgency=low
+
+  * In cups-browsed:
+    - move cups from Depends to Enhances, also drop it from the init
+      script requirements; it is not strictly necessary for cups-browsed
+      to function.
+    - add avahi-daemon to Depends, it is needed for the daemon to
+      actually start. This will also transitively bring libnss-mdns in
+      the normal cases as it is a recommends of avahi-daemon.
+      (Closes: #711319, #711229)
+    - in postinst, only try to import cups changes if the configuration
+      file exists.
+    - make the long description clearer on the situations in which it is
+      useful. (Closes: #698141)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 09 Jun 2013 12:24:26 +0200
+
 cups-filters (1.0.34-2) unstable; urgency=low
 
   * Upload to unstable.
