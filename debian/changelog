@@ -1,3 +1,10 @@
+cups-filters (1.0.34-4) UNRELEASED; urgency=low
+
+  * Install escp.h and pcl.h in the CUPS ppdc include directory; this
+    fixes cupsfilters.drv.
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 11 Jun 2013 08:25:23 +0200
+
 cups-filters (1.0.34-3) unstable; urgency=low
 
   * In cups-browsed:
