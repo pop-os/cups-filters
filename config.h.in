@@ -12,6 +12,9 @@
 /* CUPS datadir */
 #undef CUPS_DATADIR
 
+/* "Domain socket of CUPS" */
+#undef CUPS_DEFAULT_DOMAINSOCKET
+
 /* Path to CUPS fonts dir */
 #undef CUPS_FONTPATH
 
@@ -24,6 +27,9 @@
 /* Define default renderer */
 #undef CUPS_PDFTOPS_RENDERER
 
+/* pdftocairo binary to use. */
+#undef CUPS_POPPLER_PDFTOCAIRO
+
 /* pdftops binary to use. */
 #undef CUPS_POPPLER_PDFTOPS
 
@@ -32,6 +38,9 @@
 
 /* CUPS serverroot */
 #undef CUPS_SERVERROOT
+
+/* Transient run-time state dir of CUPS */
+#undef CUPS_STATEDIR
 
 /* Define that we provide acroread. */
 #undef HAVE_ACROREAD
@@ -89,6 +98,9 @@
 
 /* Define to 1 if you have the `open_memstream' function. */
 #undef HAVE_OPEN_MEMSTREAM
+
+/* Define that we provide poppler pdftocairo. */
+#undef HAVE_POPPLER_PDFTOCAIRO
 
 /* Define that we provide poppler pdftops. */
 #undef HAVE_POPPLER_PDFTOPS

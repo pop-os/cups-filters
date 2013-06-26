@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[34])
+m4_define([cups_filters_version_micro],[36])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -20,7 +20,7 @@ m4_include([m4/ax_compare_version.m4])
 AM_INIT_AUTOMAKE([1.11 gnu dist-xz dist-bzip2])
 AM_SILENT_RULES([yes])
 AC_LANG([C++])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 # Extra defines for the config.h
 AH_BOTTOM([
 #ifdef HAVE_LONG_LONG
@@ -63,7 +63,7 @@ PKG_PROG_PKG_CONFIG([0.20])
 # Specify the fontdir patch if not default
 # ========================================
 AC_ARG_WITH([fontdir],
-	[AS_HELP_STRING([--with-fontdir=path], [Specify path to font config directory ( default: fonts/conf.d/).])],
+	[AS_HELP_STRING([--with-fontdir=path], [Specify path to font config directory (default: fonts/conf.d/).])],
 	[FONTDIR="$withval"],
 	[FONTDIR="fonts/conf.d"]
 )
@@ -116,10 +116,55 @@ AC_DEFINE_DIR(BANNERTOPDF_DATADIR, "{CUPS_DATADIR}/data", [Directory where banne
 
 AC_SEARCH_LIBS([dlopen],
 	[dl],
-	DLOPEN_LIBS="-ldl",
+	[AS_IF([test "$ac_cv_search_dlopen" != "none required"], [
+		DLOPEN_LIBS="$ac_cv_search_dlopen"
+	])],
 	AC_MSG_ERROR([unable to find the dlopen() function])
 )
 AC_SUBST(DLOPEN_LIBS)
+
+# Transient run-time state dir of CUPS
+CUPS_STATEDIR=""
+AC_ARG_WITH(rundir, [  --with-cups-rundir           set transient run-time state directory of CUPS],CUPS_STATEDIR="$withval",[
+        case "$uname" in
+                Darwin*)
+                        # Darwin (OS X)
+                        CUPS_STATEDIR="$CUPS_SERVERROOT"
+                        ;;
+                *)
+                        # All others
+                        CUPS_STATEDIR="$localstatedir/run/cups"
+                        ;;
+        esac])
+AC_DEFINE_UNQUOTED(CUPS_STATEDIR, "$CUPS_STATEDIR", [Transient run-time state dir of CUPS])
+AC_SUBST(CUPS_STATEDIR)
+
+# Domain socket of CUPS...
+CUPS_DEFAULT_DOMAINSOCKET=""
+AC_ARG_WITH(domainsocket, [  --with-cups-domainsocket     set unix domain socket name used by CUPS
+],
+        default_domainsocket="$withval",
+        default_domainsocket="")
+
+if test x$enable_domainsocket != xno -a x$default_domainsocket != xno; then
+        if test "x$default_domainsocket" = x; then
+                case "$uname" in
+                        Darwin*)
+                                # Darwin and MaxOS X do their own thing...
+                                CUPS_DEFAULT_DOMAINSOCKET="$localstatedir/run/cu
+psd"
+                                ;;
+                        *)
+                                # All others use FHS standard...
+                                CUPS_DEFAULT_DOMAINSOCKET="$CUPS_STATEDIR/cups.sock"
+                                ;;
+                esac
+        else
+                CUPS_DEFAULT_DOMAINSOCKET="$default_domainsocket"
+        fi
+fi
+AC_DEFINE_UNQUOTED(CUPS_DEFAULT_DOMAINSOCKET, "$CUPS_DEFAULT_DOMAINSOCKET", "Domain socket of CUPS")
+AC_SUBST(CUPS_DEFAULT_DOMAINSOCKET)
 
 # ======================
 # Check system functions
@@ -252,9 +297,9 @@ AC_SUBST(AVAHI_GLIB_CFLAGS)
 AC_SUBST(AVAHI_GLIB_LIBS)
 
 AC_ARG_WITH([browseremoteprotocols],
-	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed.])],
+	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed (default: dnssd cups)])],
 	[with_browseremoteprotocols="$withval"],
-	[with_browseremoteprotocols=none]
+	[with_browseremoteprotocols="dnssd cups"]
 )
 BROWSEREMOTEPROTOCOLS="$with_browseremoteprotocols"
 AC_SUBST(BROWSEREMOTEPROTOCOLS)
@@ -367,12 +412,12 @@ AS_IF([test x"$long_long_found" = "xyes"], [
 # Check for pdf2ps
 # ================
 AC_ARG_WITH([pdftops],
-	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,acroread).])],
+	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread).])],
 	[with_pdftops="$withval"],
 	[with_pdftops=gs]
 )
 AS_CASE([x$with_pdftops],
-        [xgs|xpdftops|xacroread], [],
+        [xgs|xpdftops|xpdftocairo|xacroread], [],
         [AC_MSG_ERROR([Unknown value of with-pdftops provided: $with_pdftops])]
 )
 AC_ARG_WITH([gs-path],
@@ -384,6 +429,11 @@ AC_ARG_WITH([pdftops-path],
         [AS_HELP_STRING([--with-pdftops-path=value], [Set path to pdftops/ghostscript binary (default: system).])],
         [with_pdftops_path="$withval"],
         [with_pdftops_path=system]
+)
+AC_ARG_WITH([pdftocairo-path],
+        [AS_HELP_STRING([--with-pdftocairo-path=value], [Set path to pdftocairo binary (default: system).])],
+        [with_pdftocairo_path="$withval"],
+        [with_pdftocairo_path=system]
 )
 AC_ARG_WITH([acroread-path],
         [AS_HELP_STRING([--with-acroread-path=value], [Set path to acroread binary (default: system).])],
@@ -417,6 +467,8 @@ AS_IF([test "x$CUPS_GHOSTSCRIPT" != "x"], [
 	], [
 		AC_MSG_RESULT([no])
 	])
+], [
+	CUPS_GHOSTSCRIPT="gs"
 ])
 
 AS_IF([test "x$with_pdftops_path" != "xsystem"], [
@@ -442,6 +494,19 @@ AS_IF([test "x$CUPS_PDFTOPS" != "x"], [
 	], [
         	AC_MSG_RESULT([no])
 	])
+], [
+	CUPS_PDFTOPS="/usr/bin/pdftops"
+])
+AS_IF([test "x$with_pdftocairo_path" != "xsystem"], [
+	CUPS_PDFTOPS="$with_pdftocairo_path"
+], [
+	AC_PATH_PROG(CUPS_PDFTOCAIRO, [pdftocairo], [AC_MSG_ERROR([Required pdftocairo is missing. Please install Poppler developer packages.])])
+])
+AS_IF([test "x$CUPS_PDFTOCAIRO" != "x"], [
+	AC_DEFINE([HAVE_POPPLER_PDFTOCAIRO], [], [Define that we provide poppler pdftocairo.])
+	AS_IF([test x"$with_pdftops" = xpdftocairo], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [PDFTOCAIRO], [Define default renderer])])
+], [
+	CUPS_PDFTOCAIRO="pdftocairo"
 ])
 AS_IF([test "x$with_acroread_path" != "xsystem"], [
 	CUPS_ACROREAD="$with_acroread_path"
@@ -451,10 +516,13 @@ AS_IF([test "x$with_acroread_path" != "xsystem"], [
 AS_IF([test "x$CUPS_ACROREAD" != "x"], [
 	AC_DEFINE([HAVE_ACROREAD], [], [Define that we provide acroread.])
 	AS_IF([test x"$with_pdftops" = xacroread], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [ACROREAD], [Define default renderer])])
+], [
+	CUPS_ACROREAD="acroread"
 ])
 
 AC_DEFINE_UNQUOTED([CUPS_GHOSTSCRIPT], "$CUPS_GHOSTSCRIPT", [gs binary to use])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOPS], "$CUPS_PDFTOPS", [pdftops binary to use.])
+AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOCAIRO], "$CUPS_PDFTOCAIRO", [pdftocairo binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_ACROREAD], "$CUPS_ACROREAD", [acroread binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_MAX_RESOLUTION], [$CUPS_PDFTOPS_MAXRES], [max resolution used for pdftops when converting images])
 
@@ -515,6 +583,21 @@ AS_IF([test x"$GCC" = "xyes"], [
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 CXXFLAGS="$CXXFLAGS -D_GNU_SOURCE"
 
+# =======
+# gstopxl
+# =======
+AC_PROG_SED
+dnl See if it is GNU sed or else.
+dnl - need more work to tell SED features.
+SED_EXTENDED_REGEX_OPT=-nre
+sed_variant=`sed --version 2>&1`
+sed_variant=`echo $sed_variant|sed -e 's/ .*//'`
+if test "$sed_variant" != GNU ; then
+SED_EXTENDED_REGEX_OPT=-nEe
+fi
+AC_SUBST(SED_EXTENDED_REGEX_OPT)
+AC_SUBST(CUPS_GHOSTSCRIPT)
+
 # =====================
 # Prepare all .in files
 # =====================
@@ -522,6 +605,7 @@ AC_CONFIG_FILES([
 	libcupsfilters.pc
 	libfontembed.pc
 	Makefile
+	filter/gstopxl
 	utils/cups-browsed
 	utils/cups-browsed.conf
 ])
@@ -540,9 +624,11 @@ Build configuration:
 	cups-config:     ${with_cups_config}
 	font directory:  ${sysconfdir}/${FONTDIR}
 	init directory:  ${INITDDIR}
+	cups dom socket: ${CUPS_DEFAULT_DOMAINSOCKET}
 	gs-path:         ${with_gs_path}
 	imagefilters:    ${enable_imagefilters}
 	jpeg:            ${with_jpeg}
+	pdftocairo-path: ${with_pdftocairo_path}
 	pdftops:         ${with_pdftops}
 	pdftops-path:    ${with_pdftops_path}
 	png:             ${with_png}

@@ -32,6 +32,7 @@
 #include <resolv.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
@@ -119,6 +120,7 @@ static unsigned int BrowseTimeout = 300;
 static uint16_t BrowsePort = 631;
 static char **BrowsePoll = NULL;
 static size_t NumBrowsePoll = 0;
+static char *DomainSocket = NULL;
 
 static int debug = 0;
 
@@ -403,6 +405,8 @@ gboolean handle_cups_queues(gpointer unused) {
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  break;
 	}
+	if (response)
+	  ippDelete(response);
 
 	/* No jobs, not default printer, remove the CUPS queue */
 	request = ippNewRequest(CUPS_DELETE_PRINTER);
@@ -635,6 +639,9 @@ void generate_local_queue(const char *host,
 	   ignore this remote printer */
 	debug_printf("cups-browsed: %s also taken, printer ignored.\n",
 		     local_queue_name);
+	free (backup_queue_name);
+	free (remote_host);
+	cupsFreeDests(num_dests, dests);
 	return;
       }
     }
@@ -716,6 +723,9 @@ void generate_local_queue(const char *host,
 			    name ? name : "", type, domain);
     free (uri);
   }
+
+  free (backup_queue_name);
+  free (remote_host);
 
   if (p)
     debug_printf("cups-browsed: Bonjour IDs: Service name: \"%s\", "
@@ -982,23 +992,6 @@ found_cups_printer (const char *remote_host, const char *uri,
 
   debug_printf("cups-browsed: browsed queue name is %s\n",
 	       local_resource + 9);
-
-  /* Does the host need resolving? */
-  if (host[strspn (host, "0123456789.")] == '\0') {
-    /* Yes. Resolve it. */
-    struct addrinfo hints, *addr;
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = 0;
-    hints.ai_protocol = 0;
-    if (!getaddrinfo (host, NULL, &hints, &addr)) {
-      getnameinfo (addr->ai_addr, addr->ai_addrlen,
-		   host, sizeof(host),
-		   NULL, 0, 0);
-      freeaddrinfo (addr);
-    }
-  }
 
   generate_local_queue(host, port, local_resource, info ? info : "", "", "");
 }
@@ -1475,7 +1468,32 @@ browse_poll (gpointer data)
   ipp_attribute_t *attr;
   http_t *conn;
   int port = BrowsePort;
-  char *colon;
+  char *colon,*slash;
+  int major = 0;
+  int minor = 0;
+
+  slash = strchr (server, '/');
+  if (slash) {
+    *slash++ = '\0';
+    if (!strcmp(slash, "version=1.0")) {
+      major = 1;
+      minor = 0;
+    } else if (!strcmp(slash, "version=1.1")) {
+      major = 1;
+      minor = 1;
+    } else if (!strcmp(slash, "version=2.0")) {
+      major = 2;
+      minor = 0;
+    } else if (!strcmp(slash, "version=2.1")) {
+      major = 2;
+      minor = 1;
+    } else if (!strcmp(slash, "version=2.2")) {
+      major = 2;
+      minor = 2;
+    } else {
+      debug_printf ("ignoring unknown server option: %s\n", slash);
+    }
+  }
 
   debug_printf ("cups-browsed: browse polling %s\n", server);
 
@@ -1498,6 +1516,10 @@ browse_poll (gpointer data)
   }
 
   request = ippNewRequest(CUPS_GET_PRINTERS);
+  if (major > 0) {
+    debug_printf("cups-browsed: setting IPP version %d.%d\n", major, minor);
+    ippSetVersion (request, major, minor);
+  }
 
   ippAddStrings (request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
 		 "requested-attributes", sizeof (rattrs) / sizeof (rattrs[0]),
@@ -1562,8 +1584,11 @@ fail:
   if (conn)
     httpClose (conn);
 
+  if (server)
+    free (server);
+
   /* Call a new timeout handler so that we run again */
-  g_timeout_add_seconds (BrowseInterval, browse_poll, server);
+  g_timeout_add_seconds (BrowseInterval, browse_poll, data);
 
   /* Stop this timeout handler, we called a new one */
   return FALSE;
@@ -1697,10 +1722,14 @@ read_configuration (const char *filename)
 	debug_printf("cups-browsed: Adding BrowsePoll server: %s\n", value);
 	BrowsePoll[NumBrowsePoll++] = strdup (value);
       }
-    } else if (!strcasecmp(line, "BrowseAllow") && value)
+    } else if (!strcasecmp(line, "BrowseAllow") && value) {
       if (read_browseallow_value (value))
 	debug_printf ("cups-browsed: BrowseAllow value \"%s\" not understood\n",
 		      value);
+    } else if (!strcasecmp(line, "DomainSocket") && value) {
+      if (value[0] != '\0')
+	DomainSocket = strdup(value);
+    }
   }
 
   cupsFileClose(fp);
@@ -1732,6 +1761,23 @@ int main(int argc, char*argv[]) {
 
   /* Read in cups-browsed.conf */
   read_configuration (NULL);
+
+  /* Set the CUPS_SERVER environment variable to assure that cups-browsed
+     always works with the local CUPS daemon and never with a remote one
+     specified by a client.conf file */
+#ifdef CUPS_DEFAULT_DOMAINSOCKET
+  if (DomainSocket == NULL)
+    DomainSocket = CUPS_DEFAULT_DOMAINSOCKET;
+#endif
+  if (DomainSocket != NULL) {
+    struct stat sockinfo;               /* Domain socket information */
+    if (!stat(DomainSocket, &sockinfo) &&
+        (sockinfo.st_mode & S_IRWXO) == S_IRWXO)
+      setenv("CUPS_SERVER", DomainSocket, 1);
+    else
+      setenv("CUPS_SERVER", "localhost", 1);
+  } else
+    setenv("CUPS_SERVER", "localhost", 1);
 
   if (BrowseLocalProtocols & BROWSE_DNSSD) {
     fprintf(stderr, "Local support for DNSSD not implemented\n");
@@ -1933,13 +1979,13 @@ int main(int argc, char*argv[]) {
   }
 
   if (BrowsePoll) {
-    char **server;
-    for (server = BrowsePoll;
-	 *server;
-	 server++) {
+    size_t index;
+    for (index = 0;
+	 index < NumBrowsePoll;
+	 index++) {
       debug_printf ("cups-browsed: will browse poll %s every %ds\n",
-		    *server, BrowseInterval);
-      g_idle_add (browse_poll, *server);
+		    BrowsePoll[index], BrowseInterval);
+      g_idle_add (browse_poll, BrowsePoll[index]);
     }
   }
 
