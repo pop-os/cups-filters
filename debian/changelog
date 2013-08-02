@@ -1,3 +1,10 @@
+cups-filters (1.0.34-3ubuntu1) saucy; urgency=low
+
+  * debian/patches/poppler-0_24.patch: Upstream fix to make cups-filters
+    build with Poppler 0.24.x.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  2 Aug 2013 16:54:06 +0200
+
 cups-filters (1.0.34-3) unstable; urgency=low
 
   * In cups-browsed:
