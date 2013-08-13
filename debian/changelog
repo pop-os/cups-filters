@@ -1,7 +1,38 @@
-cups-filters (1.0.35-1) UNRELEASED; urgency=low
+cups-filters (1.0.36-1) UNRELEASED; urgency=low
 
   [ Till Kamppeter ]
-  * New upstream release:
+  * New upstream release 1.0.36:
+     - Fixed libdl detection in configure. Thanks to Andreas Huettel and
+       Yuta Satoh (Gentoo bug #478642).
+     - cups-browsed: Allow BrowsePoll operation also access print queues
+       on older CUPS servers. Thanks to David Mohr for the patch.
+     - cups-browsed: Assure that it always applies to the local CUPS
+       daemon and never to a remote one specified via client.conf
+       (LP: #1207203).
+     - pdftoopvp, pdftoijs, pdftoraster, bannertopdf: Made code working
+       with Poppler 0.24.x (Upstream bug #1144).
+     - gstoraster: Silenced compiler warnings.
+     - gstoraster, pdftoraster: Added support for PPD-less printing
+       controlled by IPP attributes (CUPS 1.7.x+ only).
+     - gstoraster, gstopxl: Moved these filters from Ghostscript to
+       cups-filters as upstream home.
+     - libcupsfilters: Added new cupsRasterParseIPPOptions() API
+       function for PPD-less printing controlled by IPP attributes
+       (raster.h, CUPS 1.7.x+ only).
+     - pdftopdf: Added support for page labels. "page-label" option and
+       "CLASSIFICATION" environment variable. Thanks to Tim Waugh from
+       Red Hat for the patch.
+     - pdftops: If one or more of the PDF-to-PS renderers (Ghostscript,
+       Poppler pdftops, Poppler pdftocairo, acroread) is not installed
+       at build time, pre-fill the appropriate executable's path with the
+       executable name to allow the use of this renderer when it gets
+       installed later (Closes: #716842).
+     - cups-browsed: Do not resolve host names of remote printers discovered
+       via CUPS broadcasts (Upstream bug #1141).
+     - Added man pages for cups-browsed and cups-browsed.conf. Thanks to
+       Brian Potkin for the contribution (Closes: #714460).
+     - Install also escp.h, it is useful for .drv files.
+  * New upstream release 1.0.35:
      - pdftoraster: Silenced compiler warning (Upstream bug #1092).
      - bannertopdf: Fixed typo which prevented the host name to be shown
        (Upstream bug #1115).
@@ -31,6 +62,10 @@ cups-filters (1.0.35-1) UNRELEASED; urgency=low
      - libcupsfilters, libfontembed, pdftopdf, texttopdf, cups-browsed:
        Fixed several resource leaks and other problems. Thanks to Jiri
        Popelka from Red Hat for the patches (Upstream bug #1116).
+  * debian/control: Added "Conflicts/Provides/Replaces: ghostscript-cups"
+    to the cups-filters binary package as all files from ghostscript-cups
+    moved to cups-filters.
+  * debian/libcupsfilters1.symbols: Updated.
   * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
     ./configure command line, we use the upstream default "dnssd,cups"
     now.
