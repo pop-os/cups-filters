@@ -1,3 +1,10 @@
+cups-filters (1.0.36-0ubuntu2) saucy; urgency=low
+
+  * Drop Recommends and Breaks on ghostscript-cups, now that we're
+    using the magic Provides/Conflicts/Replaces trio (LP: #1212239)
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Wed, 14 Aug 2013 12:42:57 -0600
+
 cups-filters (1.0.36-0ubuntu1) saucy; urgency=low
 
   [ Till Kamppeter ]
