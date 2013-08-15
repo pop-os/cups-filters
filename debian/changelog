@@ -1,5 +1,9 @@
 cups-filters (1.0.36-1) UNRELEASED; urgency=low
 
+  [ Adam Conrad ]
+  * Drop Recommends and Breaks on ghostscript-cups, now that we're
+    using the magic Provides/Conflicts/Replaces trio (LP: #1212239)
+
   [ Till Kamppeter ]
   * New upstream release 1.0.36:
      - Fixed libdl detection in configure. Thanks to Andreas Huettel and
