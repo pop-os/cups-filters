@@ -1,3 +1,23 @@
+cups-filters (1.0.37-0ubuntu1) saucy; urgency=low
+
+  * New upstream release 1.0.37:
+     - Added example configuration files for systemd and Upstart. Thanks
+       to Tomáš Chvátal for the systemd file.
+     - Build system: Make sure that gstoraster gets linked against the
+       libcupsfilters of the currently built package and not of the
+       system. Thanks to Tomáš Chvátal.
+     - cupsfilters.convs: Reworked the cost factors of the filters to
+       avoid bogus filter chains like pstotiff|imagetopdf instead of
+       pstopdf|pdftopdf for PostScript->PDF. Thanks to Tim Waugh from
+       Red Hat for the report.
+     - pdftopdf: Accept additional command line options for PPD-less
+       printing.
+     - cups-browsed: Fixed building with CUPS 1.5.x and older,
+       ippSetVersion() was missing under the accessor function definitions
+       for backward compatibility.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 28 Aug 2013 22:21:32 +0200
+
 cups-filters (1.0.36-0ubuntu2) saucy; urgency=low
 
   * Drop Recommends and Breaks on ghostscript-cups, now that we're
