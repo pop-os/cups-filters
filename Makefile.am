@@ -16,7 +16,9 @@ EXTRA_DIST = \
 	$(doc_DATA) \
 	autogen.sh \
 	libcupsfilters.pc.in \
-	libfontembed.pc.in
+	libfontembed.pc.in \
+	utils/cups-browsed.service \
+	utils/cups-browsed-upstart.conf
 
 # ========
 # Backends
@@ -474,7 +476,7 @@ gstoraster_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 gstoraster_LDADD = \
 	$(CUPS_LIBS) \
-	-lcupsfilters
+	libcupsfilters.la
 
 imagetopdf_SOURCES = \
 	cupsfilters/image.h \
