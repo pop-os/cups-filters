@@ -1,3 +1,14 @@
+cups-filters (1.0.38-0ubuntu1) saucy; urgency=low
+
+  * New upstream release 1.0.38:
+     - pdftops: Added "-dNOINTERPOLATE" to the Ghostscript command line
+       for quicker processing of embedded bitmaps.
+     - pstopdf: Added "-dUseCIEColor" to the Ghostscript command line
+       to assure compatibility with newer Ghostscript versions (9.08
+       and newer).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 03 Sep 2013 17:03:34 +0200
+
 cups-filters (1.0.37-0ubuntu1) saucy; urgency=low
 
   * New upstream release 1.0.37:
