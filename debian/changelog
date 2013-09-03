@@ -1,10 +1,16 @@
-cups-filters (1.0.37-1) UNRELEASED; urgency=low
+cups-filters (1.0.38-1) UNRELEASED; urgency=low
 
   [ Adam Conrad ]
   * Drop Recommends and Breaks on ghostscript-cups, now that we're
     using the magic Provides/Conflicts/Replaces trio (LP: #1212239)
 
   [ Till Kamppeter ]
+  * New upstream release 1.0.38:
+     - pdftops: Added "-dNOINTERPOLATE" to the Ghostscript command line
+       for quicker processing of embedded bitmaps.
+     - pstopdf: Added "-dUseCIEColor" to the Ghostscript command line
+       to assure compatibility with newer Ghostscript versions (9.08
+       and newer).
   * New upstream release 1.0.37:
      - Added example configuration files for systemd and Upstart. Thanks
        to Tomáš Chvátal for the systemd file.
@@ -93,7 +99,7 @@ cups-filters (1.0.37-1) UNRELEASED; urgency=low
   * Install escp.h and pcl.h in the CUPS ppdc include directory; this
     fixes cupsfilters.drv.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 26 Jun 2013 18:58:06 +0200
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue,  3 Sep 2013 16:57:06 +0200
 
 cups-filters (1.0.34-3) unstable; urgency=low
 
