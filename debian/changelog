@@ -1,3 +1,13 @@
+cups-filters (1.0.38-0ubuntu2) saucy; urgency=low
+
+  * pdftops-only-use-origpagesizes-on-unprocessed-PDFs.patch: Fix for landscape
+    PDF handling in Poppler mode. Do not use the command line options
+    "-origpagesizes" and "-choosePaperByPDFPageSize" of Poppler's pdftops
+    utility on already processed PDF data. Thanks to Tim Waugh from Red Hat for
+    the patch.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 02 Oct 2013 12:49:34 +0200
+
 cups-filters (1.0.38-0ubuntu1) saucy; urgency=low
 
   * New upstream release 1.0.38:
