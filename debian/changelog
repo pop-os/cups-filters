@@ -1,9 +1,5 @@
 cups-filters (1.0.39-1) UNRELEASED; urgency=low
 
-  [ Adam Conrad ]
-  * Drop Recommends and Breaks on ghostscript-cups, now that we're
-    using the magic Provides/Conflicts/Replaces trio (LP: #1212239)
-
   [ Till Kamppeter ]
   * New upstream release 1.0.39:
      - pdftops: Fix for landscape PDF handling. Do not use the
@@ -97,9 +93,9 @@ cups-filters (1.0.39-1) UNRELEASED; urgency=low
      - libcupsfilters, libfontembed, pdftopdf, texttopdf, cups-browsed:
        Fixed several resource leaks and other problems. Thanks to Jiri
        Popelka from Red Hat for the patches (Upstream bug #1116).
-  * debian/control: Added "Conflicts/Provides/Replaces: ghostscript-cups"
-    to the cups-filters binary package as all files from ghostscript-cups
-    moved to cups-filters.
+  * Added Conflicts/Provides/Replaces and droppded Recommends/Breaks against
+    ghostscript-cups to the cups-filters binary package as all files from
+    ghostscript-cups moved to cups-filters (LP: #1212239).
   * debian/libcupsfilters1.symbols: Updated for 1.0.36
   * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
     ./configure command line, we use the upstream default "dnssd,cups"
