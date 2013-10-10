@@ -108,6 +108,7 @@ cups-filters (1.0.39-1) UNRELEASED; urgency=low
   [ Didier Raboud ]
   * Install escp.h and pcl.h in the CUPS ppdc include directory; this
     fixes cupsfilters.drv.
+  * Drop useless uses of cat in postinst.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Tue,  3 Sep 2013 16:57:06 +0200
 
