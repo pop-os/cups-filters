@@ -100,7 +100,7 @@ cups-filters (1.0.39-1) UNRELEASED; urgency=low
   * debian/control: Added "Conflicts/Provides/Replaces: ghostscript-cups"
     to the cups-filters binary package as all files from ghostscript-cups
     moved to cups-filters.
-  * debian/libcupsfilters1.symbols: Updated.
+  * debian/libcupsfilters1.symbols: Updated for 1.0.36
   * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
     ./configure command line, we use the upstream default "dnssd,cups"
     now.
