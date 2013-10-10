@@ -42,7 +42,7 @@
  */
 
 typedef unsigned renderer_t;
-enum renderer_e {GS = 0, PDFTOPS = 1, ACROREAD = 2, PDFTOCAIRO = 3};
+enum renderer_e {GS = 0, PDFTOPS = 1, ACROREAD = 2, PDFTOCAIRO = 3, HYBRID = 4};
 
 /*
  * Local functions...
@@ -231,7 +231,7 @@ int					/* O - Exit status */
 main(int  argc,				/* I - Number of command-line args */
      char *argv[])			/* I - Command-line arguments */
 {
-  renderer_t    renderer = CUPS_PDFTOPS_RENDERER; /* Renderer: gs or pdftops or acroread */
+  renderer_t    renderer = CUPS_PDFTOPS_RENDERER; /* Renderer: gs or pdftops or acroread or pdftocairo or hybrid */
   int		fd = 0;			/* Copy file descriptor */
   char		*filename,		/* PDF file to convert */
 		tempfile[1024];		/* Temporary file */
@@ -273,6 +273,7 @@ main(int  argc,				/* I - Number of command-line args */
 		*pstops_options,	/* Options for pstops filter */
 		*pstops_end;		/* End of pstops filter option */
   const char	*cups_serverbin;	/* CUPS_SERVERBIN environment variable */
+  const char	*content_type;		/* CONTENT_TYPE environment variable */
 #if defined(HAVE_SIGACTION) && !defined(HAVE_SIGSET)
   struct sigaction action;		/* Actions for POSIX signals */
 #endif /* HAVE_SIGACTION && !HAVE_SIGSET */
@@ -370,7 +371,10 @@ main(int  argc,				/* I - Number of command-line args */
   cupsMarkOptions(ppd, num_options, options);
 
  /*
-  * Select the PDF renderer: Ghostscript (gs) or Poppler (pdftops)
+  * Select the PDF renderer: Ghostscript (gs), Poppler (pdftops),
+  * Adobe Reader (arcoread), Poppler with Cairo (pdftocairo), or
+  * Hybrid (hybrid, Poppler for Brother, Minolta, and Konica Minolta and
+  * Ghostscript otherwise)
   */
 
   if ((val = cupsGetOption("pdftops-renderer", num_options, options)) != NULL)
@@ -383,9 +387,24 @@ main(int  argc,				/* I - Number of command-line args */
       renderer = ACROREAD;
     else if (strcasecmp(val, "pdftocairo") == 0)
       renderer = PDFTOCAIRO;
+    else if (strcasecmp(val, "hybrid") == 0)
+      renderer = HYBRID;
     else
       fprintf(stderr,
 	      "WARNING: Invalid value for \"pdftops-renderer\": \"%s\"\n", val);
+  }
+
+  if (renderer == HYBRID)
+  {
+    if (ppd && ppd->manufacturer &&
+	(!strncasecmp(ppd->manufacturer, "Brother", 7) ||
+	 strcasestr(ppd->manufacturer, "Minolta")))
+      {
+	fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, and Konica Minolta to work around bugs in the printer's PS interpreters\n");
+	renderer = PDFTOPS;
+      }
+    else
+      renderer = GS;
   }
 
  /*
@@ -438,6 +457,7 @@ main(int  argc,				/* I - Number of command-line args */
   * Build the command-line for the pdftops or gs filter...
   */
 
+  content_type = getenv("CONTENT_TYPE");
   if (renderer == PDFTOPS)
   {
     pdf_argv[0] = (char *)"pdftops";
@@ -630,7 +650,9 @@ main(int  argc,				/* I - Number of command-line args */
       *  which contain pages of different sizes can be printed correctly
       */
 
-      pdf_argv[pdf_argc++] = (char *)"-origpagesizes";
+      /* Only do this for unprocessed PDF files */
+      if (content_type && !strstr (content_type, "/vnd.cups-"))
+        pdf_argv[pdf_argc++] = (char *)"-origpagesizes";
     }
 #endif /* HAVE_POPPLER_PDFTOPS_WITH_ORIGPAGESIZES */
     else if (renderer == ACROREAD)
@@ -640,7 +662,9 @@ main(int  argc,				/* I - Number of command-line args */
       * which contain pages of different sizes can be printed correctly
       */
      
-      pdf_argv[pdf_argc++] = (char *)"-choosePaperByPDFPageSize";
+      /* Only do this for unprocessed PDF files */
+      if (content_type && !strstr (content_type, "/vnd.cups-"))
+        pdf_argv[pdf_argc++] = (char *)"-choosePaperByPDFPageSize";
     }
 
    /*

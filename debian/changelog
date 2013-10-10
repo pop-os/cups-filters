@@ -1,3 +1,32 @@
+cups-filters (1.0.40-0ubuntu1) saucy; urgency=low
+
+  * New upstream bug fix release 1.0.40:
+     - pdftops: Introduced new "hybrid" renderer: Here usually
+       Ghostscript is used, but if the printer is a Brother,
+       Minolta, or Konica Minolta Poppler's pdftops gets used. This
+       is a quirk rule to work around bugs in the PS interpreters
+       of the printers (LP: #1097105, LP: #1053443, LP: #1205898, LP: #238129,
+       LP: #1072915, LP: #293832).
+     - Fixed format string issues and added __attribute__ wording
+       to printf-like functions to catch any regressions. Thanks to
+       Tim Waugh from Red Hat for the patch.
+     - pdftops: Fix for landscape PDF handling. Do not use the
+       command line options "-origpagesizes" and
+       "-choosePaperByPDFPageSize" of Poppler's pdftops utility on
+       already processed PDF data. Thanks to Tim Waugh from Red Hat
+       for the patch.
+     - cups-browsed: Improve the efficiency of BrowsePoll by using
+       IPP notifications when possible. It falls back to the
+       previous behaviour if it is not possible to use this
+       optimization. Thanks to Tim Waugh from Red Hat for the patch.
+  * pdftops-only-use-origpagesizes-on-unprocessed-PDFs.patch: Removed patch
+    backported from upstream.
+  * debian/rules: Added ./configure option "--with-pdftops=hybrid" to activate
+    the hybrid rendering mode (LP: #1097105, LP: #1053443, LP: #1205898,
+    LP: #238129, LP: #1072915, LP: #293832).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 10 Oct 2013 12:04:57 +0200
+
 cups-filters (1.0.38-0ubuntu2) saucy; urgency=low
 
   * pdftops-only-use-origpagesizes-on-unprocessed-PDFs.patch: Fix for landscape
