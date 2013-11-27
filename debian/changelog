@@ -38,7 +38,9 @@ cups-filters (1.0.41-1) UNRELEASED; urgency=low
   [ Didier Raboud ]
   * Install escp.h and pcl.h in the CUPS ppdc include directory; this
     fixes cupsfilters.drv.
-  * Drop useless uses of cat in postinst.
+  * In cups-browsed's postinst:
+    - Drop useless uses of cat
+    - Handle upgrade of Browse{Remote,Local}Protocols from cups < 1.6
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 30 Oct 2013 08:41:06 +0100
 
