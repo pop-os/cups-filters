@@ -115,6 +115,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
  avahi-daemon
+Breaks: cups-daemon (<< 1.6.4)
 Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed
  This package provides cups-browsed, a daemon which browses the Bonjour

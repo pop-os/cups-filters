@@ -41,6 +41,8 @@ cups-filters (1.0.41-1) UNRELEASED; urgency=low
   * In cups-browsed's postinst:
     - Drop useless uses of cat
     - Handle upgrade of Browse{Remote,Local}Protocols from cups < 1.6
+  * Make cups-browsed break cups-daemon << 1.6.4 to make sure the above
+    upgrade is left possible
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 30 Oct 2013 08:41:06 +0100
 
