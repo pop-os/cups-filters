@@ -1,3 +1,51 @@
+cups-filters (1.0.41-1) unstable; urgency=low
+
+  * New upstream release 1.0.41:
+     - pdftops: Introduced new "hybrid" renderer: Here usually
+       Ghostscript is used, but if the printer is a Brother,
+       Minolta, or Konica Minolta Poppler's pdftops gets used. This
+       is a quirk rule to work around bugs in the PS interpreters
+       of the printers (LP: #1097105, LP: #1053443, LP: #1205898, LP: #238129,
+       LP: #1072915, LP: #293832).
+     - cups-browsed: Assure that it always applies to the local CUPS
+       daemon and never to a remote one specified via client.conf
+       (LP: #1207203).
+     - pdftops: If one or more of the PDF-to-PS renderers (Ghostscript,
+       Poppler pdftops, Poppler pdftocairo, acroread) is not installed
+       at build time, pre-fill the appropriate executable's path with the
+       executable name to allow the use of this renderer when it gets
+       installed later (Closes: #716842).
+     - Added man pages for cups-browsed and cups-browsed.conf. Thanks to
+       Brian Potkin for the contribution (Closes: #714460).
+     - pdftops: Let Poppler generally generate PostScript level 3 if the
+       PPD identifies the printer as PS3 printer, make an exception of
+       sending PostScript Level 2 only for HP's laser printers, to not
+       compromise print quality and performance on all PS3 printers only
+       due to some buggy HP models (Closes: #712949, see also LP: #277404).
+
+  [ Till Kamppeter ]
+  * Added Conflicts/Provides/Replaces and droppded Recommends/Breaks against
+    ghostscript-cups to the cups-filters binary package as all files from
+    ghostscript-cups moved to cups-filters (LP: #1212239).
+  * debian/libcupsfilters1.symbols: Updated for 1.0.36
+  * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
+    ./configure command line, we use the upstream default "dnssd,cups"
+    now.
+  * debian/rules: Added ./configure option "--with-pdftops=hybrid" to activate
+    the hybrid rendering mode (LP: #1097105, LP: #1053443, LP: #1205898,
+    LP: #238129, LP: #1072915, LP: #293832).
+
+  [ Didier Raboud ]
+  * Install escp.h and pcl.h in the CUPS ppdc include directory; this
+    fixes cupsfilters.drv.
+  * In cups-browsed's postinst:
+    - Drop useless uses of cat
+    - Handle upgrade of Browse{Remote,Local}Protocols from cups < 1.6
+  * Make cups-browsed break cups-daemon << 1.6.4 to make sure the above
+    upgrade is left possible
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 27 Nov 2013 17:39:38 +0100
+
 cups-filters (1.0.34-3) unstable; urgency=low
 
   * In cups-browsed:
