@@ -1,4 +1,4 @@
-cups-filters (1.0.41-1) UNRELEASED; urgency=low
+cups-filters (1.0.41-1) unstable; urgency=low
 
   * New upstream release 1.0.41:
      - pdftops: Introduced new "hybrid" renderer: Here usually
@@ -44,7 +44,7 @@ cups-filters (1.0.41-1) UNRELEASED; urgency=low
   * Make cups-browsed break cups-daemon << 1.6.4 to make sure the above
     upgrade is left possible
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 30 Oct 2013 08:41:06 +0100
+ -- Didier Raboud <odyx@debian.org>  Wed, 27 Nov 2013 17:39:38 +0100
 
 cups-filters (1.0.39-1) UNRELEASED; urgency=low
 
