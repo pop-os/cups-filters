@@ -250,7 +250,7 @@ WritePage(void)
   int len_obj=pdfOut_add_xref(pdf);
   assert(len_obj==content+1);
   pdfOut_printf(pdf,"%d 0 obj\n"
-                    "%d\n"
+                    "%ld\n"
                     "endobj\n",
                     len_obj,size);
 
@@ -1220,6 +1220,7 @@ static void write_pretty_header() // {{{
       x = PageRight - PageLeft - 36.0f / LinesPerInch - stringwidth_x(pagestr);
   }
   write_font_str(x,y,ATTR_BOLD,pagestr,-1);
+  free(pagestr);
 
   pdfOut_printf(pdf,"Q\n");
 }

@@ -42,7 +42,7 @@
  */
 
 typedef unsigned renderer_t;
-enum renderer_e {GS = 0, PDFTOPS = 1, ACROREAD = 2};
+enum renderer_e {GS = 0, PDFTOPS = 1, ACROREAD = 2, PDFTOCAIRO = 3, HYBRID = 4};
 
 /*
  * Local functions...
@@ -231,7 +231,7 @@ int					/* O - Exit status */
 main(int  argc,				/* I - Number of command-line args */
      char *argv[])			/* I - Command-line arguments */
 {
-  renderer_t    renderer = CUPS_PDFTOPS_RENDERER; /* Renderer: gs or pdftops or acroread */
+  renderer_t    renderer = CUPS_PDFTOPS_RENDERER; /* Renderer: gs or pdftops or acroread or pdftocairo or hybrid */
   int		fd = 0;			/* Copy file descriptor */
   char		*filename,		/* PDF file to convert */
 		tempfile[1024];		/* Temporary file */
@@ -273,6 +273,7 @@ main(int  argc,				/* I - Number of command-line args */
 		*pstops_options,	/* Options for pstops filter */
 		*pstops_end;		/* End of pstops filter option */
   const char	*cups_serverbin;	/* CUPS_SERVERBIN environment variable */
+  const char	*content_type;		/* CONTENT_TYPE environment variable */
 #if defined(HAVE_SIGACTION) && !defined(HAVE_SIGSET)
   struct sigaction action;		/* Actions for POSIX signals */
 #endif /* HAVE_SIGACTION && !HAVE_SIGSET */
@@ -370,7 +371,10 @@ main(int  argc,				/* I - Number of command-line args */
   cupsMarkOptions(ppd, num_options, options);
 
  /*
-  * Select the PDF renderer: Ghostscript (gs) or Poppler (pdftops)
+  * Select the PDF renderer: Ghostscript (gs), Poppler (pdftops),
+  * Adobe Reader (arcoread), Poppler with Cairo (pdftocairo), or
+  * Hybrid (hybrid, Poppler for Brother, Minolta, and Konica Minolta and
+  * Ghostscript otherwise)
   */
 
   if ((val = cupsGetOption("pdftops-renderer", num_options, options)) != NULL)
@@ -381,9 +385,26 @@ main(int  argc,				/* I - Number of command-line args */
       renderer = PDFTOPS;
     else if (strcasecmp(val, "acroread") == 0)
       renderer = ACROREAD;
+    else if (strcasecmp(val, "pdftocairo") == 0)
+      renderer = PDFTOCAIRO;
+    else if (strcasecmp(val, "hybrid") == 0)
+      renderer = HYBRID;
     else
       fprintf(stderr,
 	      "WARNING: Invalid value for \"pdftops-renderer\": \"%s\"\n", val);
+  }
+
+  if (renderer == HYBRID)
+  {
+    if (ppd && ppd->manufacturer &&
+	(!strncasecmp(ppd->manufacturer, "Brother", 7) ||
+	 strcasestr(ppd->manufacturer, "Minolta")))
+      {
+	fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, and Konica Minolta to work around bugs in the printer's PS interpreters\n");
+	renderer = PDFTOPS;
+      }
+    else
+      renderer = GS;
   }
 
  /*
@@ -436,6 +457,7 @@ main(int  argc,				/* I - Number of command-line args */
   * Build the command-line for the pdftops or gs filter...
   */
 
+  content_type = getenv("CONTENT_TYPE");
   if (renderer == PDFTOPS)
   {
     pdf_argv[0] = (char *)"pdftops";
@@ -455,6 +477,12 @@ main(int  argc,				/* I - Number of command-line args */
 #    endif /* HAVE_GHOSTSCRIPT_PS2WRITE */
     pdf_argv[6] = (char *)"-sOUTPUTFILE=%stdout";
     pdf_argc    = 7;
+  }
+  else if (renderer == PDFTOCAIRO)
+  {
+    pdf_argv[0] = (char *)"pdftocairo";
+    pdf_argv[1] = (char *)"-ps";
+    pdf_argc    = 2;
   }
   else
   {
@@ -478,6 +506,8 @@ main(int  argc,				/* I - Number of command-line args */
       }
       else if (renderer == GS)
 	pdf_argv[pdf_argc++] = (char *)"-dLanguageLevel=1";
+      else if (renderer == PDFTOCAIRO)
+        fprintf(stderr, "WARNING: Level 1 PostScript not supported by pdftocairo.");
       else
         fprintf(stderr, "WARNING: Level 1 PostScript not supported by acroread.");
     }
@@ -491,18 +521,26 @@ main(int  argc,				/* I - Number of command-line args */
       }
       else if (renderer == GS)
 	pdf_argv[pdf_argc++] = (char *)"-dLanguageLevel=2";
-      else
+      else /* PDFTOCAIRO || ACROREAD */
         pdf_argv[pdf_argc++] = (char *)"-level2";
     }
     else
     {
       if (renderer == PDFTOPS)
-        /* Do not emit PS Level 3 with Poppler, some HP PostScript printers
-	   do not like it. See https://bugs.launchpad.net/bugs/277404. */
-	pdf_argv[pdf_argc++] = (char *)"-level2";
+      {
+        /* Do not emit PS Level 3 with Poppler on HP PostScript laser printers
+	   as some do not like it. See https://bugs.launchpad.net/bugs/277404.*/
+	if (ppd->manufacturer &&
+	    (!strncasecmp(ppd->manufacturer, "HP", 2) ||
+	     !strncasecmp(ppd->manufacturer, "Hewlett-Packard", 15)) &&
+	    (strcasestr(ppd->nickname, "laserjet")))
+	  pdf_argv[pdf_argc++] = (char *)"-level2";
+	else
+	  pdf_argv[pdf_argc++] = (char *)"-level3";
+      }
       else if (renderer == GS)
 	pdf_argv[pdf_argc++] = (char *)"-dLanguageLevel=3";
-      else
+      else /* PDFTOCAIRO || ACROREAD */
         pdf_argv[pdf_argc++] = (char *)"-level3";
     }
 
@@ -551,7 +589,7 @@ main(int  argc,				/* I - Number of command-line args */
 	  orientation ^= 1;
       }
 
-      if (renderer == PDFTOPS)
+      if ((renderer == PDFTOPS) || (renderer == PDFTOCAIRO))
       {
 	if (orientation & 1)
 	{
@@ -605,14 +643,16 @@ main(int  argc,				/* I - Number of command-line args */
       }
     }
 #ifdef HAVE_POPPLER_PDFTOPS_WITH_ORIGPAGESIZES
-    else if (renderer == PDFTOPS)
+    else if ((renderer == PDFTOPS) || (renderer == PDFTOCAIRO))
     {
      /*
       *  Use the page sizes of the original PDF document, this way documents
       *  which contain pages of different sizes can be printed correctly
       */
 
-      pdf_argv[pdf_argc++] = (char *)"-origpagesizes";
+      /* Only do this for unprocessed PDF files */
+      if (content_type && !strstr (content_type, "/vnd.cups-"))
+        pdf_argv[pdf_argc++] = (char *)"-origpagesizes";
     }
 #endif /* HAVE_POPPLER_PDFTOPS_WITH_ORIGPAGESIZES */
     else if (renderer == ACROREAD)
@@ -622,7 +662,9 @@ main(int  argc,				/* I - Number of command-line args */
       * which contain pages of different sizes can be printed correctly
       */
      
-      pdf_argv[pdf_argc++] = (char *)"-choosePaperByPDFPageSize";
+      /* Only do this for unprocessed PDF files */
+      if (content_type && !strstr (content_type, "/vnd.cups-"))
+        pdf_argv[pdf_argc++] = (char *)"-choosePaperByPDFPageSize";
     }
 
    /*
@@ -678,7 +720,7 @@ main(int  argc,				/* I - Number of command-line args */
     while (xres > maxres)
       xres = xres / 2;
 
-  if (renderer == PDFTOPS)
+  if ((renderer == PDFTOPS) || (renderer == PDFTOCAIRO))
   {
 #ifdef HAVE_POPPLER_PDFTOPS_WITH_RESOLUTION
    /*
@@ -734,6 +776,7 @@ main(int  argc,				/* I - Number of command-line args */
       pdf_argv[pdf_argc++] = (char *)"-dEncodeMonoImages=false";
       pdf_argv[pdf_argc++] = (char *)"-dEncodeColorImages=false";
     }
+    pdf_argv[pdf_argc++] = (char *)"-dNOINTERPOLATE";
     pdf_argv[pdf_argc++] = (char *)"-c";
     pdf_argv[pdf_argc++] = (char *)"save pop";
     pdf_argv[pdf_argc++] = (char *)"-f";
@@ -748,7 +791,7 @@ main(int  argc,				/* I - Number of command-line args */
   * of the printer's PostScript interpreter?
   */
 
-  if (renderer == PDFTOPS)
+  if ((renderer == PDFTOPS) || (renderer == PDFTOPS))
     need_post_proc = 0;
   else if (renderer == GS)
     need_post_proc =
@@ -800,13 +843,18 @@ main(int  argc,				/* I - Number of command-line args */
 
     if (renderer == PDFTOPS)
     {
-      execv(CUPS_POPPLER_PDFTOPS, pdf_argv);
+      execvp(CUPS_POPPLER_PDFTOPS, pdf_argv);
       perror("DEBUG: Unable to execute pdftops program");
     }
     else if (renderer == GS)
     {
-      execv(CUPS_GHOSTSCRIPT, pdf_argv);
+      execvp(CUPS_GHOSTSCRIPT, pdf_argv);
       perror("DEBUG: Unable to execute gs program");
+    }
+    else if (renderer == PDFTOCAIRO)
+    {
+      execvp(CUPS_POPPLER_PDFTOCAIRO, pdf_argv);
+      perror("DEBUG: Unable to execute pdftocairo program");
     }
     else
     {
@@ -820,7 +868,7 @@ main(int  argc,				/* I - Number of command-line args */
         close(fd);
       }
      
-      execv(CUPS_ACROREAD, pdf_argv);
+      execvp(CUPS_ACROREAD, pdf_argv);
       perror("DEBUG: Unable to execute acroread program");
     }
 
@@ -836,6 +884,8 @@ main(int  argc,				/* I - Number of command-line args */
       perror("DEBUG: Unable to execute pdftops program");
     else if (renderer == GS)
       perror("DEBUG: Unable to execute gs program");
+    else if (renderer == PDFTOCAIRO)
+      perror("DEBUG: Unable to execute pdftocairo program");
     else
       perror("DEBUG: Unable to execute acroread program");
 
@@ -1097,7 +1147,8 @@ main(int  argc,				/* I - Number of command-line args */
 	fprintf(stderr, "DEBUG: PID %d (%s) stopped with status %d!\n",
 		wait_pid,
 		wait_pid == pdf_pid ? (renderer == PDFTOPS ? "pdftops" :
-                (renderer == GS ? "gs" : "acroread")) :
+                (renderer == PDFTOCAIRO ? "pdftocairo" :
+		(renderer == GS ? "gs" : "acroread"))) :
 		(wait_pid == pstops_pid ? "pstops" : "Post-processing"),
 		exit_status);
       }
@@ -1107,7 +1158,8 @@ main(int  argc,				/* I - Number of command-line args */
 		"DEBUG: PID %d (%s) was terminated normally with signal %d!\n",
 		wait_pid,
 		wait_pid == pdf_pid ? (renderer == PDFTOPS ? "pdftops" :
-                (renderer == GS ? "gs" : "acroread")) :
+                (renderer == PDFTOCAIRO ? "pdftocairo" :
+                (renderer == GS ? "gs" : "acroread"))) :
 		(wait_pid == pstops_pid ? "pstops" : "Post-processing"),
 		exit_status);
       }
@@ -1117,7 +1169,8 @@ main(int  argc,				/* I - Number of command-line args */
 
 	fprintf(stderr, "DEBUG: PID %d (%s) crashed on signal %d!\n", wait_pid,
 		wait_pid == pdf_pid ? (renderer == PDFTOPS ? "pdftops" :
-                (renderer == GS ? "gs" : "acroread")) :
+                (renderer == PDFTOCAIRO ? "pdftocairo" :
+                (renderer == GS ? "gs" : "acroread"))) :
 		(wait_pid == pstops_pid ? "pstops" : "Post-processing"),
 		exit_status);
       }
@@ -1126,7 +1179,8 @@ main(int  argc,				/* I - Number of command-line args */
     {
       fprintf(stderr, "DEBUG: PID %d (%s) exited with no errors.\n", wait_pid,
 	      wait_pid == pdf_pid ? (renderer == PDFTOPS ? "pdftops" :
-              (renderer == GS ? "gs" : "acroread")) :
+              (renderer == PDFTOCAIRO ? "pdftocairo" :
+              (renderer == GS ? "gs" : "acroread"))) :
 	      (wait_pid == pstops_pid ? "pstops" : "Post-processing"));
     }
   }
