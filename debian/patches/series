@@ -1,2 +1,3 @@
 fix-pdf-landscape-printing.patch
 include-dbus-so-that-colord-support-works.patch
+fix-memory-leaks-in-cups-browsed.patch
