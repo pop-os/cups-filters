@@ -32,6 +32,8 @@ MIT Open Source License  -  http://www.opensource.org/
 #include <stdio.h>
 #include <sys/types.h>
 
+#include "config.h"
+
 #ifdef HAVE_DBUS
   #include <dbus/dbus.h>
 #endif
