@@ -474,9 +474,11 @@ gstoraster_SOURCES = \
 	cupsfilters/raster.h
 gstoraster_CFLAGS = \
 	$(CUPS_CFLAGS) \
+	$(DBUS_CFLAGS) \
 	-I$(srcdir)/cupsfilters/
 gstoraster_LDADD = \
 	$(CUPS_LIBS) \
+	$(DBUS_LIBS) \
 	libcupsfilters.la
 
 imagetopdf_SOURCES = \

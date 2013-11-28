@@ -1,3 +1,18 @@
+cups-filters (1.0.41-2) unstable; urgency=low
+
+  * Import several patches from Fedora:
+    - Fix PDF landscape printing
+    - Include dbus to make sure colord support works; therefore add
+      libdbus-1-dev in Build-Depends
+    - Fix memory leaks in cups-browsed (Closes: #730720)
+    - Adjust filter costs so application/vnd.adobe-read-postscript input
+      doesn't go via pstotiff
+  * Use dh-autoreconf to cope with the patching of configure.ac
+  * In cups-filters, add Replaces and Breaks against cups-ppdc << 1.6 as
+    pcl.h moved (Closes: #730709)
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 28 Nov 2013 23:27:04 +0100
+
 cups-filters (1.0.41-1) unstable; urgency=low
 
   * New upstream release 1.0.41:

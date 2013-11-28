@@ -14,6 +14,7 @@ include /usr/share/dpkg/buildflags.mk
 LDFLAGS += -Wl,--as-needed
 
 include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/rules/autoreconf.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
 DEB_CONFIGURE_EXTRA_FLAGS := --libdir=/usr/lib/$(DEB_HOST_MULTIARCH) --mandir=/usr/share/man --enable-static --with-pdftops=hybrid

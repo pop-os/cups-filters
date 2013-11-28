@@ -114,6 +114,18 @@ AX_COMPARE_VERSION([$CUPS_VERSION],[gt],[1.4], [
 AC_DEFINE(PDFTOPDF, [], [Needed for pdftopdf filter compilation])
 AC_DEFINE_DIR(BANNERTOPDF_DATADIR, "{CUPS_DATADIR}/data", [Directory where bannertopdf finds its data files (PDF templates)])
 
+dnl DBus support
+DBUS_CFLAGS=""
+DBUS_LIBS=""
+AC_ARG_ENABLE([dbus], AC_HELP_STRING([--disable-dbus],
+    [Do not use dbus to communicate with external services]))
+if test "$enable_dbus" != "no"; then
+        PKG_CHECK_MODULES(DBUS, [dbus-1], [HAVE_DBUS=-DHAVE_DBUS])
+        AC_DEFINE([HAVE_DBUS], [], [Defines if dbus is available.])
+fi
+AC_SUBST(DBUS_CFLAGS)
+AC_SUBST(DBUS_LIBS)
+
 AC_SEARCH_LIBS([dlopen],
 	[dl],
 	[AS_IF([test "$ac_cv_search_dlopen" != "none required"], [
@@ -640,6 +652,7 @@ Build configuration:
 	php-config:      ${with_php_config}
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
+	dbus:            ${HAVE_DBUS}
 	avahi:           ${enable_avahi}
 	browsing:        ${with_browseremoteprotocols}
 	werror:          ${enable_werror}
