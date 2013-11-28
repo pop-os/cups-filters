@@ -74,9 +74,11 @@ Suggests: foomatic-db-compressed-ppds | foomatic-db
 Conflicts: ghostscript-cups
 Replaces: cups (<< 1.5.0-16), 
  cups-common (<< 1.5.0-16),
- ghostscript-cups
+ ghostscript-cups,
+ cups-ppdc (<< 1.6)
 Breaks: cups (<< 1.5.0-16), 
- cups-common (<< 1.5.0-16)
+ cups-common (<< 1.5.0-16),
+ cups-ppdc (<< 1.6)
 Provides: ghostscript-cups
 Description: OpenPrinting CUPS Filters
  This package provides additional CUPS filters which are not provided
