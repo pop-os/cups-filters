@@ -273,7 +273,6 @@ main(int  argc,				/* I - Number of command-line args */
 		*pstops_options,	/* Options for pstops filter */
 		*pstops_end;		/* End of pstops filter option */
   const char	*cups_serverbin;	/* CUPS_SERVERBIN environment variable */
-  const char	*content_type;		/* CONTENT_TYPE environment variable */
 #if defined(HAVE_SIGACTION) && !defined(HAVE_SIGSET)
   struct sigaction action;		/* Actions for POSIX signals */
 #endif /* HAVE_SIGACTION && !HAVE_SIGSET */
@@ -457,7 +456,6 @@ main(int  argc,				/* I - Number of command-line args */
   * Build the command-line for the pdftops or gs filter...
   */
 
-  content_type = getenv("CONTENT_TYPE");
   if (renderer == PDFTOPS)
   {
     pdf_argv[0] = (char *)"pdftops";
@@ -646,25 +644,17 @@ main(int  argc,				/* I - Number of command-line args */
     else if ((renderer == PDFTOPS) || (renderer == PDFTOCAIRO))
     {
      /*
-      *  Use the page sizes of the original PDF document, this way documents
-      *  which contain pages of different sizes can be printed correctly
+      *  No options to add. Note: pdftopdf has already rotated pages
+      *  for us.
       */
-
-      /* Only do this for unprocessed PDF files */
-      if (content_type && !strstr (content_type, "/vnd.cups-"))
-        pdf_argv[pdf_argc++] = (char *)"-origpagesizes";
     }
 #endif /* HAVE_POPPLER_PDFTOPS_WITH_ORIGPAGESIZES */
     else if (renderer == ACROREAD)
     {
      /*
-      * Use the page sizes of the original PDF document, this way documents
-      * which contain pages of different sizes can be printed correctly
+      *  No options to add. Note: pdftopdf has already rotated pages
+      *  for us.
       */
-     
-      /* Only do this for unprocessed PDF files */
-      if (content_type && !strstr (content_type, "/vnd.cups-"))
-        pdf_argv[pdf_argc++] = (char *)"-choosePaperByPDFPageSize";
     }
 
    /*
