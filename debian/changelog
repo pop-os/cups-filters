@@ -76,6 +76,11 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
     debian/patches/fix-memory-leaks-in-cups-browsed.patch,
     debian/patches/include-dbus-so-that-colord-support-works.patch: Removed,
     included upstream.
+  * debian/libcupsfilters1.symbols: Updated for 1.0.42
+  * debian/control: "Conflicts/Replaces/Provides: foomatic-filters" for the
+    cups-filters binary package. Now foomatic-rip is part of cups-filters and
+    the foomatic-filters package is obsolete and should get automatically
+    uninstalled by the cups-filters binary package.
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 29 Nov 2013 23:59:00 +0100
 
