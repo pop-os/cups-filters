@@ -1,4 +1,1 @@
 fix-pdf-landscape-printing.patch
-include-dbus-so-that-colord-support-works.patch
-fix-memory-leaks-in-cups-browsed.patch
-adjust-filter-costs-to-avoid-letting-adobe-pdf-go-through-pstotiff.patch
