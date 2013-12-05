@@ -1,39 +1,6 @@
 cups-filters (1.0.42-1) UNRELEASED; urgency=low
 
   * New upstream release 1.0.42:
-     - pdftoippprinter: Check also the presence of Ghostscript and
-       use pdftoraster if Ghostscript is missing.
-     - gstoraster: At build time use the path for Ghostscript which
-       our build system already finds for pdftops.
-     - pdftoraster: Take into account rotate field in PDF header,
-       when pdftopdf rotates a page to fit the paper it sets the
-       rotate field and does not swap the width and height entries.
-     - pdftoippprinter: Made PCL 5c/e printing working correctly,
-       by first adding support for unprintable margins and
-       defaulting to 12pt margins if no margin info is supplied,
-       and second, by doing color printing always in RGB color
-       space.
-     - rastertopclx: Improved support for PPD-less printing,
-       allowing color printing with (s)RGB color space. Output is
-       in sRGB then.
-     - rastertopclx: Determine page size and select correct PCL
-       command for the page size more reliably, especially for
-       landscape-oriented pages.
-     - gstoraster, pdftoraster: Do correct PWG Raster output, allow
-       switching to PWG Raster via "media-class=PwgRaster" option
-       and CUPS Raster via "media-class=". Default for PPD-less
-       printing is PWG Raster.
-     - gstoraster, pdftoraster: Support applying unprintable
-       margins for PPD-less mode with CUPS Raster output.
-     - libcupsfilters: Added support for "media-left-margin",
-       "media-right-margin", "media-bottom-margin", and
-       "media-top-margin" IPP options to specify unprintable
-       margins in 1/100th of a mm, to allow PPD-less printing with
-       unprintable margins (esp. PCL 5c/e with rastertopclx).
-     - libcupsfilters: Do not set "MediaClass" to "PwgRaster" when
-       we request a CUPS Raster header and not a PWG Raster header.
-     - libcupsfilters: Fixed typo in a debug message in the colord
-       support part.
      - cupsfilters.convs: Corrected cost factor of
        vnd.cups-postscript -> vnd.cups-raster conversion with
        gstoraster, so that input data of the type
@@ -44,45 +11,26 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
        free() calls and removing an unneeded strdup(). Thanks to
        Jaromir Koncicky from Red Hat for the patch (Red Hat bug
        #1027317).
-     - Backends parallel and serial: Fixed logical expressions for
-       error handling (Bug #1172).
-     - libcupsfilters: Moved filter/colord.[ch] into the library as
-       this code is now used by both gstoraster and foomatic-rip.
-     - libcupsfilters: Made the names of the flags to tell that the
-       header is already included unique in all API header files.
      - foomatic-rip: Moved foomatic-rip's upstream home from the
        foomatic-filters package to cups-filters, to make it easier
        for distributions to ship and maintain a complete printing
        stack and also to make upstream maintenance and development
        easier.
-     - foomatic-rip: Removed support for all the non-CUPS printing
-       environments as they are discontinued upstream. Now
-       foomatic-rip only works as a CUPS filter and in a spooler-less
-       direct mode, where the latter is mainly for testing and
-       debugging. Thanks to Anshul Kushwaha (anshulkushwaha1 at gmail
-       dot com) for doing this as a Google Summer of Code 2013 project.
-     - foomatic-rip: Eliminated compiler warnings.
-     - foomatic-rip: fixed "endswith()" string utility function.
-     - foomatic-rip: Removed unneeded HAVE_DBUS conditionals.
      - gstoraster: Fixed build system for gstoraster use D-Bus for
        colord support.
-     - libcupsfilters: Recognize more Adobe-generated CMYK JPEGs to
-       take into account their inverted colors (Bug #1169).
-     - pdftopdf: When checking whether double-sided printing is
-       chosen, do not only check for the choice names "DuplexNoTumble"
-       and "DuplexTumble" but also for "LongEdge", "ShortEdge",
-       "Top", and "Bottom", as CUPS does (Bug #1167).
 
   [ Till Kamppeter ]
-  * debian/patches/adjust-filter-costs-to-avoid-letting-adobe-pdf-go-through-pstotiff.patch,
-    debian/patches/fix-memory-leaks-in-cups-browsed.patch,
-    debian/patches/include-dbus-so-that-colord-support-works.patch: Removed,
-    included upstream.
-  * debian/libcupsfilters1.symbols: Updated for 1.0.42
-  * debian/control: "Conflicts/Replaces/Provides: foomatic-filters" for the
-    cups-filters binary package. Now foomatic-rip is part of cups-filters and
-    the foomatic-filters package is obsolete and should get automatically
-    uninstalled by the cups-filters binary package.
+  * Drop patches included upstream:
+    - Include dbus to make sure colord support works; therefore add
+      libdbus-1-dev in Build-Depends
+    - Fix memory leaks in cups-browsed
+    - Adjust filter costs so application/vnd.adobe-read-postscript input
+      doesn't go via pstotiff
+  * Updated libcupsfilters1 symbols for 1.0.42
+  * Add "Conflicts/Replaces/Provides: foomatic-filters" for the
+    cups-filters binary package. Now foomatic-rip is part of
+    cups-filters and the foomatic-filters package is obsolete and should
+    get automatically uninstalled by the cups-filters binary package.
 
   [ Didier Raboud ]
   * Move packaging from bzr to git
