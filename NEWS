@@ -1,5 +1,79 @@
-NEWS - OpenPrinting CUPS Filters v1.0.41 - 2013-10-30
+NEWS - OpenPrinting CUPS Filters v1.0.42 - 2013-11-29
 -----------------------------------------------------
+
+CHANGES IN V1.0.42
+
+	- pdftoippprinter: Check also the presence of Ghostscript and
+	  use pdftoraster if Ghostscript is missing.
+	- gstoraster: At build time use the path for Ghostscript which
+	  our build system already finds for pdftops.
+	- pdftoraster: Take into account rotate field in PDF header,
+	  when pdftopdf rotates a page to fit the paper it sets the
+	  rotate field and does not swap the width and height entries.
+	- pdftoippprinter: Made PCL 5c/e printing working correctly,
+	  by first adding support for unprintable margins and
+	  defaulting to 12pt margins if no margin info is supplied,
+	  and second, by doing color printing always in RGB color
+	  space.
+	- rastertopclx: Improved support for PPD-less printing,
+	  allowing color printing with (s)RGB color space. Output is
+	  in sRGB then.
+	- rastertopclx: Determine page size and select correct PCL
+	  command for the page size more reliably, especially for
+	  landscape-oriented pages.
+	- gstoraster, pdftoraster: Do correct PWG Raster output, allow
+	  switching to PWG Raster via "media-class=PwgRaster" option
+	  and CUPS Raster via "media-class=". Default for PPD-less
+	  printing is PWG Raster.
+	- gstoraster, pdftoraster: Support applying unprintable
+	  margins for PPD-less mode with CUPS Raster output.
+	- libcupsfilters: Added support for "media-left-margin",
+	  "media-right-margin", "media-bottom-margin", and
+	  "media-top-margin" IPP options to specify unprintable
+	  margins in 1/100th of a mm, to allow PPD-less printing with
+	  unprintable margins (esp. PCL 5c/e with rastertopclx).
+	- libcupsfilters: Do not set "MediaClass" to "PwgRaster" when
+	  we request a CUPS Raster header and not a PWG Raster header.
+	- libcupsfilters: Fixed typo in a debug message in the colord
+          support part.
+	- cupsfilters.convs: Corrected cost factor of
+	  vnd.cups-postscript -> vnd.cups-raster conversion with
+	  gstoraster, so that input data of the type
+	  application/vnd.adobe-reader-postscript is converted
+	  correctly (not via pstotiff). Thanks to Tim Waugh from Red
+	  Hat for this patch
+	- cups-browsed: Fixed several memory leaks by adding missing
+	  free() calls and removing an unneeded strdup(). Thanks to
+	  Jaromir Koncicky from Red Hat for the patch (Red Hat bug
+	  #1027317).
+	- Backends parallel and serial: Fixed logical expressions for
+	  error handling (Bug #1172).
+	- libcupsfilters: Moved filter/colord.[ch] into the library as
+	  this code is now used by both gstoraster and foomatic-rip.
+	- libcupsfilters: Made the names of the flags to tell that the
+	  header is already included unique in all API header files.
+	- foomatic-rip: Moved foomatic-rip's upstream home from the
+	  foomatic-filters package to cups-filters, to make it easier
+	  for distributions to ship and maintain a complete printing
+	  stack and also to make upstream maintenance and development
+	  easier.
+	- foomatic-rip: Removed support for all the non-CUPS printing
+	  environments as they are discontinued upstream. Now
+	  foomatic-rip only works as a CUPS filter and in a spooler-less
+	  direct mode, where the latter is mainly for testing and
+	  debugging. Thanks to Anshul Kushwaha (anshulkushwaha1 at gmail
+	  dot com) for doing this as a Google Summer of Code 2013 project.
+	- foomatic-rip: Eliminated compiler warnings.
+	- foomatic-rip: fixed "endswith()" string utility function.
+	- foomatic-rip: Removed unneeded HAVE_DBUS conditionals.
+	- gstoraster: Fixed build system for gstoraster use D-Bus for
+	  colord support.
+	- libcupsfilters: Recognize more Adobe-generated CMYK JPEGs to
+	  take into account their inverted colors (Bug #1169).
+	- pdftopdf: When checking whether double-sided printing is
+	  chosen, do not only check for the choice names "DuplexNoTumble"
+	  and "DuplexTumble" but also for "LongEdge", "ShortEdge",
+	  "Top", and "Bottom", as CUPS does (Bug #1167).
 
 CHANGES IN V1.0.41
 
