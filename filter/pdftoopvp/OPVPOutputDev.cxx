@@ -8,6 +8,9 @@
 //========================================================================
 
 #include <config.h>
+#ifdef HAVE_CPP_POPPLER_VERSION_H
+#include "cpp/poppler-version.h"
+#endif
 
 #ifdef USE_GCC_PRAGMAS
 #pragma implementation
@@ -273,9 +276,7 @@ void OPVPOutputDev::startDoc(XRef *xrefA) {
 #if HAVE_FREETYPE_FREETYPE_H || HAVE_FREETYPE_H
 				    globalParams->getEnableFreeType(),
 				    gFalse,
-#ifdef SPLASH_SLIGHT_HINTING
                                     gFalse,
-#endif
 #endif
 				    globalParams->getAntialias());
   for (i = 0; i < nT3Fonts; ++i) {

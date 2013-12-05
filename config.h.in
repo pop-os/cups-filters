@@ -30,19 +30,25 @@
 /* Use libjpeg instead of builtin jpeg decoder. */
 #undef ENABLE_LIBJPEG
 
-/* New font type enumeration */
-#undef FONTTYPE_ENUM2
+/* Define if you have Poppler's "cpp/poppler-version.h" header file. */
+#undef HAVE_CPP_POPPLER_VERSION_H
 
-/* GlobalParams::GlobalParams has a argument. */
-#undef GLOBALPARAMS_HAS_A_ARG
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the <endian.h> header file. */
+#undef HAVE_ENDIAN_H
+
 /* Have FreeType2 include files */
 #undef HAVE_FREETYPE_H
 
-/* Have Stream::getUndecodedStream */
+/* Define to 1 if you have the `getline' function. */
+#undef HAVE_GETLINE
+
+/* Define if you have Stream::getUndecodedStream(). */
 #undef HAVE_GETUNDECODEDSTREAM
 
 /* Define that we provide ghostscript binary */
@@ -75,8 +81,8 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* have new GfxFontType */
-#undef HAVE_NEW_GFX_FONTTYPE
+/* Define to 1 if you have the `open_memstream' function. */
+#undef HAVE_OPEN_MEMSTREAM
 
 /* Define that we provide poppler pdftops. */
 #undef HAVE_POPPLER_PDFTOPS
@@ -95,6 +101,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strcasestr' function. */
+#undef HAVE_STRCASESTR
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
@@ -136,7 +145,7 @@
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
 
-/* Old CharCodeToUnicode::mapToUnicode */
+/* Define if you have Old CharCodeToUnicode::mapToUnicode() */
 #undef OLD_MAPTOUNICODE
 
 /* Name of package */
@@ -160,14 +169,8 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Parser::Parser has two arguments. */
-#undef PARSER_HAS_2_ARGS
-
 /* Needed for pdftopdf filter compilation */
 #undef PDFTOPDF
-
-/* SplashFontEngine enableSlightHinting */
-#undef SPLASH_SLIGHT_HINTING
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
