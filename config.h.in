@@ -6,6 +6,9 @@
 /* CUPS Version is 1.4 or newer */
 #undef CUPS_1_4
 
+/* acroread binary to use. */
+#undef CUPS_ACROREAD
+
 /* CUPS datadir */
 #undef CUPS_DATADIR
 
@@ -26,6 +29,9 @@
 
 /* Path to CUPS binaries dir */
 #undef CUPS_SERVERBIN
+
+/* Define that we provide acroread. */
+#undef HAVE_ACROREAD
 
 /* Define if you have Poppler's "cpp/poppler-version.h" header file. */
 #undef HAVE_CPP_POPPLER_VERSION_H
