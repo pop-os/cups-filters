@@ -37,6 +37,7 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
     - Drop .bzr-builddeb
     - Update Vcs-* fields
   * Drop conflicting Recommends against foomatic-filters
+  * Rename ttf-dejavu dependency to fonts-dejavu (Closes: #716744)
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 29 Nov 2013 23:59:00 +0100
 

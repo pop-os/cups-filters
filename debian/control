@@ -68,7 +68,7 @@ Depends: ${shlibs:Depends},
  ${misc:Depends},
  bc,
  ghostscript (>= 9.02~),
- fonts-freefont-ttf | fonts-liberation | ttf-dejavu
+ fonts-freefont-ttf | fonts-liberation | fonts-dejavu
 Recommends: colord
 Suggests: foomatic-db-compressed-ppds | foomatic-db
 Conflicts: ghostscript-cups,
