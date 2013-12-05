@@ -121,7 +121,7 @@ static void info_line(FILE *s,
 }
 
 
-static info_line_time(FILE *s,
+static void info_line_time(FILE *s,
                       const char *key,
                       const char *timestamp)
 {
@@ -220,7 +220,7 @@ static int generate_banner_pdf(banner_t *banner,
 
     if (banner->infos & INFO_PRINTER_DRIVER_VERSION)
         info_line(s, "Driver Version",
-                  ppdFindAttr(ppd, "FileVersion", NULL) ? attr->value : "");
+                  (attr = ppdFindAttr(ppd, "FileVersion", NULL)) ? attr->value : "");
 
     if (banner->infos & INFO_PRINTER_INFO)
         info_line(s, "Description", getenv("PRINTER_INFO"));
