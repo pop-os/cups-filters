@@ -197,6 +197,13 @@ pkgcupsdata_DATA = \
 
 EXTRA_DIST += $(pkgcupsdata_DATA)
 
+# ===========
+# CUPS Config
+# ===========
+pkgcupsserverrootdir = $(CUPS_SERVERROOT)
+pkgcupsserverroot_DATA = \
+	utils/cups-browsed.conf
+
 # =======
 # Drivers
 # =======
@@ -329,7 +336,7 @@ pdftoopvp_LDADD = \
 	$(FREETYPE_LIBS) \
 	$(FONTCONFIG_LIBS) \
 	$(LIBPNG_LIBS) \
-	$(POPPLER_LIBS)
+	$(POPPLER_LIBS) \
 	$(DLOPEN_LIBS)
 
 EXTRA_DIST += $(pkgfontconfig_DATA)
@@ -603,22 +610,23 @@ EXTRA_DIST += \
 # =====
 
 EXTRA_DIST += utils/cups-browsed.in
-sbin_PROGRAMS =
-if ENABLE_AVAHI
-sbin_PROGRAMS += \
+sbin_PROGRAMS = \
 	cups-browsed
 cups_browsed_SOURCES = \
 	utils/cups-browsed.c
 cups_browsed_CFLAGS = \
 	$(CUPS_CFLAGS) \
-	$(AVAHI_CFLAGS)
+	$(AVAHI_CFLAGS) \
+	$(AVAHI_GLIB_CFLAGS) \
+	$(GLIB_CFLAGS)
 cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
 cups_browsed_LDADD = \
 	$(CUPS_LIBS) \
-	$(AVAHI_LIBS)
+	$(AVAHI_LIBS) \
+	$(AVAHI_GLIB_LIBS) \
+	$(GLIB_LIBS)
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
-endif
 
 # ===
 # PPD
@@ -655,28 +663,24 @@ distclean-local:
 	rm -rf *.cache *~
 
 install-data-hook:
-if ENABLE_AVAHI
 if RCLINKS
 	for level in $(RCLEVELS); do \
 		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
-		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
-		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
+		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
+		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
 	done; \
 	$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc0.d; \
-	$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
+	$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
 endif
-endif
-	$(LN_S) pdf.utf-8.simple \
+	$(LN_S) -f pdf.utf-8.simple \
 		$(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 
 
 uninstall-hook:
-if ENABLE_AVAHI
 if RCLINKS
 	if test "x$(INITDIR)" != x; then \
 		$(RM) $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d/[SK]??cups-browsed || :; \
 		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
 	fi
-endif
 endif
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8

@@ -72,17 +72,16 @@ pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
-sbin_PROGRAMS = $(am__EXEEXT_2)
-@ENABLE_AVAHI_TRUE@am__append_2 = \
-@ENABLE_AVAHI_TRUE@	cups-browsed
-
+sbin_PROGRAMS = cups-browsed$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/libcupsfilters.pc.in $(srcdir)/libfontembed.pc.in \
-	$(top_srcdir)/configure $(top_srcdir)/utils/cups-browsed.in \
-	AUTHORS COPYING ChangeLog INSTALL NEWS compile config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+	$(top_srcdir)/configure \
+	$(top_srcdir)/utils/cups-browsed.conf.in \
+	$(top_srcdir)/utils/cups-browsed.in AUTHORS COPYING ChangeLog \
+	INSTALL NEWS compile config.guess config.sub depcomp \
+	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_compare_version.m4 \
@@ -94,7 +93,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
-	utils/cups-browsed
+	utils/cups-browsed utils/cups-browsed.conf
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -129,7 +128,9 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" \
 	"$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" \
 	"$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" \
-	"$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgdriverdir)" \
+	"$(DESTDIR)$(pkgcupsdatadir)" \
+	"$(DESTDIR)$(pkgcupsserverrootdir)" \
+	"$(DESTDIR)$(pkgdriverdir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
 	"$(DESTDIR)$(pkgfontconfigdir)" \
 	"$(DESTDIR)$(pkgfontembedincludedir)" \
@@ -181,7 +182,6 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
 @ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_1 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
-@ENABLE_AVAHI_TRUE@am__EXEEXT_2 = cups-browsed$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
 am_bannertopdf_OBJECTS = bannertopdf-banner.$(OBJEXT) \
@@ -203,12 +203,11 @@ commandtopclx_DEPENDENCIES = $(am__DEPENDENCIES_1)
 commandtopclx_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(commandtopclx_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__cups_browsed_SOURCES_DIST = utils/cups-browsed.c
-@ENABLE_AVAHI_TRUE@am_cups_browsed_OBJECTS =  \
-@ENABLE_AVAHI_TRUE@	cups_browsed-cups-browsed.$(OBJEXT)
+am_cups_browsed_OBJECTS = cups_browsed-cups-browsed.$(OBJEXT)
 cups_browsed_OBJECTS = $(am_cups_browsed_OBJECTS)
-@ENABLE_AVAHI_TRUE@cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-@ENABLE_AVAHI_TRUE@	$(am__DEPENDENCIES_1)
+cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -254,7 +253,7 @@ am_pdftoopvp_OBJECTS = pdftoopvp-OPRS.$(OBJEXT) \
 pdftoopvp_OBJECTS = $(am_pdftoopvp_OBJECTS)
 pdftoopvp_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 pdftoopvp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftoopvp_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -429,7 +428,7 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
-	$(commandtopclx_SOURCES) $(am__cups_browsed_SOURCES_DIST) \
+	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
 	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
 	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
@@ -446,9 +445,10 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 DATA = $(doc_DATA) $(pkgbanner_DATA) $(pkgcharset_DATA) \
-	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgdriver_DATA) \
-	$(pkgfiltersinclude_DATA) $(pkgfontconfig_DATA) \
-	$(pkgfontembedinclude_DATA) $(pkgmime_DATA) $(ppd_DATA)
+	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgcupsserverroot_DATA) \
+	$(pkgdriver_DATA) $(pkgfiltersinclude_DATA) \
+	$(pkgfontconfig_DATA) $(pkgfontembedinclude_DATA) \
+	$(pkgmime_DATA) $(ppd_DATA)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -476,9 +476,12 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AVAHI_CFLAGS = @AVAHI_CFLAGS@
+AVAHI_GLIB_CFLAGS = @AVAHI_GLIB_CFLAGS@
+AVAHI_GLIB_LIBS = @AVAHI_GLIB_LIBS@
 AVAHI_LIBS = @AVAHI_LIBS@
 AWK = @AWK@
 BANNERTOPDF_DATADIR = @BANNERTOPDF_DATADIR@
+BROWSEREMOTEPROTOCOLS = @BROWSEREMOTEPROTOCOLS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -493,6 +496,7 @@ CUPS_GHOSTSCRIPT = @CUPS_GHOSTSCRIPT@
 CUPS_LIBS = @CUPS_LIBS@
 CUPS_PDFTOPS = @CUPS_PDFTOPS@
 CUPS_SERVERBIN = @CUPS_SERVERBIN@
+CUPS_SERVERROOT = @CUPS_SERVERROOT@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -516,6 +520,8 @@ FONTDIR = @FONTDIR@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
 GETLINE = @GETLINE@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
 IJS_CFLAGS = @IJS_CFLAGS@
 IJS_LIBS = @IJS_LIBS@
@@ -828,6 +834,14 @@ pkgcupsdata_DATA = \
 	data/testprint
 
 
+# ===========
+# CUPS Config
+# ===========
+pkgcupsserverrootdir = $(CUPS_SERVERROOT)
+pkgcupsserverroot_DATA = \
+	utils/cups-browsed.conf
+
+
 # =======
 # Drivers
 # =======
@@ -938,7 +952,8 @@ pdftoopvp_LDADD = \
 	$(FREETYPE_LIBS) \
 	$(FONTCONFIG_LIBS) \
 	$(LIBPNG_LIBS) \
-	$(POPPLER_LIBS)
+	$(POPPLER_LIBS) \
+	$(DLOPEN_LIBS)
 
 pdftopdf_SOURCES = \
 	filter/pdftopdf/pdftopdf.cc \
@@ -1191,20 +1206,24 @@ texttopdf_LDADD = \
 	$(FONTCONFIG_LIBS) \
 	libfontembed.la
 
-@ENABLE_AVAHI_TRUE@cups_browsed_SOURCES = \
-@ENABLE_AVAHI_TRUE@	utils/cups-browsed.c
+cups_browsed_SOURCES = \
+	utils/cups-browsed.c
 
-@ENABLE_AVAHI_TRUE@cups_browsed_CFLAGS = \
-@ENABLE_AVAHI_TRUE@	$(CUPS_CFLAGS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_CFLAGS)
+cups_browsed_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	$(AVAHI_CFLAGS) \
+	$(AVAHI_GLIB_CFLAGS) \
+	$(GLIB_CFLAGS)
 
-@ENABLE_AVAHI_TRUE@cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
-@ENABLE_AVAHI_TRUE@cups_browsed_LDADD = \
-@ENABLE_AVAHI_TRUE@	$(CUPS_LIBS) \
-@ENABLE_AVAHI_TRUE@	$(AVAHI_LIBS)
+cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
+cups_browsed_LDADD = \
+	$(CUPS_LIBS) \
+	$(AVAHI_LIBS) \
+	$(AVAHI_GLIB_LIBS) \
+	$(GLIB_LIBS)
 
-@ENABLE_AVAHI_TRUE@initrcdir = $(INITDDIR)
-@ENABLE_AVAHI_TRUE@initrc_SCRIPTS = utils/cups-browsed
+initrcdir = $(INITDDIR)
+initrc_SCRIPTS = utils/cups-browsed
 
 # ===
 # PPD
@@ -1288,6 +1307,8 @@ libcupsfilters.pc: $(top_builddir)/config.status $(srcdir)/libcupsfilters.pc.in
 libfontembed.pc: $(top_builddir)/config.status $(srcdir)/libfontembed.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 utils/cups-browsed: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+utils/cups-browsed.conf: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -3097,6 +3118,27 @@ uninstall-pkgcupsdataDATA:
 	@list='$(pkgcupsdata_DATA)'; test -n "$(pkgcupsdatadir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(pkgcupsdatadir)'; $(am__uninstall_files_from_dir)
+install-pkgcupsserverrootDATA: $(pkgcupsserverroot_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(pkgcupsserverroot_DATA)'; test -n "$(pkgcupsserverrootdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgcupsserverrootdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgcupsserverrootdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgcupsserverrootdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgcupsserverrootdir)" || exit $$?; \
+	done
+
+uninstall-pkgcupsserverrootDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgcupsserverroot_DATA)'; test -n "$(pkgcupsserverrootdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgcupsserverrootdir)'; $(am__uninstall_files_from_dir)
 install-pkgdriverDATA: $(pkgdriver_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgdriver_DATA)'; test -n "$(pkgdriverdir)" || list=; \
@@ -3540,7 +3582,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -3603,10 +3645,11 @@ install-data-am: install-docDATA install-initrcSCRIPTS \
 	install-phpextensionLTLIBRARIES install-pkgbackendPROGRAMS \
 	install-pkgbannerDATA install-pkgcharsetDATA \
 	install-pkgconfDATA install-pkgcupsdataDATA \
-	install-pkgdriverDATA install-pkgfilterPROGRAMS \
-	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
-	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
-	install-pkgmimeDATA install-ppdDATA
+	install-pkgcupsserverrootDATA install-pkgdriverDATA \
+	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
+	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
+	install-pkgfontembedincludeDATA install-pkgmimeDATA \
+	install-ppdDATA
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
@@ -3661,10 +3704,11 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
 	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
-	uninstall-pkgdriverDATA uninstall-pkgfilterPROGRAMS \
-	uninstall-pkgfilterSCRIPTS uninstall-pkgfiltersincludeDATA \
-	uninstall-pkgfontconfigDATA uninstall-pkgfontembedincludeDATA \
-	uninstall-pkgmimeDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
+	uninstall-pkgcupsserverrootDATA uninstall-pkgdriverDATA \
+	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
+	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
+	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
+	uninstall-ppdDATA uninstall-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: all check-am install-am install-data-am install-strip \
@@ -3688,46 +3732,46 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	install-pdf install-pdf-am install-phpextensionLTLIBRARIES \
 	install-pkgbackendPROGRAMS install-pkgbannerDATA \
 	install-pkgcharsetDATA install-pkgconfDATA \
-	install-pkgcupsdataDATA install-pkgdriverDATA \
-	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
-	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
-	install-pkgfontembedincludeDATA install-pkgmimeDATA \
-	install-ppdDATA install-ps install-ps-am install-sbinPROGRAMS \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-docDATA uninstall-hook \
-	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES \
-	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
-	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
-	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
+	install-pkgcupsdataDATA install-pkgcupsserverrootDATA \
+	install-pkgdriverDATA install-pkgfilterPROGRAMS \
+	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
+	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
+	install-pkgmimeDATA install-ppdDATA install-ps install-ps-am \
+	install-sbinPROGRAMS install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-docDATA uninstall-hook uninstall-initrcSCRIPTS \
+	uninstall-libLTLIBRARIES uninstall-phpextensionLTLIBRARIES \
+	uninstall-pkgbackendPROGRAMS uninstall-pkgbannerDATA \
+	uninstall-pkgcharsetDATA uninstall-pkgconfDATA \
+	uninstall-pkgcupsdataDATA uninstall-pkgcupsserverrootDATA \
 	uninstall-pkgdriverDATA uninstall-pkgfilterPROGRAMS \
 	uninstall-pkgfilterSCRIPTS uninstall-pkgfiltersincludeDATA \
 	uninstall-pkgfontconfigDATA uninstall-pkgfontembedincludeDATA \
 	uninstall-pkgmimeDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
 
-	$(DLOPEN_LIBS)
 
 distclean-local:
 	rm -rf *.cache *~
 
 install-data-hook:
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	for level in $(RCLEVELS); do \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	done; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc0.d; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	$(LN_S) ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
-	$(LN_S) pdf.utf-8.simple \
+@RCLINKS_TRUE@	for level in $(RCLEVELS); do \
+@RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
+@RCLINKS_TRUE@		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/S$(RCSTART)cups-browsed; \
+@RCLINKS_TRUE@		$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc$${level}.d/K$(RCSTOP)cups-browsed; \
+@RCLINKS_TRUE@	done; \
+@RCLINKS_TRUE@	$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc0.d; \
+@RCLINKS_TRUE@	$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
+	$(LN_S) -f pdf.utf-8.simple \
 		$(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 
 uninstall-hook:
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	if test "x$(INITDIR)" != x; then \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		$(RM) $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d/[SK]??cups-browsed || :; \
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
-@ENABLE_AVAHI_TRUE@@RCLINKS_TRUE@	fi
+@RCLINKS_TRUE@	if test "x$(INITDIR)" != x; then \
+@RCLINKS_TRUE@		$(RM) $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d/[SK]??cups-browsed || :; \
+@RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
+@RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
