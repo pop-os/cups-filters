@@ -45,9 +45,9 @@ ps_code=
 ppd_opts=
 
 resolution=
-eval "$(printf "%s" "$5" | sed -nre 's/.*(^|[[:space:]])Resolution=([0-9.]+(x[0-9.]+)?).*/resolution="${resolution:-\2}"/p')"
+eval "$(printf "%s" "$5" | sed -nEe 's/.*(^|[[:space:]])Resolution=([0-9.]+(x[0-9.]+)?).*/resolution="${resolution:-\2}"/p')"
 if test -e "$PPD"; then
-  eval "$(sed -nre 's/^\*DefaultResolution:[[:space:]]+([0-9.]+(x[0-9.]+)?).*/resolution="${resolution:-\1}"/p' "$PPD")"
+  eval "$(sed -nEe 's/^\*DefaultResolution:[[:space:]]+([0-9.]+(x[0-9.]+)?).*/resolution="${resolution:-\1}"/p' "$PPD")"
 fi
 echo "DEBUG: Resolution: $resolution" >&2
 if test -n "$resolution"; then
@@ -55,15 +55,15 @@ if test -n "$resolution"; then
 fi
 
 pagesize=
-eval "$(printf "%s" "$5" | sed -nre 's/.*(^|[[:space:]])(media|PageSize)=([^[:space:]]+).*/pagesize="${pagesize:-\3}"/p')"
+eval "$(printf "%s" "$5" | sed -nEe 's/.*(^|[[:space:]])(media|PageSize)=([^[:space:]]+).*/pagesize="${pagesize:-\3}"/p')"
 if test -e "$PPD"; then
-  eval "$(sed -nre 's/^\*DefaultPageSize:[[:space:]]+([^[:space:]]+).*/pagesize="${pagesize:-\1}"/p' "$PPD")"
+  eval "$(sed -nEe 's/^\*DefaultPageSize:[[:space:]]+([^[:space:]]+).*/pagesize="${pagesize:-\1}"/p' "$PPD")"
 fi
 echo "DEBUG: Page size: $pagesize" >&2
 width=
 height=
 if test -n "$pagesize" && test -e "$PPD"; then
-  eval "$(sed -nre 's|^\*PaperDimension[[:space:]]+'"$pagesize"'/[^:]+:[[:space:]]+"([^[:space:]]+)[[:space:]]+([^[:space:]]+)".*|width="\1"; height="\2"|p' "$PPD")"
+  eval "$(sed -nEe 's|^\*PaperDimension[[:space:]]+'"$pagesize"'/[^:]+:[[:space:]]+"([^[:space:]]+)[[:space:]]+([^[:space:]]+)".*|width="\1"; height="\2"|p' "$PPD")"
 fi
 echo "DEBUG: Width: $width, height: $height" >&2
 if test -n "$width"; then
@@ -78,7 +78,7 @@ bl_y=
 tr_x=
 tr_y=
 if test -n "$pagesize" && test -e "$PPD"; then
-  eval "$(sed -nre 's|^\*ImageableArea[[:space:]]+'"$pagesize"'/[^:]+:[[:space:]]+"([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)".*|bl_x="\1"; bl_y="\2"; tr_x="\3"; tr_y="\4"|p' "$PPD")"
+  eval "$(sed -nEe 's|^\*ImageableArea[[:space:]]+'"$pagesize"'/[^:]+:[[:space:]]+"([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)".*|bl_x="\1"; bl_y="\2"; tr_x="\3"; tr_y="\4"|p' "$PPD")"
 fi
 echo "DEBUG: Absolute margins: $bl_x, $bl_y, $tr_x, $tr_y" >&2
 margin_l=
@@ -100,14 +100,14 @@ if test -n "$margin_l" && test -n "$margin_b" && \
 fi
 
 inputslot=
-eval "$(printf "%s" "$5" | sed -nre 's/.*(^|[[:space:]])(InputSlot)=([^[:space:]]+).*/inputslot="${inputslot:-\3}"/p')"
+eval "$(printf "%s" "$5" | sed -nEe 's/.*(^|[[:space:]])(InputSlot)=([^[:space:]]+).*/inputslot="${inputslot:-\3}"/p')"
 if test -e "$PPD"; then
-  eval "$(sed -nre 's/^\*DefaultInputSlot:[[:space:]]+([^[:space:]]+).*/inputslot="${inputslot:-\1}"/p' "$PPD")"
+  eval "$(sed -nEe 's/^\*DefaultInputSlot:[[:space:]]+([^[:space:]]+).*/inputslot="${inputslot:-\1}"/p' "$PPD")"
 fi
 echo "DEBUG: InputSlot: $inputslot" >&2
 inputslot_val=
 if test -n "$inputslot" && test -e "$PPD"; then
-  eval "$(sed -nre 's|^\*InputSlot[[:space:]]+'"$inputslot"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/MediaPosition[[:space:]]*([0-9]+)[[:space:]]*>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|inputslot_val="\1"|p' "$PPD")"
+  eval "$(sed -nEe 's|^\*InputSlot[[:space:]]+'"$inputslot"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/MediaPosition[[:space:]]*([0-9]+)[[:space:]]*>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|inputslot_val="\1"|p' "$PPD")"
 fi
 echo "DEBUG: Value for MediaPosition: $inputslot_val" >&2
 if test -n "$inputslot_val"; then
@@ -115,9 +115,9 @@ if test -n "$inputslot_val"; then
 fi
 
 colormodel=
-eval "$(printf "%s" "$5" | sed -nre 's/.*(^|[[:space:]])(ColorModel)=([^[:space:]]+).*/colormodel="${colormodel:-\3}"/p')"
+eval "$(printf "%s" "$5" | sed -nEe 's/.*(^|[[:space:]])(ColorModel)=([^[:space:]]+).*/colormodel="${colormodel:-\3}"/p')"
 if test -e "$PPD"; then
-  eval "$(sed -nre 's/^\*DefaultColorModel:[[:space:]]+([^[:space:]]+).*/colormodel="${colormodel:-\1}"/p' "$PPD")"
+  eval "$(sed -nEe 's/^\*DefaultColorModel:[[:space:]]+([^[:space:]]+).*/colormodel="${colormodel:-\1}"/p' "$PPD")"
 fi
 echo "DEBUG: ColorModel: $colormodel" >&2
 if test "$colormodel" = "Gray"; then
@@ -125,7 +125,7 @@ if test "$colormodel" = "Gray"; then
 fi
 colormodel_val=
 if test -n "$colormodel" && test -e "$PPD"; then
-  eval "$(sed -nre 's|^\*ColorModel[[:space:]]+'"$colormodel"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/BitsPerPixel[[:space:]]*([0-9]*)[[:space:]]*>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|colormodel_val="\1"|p' "$PPD")"
+  eval "$(sed -nEe 's|^\*ColorModel[[:space:]]+'"$colormodel"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/BitsPerPixel[[:space:]]*([0-9]*)[[:space:]]*>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|colormodel_val="\1"|p' "$PPD")"
 fi
 echo "DEBUG: Value for BitsPerPixel: $colormodel_val" >&2
 if test -n "$colormodel_val"; then
@@ -133,15 +133,15 @@ if test -n "$colormodel_val"; then
 fi
 
 duplex=
-eval "$(printf "%s" "$5" | sed -nre 's/.*(^|[[:space:]])(Duplex)=([^[:space:]]+).*/duplex="${duplex:-\3}"/p')"
+eval "$(printf "%s" "$5" | sed -nEe 's/.*(^|[[:space:]])(Duplex)=([^[:space:]]+).*/duplex="${duplex:-\3}"/p')"
 if test -e "$PPD"; then
-  eval "$(sed -nre 's/^\*DefaultDuplex:[[:space:]]+([^[:space:]]+).*/duplex="${duplex:-\1}"/p' "$PPD")"
+  eval "$(sed -nEe 's/^\*DefaultDuplex:[[:space:]]+([^[:space:]]+).*/duplex="${duplex:-\1}"/p' "$PPD")"
 fi
 echo "DEBUG: Duplex: $duplex" >&2
 duplex_val=
 tumble_val=
 if test -n "$duplex" && test -e "$PPD"; then
-  eval "$(sed -nre 's|^\*Duplex[[:space:]]+'"$duplex"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/Duplex[[:space:]]*([^[:space:]]*)[[:space:]]*(/Tumble[[:space:]]*([^[:space:]]*)[[:space:]]*)?>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|duplex_val="\1"; tumble_val="\3"|p' "$PPD")"
+  eval "$(sed -nEe 's|^\*Duplex[[:space:]]+'"$duplex"'/[^:]+:[[:space:]]+"[[:space:]]*<[[:space:]]*<[[:space:]]*/Duplex[[:space:]]*([^[:space:]]*)[[:space:]]*(/Tumble[[:space:]]*([^[:space:]]*)[[:space:]]*)?>[[:space:]]*>[[:space:]]*setpagedevice[[:space:]]*".*|duplex_val="\1"; tumble_val="\3"|p' "$PPD")"
 fi
 echo "DEBUG: Value for Duplex: $duplex_val; Value for Tumble: $tumble_val" >&2
 if test -n "$duplex_val"; then
