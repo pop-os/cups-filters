@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[19])
+m4_define([cups_filters_version_micro],[20])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -110,12 +110,22 @@ AX_COMPARE_VERSION([$CUPS_VERSION],[gt],[1.4], [
 AC_DEFINE(PDFTOPDF, [], [Needed for pdftopdf filter compilation])
 AC_DEFINE_DIR(BANNERTOPDF_DATADIR, "{CUPS_DATADIR}/data", [Directory where bannertopdf finds its data files (PDF templates)])
 
+AC_SEARCH_LIBS([dlopen],
+	[dl],
+	DLOPEN_LIBS="-ldl",
+	AC_MSG_ERROR([unable to find the dlopen() function])
+)
+AC_SUBST(DLOPEN_LIBS)
+
 # ======================
 # Check system functions
 # ======================
 AC_CHECK_FUNCS(sigaction)
 AC_CHECK_FUNCS(waitpid wait3)
 AC_CHECK_FUNCS(strtoll)
+AC_CHECK_FUNCS(open_memstream)
+AC_CHECK_FUNCS(getline,[],AC_SUBST([GETLINE],['bannertopdf-getline.$(OBJEXT)']))
+AC_CHECK_FUNCS(strcasestr,[],AC_SUBST([STRCASESTR],['pdftops-strcasestr.$(OBJEXT)']))
 AC_SEARCH_LIBS(pow, m)
 
 # ========================
@@ -126,6 +136,8 @@ AC_CHECK_HEADERS([sys/stat.h])
 AC_CHECK_HEADERS([sys/types.h])
 AC_CHECK_HEADERS([unistd.h])
 AC_CHECK_HEADERS([zlib.h])
+AC_CHECK_HEADERS([endian.h])
+AC_CHECK_HEADERS([dirent.h])
 
 # =============
 # Image options
@@ -202,31 +214,16 @@ AC_DEFINE([HAVE_LIBZ], [], [Define that we use zlib])
 # ================
 POPPLER_INCLUDEDIR=`pkg-config poppler --variable includedir`
 AC_CHECK_HEADER([UGooString.h], [AC_DEFINE([HAVE_UGOOSTRING_H],,[Have UGooString.h])], [])
-# FIXME:
-# Use proper c compile check not greps and then just link again poppler with all the features
-# instead of this and all the libs.
-AS_IF([grep "enableSlightHinting" $POPPLER_INCLUDEDIR/poppler/splash/SplashFontEngine.h >/dev/null], [
-	AC_DEFINE([SPLASH_SLIGHT_HINTING],,[SplashFontEngine enableSlightHinting])
-])
-AS_IF([grep "GlobalParams(char \*cfgFileName)" $POPPLER_INCLUDEDIR/poppler/GlobalParams.h >/dev/null], [
-	AC_DEFINE([GLOBALPARAMS_HAS_A_ARG],,[GlobalParams::GlobalParams has a argument.])
-])
-AS_IF([grep "Parser(XRef \*xrefA, Lexer \*lexerA)" $POPPLER_INCLUDEDIR/poppler/Parser.h >/dev/null], [
-	AC_DEFINE([PARSER_HAS_2_ARGS],,[Parser::Parser has two arguments.])
-])
-AS_IF([grep "fontType1COT" $POPPLER_INCLUDEDIR/poppler/GfxFont.h >/dev/null], [
-	AC_DEFINE([FONTTYPE_ENUM2],,[New font type enumeration])
-])
-AS_IF([grep "getUndecodedStream" $POPPLER_INCLUDEDIR/poppler/Stream.h >/dev/null], [
-	AC_DEFINE([HAVE_GETUNDECODEDSTREAM],,[Have Stream::getUndecodedStream])
-])
-AS_IF([grep "mapToUnicode(.*Unicode[ ][ ]*\*u" $POPPLER_INCLUDEDIR/poppler/CharCodeToUnicode.h], [
-	AC_DEFINE([OLD_MAPTOUNICODE],,[Old CharCodeToUnicode::mapToUnicode])
-])
-AS_IF([grep "GfxColorSpace *\*parse(Object *\*csObj)" $POPPLER_INCLUDEDIR/poppler/GfxState.h >/dev/null], [
-	AC_DEFINE([HAVE_NEW_GFX_FONTTYPE],,[have new GfxFontType])
-])
+AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
 
+AC_TRY_COMPILE([#include <Stream.h>],
+	[virtual Stream *s = getUndecodedStream()],
+	[AC_DEFINE([HAVE_GETUNDECODEDSTREAM],,[Define if you have Stream::getUndecodedStream().])],
+	[])
+AC_TRY_COMPILE([#include <CharCodeToUnicode.h>],
+	[CharCode c; Unicode **u; int i = mapToUnicode(c, u)],
+	[AC_DEFINE([OLD_MAPTOUNICODE],,[Define if you have Old CharCodeToUnicode::mapToUnicode()])],
+	[])
 
 # ===================================
 # Check for large files and long long
@@ -278,15 +275,14 @@ AS_CASE([x$with_pdftops_maxres],
 	[AC_MSG_ERROR([Unknown value of with-pdftops-maxres provided: $with_pdftops])]
 )
 
-PDFTOPS="pdftops"
-AS_IF([test x"$with_pdftops" = gs], [
-	AS_IF([test "x$with_gs_path" != "xsystem"], [
-		CUPS_GHOSTSCRIPT="$with_gs_path"
-	], [
-		AC_PATH_PROG(CUPS_GHOSTSCRIPT, [gs], [AC_MSG_ERROR([Required gs binary is missing. Please install ghostscript-gpl package.])])
-	])
+AS_IF([test "x$with_gs_path" != "xsystem"], [
+	CUPS_GHOSTSCRIPT="$with_gs_path"
+], [
+	AC_PATH_PROG(CUPS_GHOSTSCRIPT, [gs], [AC_MSG_ERROR([Required gs binary is missing. Please install ghostscript-gpl package.])])
+])
+AS_IF([test "x$CUPS_GHOSTSCRIPT" != "x"], [
 	AC_DEFINE([HAVE_GHOSTSCRIPT], [], [Define that we provide ghostscript binary])
-	AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [GS], [Define default renderer])
+	AS_IF([test x"$with_pdftops" = xgs], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [GS], [Define default renderer])])
 
 	AC_MSG_CHECKING(whether gs supports the ps2write device)
 	AS_IF([`$CUPS_GHOSTSCRIPT -h 2>&1 | grep -q ps2write`], [
@@ -295,14 +291,16 @@ AS_IF([test x"$with_pdftops" = gs], [
 	], [
 		AC_MSG_RESULT([no])
 	])
+])
+
+AS_IF([test "x$with_pdftops_path" != "xsystem"], [
+	CUPS_PDFTOPS="$with_pdftops"
 ], [
-	AS_IF([test "x$with_pdftops_path" != "xsystem"], [
-		CUPS_PDFTOPS="$with_pdftops"
-	], [
-		AC_PATH_PROG(CUPS_PDFTOPS, [pdftops], [AC_MSG_ERROR([Required pdftops is missing. Please install CUPS developer packages.])])
-	])
+	AC_PATH_PROG(CUPS_PDFTOPS, [pdftops], [AC_MSG_ERROR([Required pdftops is missing. Please install CUPS developer packages.])])
+])
+AS_IF([test "x$CUPS_PDFTOPS" != "x"], [
 	AC_DEFINE([HAVE_POPPLER_PDFTOPS], [], [Define that we provide poppler pdftops.])
-	AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [PDFTOPS], [Define default renderer])
+	AS_IF([test x"$with_pdftops" = xpdftops], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [PDFTOPS], [Define default renderer])])
 
 	AC_MSG_CHECKING([whether pdftops supports -origpagesizes])
 	AS_IF([`$CUPS_PDFTOPS -h 2>&1 | grep -q -- -origpagesizes`], [
@@ -319,12 +317,10 @@ AS_IF([test x"$with_pdftops" = gs], [
         	AC_MSG_RESULT([no])
 	])
 ])
-DEFAULT_PDFTOPS=""
+
 AC_DEFINE_UNQUOTED([CUPS_GHOSTSCRIPT], "$CUPS_GHOSTSCRIPT", [gs binary to use])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOPS], "$CUPS_PDFTOPS", [pdftops binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_MAX_RESOLUTION], [$CUPS_PDFTOPS_MAXRES], [max resolution used for pdftops when converting images])
-AC_SUBST(DEFAULT_PDFTOPS)
-AC_SUBST(PDFTOPS)
 
 # =============
 # Check for php

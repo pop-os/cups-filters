@@ -162,8 +162,6 @@ PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 am_bannertopdf_OBJECTS = bannertopdf-banner.$(OBJEXT) \
 	bannertopdf-bannertopdf.$(OBJEXT) bannertopdf-pdf.$(OBJEXT)
 bannertopdf_OBJECTS = $(am_bannertopdf_OBJECTS)
-bannertopdf_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 bannertopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(bannertopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -247,7 +245,6 @@ pdftopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 am_pdftops_OBJECTS = pdftops-common.$(OBJEXT) \
 	pdftops-pdftops.$(OBJEXT)
 pdftops_OBJECTS = $(am_pdftops_OBJECTS)
-pdftops_DEPENDENCIES = $(am__DEPENDENCIES_1)
 pdftops_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pdftops_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -382,28 +379,30 @@ am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
-	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
-	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES)
+	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
+	$(commandtopclx_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
-	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
-	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES)
+	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
+	$(commandtopclx_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES)
 DATA = $(doc_DATA) $(pkgbanner_DATA) $(pkgcharset_DATA) \
 	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgdriver_DATA) \
 	$(pkgfiltersinclude_DATA) $(pkgfontconfig_DATA) \
@@ -454,10 +453,10 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DEFAULT_PDFTOPS = @DEFAULT_PDFTOPS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DLOPEN_LIBS = @DLOPEN_LIBS@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
@@ -471,6 +470,7 @@ FONTCONFIG_LIBS = @FONTCONFIG_LIBS@
 FONTDIR = @FONTDIR@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
+GETLINE = @GETLINE@
 GREP = @GREP@
 IJS_CFLAGS = @IJS_CFLAGS@
 IJS_LIBS = @IJS_LIBS@
@@ -511,7 +511,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PDFTOPS = @PDFTOPS@
 PHPCONFIG = @PHPCONFIG@
 PHPDIR = @PHPDIR@
 PKG_CONFIG = @PKG_CONFIG@
@@ -523,6 +522,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRCASESTR = @STRCASESTR@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ZLIB_CFLAGS = @ZLIB_CFLAGS@
@@ -952,6 +952,7 @@ bannertopdf_SOURCES = \
 	filter/pdf.cxx \
 	filter/pdf.h
 
+EXTRA_bannertopdf_SOURCES = filter/getline.c
 bannertopdf_CFLAGS = \
 	$(CUPS_CFLAGS) \
 	$(LIBJPEG_CFLAGS) \
@@ -961,12 +962,14 @@ bannertopdf_CFLAGS = \
 
 bannertopdf_CXXFLAGS = $(bannertopdf_CFLAGS)
 bannertopdf_LDADD = \
+	$(GETLINE) \
 	$(CUPS_LIBS) \
 	$(LIBJPEG_LIBS) \
 	$(LIBPNG_LIBS) \
 	$(POPPLER_LIBS) \
 	$(TIFF_LIBS)
 
+bannertopdf_DEPENDENCIES = $(GETLINE)
 commandtoescpx_SOURCES = \
 	cupsfilters/driver.h \
 	filter/commandtoescpx.c \
@@ -1042,8 +1045,10 @@ pdftops_SOURCES = \
 	filter/common.h \
 	filter/pdftops.c
 
+EXTRA_pdftops_SOURCES = filter/strcasestr.c
 pdftops_CFLAGS = $(CUPS_CFLAGS)
-pdftops_LDADD = $(CUPS_LIBS)
+pdftops_LDADD = $(STRCASESTR) $(CUPS_LIBS)
+pdftops_DEPENDENCIES = $(STRCASESTR)
 pdftoraster_SOURCES = \
 	filter/pdftoraster.cxx \
 	filter/PDFError.h
@@ -1547,6 +1552,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aglfn13.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-banner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-bannertopdf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-getline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-pdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/commandtoescpx-commandtoescpx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/commandtopclx-commandtopclx.Po@am__quote@
@@ -1618,6 +1624,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-pdftopdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-pdftops.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftops-strcasestr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoraster-pdftoraster.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertoescpx-rastertoescpx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertopclx-pcl-common.Po@am__quote@
@@ -1916,6 +1923,20 @@ bannertopdf-bannertopdf.obj: filter/bannertopdf.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -c -o bannertopdf-bannertopdf.obj `if test -f 'filter/bannertopdf.c'; then $(CYGPATH_W) 'filter/bannertopdf.c'; else $(CYGPATH_W) '$(srcdir)/filter/bannertopdf.c'; fi`
 
+bannertopdf-getline.o: filter/getline.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -MT bannertopdf-getline.o -MD -MP -MF $(DEPDIR)/bannertopdf-getline.Tpo -c -o bannertopdf-getline.o `test -f 'filter/getline.c' || echo '$(srcdir)/'`filter/getline.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bannertopdf-getline.Tpo $(DEPDIR)/bannertopdf-getline.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/getline.c' object='bannertopdf-getline.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -c -o bannertopdf-getline.o `test -f 'filter/getline.c' || echo '$(srcdir)/'`filter/getline.c
+
+bannertopdf-getline.obj: filter/getline.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -MT bannertopdf-getline.obj -MD -MP -MF $(DEPDIR)/bannertopdf-getline.Tpo -c -o bannertopdf-getline.obj `if test -f 'filter/getline.c'; then $(CYGPATH_W) 'filter/getline.c'; else $(CYGPATH_W) '$(srcdir)/filter/getline.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bannertopdf-getline.Tpo $(DEPDIR)/bannertopdf-getline.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/getline.c' object='bannertopdf-getline.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -c -o bannertopdf-getline.obj `if test -f 'filter/getline.c'; then $(CYGPATH_W) 'filter/getline.c'; else $(CYGPATH_W) '$(srcdir)/filter/getline.c'; fi`
+
 commandtoescpx-commandtoescpx.o: filter/commandtoescpx.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(commandtoescpx_CFLAGS) $(CFLAGS) -MT commandtoescpx-commandtoescpx.o -MD -MP -MF $(DEPDIR)/commandtoescpx-commandtoescpx.Tpo -c -o commandtoescpx-commandtoescpx.o `test -f 'filter/commandtoescpx.c' || echo '$(srcdir)/'`filter/commandtoescpx.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/commandtoescpx-commandtoescpx.Tpo $(DEPDIR)/commandtoescpx-commandtoescpx.Po
@@ -2055,6 +2076,20 @@ pdftops-pdftops.obj: filter/pdftops.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/pdftops.c' object='pdftops-pdftops.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -c -o pdftops-pdftops.obj `if test -f 'filter/pdftops.c'; then $(CYGPATH_W) 'filter/pdftops.c'; else $(CYGPATH_W) '$(srcdir)/filter/pdftops.c'; fi`
+
+pdftops-strcasestr.o: filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -MT pdftops-strcasestr.o -MD -MP -MF $(DEPDIR)/pdftops-strcasestr.Tpo -c -o pdftops-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftops-strcasestr.Tpo $(DEPDIR)/pdftops-strcasestr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='pdftops-strcasestr.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -c -o pdftops-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
+
+pdftops-strcasestr.obj: filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -MT pdftops-strcasestr.obj -MD -MP -MF $(DEPDIR)/pdftops-strcasestr.Tpo -c -o pdftops-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftops-strcasestr.Tpo $(DEPDIR)/pdftops-strcasestr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='pdftops-strcasestr.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -c -o pdftops-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
 
 rastertoescpx-rastertoescpx.o: filter/rastertoescpx.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rastertoescpx_CFLAGS) $(CFLAGS) -MT rastertoescpx-rastertoescpx.o -MD -MP -MF $(DEPDIR)/rastertoescpx-rastertoescpx.Tpo -c -o rastertoescpx-rastertoescpx.o `test -f 'filter/rastertoescpx.c' || echo '$(srcdir)/'`filter/rastertoescpx.c
@@ -3519,6 +3554,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
 	uninstall-ppdDATA
 
+	$(DLOPEN_LIBS)
 
 distclean-local:
 	rm -rf *.cache *~

@@ -30,6 +30,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_CPP_POPPLER_VERSION_H
+#include "cpp/poppler-version.h"
+#endif
 #include <goo/GooString.h>
 #include <goo/gmem.h>
 #include <Object.h>
@@ -288,11 +291,7 @@ int main(int argc, char *argv[]) {
 #else
   setErrorFunction(::myErrorFun);
 #endif
-#ifdef GLOBALPARAMS_HAS_A_ARG
-  globalParams = new GlobalParams(0);
-#else
   globalParams = new GlobalParams();
-#endif
   parseOpts(argc, argv);
 
   if (argc == 6) {
