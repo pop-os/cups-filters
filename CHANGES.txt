@@ -1,10 +1,29 @@
-CHANGES.txt - OpenPrinting CUPS Filters v1.0b1 - 2011-01-26
------------------------------------------------------------
+CHANGES.txt - OpenPrinting CUPS Filters v1.0 - 2011-02-10
+---------------------------------------------------------
+
+CHANGES IN V1.0
+
+	- Built the pdftops filter based on Ghostscript by default, as
+	  Ghostscript is better optimized for print output (Ubuntu bug
+	  #926068).
+	- If the pdftops filter is built for using Poppler, let Poppler not
+	  emit PostScript level 3, as this causes problems with some HP
+	  printers (Ubuntu bug #277404, Freedesktop (Poppler) bug #19640).
+	- bannertopdf needs to be linked with C++ (bug #995)
+	- Added test.sh script for testing texttopdf
+	- Added original documentation of the PDF filters to README.txt
+	- Install C header files and the static library
+	- General clean-up of "make install" targets in Makefiles
+	- Raised MIME conversion cost factor of pdftoraster from 66 to 100 to
+	  give priority to the gstoraster filter from Ghostscript, as this
+	  filter supports ICC-profile-based color management.
+	- Documentation updated because libijs, liblcms, freetype, and
+          fontconfig are needed to build this package
 
 CHANGES IN V1.0b1
 
-	- Removed the bannertops, imagetops, and texttops, they are not
-	  needed any more in the PDF-based printing workflow
+	- Removed the bannertops, imagetops, and texttops filters, they are
+	  not needed any more in the PDF-based printing workflow
 	- Added support for liblcms2
 	- Named the package "OpenPrinting CUPS Filters"
 	- Renamed libcupslegacy to libcupsfilters
