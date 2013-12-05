@@ -1,5 +1,20 @@
-CHANGES.txt - OpenPrinting CUPS Filters v1.0.3 - 2011-03-01
+CHANGES.txt - OpenPrinting CUPS Filters v1.0.4 - 2011-03-07
 -----------------------------------------------------------
+
+CHANGES IN V1.0.4
+
+	- texttopdf: Fall back to altermative fonts via fontconfig if the
+	  FreeMono TrueType fonts are not installed (Debian bugs #495598
+	  and #662660).
+	- bannertopdf: Fix off-by-one error in page duplication
+	- bannertopdf: Put indirect references to streams into the page's
+	  contents
+	- bannertopdf: Let byte offsets for the Xref table of the PDF output
+	  being determined correctly also when the output goes to stdout
+	  (Ubuntu bug #939735).
+	- bannertopdf: Output multiple copies of the test page if duplex
+	  and/or N-up is chosen, to let the test page appear on all possible
+	  positions of the sheet (Ubuntu bug #939530).
 
 CHANGES IN V1.0.3
 
