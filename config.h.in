@@ -30,6 +30,9 @@
 /* Path to CUPS binaries dir */
 #undef CUPS_SERVERBIN
 
+/* CUPS serverroot */
+#undef CUPS_SERVERROOT
+
 /* Define that we provide acroread. */
 #undef HAVE_ACROREAD
 
