@@ -254,7 +254,7 @@ am_pdftoopvp_OBJECTS = pdftoopvp-OPRS.$(OBJEXT) \
 pdftoopvp_OBJECTS = $(am_pdftoopvp_OBJECTS)
 pdftoopvp_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 pdftoopvp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftoopvp_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -938,7 +938,8 @@ pdftoopvp_LDADD = \
 	$(FREETYPE_LIBS) \
 	$(FONTCONFIG_LIBS) \
 	$(LIBPNG_LIBS) \
-	$(POPPLER_LIBS)
+	$(POPPLER_LIBS) \
+	$(DLOPEN_LIBS)
 
 pdftopdf_SOURCES = \
 	filter/pdftopdf/pdftopdf.cc \
@@ -3707,7 +3708,6 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgfontconfigDATA uninstall-pkgfontembedincludeDATA \
 	uninstall-pkgmimeDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
 
-	$(DLOPEN_LIBS)
 
 distclean-local:
 	rm -rf *.cache *~

@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[28])
+m4_define([cups_filters_version_micro],[29])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -287,7 +287,7 @@ elif test "x$rcdir" != xno; then
 	fi
 fi
 
-AM_CONDITIONAL([RCLINKS], [test "x$INITDDIR" = "x"])
+AM_CONDITIONAL([RCLINKS], [test "x$INITDIR" != "x"])
 
 if test "x${INITDIR}" != "x" -a "x${INITDDIR}" = "x"; then
    INITDDIR="${INITDIR}/init.d"
