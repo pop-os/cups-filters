@@ -24,6 +24,9 @@
 /* Define default renderer */
 #undef CUPS_PDFTOPS_RENDERER
 
+/* pdftocairo binary to use. */
+#undef CUPS_POPPLER_PDFTOCAIRO
+
 /* pdftops binary to use. */
 #undef CUPS_POPPLER_PDFTOPS
 
@@ -89,6 +92,9 @@
 
 /* Define to 1 if you have the `open_memstream' function. */
 #undef HAVE_OPEN_MEMSTREAM
+
+/* Define that we provide poppler pdftocairo. */
+#undef HAVE_POPPLER_PDFTOCAIRO
 
 /* Define that we provide poppler pdftops. */
 #undef HAVE_POPPLER_PDFTOPS
