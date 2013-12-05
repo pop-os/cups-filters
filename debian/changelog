@@ -72,6 +72,8 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
        chosen, do not only check for the choice names "DuplexNoTumble"
        and "DuplexTumble" but also for "LongEdge", "ShortEdge",
        "Top", and "Bottom", as CUPS does (Bug #1167).
+
+  [ Till Kamppeter ]
   * debian/patches/adjust-filter-costs-to-avoid-letting-adobe-pdf-go-through-pstotiff.patch,
     debian/patches/fix-memory-leaks-in-cups-browsed.patch,
     debian/patches/include-dbus-so-that-colord-support-works.patch: Removed,
@@ -81,6 +83,11 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
     cups-filters binary package. Now foomatic-rip is part of cups-filters and
     the foomatic-filters package is obsolete and should get automatically
     uninstalled by the cups-filters binary package.
+
+  [ Didier Raboud ]
+  * Move packaging from bzr to git
+    - Drop .bzr-builddeb
+    - Update Vcs-* fields
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 29 Nov 2013 23:59:00 +0100
 

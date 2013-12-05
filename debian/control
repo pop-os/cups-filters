@@ -35,8 +35,8 @@ Build-Depends:
  libavahi-client-dev,
  libavahi-glib-dev
 Homepage: http://www.openprinting.org/
-Vcs-Bzr: http://bzr.debian.org/pkg-cups/cups-filters/debian-trunk/
-Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-cups/cups-filters/debian-trunk/
+Vcs-Git: git://anonscm.debian.org/pkg-cups/cups-filters.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cups/cups-filters.git;a=summary
 
 Package: libcupsfilters1
 Section: libs
