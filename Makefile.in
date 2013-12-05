@@ -64,8 +64,8 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
-	commandtopclx$(EXEEXT) pdftoijs$(EXEEXT) pdftops$(EXEEXT) \
-	pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
+	commandtopclx$(EXEEXT) gstoraster$(EXEEXT) pdftoijs$(EXEEXT) \
+	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
 	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
 	$(am__EXEEXT_1)
 @ENABLE_IMAGEFILTERS_TRUE@am__append_1 = \
@@ -77,7 +77,7 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/libcupsfilters.pc.in $(srcdir)/libfontembed.pc.in \
-	$(top_srcdir)/configure \
+	$(top_srcdir)/configure $(top_srcdir)/filter/gstopxl.in \
 	$(top_srcdir)/utils/cups-browsed.conf.in \
 	$(top_srcdir)/utils/cups-browsed.in AUTHORS COPYING ChangeLog \
 	INSTALL NEWS compile config.guess config.sub depcomp \
@@ -92,7 +92,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
+CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc filter/gstopxl \
 	utils/cups-browsed utils/cups-browsed.conf
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -126,6 +126,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" \
+	"$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" \
 	"$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" \
 	"$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" \
 	"$(DESTDIR)$(pkgcupsdatadir)" \
@@ -153,8 +154,9 @@ am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-image-sgilib.lo \
 	libcupsfilters_la-image-sun.lo libcupsfilters_la-image-tiff.lo \
 	libcupsfilters_la-image-zoom.lo libcupsfilters_la-lut.lo \
-	libcupsfilters_la-pack.lo libcupsfilters_la-rgb.lo \
-	libcupsfilters_la-srgb.lo $(am__objects_1)
+	libcupsfilters_la-pack.lo libcupsfilters_la-raster.lo \
+	libcupsfilters_la-rgb.lo libcupsfilters_la-srgb.lo \
+	$(am__objects_1)
 libcupsfilters_la_OBJECTS = $(am_libcupsfilters_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -211,6 +213,13 @@ cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_gstoraster_OBJECTS = gstoraster-gstoraster.$(OBJEXT) \
+	gstoraster-colord.$(OBJEXT)
+gstoraster_OBJECTS = $(am_gstoraster_OBJECTS)
+gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1)
+gstoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gstoraster_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_imagetopdf_OBJECTS = imagetopdf-common.$(OBJEXT) \
 	imagetopdf-imagetopdf.$(OBJEXT)
@@ -416,35 +425,41 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
-	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
+	$(urftopdf_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
-	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
+	$(urftopdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+man5dir = $(mandir)/man5
+man8dir = $(mandir)/man8
+NROFF = nroff
+MANS = $(man_MANS)
 DATA = $(doc_DATA) $(pkgbanner_DATA) $(pkgcharset_DATA) \
 	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgcupsserverroot_DATA) \
 	$(pkgdriver_DATA) $(pkgfiltersinclude_DATA) \
@@ -492,6 +507,7 @@ CUPSCONFIG = @CUPSCONFIG@
 CUPS_ACROREAD = @CUPS_ACROREAD@
 CUPS_CFLAGS = @CUPS_CFLAGS@
 CUPS_DATADIR = @CUPS_DATADIR@
+CUPS_DEFAULT_DOMAINSOCKET = @CUPS_DEFAULT_DOMAINSOCKET@
 CUPS_FONTPATH = @CUPS_FONTPATH@
 CUPS_GHOSTSCRIPT = @CUPS_GHOSTSCRIPT@
 CUPS_LIBS = @CUPS_LIBS@
@@ -499,6 +515,7 @@ CUPS_PDFTOCAIRO = @CUPS_PDFTOCAIRO@
 CUPS_PDFTOPS = @CUPS_PDFTOPS@
 CUPS_SERVERBIN = @CUPS_SERVERBIN@
 CUPS_SERVERROOT = @CUPS_SERVERROOT@
+CUPS_STATEDIR = @CUPS_STATEDIR@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -581,6 +598,7 @@ RCLEVELS = @RCLEVELS@
 RCSTART = @RCSTART@
 RCSTOP = @RCSTOP@
 SED = @SED@
+SED_EXTENDED_REGEX_OPT = @SED_EXTENDED_REGEX_OPT@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRCASESTR = @STRCASESTR@
@@ -657,17 +675,13 @@ doc_DATA = \
 
 # Not reliable bash script
 #TESTS += filter/test.sh
-
-# =====
-# UTILS
-# =====
 EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	libfontembed.pc.in $(pkgbanner_DATA) $(pkgcharset_DATA) \
 	$(pkgfiltersinclude_DATA) cupsfilters/image.pgm \
 	cupsfilters/image.ppm $(pkgcupsdata_DATA) $(pkgdriver_DATA) \
 	$(pkgppdc_DATA) $(pkgmime_DATA) $(pkgfontembedinclude_DATA) \
 	fontembed/README $(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) \
-	filter/test.sh utils/cups-browsed.in $(ppd_DATA) \
+	filter/test.sh utils/cups-browsed.in $(man_MANS) $(ppd_DATA) \
 	scripting/perl scripting/php/README scripting/php/phpcups.php
 
 # ========
@@ -726,7 +740,8 @@ pkgcharset_DATA = \
 pkgfiltersincludedir = $(includedir)/cupsfilters
 pkgfiltersinclude_DATA = \
 	cupsfilters/driver.h \
-	cupsfilters/image.h
+	cupsfilters/image.h \
+	cupsfilters/raster.h
 
 lib_LTLIBRARIES = libcupsfilters.la libfontembed.la
 #	testcmyk # fails as it opens some image.ppm which is nowerhe to be found.
@@ -764,6 +779,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/image-zoom.c \
 	cupsfilters/lut.c \
 	cupsfilters/pack.c \
+	cupsfilters/raster.c \
 	cupsfilters/rgb.c \
 	cupsfilters/srgb.c \
 	$(pkgfiltersinclude_DATA)
@@ -857,7 +873,8 @@ pkgdriver_DATA = \
 # =======
 pkgppdcdir = $(CUPS_DATADIR)/ppdc
 pkgppdc_DATA = \
-	filter/pcl.h
+	filter/pcl.h \
+	filter/escp.h
 
 
 # =====
@@ -1002,6 +1019,7 @@ pdftopdf_LDADD = \
 # Simple filter binaries
 # ======================
 pkgfilter_SCRIPTS = \
+	filter/gstopxl \
 	filter/imagetops \
 	filter/pstopdf \
 	filter/textonly \
@@ -1052,6 +1070,20 @@ commandtopclx_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 
 commandtopclx_LDADD = $(CUPS_LIBS)
+gstoraster_SOURCES = \
+	filter/gstoraster.c \
+	filter/colord.c \
+	filter/colord.h \
+	cupsfilters/raster.h
+
+gstoraster_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	-I$(srcdir)/cupsfilters/
+
+gstoraster_LDADD = \
+	$(CUPS_LIBS) \
+	-lcupsfilters
+
 imagetopdf_SOURCES = \
 	cupsfilters/image.h \
 	filter/common.c \
@@ -1234,6 +1266,10 @@ cups_browsed_LDADD = \
 
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
+man_MANS = \
+	utils/cups-browsed.8 \
+	utils/cups-browsed.conf.5
+
 
 # ===
 # PPD
@@ -1243,6 +1279,8 @@ ppd_DATA = \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
+	ppd/pxlcolor.ppd \
+	ppd/pxlmono.ppd \
 	ppd/textonly.ppd
 
 
@@ -1315,6 +1353,8 @@ distclean-hdr:
 libcupsfilters.pc: $(top_builddir)/config.status $(srcdir)/libcupsfilters.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 libfontembed.pc: $(top_builddir)/config.status $(srcdir)/libfontembed.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/gstopxl: $(top_builddir)/config.status $(top_srcdir)/filter/gstopxl.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 utils/cups-browsed: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -1595,6 +1635,9 @@ commandtopclx$(EXEEXT): $(commandtopclx_OBJECTS) $(commandtopclx_DEPENDENCIES) $
 cups-browsed$(EXEEXT): $(cups_browsed_OBJECTS) $(cups_browsed_DEPENDENCIES) $(EXTRA_cups_browsed_DEPENDENCIES) 
 	@rm -f cups-browsed$(EXEEXT)
 	$(AM_V_CCLD)$(cups_browsed_LINK) $(cups_browsed_OBJECTS) $(cups_browsed_LDADD) $(LIBS)
+gstoraster$(EXEEXT): $(gstoraster_OBJECTS) $(gstoraster_DEPENDENCIES) $(EXTRA_gstoraster_DEPENDENCIES) 
+	@rm -f gstoraster$(EXEEXT)
+	$(AM_V_CCLD)$(gstoraster_LINK) $(gstoraster_OBJECTS) $(gstoraster_LDADD) $(LIBS)
 imagetopdf$(EXEEXT): $(imagetopdf_OBJECTS) $(imagetopdf_DEPENDENCIES) $(EXTRA_imagetopdf_DEPENDENCIES) 
 	@rm -f imagetopdf$(EXEEXT)
 	$(AM_V_CCLD)$(imagetopdf_LINK) $(imagetopdf_OBJECTS) $(imagetopdf_LDADD) $(LIBS)
@@ -1758,6 +1801,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/embed_sfnt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontfile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frequent.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gstoraster-colord.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gstoraster-gstoraster.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imagetopdf-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imagetopdf-imagetopdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imagetoraster-common.Po@am__quote@
@@ -1782,6 +1827,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-lut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pack.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-raster.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-rgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-srgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libphpcups_la-phpcups.Plo@am__quote@
@@ -2000,6 +2046,13 @@ libcupsfilters_la-pack.lo: cupsfilters/pack.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-pack.lo `test -f 'cupsfilters/pack.c' || echo '$(srcdir)/'`cupsfilters/pack.c
 
+libcupsfilters_la-raster.lo: cupsfilters/raster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-raster.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-raster.Tpo -c -o libcupsfilters_la-raster.lo `test -f 'cupsfilters/raster.c' || echo '$(srcdir)/'`cupsfilters/raster.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-raster.Tpo $(DEPDIR)/libcupsfilters_la-raster.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/raster.c' object='libcupsfilters_la-raster.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-raster.lo `test -f 'cupsfilters/raster.c' || echo '$(srcdir)/'`cupsfilters/raster.c
+
 libcupsfilters_la-rgb.lo: cupsfilters/rgb.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-rgb.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-rgb.Tpo -c -o libcupsfilters_la-rgb.lo `test -f 'cupsfilters/rgb.c' || echo '$(srcdir)/'`cupsfilters/rgb.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-rgb.Tpo $(DEPDIR)/libcupsfilters_la-rgb.Plo
@@ -2167,6 +2220,34 @@ cups_browsed-cups-browsed.obj: utils/cups-browsed.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils/cups-browsed.c' object='cups_browsed-cups-browsed.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cups_browsed_CFLAGS) $(CFLAGS) -c -o cups_browsed-cups-browsed.obj `if test -f 'utils/cups-browsed.c'; then $(CYGPATH_W) 'utils/cups-browsed.c'; else $(CYGPATH_W) '$(srcdir)/utils/cups-browsed.c'; fi`
+
+gstoraster-gstoraster.o: filter/gstoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-gstoraster.o -MD -MP -MF $(DEPDIR)/gstoraster-gstoraster.Tpo -c -o gstoraster-gstoraster.o `test -f 'filter/gstoraster.c' || echo '$(srcdir)/'`filter/gstoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-gstoraster.Tpo $(DEPDIR)/gstoraster-gstoraster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/gstoraster.c' object='gstoraster-gstoraster.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-gstoraster.o `test -f 'filter/gstoraster.c' || echo '$(srcdir)/'`filter/gstoraster.c
+
+gstoraster-gstoraster.obj: filter/gstoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-gstoraster.obj -MD -MP -MF $(DEPDIR)/gstoraster-gstoraster.Tpo -c -o gstoraster-gstoraster.obj `if test -f 'filter/gstoraster.c'; then $(CYGPATH_W) 'filter/gstoraster.c'; else $(CYGPATH_W) '$(srcdir)/filter/gstoraster.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-gstoraster.Tpo $(DEPDIR)/gstoraster-gstoraster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/gstoraster.c' object='gstoraster-gstoraster.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-gstoraster.obj `if test -f 'filter/gstoraster.c'; then $(CYGPATH_W) 'filter/gstoraster.c'; else $(CYGPATH_W) '$(srcdir)/filter/gstoraster.c'; fi`
+
+gstoraster-colord.o: filter/colord.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-colord.o -MD -MP -MF $(DEPDIR)/gstoraster-colord.Tpo -c -o gstoraster-colord.o `test -f 'filter/colord.c' || echo '$(srcdir)/'`filter/colord.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-colord.Tpo $(DEPDIR)/gstoraster-colord.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/colord.c' object='gstoraster-colord.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-colord.o `test -f 'filter/colord.c' || echo '$(srcdir)/'`filter/colord.c
+
+gstoraster-colord.obj: filter/colord.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-colord.obj -MD -MP -MF $(DEPDIR)/gstoraster-colord.Tpo -c -o gstoraster-colord.obj `if test -f 'filter/colord.c'; then $(CYGPATH_W) 'filter/colord.c'; else $(CYGPATH_W) '$(srcdir)/filter/colord.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-colord.Tpo $(DEPDIR)/gstoraster-colord.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/colord.c' object='gstoraster-colord.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-colord.obj `if test -f 'filter/colord.c'; then $(CYGPATH_W) 'filter/colord.c'; else $(CYGPATH_W) '$(srcdir)/filter/colord.c'; fi`
 
 imagetopdf-common.o: filter/common.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imagetopdf_CFLAGS) $(CFLAGS) -MT imagetopdf-common.o -MD -MP -MF $(DEPDIR)/imagetopdf-common.Tpo -c -o imagetopdf-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
@@ -3023,6 +3104,92 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
+install-man5: $(man_MANS)
+	@$(NORMAL_INSTALL)
+	@list1=''; \
+	list2='$(man_MANS)'; \
+	test -n "$(man5dir)" \
+	  && test -n "`echo $$list1$$list2`" \
+	  || exit 0; \
+	echo " $(MKDIR_P) '$(DESTDIR)$(man5dir)'"; \
+	$(MKDIR_P) "$(DESTDIR)$(man5dir)" || exit 1; \
+	{ for i in $$list1; do echo "$$i"; done;  \
+	if test -n "$$list2"; then \
+	  for i in $$list2; do echo "$$i"; done \
+	    | sed -n '/\.5[a-z]*$$/p'; \
+	fi; \
+	} | while read p; do \
+	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; echo "$$p"; \
+	done | \
+	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^5][0-9a-z]*$$,5,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+	sed 'N;N;s,\n, ,g' | { \
+	list=; while read file base inst; do \
+	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man5dir)/$$inst'"; \
+	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man5dir)/$$inst" || exit $$?; \
+	  fi; \
+	done; \
+	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+	while read files; do \
+	  test -z "$$files" || { \
+	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man5dir)'"; \
+	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man5dir)" || exit $$?; }; \
+	done; }
+
+uninstall-man5:
+	@$(NORMAL_UNINSTALL)
+	@list=''; test -n "$(man5dir)" || exit 0; \
+	files=`{ for i in $$list; do echo "$$i"; done; \
+	l2='$(man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.5[a-z]*$$/p'; \
+	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^5][0-9a-z]*$$,5,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
+	dir='$(DESTDIR)$(man5dir)'; $(am__uninstall_files_from_dir)
+install-man8: $(man_MANS)
+	@$(NORMAL_INSTALL)
+	@list1=''; \
+	list2='$(man_MANS)'; \
+	test -n "$(man8dir)" \
+	  && test -n "`echo $$list1$$list2`" \
+	  || exit 0; \
+	echo " $(MKDIR_P) '$(DESTDIR)$(man8dir)'"; \
+	$(MKDIR_P) "$(DESTDIR)$(man8dir)" || exit 1; \
+	{ for i in $$list1; do echo "$$i"; done;  \
+	if test -n "$$list2"; then \
+	  for i in $$list2; do echo "$$i"; done \
+	    | sed -n '/\.8[a-z]*$$/p'; \
+	fi; \
+	} | while read p; do \
+	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; echo "$$p"; \
+	done | \
+	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^8][0-9a-z]*$$,8,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+	sed 'N;N;s,\n, ,g' | { \
+	list=; while read file base inst; do \
+	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man8dir)/$$inst'"; \
+	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man8dir)/$$inst" || exit $$?; \
+	  fi; \
+	done; \
+	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+	while read files; do \
+	  test -z "$$files" || { \
+	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man8dir)'"; \
+	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man8dir)" || exit $$?; }; \
+	done; }
+
+uninstall-man8:
+	@$(NORMAL_UNINSTALL)
+	@list=''; test -n "$(man8dir)" || exit 0; \
+	files=`{ for i in $$list; do echo "$$i"; done; \
+	l2='$(man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.8[a-z]*$$/p'; \
+	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^8][0-9a-z]*$$,8,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
+	dir='$(DESTDIR)$(man8dir)'; $(am__uninstall_files_from_dir)
 install-docDATA: $(doc_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(doc_DATA)'; test -n "$(docdir)" || list=; \
@@ -3443,6 +3610,19 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
+	@list='$(MANS)'; if test -n "$$list"; then \
+	  list=`for p in $$list; do \
+	    if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	    if test -f "$$d$$p"; then echo "$$d$$p"; else :; fi; done`; \
+	  if test -n "$$list" && \
+	    grep 'ab help2man is required to generate this page' $$list >/dev/null; then \
+	    echo "error: found man pages containing the \`missing help2man' replacement text:" >&2; \
+	    grep -l 'ab help2man is required to generate this page' $$list | sed 's/^/         /' >&2; \
+	    echo "       to fix them, install help2man, remove and regenerate the man pages;" >&2; \
+	    echo "       typically \`make maintainer-clean' will remove them" >&2; \
+	    exit 1; \
+	  else :; fi; \
+	else :; fi
 	$(am__remove_distdir)
 	test -d "$(distdir)" || mkdir "$(distdir)"
 	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
@@ -3608,12 +3788,12 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS) $(DATA) \
 		config.h
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -3672,7 +3852,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-docDATA install-initrcSCRIPTS \
+install-data-am: install-docDATA install-initrcSCRIPTS install-man \
 	install-phpextensionLTLIBRARIES install-pkgbackendPROGRAMS \
 	install-pkgbannerDATA install-pkgcharsetDATA \
 	install-pkgconfDATA install-pkgcupsdataDATA \
@@ -3698,7 +3878,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man:
+install-man: install-man5 install-man8
 
 install-pdf: install-pdf-am
 
@@ -3731,7 +3911,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
-	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES \
+	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
 	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
@@ -3742,6 +3922,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgppdcDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
+uninstall-man: uninstall-man5 uninstall-man8
+
 .MAKE: all check-am install-am install-data-am install-strip \
 	uninstall-am
 
@@ -3760,21 +3942,23 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am \
 	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
-	install-pdf install-pdf-am install-phpextensionLTLIBRARIES \
-	install-pkgbackendPROGRAMS install-pkgbannerDATA \
-	install-pkgcharsetDATA install-pkgconfDATA \
-	install-pkgcupsdataDATA install-pkgcupsserverrootDATA \
-	install-pkgdriverDATA install-pkgfilterPROGRAMS \
-	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
-	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
-	install-pkgmimeDATA install-pkgppdcDATA install-ppdDATA \
-	install-ps install-ps-am install-sbinPROGRAMS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-man5 install-man8 install-pdf install-pdf-am \
+	install-phpextensionLTLIBRARIES install-pkgbackendPROGRAMS \
+	install-pkgbannerDATA install-pkgcharsetDATA \
+	install-pkgconfDATA install-pkgcupsdataDATA \
+	install-pkgcupsserverrootDATA install-pkgdriverDATA \
+	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
+	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
+	install-pkgfontembedincludeDATA install-pkgmimeDATA \
+	install-pkgppdcDATA install-ppdDATA install-ps install-ps-am \
+	install-sbinPROGRAMS install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-binPROGRAMS \
 	uninstall-docDATA uninstall-hook uninstall-initrcSCRIPTS \
-	uninstall-libLTLIBRARIES uninstall-phpextensionLTLIBRARIES \
+	uninstall-libLTLIBRARIES uninstall-man uninstall-man5 \
+	uninstall-man8 uninstall-phpextensionLTLIBRARIES \
 	uninstall-pkgbackendPROGRAMS uninstall-pkgbannerDATA \
 	uninstall-pkgcharsetDATA uninstall-pkgconfDATA \
 	uninstall-pkgcupsdataDATA uninstall-pkgcupsserverrootDATA \

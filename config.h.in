@@ -12,6 +12,9 @@
 /* CUPS datadir */
 #undef CUPS_DATADIR
 
+/* "Domain socket of CUPS" */
+#undef CUPS_DEFAULT_DOMAINSOCKET
+
 /* Path to CUPS fonts dir */
 #undef CUPS_FONTPATH
 
@@ -35,6 +38,9 @@
 
 /* CUPS serverroot */
 #undef CUPS_SERVERROOT
+
+/* Transient run-time state dir of CUPS */
+#undef CUPS_STATEDIR
 
 /* Define that we provide acroread. */
 #undef HAVE_ACROREAD
