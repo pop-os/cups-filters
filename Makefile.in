@@ -134,7 +134,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
 	"$(DESTDIR)$(pkgfontconfigdir)" \
 	"$(DESTDIR)$(pkgfontembedincludedir)" \
-	"$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(ppddir)"
+	"$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" \
+	"$(DESTDIR)$(ppddir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(phpextension_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libcupsfilters_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
@@ -448,7 +449,7 @@ DATA = $(doc_DATA) $(pkgbanner_DATA) $(pkgcharset_DATA) \
 	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgcupsserverroot_DATA) \
 	$(pkgdriver_DATA) $(pkgfiltersinclude_DATA) \
 	$(pkgfontconfig_DATA) $(pkgfontembedinclude_DATA) \
-	$(pkgmime_DATA) $(ppd_DATA)
+	$(pkgmime_DATA) $(pkgppdc_DATA) $(ppd_DATA)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -494,6 +495,7 @@ CUPS_DATADIR = @CUPS_DATADIR@
 CUPS_FONTPATH = @CUPS_FONTPATH@
 CUPS_GHOSTSCRIPT = @CUPS_GHOSTSCRIPT@
 CUPS_LIBS = @CUPS_LIBS@
+CUPS_PDFTOCAIRO = @CUPS_PDFTOCAIRO@
 CUPS_PDFTOPS = @CUPS_PDFTOPS@
 CUPS_SERVERBIN = @CUPS_SERVERBIN@
 CUPS_SERVERROOT = @CUPS_SERVERROOT@
@@ -663,10 +665,10 @@ EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	libfontembed.pc.in $(pkgbanner_DATA) $(pkgcharset_DATA) \
 	$(pkgfiltersinclude_DATA) cupsfilters/image.pgm \
 	cupsfilters/image.ppm $(pkgcupsdata_DATA) $(pkgdriver_DATA) \
-	$(pkgmime_DATA) $(pkgfontembedinclude_DATA) fontembed/README \
-	$(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) filter/test.sh \
-	utils/cups-browsed.in $(ppd_DATA) scripting/perl \
-	scripting/php/README scripting/php/phpcups.php
+	$(pkgppdc_DATA) $(pkgmime_DATA) $(pkgfontembedinclude_DATA) \
+	fontembed/README $(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) \
+	filter/test.sh utils/cups-browsed.in $(ppd_DATA) \
+	scripting/perl scripting/php/README scripting/php/phpcups.php
 
 # ========
 # Backends
@@ -848,6 +850,14 @@ pkgcupsserverroot_DATA = \
 pkgdriverdir = $(CUPS_DATADIR)/drv
 pkgdriver_DATA = \
 	drv/cupsfilters.drv
+
+
+# =======
+# Definitions for drivers
+# =======
+pkgppdcdir = $(CUPS_DATADIR)/ppdc
+pkgppdc_DATA = \
+	filter/pcl.h
 
 
 # =====
@@ -3244,6 +3254,27 @@ uninstall-pkgmimeDATA:
 	@list='$(pkgmime_DATA)'; test -n "$(pkgmimedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(pkgmimedir)'; $(am__uninstall_files_from_dir)
+install-pkgppdcDATA: $(pkgppdc_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(pkgppdc_DATA)'; test -n "$(pkgppdcdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgppdcdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgppdcdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgppdcdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgppdcdir)" || exit $$?; \
+	done
+
+uninstall-pkgppdcDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgppdc_DATA)'; test -n "$(pkgppdcdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgppdcdir)'; $(am__uninstall_files_from_dir)
 install-ppdDATA: $(ppd_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(ppd_DATA)'; test -n "$(ppddir)" || list=; \
@@ -3582,7 +3613,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -3649,7 +3680,7 @@ install-data-am: install-docDATA install-initrcSCRIPTS \
 	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
 	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
 	install-pkgfontembedincludeDATA install-pkgmimeDATA \
-	install-ppdDATA
+	install-pkgppdcDATA install-ppdDATA
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
@@ -3708,7 +3739,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
 	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
-	uninstall-ppdDATA uninstall-sbinPROGRAMS
+	uninstall-pkgppdcDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: all check-am install-am install-data-am install-strip \
@@ -3736,9 +3767,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	install-pkgdriverDATA install-pkgfilterPROGRAMS \
 	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
 	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
-	install-pkgmimeDATA install-ppdDATA install-ps install-ps-am \
-	install-sbinPROGRAMS install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-pkgmimeDATA install-pkgppdcDATA install-ppdDATA \
+	install-ps install-ps-am install-sbinPROGRAMS install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-binPROGRAMS \
@@ -3750,7 +3781,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgdriverDATA uninstall-pkgfilterPROGRAMS \
 	uninstall-pkgfilterSCRIPTS uninstall-pkgfiltersincludeDATA \
 	uninstall-pkgfontconfigDATA uninstall-pkgfontembedincludeDATA \
-	uninstall-pkgmimeDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
+	uninstall-pkgmimeDATA uninstall-pkgppdcDATA uninstall-ppdDATA \
+	uninstall-sbinPROGRAMS
 
 
 distclean-local:
