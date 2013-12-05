@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.0.36 - 2013-08-13
+README - OpenPrinting CUPS Filters v1.0.37 - 2013-08-28
 -------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -255,6 +255,40 @@ HELPER DAEMON FOR BROWSING REMOTE CUPS PRINTERS
     it. The queues which it has created get removed then (except a
     queue set as system default, to not loose its system default
     state).
+
+    Make sure that cups-browsed gets started after avahi-daemon, so that
+    the Bonjour/DNS-SD browsing works. On systems using systemd use a
+    /usr/lib/systemd/system/cups-browsed.service file like this:
+
+        [Unit]
+        Description=Make remote CUPS printers available locally
+        After=cups.service avahi-daemon.service
+        Wants=cups.service avahi-daemon.service
+
+        [Service]
+        ExecStart=/usr/sbin/cups-browsed
+
+        [Install]
+        WantedBy=multi-user.target
+
+    On systems using Upstart use an /etc/init/cups-browsed.conf file like this:
+
+        start on (filesystem
+                  and started avahi-daemon
+                  and (started cups or runlevel [2345]))
+        stop on runlevel [016]
+
+        respawn
+        respawn limit 3 240
+
+        pre-start script
+            [ -x /usr/sbin/cups-browsed ]
+        end script
+
+        exec /usr/sbin/cups-browsed
+
+    These files are included in the source distribution as
+    utils/cups-browsed.service and utils/cups-browsed-upstart.conf.
 
     Here is some info on how cups-browsed works internally (first concept of a
     daemon which does only Bonjour browsing):

@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[36])
+m4_define([cups_filters_version_micro],[37])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -558,7 +558,7 @@ AS_IF([test x"$with_php" = "xyes"], [
 # Test ARGS
 # =========
 AC_ARG_WITH([test-font-path],
-	[AS_HELP_STRING([--with-test-font-path=value], [Set path to pdftops/ghostscript binary (default: /usr/share/fonts/dejavu/DejaVuSans.ttf).])],
+	[AS_HELP_STRING([--with-test-font-path=value], [Set path to font used for tests (default: /usr/share/fonts/dejavu/DejaVuSans.ttf).])],
 	[with_test_font_path="$withval"],
 	[with_test_font_path="/usr/share/fonts/dejavu/DejaVuSans.ttf"]
 )

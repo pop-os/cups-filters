@@ -217,7 +217,7 @@ cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_gstoraster_OBJECTS = gstoraster-gstoraster.$(OBJEXT) \
 	gstoraster-colord.$(OBJEXT)
 gstoraster_OBJECTS = $(am_gstoraster_OBJECTS)
-gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1)
+gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 gstoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gstoraster_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -676,13 +676,15 @@ doc_DATA = \
 # Not reliable bash script
 #TESTS += filter/test.sh
 EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
-	libfontembed.pc.in $(pkgbanner_DATA) $(pkgcharset_DATA) \
-	$(pkgfiltersinclude_DATA) cupsfilters/image.pgm \
-	cupsfilters/image.ppm $(pkgcupsdata_DATA) $(pkgdriver_DATA) \
-	$(pkgppdc_DATA) $(pkgmime_DATA) $(pkgfontembedinclude_DATA) \
-	fontembed/README $(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) \
-	filter/test.sh utils/cups-browsed.in $(man_MANS) $(ppd_DATA) \
-	scripting/perl scripting/php/README scripting/php/phpcups.php
+	libfontembed.pc.in utils/cups-browsed.service \
+	utils/cups-browsed-upstart.conf $(pkgbanner_DATA) \
+	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
+	cupsfilters/image.pgm cupsfilters/image.ppm \
+	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(pkgppdc_DATA) \
+	$(pkgmime_DATA) $(pkgfontembedinclude_DATA) fontembed/README \
+	$(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) filter/test.sh \
+	utils/cups-browsed.in $(man_MANS) $(ppd_DATA) scripting/perl \
+	scripting/php/README scripting/php/phpcups.php
 
 # ========
 # Backends
@@ -1082,7 +1084,7 @@ gstoraster_CFLAGS = \
 
 gstoraster_LDADD = \
 	$(CUPS_LIBS) \
-	-lcupsfilters
+	libcupsfilters.la
 
 imagetopdf_SOURCES = \
 	cupsfilters/image.h \
