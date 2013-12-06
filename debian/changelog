@@ -1,4 +1,4 @@
-cups-filters (1.0.42-1) UNRELEASED; urgency=low
+cups-filters (1.0.42-1) unstable; urgency=low
 
   * New upstream release 1.0.42:
      - cupsfilters.convs: Corrected cost factor of
@@ -39,7 +39,7 @@ cups-filters (1.0.42-1) UNRELEASED; urgency=low
   * Drop conflicting Recommends against foomatic-filters
   * Rename ttf-dejavu dependency to fonts-dejavu (Closes: #716744)
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 29 Nov 2013 23:59:00 +0100
+ -- Didier Raboud <odyx@debian.org>  Fri, 06 Dec 2013 23:36:33 +0100
 
 cups-filters (1.0.41-2) unstable; urgency=low
 
