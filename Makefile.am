@@ -80,6 +80,7 @@ EXTRA_DIST += $(pkgcharset_DATA)
 # ====================
 pkgfiltersincludedir = $(includedir)/cupsfilters
 pkgfiltersinclude_DATA = \
+	cupsfilters/colord.h \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
 	cupsfilters/raster.h
@@ -111,6 +112,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/attr.c \
 	cupsfilters/check.c \
 	cupsfilters/cmyk.c \
+	cupsfilters/colord.c \
 	cupsfilters/dither.c \
 	cupsfilters/image.c \
 	cupsfilters/image-bmp.c \
@@ -145,10 +147,13 @@ libcupsfilters_la_CFLAGS = \
 	$(LIBJPEG_CFLAGS) \
 	$(LIBPNG_CFLAGS) \
 	$(TIFF_CFLAGS)
-
 libcupsfilters_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1
+if BUILD_DBUS
+libcupsfilters_la_CFLAGS += $(DBUS_CFLAGS) -DHAVE_DBUS
+libcupsfilters_la_LIBADD += $(DBUS_LIBS)
+endif
 
 testcmyk_SOURCES = \
 	cupsfilters/testcmyk.c \
@@ -403,6 +408,7 @@ pkgfilter_PROGRAMS += \
 	bannertopdf \
 	commandtoescpx \
 	commandtopclx \
+	foomatic-rip \
 	gstoraster \
 	pdftoijs \
 	pdftoippprinter \
@@ -467,18 +473,40 @@ commandtopclx_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 commandtopclx_LDADD = $(CUPS_LIBS)
 
+foomatic_rip_SOURCES = \
+	filter/foomatic-rip/foomaticrip.c \
+	filter/foomatic-rip/foomaticrip.h \
+	filter/foomatic-rip/options.c \
+	filter/foomatic-rip/options.h \
+	filter/foomatic-rip/pdf.c \
+	filter/foomatic-rip/pdf.h \
+	filter/foomatic-rip/postscript.c \
+	filter/foomatic-rip/postscript.h \
+	filter/foomatic-rip/process.c \
+	filter/foomatic-rip/process.h \
+	filter/foomatic-rip/renderer.c \
+	filter/foomatic-rip/renderer.h \
+	filter/foomatic-rip/spooler.c \
+	filter/foomatic-rip/spooler.h \
+	filter/foomatic-rip/util.c \
+	filter/foomatic-rip/util.h \
+	cupsfilters/colord.h
+foomatic_rip_CFLAGS = \
+	-DCONFIG_PATH='"$(sysconfdir)/foomatic"' \
+	-I$(srcdir)/cupsfilters/
+foomatic_rip_LDADD = \
+	-lm \
+	libcupsfilters.la
+
 gstoraster_SOURCES = \
 	filter/gstoraster.c \
-	filter/colord.c \
-	filter/colord.h \
+	cupsfilters/colord.h \
 	cupsfilters/raster.h
 gstoraster_CFLAGS = \
 	$(CUPS_CFLAGS) \
-	$(DBUS_CFLAGS) \
 	-I$(srcdir)/cupsfilters/
 gstoraster_LDADD = \
 	$(CUPS_LIBS) \
-	$(DBUS_LIBS) \
 	libcupsfilters.la
 
 imagetopdf_SOURCES = \
@@ -668,7 +696,8 @@ initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = \
 	utils/cups-browsed.8 \
-	utils/cups-browsed.conf.5
+	utils/cups-browsed.conf.5 \
+	filter/foomatic-rip/foomatic-rip.1
 EXTRA_DIST += utils/cups-browsed.in \
 	$(man_MANS)
 

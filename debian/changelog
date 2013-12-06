@@ -1,3 +1,46 @@
+cups-filters (1.0.42-1) unstable; urgency=low
+
+  * New upstream release 1.0.42:
+     - cupsfilters.convs: Corrected cost factor of
+       vnd.cups-postscript -> vnd.cups-raster conversion with
+       gstoraster, so that input data of the type
+       application/vnd.adobe-reader-postscript is converted
+       correctly (not via pstotiff). Thanks to Tim Waugh from Red
+       Hat for this patch
+     - cups-browsed: Fixed several memory leaks by adding missing
+       free() calls and removing an unneeded strdup(). Thanks to
+       Jaromir Koncicky from Red Hat for the patch (Red Hat bug
+       #1027317).
+     - foomatic-rip: Moved foomatic-rip's upstream home from the
+       foomatic-filters package to cups-filters, to make it easier
+       for distributions to ship and maintain a complete printing
+       stack and also to make upstream maintenance and development
+       easier.
+     - gstoraster: Fixed build system for gstoraster use D-Bus for
+       colord support.
+
+  [ Till Kamppeter ]
+  * Drop patches included upstream:
+    - Include dbus to make sure colord support works; therefore add
+      libdbus-1-dev in Build-Depends
+    - Fix memory leaks in cups-browsed
+    - Adjust filter costs so application/vnd.adobe-read-postscript input
+      doesn't go via pstotiff
+  * Updated libcupsfilters1 symbols for 1.0.42
+  * Add "Conflicts/Replaces/Provides: foomatic-filters" for the
+    cups-filters binary package. Now foomatic-rip is part of
+    cups-filters and the foomatic-filters package is obsolete and should
+    get automatically uninstalled by the cups-filters binary package.
+
+  [ Didier Raboud ]
+  * Move packaging from bzr to git
+    - Drop .bzr-builddeb
+    - Update Vcs-* fields
+  * Drop conflicting Recommends against foomatic-filters
+  * Rename ttf-dejavu dependency to fonts-dejavu (Closes: #716744)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 06 Dec 2013 23:36:33 +0100
+
 cups-filters (1.0.41-2) unstable; urgency=low
 
   * Import several patches from Fedora:
@@ -60,6 +103,41 @@ cups-filters (1.0.41-1) unstable; urgency=low
     upgrade is left possible
 
  -- Didier Raboud <odyx@debian.org>  Wed, 27 Nov 2013 17:39:38 +0100
+
+cups-filters (1.0.39-1) UNRELEASED; urgency=low
+
+  * New upstream release 1.0.39:
+     - cups-browsed: Assure that it always applies to the local CUPS
+       daemon and never to a remote one specified via client.conf
+       (LP: #1207203).
+     - pdftops: If one or more of the PDF-to-PS renderers (Ghostscript,
+       Poppler pdftops, Poppler pdftocairo, acroread) is not installed
+       at build time, pre-fill the appropriate executable's path with the
+       executable name to allow the use of this renderer when it gets
+       installed later (Closes: #716842).
+     - Added man pages for cups-browsed and cups-browsed.conf. Thanks to
+       Brian Potkin for the contribution (Closes: #714460).
+     - pdftops: Let Poppler generally generate PostScript level 3 if the
+       PPD identifies the printer as PS3 printer, make an exception of
+       sending PostScript Level 2 only for HP's laser printers, to not
+       compromise print quality and performance on all PS3 printers only
+       due to some buggy HP models (Closes: #712949, see also LP: #277404).
+
+  [ Till Kamppeter ]
+  * Added Conflicts/Provides/Replaces and droppded Recommends/Breaks against
+    ghostscript-cups to the cups-filters binary package as all files from
+    ghostscript-cups moved to cups-filters (LP: #1212239).
+  * debian/libcupsfilters1.symbols: Updated for 1.0.36
+  * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
+    ./configure command line, we use the upstream default "dnssd,cups"
+    now.
+
+  [ Didier Raboud ]
+  * Install escp.h and pcl.h in the CUPS ppdc include directory; this
+    fixes cupsfilters.drv.
+  * Drop useless uses of cat in postinst.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue,  3 Sep 2013 16:57:06 +0200
 
 cups-filters (1.0.34-3) unstable; urgency=low
 

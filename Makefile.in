@@ -88,14 +88,17 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
+@BUILD_DBUS_TRUE@am__append_1 = $(DBUS_CFLAGS) -DHAVE_DBUS
+@BUILD_DBUS_TRUE@am__append_2 = $(DBUS_LIBS)
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
-	commandtopclx$(EXEEXT) gstoraster$(EXEEXT) pdftoijs$(EXEEXT) \
-	pdftoippprinter$(EXEEXT) pdftops$(EXEEXT) pdftoraster$(EXEEXT) \
-	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
-	texttopdf$(EXEEXT) urftopdf$(EXEEXT) $(am__EXEEXT_1)
-@ENABLE_IMAGEFILTERS_TRUE@am__append_1 = \
+	commandtopclx$(EXEEXT) foomatic-rip$(EXEEXT) \
+	gstoraster$(EXEEXT) pdftoijs$(EXEEXT) pdftoippprinter$(EXEEXT) \
+	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
+	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
+	$(am__EXEEXT_1)
+@ENABLE_IMAGEFILTERS_TRUE@am__append_3 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
@@ -107,9 +110,10 @@ DIST_COMMON = INSTALL NEWS README AUTHORS ChangeLog \
 	$(srcdir)/config.h.in $(srcdir)/libcupsfilters.pc.in \
 	$(srcdir)/libfontembed.pc.in $(top_srcdir)/filter/gstopxl.in \
 	$(top_srcdir)/utils/cups-browsed.in \
-	$(top_srcdir)/utils/cups-browsed.conf.in depcomp test-driver \
-	COPYING compile config.guess config.sub install-sh missing \
-	ltmain.sh
+	$(top_srcdir)/utils/cups-browsed.conf.in \
+	$(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in depcomp \
+	test-driver COPYING compile config.guess config.sub install-sh \
+	missing ltmain.sh
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -124,7 +128,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc filter/gstopxl \
-	utils/cups-browsed utils/cups-browsed.conf
+	utils/cups-browsed utils/cups-browsed.conf \
+	filter/foomatic-rip/foomatic-rip.1
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -157,10 +162,10 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" \
-	"$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" \
-	"$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" \
-	"$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" \
-	"$(DESTDIR)$(pkgcupsdatadir)" \
+	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" \
+	"$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" \
+	"$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" \
+	"$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" \
 	"$(DESTDIR)$(pkgcupsserverrootdir)" \
 	"$(DESTDIR)$(pkgdriverdir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
@@ -170,13 +175,15 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(ppddir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(phpextension_LTLIBRARIES)
 am__DEPENDENCIES_1 =
+@BUILD_DBUS_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 libcupsfilters_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 am__objects_1 =
 am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-check.lo libcupsfilters_la-cmyk.lo \
-	libcupsfilters_la-dither.lo libcupsfilters_la-image.lo \
-	libcupsfilters_la-image-bmp.lo \
+	libcupsfilters_la-colord.lo libcupsfilters_la-dither.lo \
+	libcupsfilters_la-image.lo libcupsfilters_la-image-bmp.lo \
 	libcupsfilters_la-image-colorspace.lo \
 	libcupsfilters_la-image-gif.lo libcupsfilters_la-image-jpeg.lo \
 	libcupsfilters_la-image-photocd.lo \
@@ -246,8 +253,17 @@ cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_gstoraster_OBJECTS = gstoraster-gstoraster.$(OBJEXT) \
-	gstoraster-colord.$(OBJEXT)
+am_foomatic_rip_OBJECTS = foomatic_rip-foomaticrip.$(OBJEXT) \
+	foomatic_rip-options.$(OBJEXT) foomatic_rip-pdf.$(OBJEXT) \
+	foomatic_rip-postscript.$(OBJEXT) \
+	foomatic_rip-process.$(OBJEXT) foomatic_rip-renderer.$(OBJEXT) \
+	foomatic_rip-spooler.$(OBJEXT) foomatic_rip-util.$(OBJEXT)
+foomatic_rip_OBJECTS = $(am_foomatic_rip_OBJECTS)
+foomatic_rip_DEPENDENCIES = libcupsfilters.la
+foomatic_rip_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(foomatic_rip_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_gstoraster_OBJECTS = gstoraster-gstoraster.$(OBJEXT)
 gstoraster_OBJECTS = $(am_gstoraster_OBJECTS)
 gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 gstoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -474,11 +490,11 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
-	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
-	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
-	$(pdftoijs_SOURCES) $(pdftoippprinter_SOURCES) \
-	$(EXTRA_pdftoippprinter_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
+	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) \
+	$(pdftoippprinter_SOURCES) $(EXTRA_pdftoippprinter_SOURCES) \
+	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
 	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
@@ -490,11 +506,11 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
-	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
-	$(imagetoraster_SOURCES) $(parallel_SOURCES) \
-	$(pdftoijs_SOURCES) $(pdftoippprinter_SOURCES) \
-	$(EXTRA_pdftoippprinter_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
+	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) \
+	$(pdftoippprinter_SOURCES) $(EXTRA_pdftoippprinter_SOURCES) \
+	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
 	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
@@ -507,6 +523,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+man1dir = $(mandir)/man1
 man5dir = $(mandir)/man5
 man8dir = $(mandir)/man8
 NROFF = nroff
@@ -768,6 +785,8 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -988,6 +1007,7 @@ pkgcharset_DATA = \
 # ====================
 pkgfiltersincludedir = $(includedir)/cupsfilters
 pkgfiltersinclude_DATA = \
+	cupsfilters/colord.h \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
 	cupsfilters/raster.h
@@ -1009,6 +1029,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/attr.c \
 	cupsfilters/check.c \
 	cupsfilters/cmyk.c \
+	cupsfilters/colord.c \
 	cupsfilters/dither.c \
 	cupsfilters/image.c \
 	cupsfilters/image-bmp.c \
@@ -1033,19 +1054,10 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/srgb.c \
 	$(pkgfiltersinclude_DATA)
 
-libcupsfilters_la_LIBADD = \
-	$(CUPS_LIBS) \
-	$(LIBJPEG_LIBS) \
-	$(LIBPNG_LIBS) \
-	$(TIFF_LIBS) \
-	-lm
-
-libcupsfilters_la_CFLAGS = \
-	$(CUPS_CFLAGS) \
-	$(LIBJPEG_CFLAGS) \
-	$(LIBPNG_CFLAGS) \
-	$(TIFF_CFLAGS)
-
+libcupsfilters_la_LIBADD = $(CUPS_LIBS) $(LIBJPEG_LIBS) $(LIBPNG_LIBS) \
+	$(TIFF_LIBS) -lm $(am__append_2)
+libcupsfilters_la_CFLAGS = $(CUPS_CFLAGS) $(LIBJPEG_CFLAGS) \
+	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_1)
 libcupsfilters_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1
@@ -1319,10 +1331,36 @@ commandtopclx_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 
 commandtopclx_LDADD = $(CUPS_LIBS)
+foomatic_rip_SOURCES = \
+	filter/foomatic-rip/foomaticrip.c \
+	filter/foomatic-rip/foomaticrip.h \
+	filter/foomatic-rip/options.c \
+	filter/foomatic-rip/options.h \
+	filter/foomatic-rip/pdf.c \
+	filter/foomatic-rip/pdf.h \
+	filter/foomatic-rip/postscript.c \
+	filter/foomatic-rip/postscript.h \
+	filter/foomatic-rip/process.c \
+	filter/foomatic-rip/process.h \
+	filter/foomatic-rip/renderer.c \
+	filter/foomatic-rip/renderer.h \
+	filter/foomatic-rip/spooler.c \
+	filter/foomatic-rip/spooler.h \
+	filter/foomatic-rip/util.c \
+	filter/foomatic-rip/util.h \
+	cupsfilters/colord.h
+
+foomatic_rip_CFLAGS = \
+	-DCONFIG_PATH='"$(sysconfdir)/foomatic"' \
+	-I$(srcdir)/cupsfilters/
+
+foomatic_rip_LDADD = \
+	-lm \
+	libcupsfilters.la
+
 gstoraster_SOURCES = \
 	filter/gstoraster.c \
-	filter/colord.c \
-	filter/colord.h \
+	cupsfilters/colord.h \
 	cupsfilters/raster.h
 
 gstoraster_CFLAGS = \
@@ -1526,7 +1564,8 @@ initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = \
 	utils/cups-browsed.8 \
-	utils/cups-browsed.conf.5
+	utils/cups-browsed.conf.5 \
+	filter/foomatic-rip/foomatic-rip.1
 
 
 # ===
@@ -1617,6 +1656,8 @@ filter/gstopxl: $(top_builddir)/config.status $(top_srcdir)/filter/gstopxl.in
 utils/cups-browsed: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 utils/cups-browsed.conf: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.conf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/foomatic-rip/foomatic-rip.1: $(top_builddir)/config.status $(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
@@ -1919,6 +1960,10 @@ cups-browsed$(EXEEXT): $(cups_browsed_OBJECTS) $(cups_browsed_DEPENDENCIES) $(EX
 	@rm -f cups-browsed$(EXEEXT)
 	$(AM_V_CCLD)$(cups_browsed_LINK) $(cups_browsed_OBJECTS) $(cups_browsed_LDADD) $(LIBS)
 
+foomatic-rip$(EXEEXT): $(foomatic_rip_OBJECTS) $(foomatic_rip_DEPENDENCIES) $(EXTRA_foomatic_rip_DEPENDENCIES) 
+	@rm -f foomatic-rip$(EXEEXT)
+	$(AM_V_CCLD)$(foomatic_rip_LINK) $(foomatic_rip_OBJECTS) $(foomatic_rip_LDADD) $(LIBS)
+
 gstoraster$(EXEEXT): $(gstoraster_OBJECTS) $(gstoraster_DEPENDENCIES) $(EXTRA_gstoraster_DEPENDENCIES) 
 	@rm -f gstoraster$(EXEEXT)
 	$(AM_V_CCLD)$(gstoraster_LINK) $(gstoraster_OBJECTS) $(gstoraster_LDADD) $(LIBS)
@@ -2112,8 +2157,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/embed_pdf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/embed_sfnt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontfile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-foomaticrip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-options.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-pdf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-postscript.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-process.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-renderer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-spooler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/foomatic_rip-util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frequent.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gstoraster-colord.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gstoraster-gstoraster.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imagetopdf-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imagetopdf-imagetopdf.Po@am__quote@
@@ -2122,6 +2174,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-attr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-check.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-cmyk.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-colord.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-dither.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image-bmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image-colorspace.Plo@am__quote@
@@ -2241,6 +2294,13 @@ libcupsfilters_la-cmyk.lo: cupsfilters/cmyk.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/cmyk.c' object='libcupsfilters_la-cmyk.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-cmyk.lo `test -f 'cupsfilters/cmyk.c' || echo '$(srcdir)/'`cupsfilters/cmyk.c
+
+libcupsfilters_la-colord.lo: cupsfilters/colord.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-colord.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-colord.Tpo -c -o libcupsfilters_la-colord.lo `test -f 'cupsfilters/colord.c' || echo '$(srcdir)/'`cupsfilters/colord.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-colord.Tpo $(DEPDIR)/libcupsfilters_la-colord.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/colord.c' object='libcupsfilters_la-colord.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-colord.lo `test -f 'cupsfilters/colord.c' || echo '$(srcdir)/'`cupsfilters/colord.c
 
 libcupsfilters_la-dither.lo: cupsfilters/dither.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-dither.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-dither.Tpo -c -o libcupsfilters_la-dither.lo `test -f 'cupsfilters/dither.c' || echo '$(srcdir)/'`cupsfilters/dither.c
@@ -2536,6 +2596,118 @@ cups_browsed-cups-browsed.obj: utils/cups-browsed.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cups_browsed_CFLAGS) $(CFLAGS) -c -o cups_browsed-cups-browsed.obj `if test -f 'utils/cups-browsed.c'; then $(CYGPATH_W) 'utils/cups-browsed.c'; else $(CYGPATH_W) '$(srcdir)/utils/cups-browsed.c'; fi`
 
+foomatic_rip-foomaticrip.o: filter/foomatic-rip/foomaticrip.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-foomaticrip.o -MD -MP -MF $(DEPDIR)/foomatic_rip-foomaticrip.Tpo -c -o foomatic_rip-foomaticrip.o `test -f 'filter/foomatic-rip/foomaticrip.c' || echo '$(srcdir)/'`filter/foomatic-rip/foomaticrip.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-foomaticrip.Tpo $(DEPDIR)/foomatic_rip-foomaticrip.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/foomaticrip.c' object='foomatic_rip-foomaticrip.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-foomaticrip.o `test -f 'filter/foomatic-rip/foomaticrip.c' || echo '$(srcdir)/'`filter/foomatic-rip/foomaticrip.c
+
+foomatic_rip-foomaticrip.obj: filter/foomatic-rip/foomaticrip.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-foomaticrip.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-foomaticrip.Tpo -c -o foomatic_rip-foomaticrip.obj `if test -f 'filter/foomatic-rip/foomaticrip.c'; then $(CYGPATH_W) 'filter/foomatic-rip/foomaticrip.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/foomaticrip.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-foomaticrip.Tpo $(DEPDIR)/foomatic_rip-foomaticrip.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/foomaticrip.c' object='foomatic_rip-foomaticrip.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-foomaticrip.obj `if test -f 'filter/foomatic-rip/foomaticrip.c'; then $(CYGPATH_W) 'filter/foomatic-rip/foomaticrip.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/foomaticrip.c'; fi`
+
+foomatic_rip-options.o: filter/foomatic-rip/options.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-options.o -MD -MP -MF $(DEPDIR)/foomatic_rip-options.Tpo -c -o foomatic_rip-options.o `test -f 'filter/foomatic-rip/options.c' || echo '$(srcdir)/'`filter/foomatic-rip/options.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-options.Tpo $(DEPDIR)/foomatic_rip-options.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/options.c' object='foomatic_rip-options.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-options.o `test -f 'filter/foomatic-rip/options.c' || echo '$(srcdir)/'`filter/foomatic-rip/options.c
+
+foomatic_rip-options.obj: filter/foomatic-rip/options.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-options.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-options.Tpo -c -o foomatic_rip-options.obj `if test -f 'filter/foomatic-rip/options.c'; then $(CYGPATH_W) 'filter/foomatic-rip/options.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/options.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-options.Tpo $(DEPDIR)/foomatic_rip-options.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/options.c' object='foomatic_rip-options.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-options.obj `if test -f 'filter/foomatic-rip/options.c'; then $(CYGPATH_W) 'filter/foomatic-rip/options.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/options.c'; fi`
+
+foomatic_rip-pdf.o: filter/foomatic-rip/pdf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-pdf.o -MD -MP -MF $(DEPDIR)/foomatic_rip-pdf.Tpo -c -o foomatic_rip-pdf.o `test -f 'filter/foomatic-rip/pdf.c' || echo '$(srcdir)/'`filter/foomatic-rip/pdf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-pdf.Tpo $(DEPDIR)/foomatic_rip-pdf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/pdf.c' object='foomatic_rip-pdf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-pdf.o `test -f 'filter/foomatic-rip/pdf.c' || echo '$(srcdir)/'`filter/foomatic-rip/pdf.c
+
+foomatic_rip-pdf.obj: filter/foomatic-rip/pdf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-pdf.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-pdf.Tpo -c -o foomatic_rip-pdf.obj `if test -f 'filter/foomatic-rip/pdf.c'; then $(CYGPATH_W) 'filter/foomatic-rip/pdf.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/pdf.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-pdf.Tpo $(DEPDIR)/foomatic_rip-pdf.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/pdf.c' object='foomatic_rip-pdf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-pdf.obj `if test -f 'filter/foomatic-rip/pdf.c'; then $(CYGPATH_W) 'filter/foomatic-rip/pdf.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/pdf.c'; fi`
+
+foomatic_rip-postscript.o: filter/foomatic-rip/postscript.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-postscript.o -MD -MP -MF $(DEPDIR)/foomatic_rip-postscript.Tpo -c -o foomatic_rip-postscript.o `test -f 'filter/foomatic-rip/postscript.c' || echo '$(srcdir)/'`filter/foomatic-rip/postscript.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-postscript.Tpo $(DEPDIR)/foomatic_rip-postscript.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/postscript.c' object='foomatic_rip-postscript.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-postscript.o `test -f 'filter/foomatic-rip/postscript.c' || echo '$(srcdir)/'`filter/foomatic-rip/postscript.c
+
+foomatic_rip-postscript.obj: filter/foomatic-rip/postscript.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-postscript.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-postscript.Tpo -c -o foomatic_rip-postscript.obj `if test -f 'filter/foomatic-rip/postscript.c'; then $(CYGPATH_W) 'filter/foomatic-rip/postscript.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/postscript.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-postscript.Tpo $(DEPDIR)/foomatic_rip-postscript.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/postscript.c' object='foomatic_rip-postscript.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-postscript.obj `if test -f 'filter/foomatic-rip/postscript.c'; then $(CYGPATH_W) 'filter/foomatic-rip/postscript.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/postscript.c'; fi`
+
+foomatic_rip-process.o: filter/foomatic-rip/process.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-process.o -MD -MP -MF $(DEPDIR)/foomatic_rip-process.Tpo -c -o foomatic_rip-process.o `test -f 'filter/foomatic-rip/process.c' || echo '$(srcdir)/'`filter/foomatic-rip/process.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-process.Tpo $(DEPDIR)/foomatic_rip-process.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/process.c' object='foomatic_rip-process.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-process.o `test -f 'filter/foomatic-rip/process.c' || echo '$(srcdir)/'`filter/foomatic-rip/process.c
+
+foomatic_rip-process.obj: filter/foomatic-rip/process.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-process.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-process.Tpo -c -o foomatic_rip-process.obj `if test -f 'filter/foomatic-rip/process.c'; then $(CYGPATH_W) 'filter/foomatic-rip/process.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/process.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-process.Tpo $(DEPDIR)/foomatic_rip-process.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/process.c' object='foomatic_rip-process.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-process.obj `if test -f 'filter/foomatic-rip/process.c'; then $(CYGPATH_W) 'filter/foomatic-rip/process.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/process.c'; fi`
+
+foomatic_rip-renderer.o: filter/foomatic-rip/renderer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-renderer.o -MD -MP -MF $(DEPDIR)/foomatic_rip-renderer.Tpo -c -o foomatic_rip-renderer.o `test -f 'filter/foomatic-rip/renderer.c' || echo '$(srcdir)/'`filter/foomatic-rip/renderer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-renderer.Tpo $(DEPDIR)/foomatic_rip-renderer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/renderer.c' object='foomatic_rip-renderer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-renderer.o `test -f 'filter/foomatic-rip/renderer.c' || echo '$(srcdir)/'`filter/foomatic-rip/renderer.c
+
+foomatic_rip-renderer.obj: filter/foomatic-rip/renderer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-renderer.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-renderer.Tpo -c -o foomatic_rip-renderer.obj `if test -f 'filter/foomatic-rip/renderer.c'; then $(CYGPATH_W) 'filter/foomatic-rip/renderer.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/renderer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-renderer.Tpo $(DEPDIR)/foomatic_rip-renderer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/renderer.c' object='foomatic_rip-renderer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-renderer.obj `if test -f 'filter/foomatic-rip/renderer.c'; then $(CYGPATH_W) 'filter/foomatic-rip/renderer.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/renderer.c'; fi`
+
+foomatic_rip-spooler.o: filter/foomatic-rip/spooler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-spooler.o -MD -MP -MF $(DEPDIR)/foomatic_rip-spooler.Tpo -c -o foomatic_rip-spooler.o `test -f 'filter/foomatic-rip/spooler.c' || echo '$(srcdir)/'`filter/foomatic-rip/spooler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-spooler.Tpo $(DEPDIR)/foomatic_rip-spooler.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/spooler.c' object='foomatic_rip-spooler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-spooler.o `test -f 'filter/foomatic-rip/spooler.c' || echo '$(srcdir)/'`filter/foomatic-rip/spooler.c
+
+foomatic_rip-spooler.obj: filter/foomatic-rip/spooler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-spooler.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-spooler.Tpo -c -o foomatic_rip-spooler.obj `if test -f 'filter/foomatic-rip/spooler.c'; then $(CYGPATH_W) 'filter/foomatic-rip/spooler.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/spooler.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-spooler.Tpo $(DEPDIR)/foomatic_rip-spooler.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/spooler.c' object='foomatic_rip-spooler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-spooler.obj `if test -f 'filter/foomatic-rip/spooler.c'; then $(CYGPATH_W) 'filter/foomatic-rip/spooler.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/spooler.c'; fi`
+
+foomatic_rip-util.o: filter/foomatic-rip/util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-util.o -MD -MP -MF $(DEPDIR)/foomatic_rip-util.Tpo -c -o foomatic_rip-util.o `test -f 'filter/foomatic-rip/util.c' || echo '$(srcdir)/'`filter/foomatic-rip/util.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-util.Tpo $(DEPDIR)/foomatic_rip-util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/util.c' object='foomatic_rip-util.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-util.o `test -f 'filter/foomatic-rip/util.c' || echo '$(srcdir)/'`filter/foomatic-rip/util.c
+
+foomatic_rip-util.obj: filter/foomatic-rip/util.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-util.obj -MD -MP -MF $(DEPDIR)/foomatic_rip-util.Tpo -c -o foomatic_rip-util.obj `if test -f 'filter/foomatic-rip/util.c'; then $(CYGPATH_W) 'filter/foomatic-rip/util.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/util.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/foomatic_rip-util.Tpo $(DEPDIR)/foomatic_rip-util.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/foomatic-rip/util.c' object='foomatic_rip-util.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -c -o foomatic_rip-util.obj `if test -f 'filter/foomatic-rip/util.c'; then $(CYGPATH_W) 'filter/foomatic-rip/util.c'; else $(CYGPATH_W) '$(srcdir)/filter/foomatic-rip/util.c'; fi`
+
 gstoraster-gstoraster.o: filter/gstoraster.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-gstoraster.o -MD -MP -MF $(DEPDIR)/gstoraster-gstoraster.Tpo -c -o gstoraster-gstoraster.o `test -f 'filter/gstoraster.c' || echo '$(srcdir)/'`filter/gstoraster.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-gstoraster.Tpo $(DEPDIR)/gstoraster-gstoraster.Po
@@ -2549,20 +2721,6 @@ gstoraster-gstoraster.obj: filter/gstoraster.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/gstoraster.c' object='gstoraster-gstoraster.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-gstoraster.obj `if test -f 'filter/gstoraster.c'; then $(CYGPATH_W) 'filter/gstoraster.c'; else $(CYGPATH_W) '$(srcdir)/filter/gstoraster.c'; fi`
-
-gstoraster-colord.o: filter/colord.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-colord.o -MD -MP -MF $(DEPDIR)/gstoraster-colord.Tpo -c -o gstoraster-colord.o `test -f 'filter/colord.c' || echo '$(srcdir)/'`filter/colord.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-colord.Tpo $(DEPDIR)/gstoraster-colord.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/colord.c' object='gstoraster-colord.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-colord.o `test -f 'filter/colord.c' || echo '$(srcdir)/'`filter/colord.c
-
-gstoraster-colord.obj: filter/colord.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -MT gstoraster-colord.obj -MD -MP -MF $(DEPDIR)/gstoraster-colord.Tpo -c -o gstoraster-colord.obj `if test -f 'filter/colord.c'; then $(CYGPATH_W) 'filter/colord.c'; else $(CYGPATH_W) '$(srcdir)/filter/colord.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gstoraster-colord.Tpo $(DEPDIR)/gstoraster-colord.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/colord.c' object='gstoraster-colord.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gstoraster_CFLAGS) $(CFLAGS) -c -o gstoraster-colord.obj `if test -f 'filter/colord.c'; then $(CYGPATH_W) 'filter/colord.c'; else $(CYGPATH_W) '$(srcdir)/filter/colord.c'; fi`
 
 imagetopdf-common.o: filter/common.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imagetopdf_CFLAGS) $(CFLAGS) -MT imagetopdf-common.o -MD -MP -MF $(DEPDIR)/imagetopdf-common.Tpo -c -o imagetopdf-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
@@ -3461,6 +3619,49 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
+install-man1: $(man_MANS)
+	@$(NORMAL_INSTALL)
+	@list1=''; \
+	list2='$(man_MANS)'; \
+	test -n "$(man1dir)" \
+	  && test -n "`echo $$list1$$list2`" \
+	  || exit 0; \
+	echo " $(MKDIR_P) '$(DESTDIR)$(man1dir)'"; \
+	$(MKDIR_P) "$(DESTDIR)$(man1dir)" || exit 1; \
+	{ for i in $$list1; do echo "$$i"; done;  \
+	if test -n "$$list2"; then \
+	  for i in $$list2; do echo "$$i"; done \
+	    | sed -n '/\.1[a-z]*$$/p'; \
+	fi; \
+	} | while read p; do \
+	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; echo "$$p"; \
+	done | \
+	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+	sed 'N;N;s,\n, ,g' | { \
+	list=; while read file base inst; do \
+	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
+	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst" || exit $$?; \
+	  fi; \
+	done; \
+	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+	while read files; do \
+	  test -z "$$files" || { \
+	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man1dir)'"; \
+	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man1dir)" || exit $$?; }; \
+	done; }
+
+uninstall-man1:
+	@$(NORMAL_UNINSTALL)
+	@list=''; test -n "$(man1dir)" || exit 0; \
+	files=`{ for i in $$list; do echo "$$i"; done; \
+	l2='$(man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.1[a-z]*$$/p'; \
+	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
+	dir='$(DESTDIR)$(man1dir)'; $(am__uninstall_files_from_dir)
 install-man5: $(man_MANS)
 	@$(NORMAL_INSTALL)
 	@list1=''; \
@@ -4241,7 +4442,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -4329,7 +4530,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man: install-man5 install-man8
+install-man: install-man1 install-man5 install-man8
 
 install-pdf: install-pdf-am
 
@@ -4373,7 +4574,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgppdcDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
-uninstall-man: uninstall-man5 uninstall-man8
+uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
 .MAKE: all check-am install-am install-data-am install-strip \
 	uninstall-am
@@ -4393,23 +4594,23 @@ uninstall-man: uninstall-man5 uninstall-man8
 	install-dvi install-dvi-am install-exec install-exec-am \
 	install-html install-html-am install-info install-info-am \
 	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
-	install-man5 install-man8 install-pdf install-pdf-am \
-	install-phpextensionLTLIBRARIES install-pkgbackendPROGRAMS \
-	install-pkgbannerDATA install-pkgcharsetDATA \
-	install-pkgconfDATA install-pkgcupsdataDATA \
-	install-pkgcupsserverrootDATA install-pkgdriverDATA \
-	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
-	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
-	install-pkgfontembedincludeDATA install-pkgmimeDATA \
-	install-pkgppdcDATA install-ppdDATA install-ps install-ps-am \
-	install-sbinPROGRAMS install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-man1 install-man5 install-man8 install-pdf \
+	install-pdf-am install-phpextensionLTLIBRARIES \
+	install-pkgbackendPROGRAMS install-pkgbannerDATA \
+	install-pkgcharsetDATA install-pkgconfDATA \
+	install-pkgcupsdataDATA install-pkgcupsserverrootDATA \
+	install-pkgdriverDATA install-pkgfilterPROGRAMS \
+	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
+	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
+	install-pkgmimeDATA install-pkgppdcDATA install-ppdDATA \
+	install-ps install-ps-am install-sbinPROGRAMS install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-docDATA uninstall-hook \
 	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
-	uninstall-man5 uninstall-man8 \
+	uninstall-man1 uninstall-man5 uninstall-man8 \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
 	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
