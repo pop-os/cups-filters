@@ -61,3 +61,6 @@ binary-post-install/cups-filters::
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod 700 debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
+
+binary-post-install/cups-browsed::
+	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
