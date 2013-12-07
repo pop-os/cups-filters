@@ -120,7 +120,7 @@ Package: cups-browsed
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
- avahi-daemon
+ avahi-daemon (>= 0.6.31-3~)
 Breaks: cups-daemon (<< 1.6.4)
 Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed
