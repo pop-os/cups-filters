@@ -56,6 +56,9 @@ binary-post-install/cups-filters::
 	if dpkg-vendor --is ubuntu; then \
 	   install -D -m 644 debian/local/apport-hook.py debian/$(cdbs_curpkg)/usr/share/apport/package-hooks/source_cups-filters.py; \
 	   install -D -m 644 debian/local/default-testpage-ubuntu.pdf debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
+	else \
+	   mkdir -p debian/$(cdbs_curpkg)/usr/share/cups/data/; \
+	   rsvg-convert debian/local/default-testpage-debian.svg -f pdf > debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
 	fi
 
 	# Make the serial backend run as root, since /dev/ttyS* are

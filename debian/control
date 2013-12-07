@@ -34,7 +34,8 @@ Build-Depends:
  libdbus-1-dev,
  libavahi-common-dev,
  libavahi-client-dev,
- libavahi-glib-dev
+ libavahi-glib-dev,
+ librsvg2-bin
 Homepage: http://www.openprinting.org/
 Vcs-Git: git://anonscm.debian.org/pkg-cups/cups-filters.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cups/cups-filters.git;a=summary
