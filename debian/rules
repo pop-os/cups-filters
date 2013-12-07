@@ -55,7 +55,7 @@ binary-post-install/cups-filters::
 	#  - Replace standard test page template by Ubuntu-branded one
 	if dpkg-vendor --is ubuntu; then \
 	   install -D -m 644 debian/local/apport-hook.py debian/$(cdbs_curpkg)/usr/share/apport/package-hooks/source_cups-filters.py; \
-	   install -D -m 644 debian/local/default-testpage.pdf debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
+	   install -D -m 644 debian/local/default-testpage-ubuntu.pdf debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
 	fi
 
 	# Make the serial backend run as root, since /dev/ttyS* are
