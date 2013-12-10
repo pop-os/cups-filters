@@ -45,7 +45,7 @@ cleanbuilddir::
 common-install-prehook-impl::
 	# Use upstart script on Ubuntu; we need to hide it away for Debian
 	# builds, as dh_installinit does not have a --sysvinit-only
-	if dpkg-vendor --is ubuntu; then \
+	if dpkg-vendor --derives-from ubuntu; then \
 	    cp debian/local/*.upstart debian; \
 	fi
 
@@ -53,11 +53,17 @@ binary-post-install/cups-filters::
 	# Ubuntu-specific stuff
 	#  - Install Apport hook
 	#  - Replace standard test page template by Ubuntu-branded one
-	if dpkg-vendor --is ubuntu; then \
+	if dpkg-vendor --derives-from ubuntu; then \
 	   install -D -m 644 debian/local/apport-hook.py debian/$(cdbs_curpkg)/usr/share/apport/package-hooks/source_cups-filters.py; \
-	   install -D -m 644 debian/local/default-testpage.pdf debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
+	   install -D -m 644 debian/local/default-testpage-ubuntu.pdf debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
+	else \
+	   mkdir -p debian/$(cdbs_curpkg)/usr/share/cups/data/; \
+	   rsvg-convert debian/local/default-testpage-debian.svg -f pdf > debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
 	fi
 
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod 700 debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
+
+binary-post-install/cups-browsed::
+	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed

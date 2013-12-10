@@ -14,6 +14,7 @@ Build-Depends:
  debhelper (>= 9~),
  dh-autoreconf,
  dpkg-dev (>= 1.16.1~),
+ dh-apparmor,
  pkg-config,
  sharutils,
  ghostscript (>= 9.02~),
@@ -33,7 +34,8 @@ Build-Depends:
  libdbus-1-dev,
  libavahi-common-dev,
  libavahi-client-dev,
- libavahi-glib-dev
+ libavahi-glib-dev,
+ librsvg2-bin
 Homepage: http://www.openprinting.org/
 Vcs-Git: git://anonscm.debian.org/pkg-cups/cups-filters.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cups/cups-filters.git;a=summary
@@ -120,7 +122,7 @@ Package: cups-browsed
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
- avahi-daemon
+ avahi-daemon (>= 0.6.31-3~)
 Breaks: cups-daemon (<< 1.6.4)
 Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed
