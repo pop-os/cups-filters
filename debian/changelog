@@ -1,3 +1,22 @@
+cups-filters (1.0.42-2) unstable; urgency=low
+
+  [ Didier Raboud ]
+  * Switch avahi LSB Required-{Start,Stop} dependencies to be
+    avahi-daemon; also bump package relationship to >= 0.6.31-3~
+    (Closes: #731611)
+  * Add Debian-specific more lightweight default testpage in svg;
+    convert it at build-time with rsvg-convert, hence add librsvg2-bin
+    in Build-Depends. Thanks to Stefan Nagy (Closes: #718895)
+  * Make all Ubuntu derivatives use Ubuntu material through dpkg-vendor
+    --derives-from instead of --is
+  * Backport upstream patch to fix kFreeBSD FTBFS due to conflicting
+    PATH_MAX defintions. Thanks to Peter Green (Closes: #731658)
+
+  [ Felix Geyer ]
+  * Include AppArmor profile (Closes: #728709)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 10 Dec 2013 15:01:49 +0100
+
 cups-filters (1.0.42-1) unstable; urgency=low
 
   * New upstream release 1.0.42:
