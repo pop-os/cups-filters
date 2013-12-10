@@ -1,2 +1,3 @@
 usr/sbin/cups-browsed
 etc/cups/cups-browsed.conf
+../apparmor/usr.sbin.cups-browsed etc/apparmor.d/
