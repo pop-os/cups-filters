@@ -7,6 +7,12 @@
 #include <assert.h>
 #include <cups/cups.h>
 #include <cups/ppd.h>
+#if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 6)
+#define HAVE_CUPS_1_7 1
+#endif
+#ifdef HAVE_CUPS_1_7
+#include <cups/pwg.h>
+#endif /* HAVE_CUPS_1_7 */
 #include <iomanip>
 #include <sstream>
 #include <memory>
@@ -48,13 +54,6 @@ void setFinalPPD(ppd_file_t *ppd,const ProcessingParameters &param)
   ppd_choice_t *choice;
   if ( (choice=ppdFindMarkedChoice(ppd,"MirrorPrint")) != NULL) {
     choice->marked=0;
-  }
-
-  // TODO: FIXME:  unify code with emitJCLOptions, which does this "by-hand" now (and makes this code superfluous)
-  if (param.deviceCopies==1) {
-    // make sure any hardware copying is disabled
-    ppdMarkOption(ppd,"Copies","1");
-    ppdMarkOption(ppd,"JCLCopies","1");
   }
 }
 
@@ -322,10 +321,10 @@ void getParameters(ppd_file_t *ppd,int num_options,cups_option_t *options,Proces
 // TODO?  pstops checks =="true", pdftops !is_false  ... pstops says: fitplot only for PS (i.e. not for PDF, cmp. cgpdftopdf)
   param.fitplot=(val)&&(!is_false(val));
 
-  if ( (ppd)&&(ppd->landscape>0) ) { // direction the printer rotates landscape (90 or -90)
-    param.normal_landscape=ROT_90;
-  } else {
+  if (ppd && (ppd->landscape < 0)) { // direction the printer rotates landscape (90 or -90)
     param.normal_landscape=ROT_270;
+  } else {
+    param.normal_landscape=ROT_90;
   }
 
   int ipprot;
@@ -356,6 +355,32 @@ void getParameters(ppd_file_t *ppd,int num_options,cups_option_t *options,Proces
     param.page.width=pagesize->width;
     param.page.height=pagesize->length;
   }
+#ifdef HAVE_CUPS_1_7
+  else {
+    if ((val = cupsGetOption("media-size", num_options, options)) != NULL ||
+	(val = cupsGetOption("MediaSize", num_options, options)) != NULL ||
+	(val = cupsGetOption("page-size", num_options, options)) != NULL ||
+	(val = cupsGetOption("PageSize", num_options, options)) != NULL) {
+      pwg_media_t *size_found = NULL;
+      fprintf(stderr, "DEBUG: Page size from command line: %s\n", val);
+      if ((size_found = pwgMediaForPWG(val)) == NULL)
+	if ((size_found = pwgMediaForPPD(val)) == NULL)
+	  size_found = pwgMediaForLegacy(val);
+      if (size_found != NULL) {
+	param.page.width = size_found->width * 72.0 / 2540.0;
+        param.page.height = size_found->length * 72.0 / 2540.0;
+	param.page.top=param.page.bottom=36.0;
+	param.page.right=param.page.left=18.0;
+	param.page.right=param.page.width-param.page.right;
+	param.page.top=param.page.height-param.page.top;
+	fprintf(stderr, "DEBUG: Width: %f, Length: %f\n", param.page.width, param.page.height);
+      }
+      else
+	fprintf(stderr, "DEBUG: Unsupported page size %s.\n", val);
+    }
+  }
+#endif /* HAVE_CUPS_1_7 */
+
   param.paper_is_landscape=(param.page.width>param.page.height);
 
   PageRect tmp; // borders (before rotation)
@@ -364,6 +389,19 @@ void getParameters(ppd_file_t *ppd,int num_options,cups_option_t *options,Proces
   optGetFloat("page-left",num_options,options,&tmp.left);
   optGetFloat("page-right",num_options,options,&tmp.right);
   optGetFloat("page-bottom",num_options,options,&tmp.bottom);
+
+  if ((val = cupsGetOption("media-top-margin", num_options, options))
+      != NULL)
+    tmp.top = atof(val) * 72.0 / 2540.0; 
+  if ((val = cupsGetOption("media-left-margin", num_options, options))
+      != NULL)
+    tmp.left = atof(val) * 72.0 / 2540.0; 
+  if ((val = cupsGetOption("media-right-margin", num_options, options))
+      != NULL)
+    tmp.right = atof(val) * 72.0 / 2540.0; 
+  if ((val = cupsGetOption("media-bottom-margin", num_options, options))
+      != NULL)
+    tmp.bottom = atof(val) * 72.0 / 2540.0; 
 
   if ( (param.orientation==ROT_90)||(param.orientation==ROT_270) ) { // unrotate page
     // NaN stays NaN
@@ -533,7 +571,7 @@ bool checkFeature(const char *feature, int num_options, cups_option_t *options) 
 // }}}
 */
 
-  // make pages a multiple of two (only considered when duplex is on). 
+  // make pages a multiple of two (only considered when duplex is on).
   // i.e. printer has hardware-duplex, but needs pre-inserted filler pages
   // FIXME? pdftopdf also supports it as cmdline option (via checkFeature())
   ppd_attr_t *attr;
@@ -579,35 +617,38 @@ void calculate(ppd_file_t *ppd,ProcessingParameters &param) // {{{
     }
   }
 
-#if 1    // for now
-  // enable hardware copy generation
-  if (ppd) {
-    if (!ppd->manual_copies) {
-      // use hardware copying
-      param.deviceCopies=param.numCopies;
-      param.numCopies=1;
-    } else {
-      param.deviceCopies=1;
-    }
-  }
-#endif
-
   setFinalPPD(ppd,param);
 
-  if ( (param.numCopies==1)&&(param.deviceCopies==1) ) {
-    // collate is never needed for a single page
-    param.collate=false; // (this does not make a big difference for us)
-    param.deviceCollate=false;
-  } else if ( (param.deviceCopies==1)&&(param.duplex) ) { // i.e. (numCopies>1), in software
-    // duplex printing of multiple software copies:
-    // collate + evenDuplex must be forced to prevent copies on the backsides
-    param.collate=true;
-    param.deviceCollate=false; // either (!ppd) or (ppd->manual_copies)
-  } else if (param.collate) { // collate requested by user
-    // check collate device, with current/final(!) ppd settings
-    param.deviceCollate=printerWillCollate(ppd);
-  } else { // (!param.collate)
-    param.deviceCollate=false;
+  if (param.numCopies==1) {
+    param.deviceCopies=1;
+    // collate is never needed for a single copy
+    param.collate=false; // (does not make a big difference for us)
+  } else if ( (ppd)&&(!ppd->manual_copies) ) { // hw copy generation available
+    param.deviceCopies=param.numCopies;
+    if (param.collate) { // collate requested by user
+      // check collate device, with current/final(!) ppd settings
+      param.deviceCollate=printerWillCollate(ppd);
+      if (!param.deviceCollate) {
+        // printer can't hw collate -> we must copy collated in sw
+        param.deviceCopies=1;
+      }
+    } // else: printer copies w/o collate and takes care of duplex/evenDuplex
+  } else { // sw copies
+    param.deviceCopies=1;
+    if (param.duplex) { // &&(numCopies>1)
+      // sw collate + evenDuplex must be forced to prevent copies on the backsides
+      param.collate=true;
+      param.deviceCollate=false;
+    }
+  }
+
+  // TODO? FIXME:  unify code with emitJCLOptions, which does this "by-hand" now (and makes this code superfluous)
+  if (param.deviceCopies==1) {
+    // make sure any hardware copying is disabled
+    ppdMarkOption(ppd,"Copies","1");
+    ppdMarkOption(ppd,"JCLCopies","1");
+  } else { // hw copy
+    param.numCopies=1; // disable sw copy
   }
 
   if ( (param.collate)&&(!param.deviceCollate) ) { // software collate
@@ -621,7 +662,7 @@ void calculate(ppd_file_t *ppd,ProcessingParameters &param) // {{{
 }
 // }}}
 
-// reads from stdin into temporary file. returns FILE *  or NULL on error 
+// reads from stdin into temporary file. returns FILE *  or NULL on error
 // TODO? to extra file (also used in pdftoijs, e.g.)
 FILE *copy_stdin_to_temp() // {{{
 {
@@ -743,11 +784,11 @@ proc1->emitFilename("out.pdf");
 /* TODO
     // color management
 --- PPD:
-      copyPPDLine_(fp_dest, fp_src, "*PPD-Adobe: "); 
-      copyPPDLine_(fp_dest, fp_src, "*cupsICCProfile ");  
+      copyPPDLine_(fp_dest, fp_src, "*PPD-Adobe: ");
+      copyPPDLine_(fp_dest, fp_src, "*cupsICCProfile ");
       copyPPDLine_(fp_dest, fp_src, "*Manufacturer:");
       copyPPDLine_(fp_dest, fp_src, "*ColorDevice:");
-      copyPPDLine_(fp_dest, fp_src, "*DefaultColorSpace:");  
+      copyPPDLine_(fp_dest, fp_src, "*DefaultColorSpace:");
     if (cupsICCProfile) {
       proc.addCM(...,...);
     }
