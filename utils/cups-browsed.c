@@ -235,18 +235,6 @@ ippSetVersion(ipp_t *ipp, int major, int minor)
   ipp->request.any.version[1] = minor;
   return (1);
 }
-
-int
-ippSetVersion(ipp_t *ipp,
-              int   major,
-              int   minor)
-{
-  if (!ipp || major < 0 || minor < 0)
-    return (0);
-  ipp->request.any.version[0] = major;
-  ipp->request.any.version[1] = minor;
-  return (1);
-}
 #endif
 
 void debug_printf(const char *format, ...) {
@@ -277,6 +265,7 @@ create_local_queue (const char *name,
 		    const char *type,
 		    const char *domain,
 		    const char *pdl,
+		    const char *make_model,
 		    int is_cups_queue)
 {
   remote_printer_t *p;
@@ -526,10 +515,10 @@ create_local_queue (const char *name,
 	     "  exec \"$0\" \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" < \"$6\"\n"
 	     "fi\n"
 	     "\n"
-	     "extra_options=\"output-format=%s\"\n"
+	     "extra_options=\"output-format=%s make-and-model=%s\"\n"
 	     "\n"
 	     "%s/filter/pdftoippprinter \"$1\" \"$2\" \"$3\" \"$4\" \"$5 $extra_options\"\n",
-	     p->name, pdl, cups_serverbin);
+	     p->name, pdl, make_model, cups_serverbin);
 
     bytes = write(fd, buffer, strlen(buffer));
     if (bytes != strlen(buffer)) {
@@ -1095,7 +1084,8 @@ void generate_local_queue(const char *host,
     /* We need to create a local queue pointing to the
        discovered printer */
     p = create_local_queue (local_queue_name, uri, remote_host,
-			    name ? name : "", type, domain, pdl, is_cups_queue);
+			    name ? name : "", type, domain, pdl, remote_queue,
+			    is_cups_queue);
     free (uri);
   }
 
@@ -2434,7 +2424,7 @@ int main(int argc, char*argv[]) {
 				  cupsGetOption("device-uri",
 						dest->num_options,
 						dest->options),
-				  "", "", "", "", NULL, 1);
+				  "", "", "", "", NULL, NULL, 1);
 	  if (p) {
 	    /* Mark as unconfirmed, if no Avahi report of this queue appears
 	       in a certain time frame, we will remove the queue */
