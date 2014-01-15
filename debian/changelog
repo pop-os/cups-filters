@@ -1,3 +1,11 @@
+cups-filters (1.0.43-2) UNRELEASED; urgency=medium
+
+  * AppArmor profile: Allow reading and writing in /tmp/ as cups-browsed
+    creates temporary files when setting up native IPP printers PPD-less
+    ("CreateIPPPrinterQueues Yes" in cups-browsed.conf).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 15 Jan 2014 17:58:06 +0100
+
 cups-filters (1.0.43-1) unstable; urgency=medium
 
   * New upstream release 1.0.43:
