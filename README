@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.0.43 - 2013-12-19
+README - OpenPrinting CUPS Filters v1.0.44 - 2014-01-17
 -------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -111,7 +111,7 @@ POSTSCRIPT PRINTING RENDERER AND RESOLUTION SELECTION
     and distributions should not choose it as default.
 
     The selection is done by the "pdftops-renderer" option, setting it
-    to "gs", "pdftops", "pdftocairo", or "acroread":
+    to "gs", "pdftops", "pdftocairo", "acroread", or "hybrid":
 
     Per-job:           lpr -o pdftops-renderer=pdftops ...
     Per-queue default: lpadmin -p printer -o pdftops-renderer-default=gs
@@ -119,6 +119,10 @@ POSTSCRIPT PRINTING RENDERER AND RESOLUTION SELECTION
 
     By default, pdftops uses Ghostscript if this does not get changed
     at compile time, for example by the Linux distribution vendor.
+
+    Hybrid means Ghostscript for most printers, but Poppler's pdftops
+    for Brother, Minolta, and Konica Minolta. Printer make and model
+    information comes from the PPD or via the "make-and-model" option.
 
     2. Limitation of the image rendering resolution
 
@@ -733,7 +737,11 @@ Options must not be implemented by specifying PostScript code to
 inject.  They must be injecting JCL code ("*JCLOpenUI:
 ... ... *JCLCloseUI: ...").
 
-A sample PPD file, HP-Color_LaserJet_CM3530_MFP-PDF.ppd is included.
+Sample PPD files are included:
+
+- Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd
+- Generic-PDF_Printer-PDF.ppd
+- HP-Color_LaserJet_CM3530_MFP-PDF.ppd
 
 3. LICENSE
 
@@ -969,8 +977,11 @@ line:
 
 and NO "*cupsFilter:" line which accepts PostScript input.
 
-A sample PPD file for a native PDF printer,
-HP-Color_LaserJet_CM3530_MFP-PDF.ppd is included.
+Sample PPD file for native PDF printer are included:
+
+- Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd
+- Generic-PDF_Printer-PDF.ppd
+- HP-Color_LaserJet_CM3530_MFP-PDF.ppd
 
 When a printer does not support PS nor PDF, you can use Ghostscript (GS).
 In this case, you can specify device options like a PS printer.
