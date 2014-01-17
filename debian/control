@@ -68,6 +68,7 @@ Package: cups-filters
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
+ cups-filters-ppd-less (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
  fonts-freefont-ttf | fonts-liberation | fonts-dejavu
@@ -85,10 +86,31 @@ Breaks: cups (<< 1.5.0-16),
  cups-ppdc (<< 1.6)
 Provides: ghostscript-cups,
  foomatic-filters
-Description: OpenPrinting CUPS Filters
+Description: OpenPrinting CUPS Filters - Main Package
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
  printing workflow.
+ .
+ This package contains the filters for printing with drivers/PPDs and
+ for converting non-PDF input files to PDF.
+
+Package: cups-filters-ppd-less
+Architecture: any
+Depends: ${shlibs:Depends}, 
+ ${misc:Depends},
+ poppler-utils
+Replaces: cups (<< 1.5.0-16),
+ cups-filters (<= 1.0.43-1)
+Breaks: cups (<< 1.5.0-16),
+ cups-filters (<= 1.0.43-1)
+Description: OpenPrinting CUPS Filters - PPD-less printing
+ This package provides additional CUPS filters which are not provided
+ by the CUPS project itself. This includes filters for a PDF based
+ printing workflow.
+ .
+ This package contains only the filters needed for PPD-less printing of
+ PDF input files on IPP printers with known, common languages (PDF,
+ PostScript, PWG Raster, PCL).
 
 Package: libcupsfilters-dev
 Section: libdevel

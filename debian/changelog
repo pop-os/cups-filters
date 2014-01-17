@@ -12,6 +12,16 @@ cups-filters (1.0.44-1) UNRELEASED; urgency=low
     - Added another sample PPD file for a native PDF printer,
       Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd. Thanks to Adrian
       Johnson for contributing this PPD file.
+  * Splitted binary package "cups-filters" into "cups-filters" and
+    "cups-filters-ppd-less". In low-footprint (mobile) environments we can
+    restrict the printer support to only IPP printers with known common
+    languages (PDF, PostScript, PWG Raster, PCL) to get rid of the heavy
+    load of drivers and PPDs for thousands of printers. From cups-filters we
+    need only the "cups-browsed" and "cups-filters-ppd-less" (plus library
+    packages) then and with "cups-daemon" and "cups-ppd-less" from CUPS and
+    "poppler-utils" and "libpoppler" from Poppler one gets a low-footprint
+    printing stack for mobile devices setting up IPP printers automatically
+    (Needs "CreateIPPPrinterQueues Yes" in cups-browsed.conf).
   * AppArmor profile: Allow reading and writing in /tmp/ as cups-browsed
     creates temporary files when setting up native IPP printers PPD-less
     ("CreateIPPPrinterQueues Yes" in cups-browsed.conf).
