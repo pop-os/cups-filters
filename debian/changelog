@@ -1,17 +1,8 @@
 cups-filters (1.0.44-1) UNRELEASED; urgency=low
 
-  * New upstream release 1.0.44:
-    - README: Documented the "hybrid" choice for the PDF renderer
-      in the pdftops filter.
-    - pdftoippprinter: Handle missing Ghostscript/Poppler for all
-      output formats.
-    - cups-browsed: Minor corrections in the error messages.
-    - gstopxl: Support for PPD-less printing. Resolution,
-      InputSlot, Duplex, and ColorModel are set also without PPD
-      file now.
-    - Added another sample PPD file for a native PDF printer,
-      Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd. Thanks to Adrian
-      Johnson for contributing this PPD file.
+  * New upstream release 1.0.44
+
+  [ Till Kamppeter ]
   * Splitted binary package "cups-filters" into "cups-filters" and
     "cups-filters-core-drivers". In low-footprint (mobile) environments we can
     restrict the printer support to only IPP printers with known common
@@ -25,6 +16,9 @@ cups-filters (1.0.44-1) UNRELEASED; urgency=low
   * AppArmor profile: Allow reading and writing in /tmp/ as cups-browsed
     creates temporary files when setting up native IPP printers PPD-less
     ("CreateIPPPrinterQueues Yes" in cups-browsed.conf).
+
+  [ Didier Raboud ]
+  * Strip UNRELEASED 1.0.39-1 changelog entry (Closes: #733981)
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 17 Jan 2014 12:09:06 +0100
 
