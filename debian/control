@@ -100,9 +100,9 @@ Depends: ${shlibs:Depends},
  ${misc:Depends},
  poppler-utils
 Replaces: cups (<< 1.5.0-16),
- cups-filters (<= 1.0.43-1)
+ cups-filters (<< 1.0.44-1~)
 Breaks: cups (<< 1.5.0-16),
- cups-filters (<= 1.0.43-1)
+ cups-filters (<< 1.0.44-1~)
 Description: OpenPrinting CUPS Filters - PPD-less printing
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
