@@ -1,3 +1,9 @@
+cups-filters (1.0.43-1build1) trusty; urgency=medium
+
+  * Rebuild for the new poppler soname
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 22 Jan 2014 22:46:37 +0100
+
 cups-filters (1.0.43-1) unstable; urgency=medium
 
   * New upstream release 1.0.43:
