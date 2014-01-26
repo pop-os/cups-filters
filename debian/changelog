@@ -1,4 +1,4 @@
-cups-filters (1.0.44-1) UNRELEASED; urgency=low
+cups-filters (1.0.44-1) unstable; urgency=low
 
   * New upstream release 1.0.44
 
@@ -20,8 +20,10 @@ cups-filters (1.0.44-1) UNRELEASED; urgency=low
 
   [ Didier Raboud ]
   * Strip UNRELEASED 1.0.39-1 changelog entry (Closes: #733981)
+  * Drop update-rc.d arguments in Debian, as they are no longer
+    supported
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 17 Jan 2014 12:09:06 +0100
+ -- Didier Raboud <odyx@debian.org>  Sun, 26 Jan 2014 12:28:55 +0100
 
 cups-filters (1.0.43-1) unstable; urgency=medium
 
