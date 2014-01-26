@@ -1,3 +1,30 @@
+cups-filters (1.0.44-1) unstable; urgency=low
+
+  * New upstream release 1.0.44
+
+  [ Till Kamppeter ]
+  * Split binary package "cups-filters" into "cups-filters" and
+    "cups-filters-core-drivers". In low-footprint (mobile) environments we
+    can restrict the printer support to only IPP printers with known
+    common languages (PDF, PostScript, PWG Raster, PCL) to get rid of
+    the heavy load of drivers and PPDs for thousands of printers. From
+    cups-filters we need only the "cups-browsed" and
+    "cups-filters-core-drivers" (plus library packages) then and with
+    "cups-daemon" and "cups-core-drivers" from CUPS and "poppler-utils"
+    and "libpoppler" from Poppler one gets a low-footprint printing stack
+    for mobile devices setting up IPP printers automatically (Needs
+    "CreateIPPPrinterQueues Yes" in cups-browsed.conf).
+  * AppArmor profile: Allow reading and writing in /tmp/ as cups-browsed
+    creates temporary files when setting up native IPP printers PPD-less
+    ("CreateIPPPrinterQueues Yes" in cups-browsed.conf).
+
+  [ Didier Raboud ]
+  * Strip UNRELEASED 1.0.39-1 changelog entry (Closes: #733981)
+  * Drop update-rc.d arguments in Debian, as they are no longer
+    supported
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 26 Jan 2014 12:28:55 +0100
+
 cups-filters (1.0.43-1) unstable; urgency=medium
 
   * New upstream release 1.0.43:
@@ -139,41 +166,6 @@ cups-filters (1.0.41-1) unstable; urgency=low
     upgrade is left possible
 
  -- Didier Raboud <odyx@debian.org>  Wed, 27 Nov 2013 17:39:38 +0100
-
-cups-filters (1.0.39-1) UNRELEASED; urgency=low
-
-  * New upstream release 1.0.39:
-     - cups-browsed: Assure that it always applies to the local CUPS
-       daemon and never to a remote one specified via client.conf
-       (LP: #1207203).
-     - pdftops: If one or more of the PDF-to-PS renderers (Ghostscript,
-       Poppler pdftops, Poppler pdftocairo, acroread) is not installed
-       at build time, pre-fill the appropriate executable's path with the
-       executable name to allow the use of this renderer when it gets
-       installed later (Closes: #716842).
-     - Added man pages for cups-browsed and cups-browsed.conf. Thanks to
-       Brian Potkin for the contribution (Closes: #714460).
-     - pdftops: Let Poppler generally generate PostScript level 3 if the
-       PPD identifies the printer as PS3 printer, make an exception of
-       sending PostScript Level 2 only for HP's laser printers, to not
-       compromise print quality and performance on all PS3 printers only
-       due to some buggy HP models (Closes: #712949, see also LP: #277404).
-
-  [ Till Kamppeter ]
-  * Added Conflicts/Provides/Replaces and droppded Recommends/Breaks against
-    ghostscript-cups to the cups-filters binary package as all files from
-    ghostscript-cups moved to cups-filters (LP: #1212239).
-  * debian/libcupsfilters1.symbols: Updated for 1.0.36
-  * debian/rules: Removed "--with-browseremoteprotocols=dnssd" from the
-    ./configure command line, we use the upstream default "dnssd,cups"
-    now.
-
-  [ Didier Raboud ]
-  * Install escp.h and pcl.h in the CUPS ppdc include directory; this
-    fixes cupsfilters.drv.
-  * Drop useless uses of cat in postinst.
-
- -- Till Kamppeter <till.kamppeter@gmail.com>  Tue,  3 Sep 2013 16:57:06 +0200
 
 cups-filters (1.0.34-3) unstable; urgency=low
 
