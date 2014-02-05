@@ -1,3 +1,16 @@
+cups-filters (1.0.44-2) unstable; urgency=medium
+
+  [ Jamie Strandboge ]
+  * Add patch to ensure that under upstart, the apparmor profile is
+    loaded in the kernel before cups-browsed is started (LP: #1276630)
+
+  [ Didier Raboud ]
+  * Drop specific fonts' dependencies from cups-filters, as a reasonable
+    set of fonts is provided through fontconfig already, thanks to
+    Fabian Greffrath (Closes: #735223, #670059)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 05 Feb 2014 17:25:00 +0100
+
 cups-filters (1.0.44-1) unstable; urgency=low
 
   * New upstream release 1.0.44

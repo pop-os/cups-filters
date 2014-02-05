@@ -71,7 +71,6 @@ Depends: ${shlibs:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
- fonts-freefont-ttf | fonts-liberation | fonts-dejavu
 Recommends: colord
 Suggests: foomatic-db-compressed-ppds | foomatic-db
 Conflicts: ghostscript-cups,
