@@ -1,3 +1,17 @@
+cups-filters (1.0.45-1) unstable; urgency=medium
+
+  * New upstream release 1.0.45
+    - cups-browsed: Under Upstart load the AppArmor profile (LP: #1276630)
+    - foomatic-rip: Do not use PATH_MAX for the length of static strings
+      which are supposed to hold a command line. Use our own CMDLINE_MAX
+      constant to set them to a length of 65535 bytes
+      (LP: #1019662, Closes: #738440).
+
+  * Drop the upstart patch now included upstream
+  * Bump Standards-Version to 3.9.5 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 14 Feb 2014 10:37:28 +0100
+
 cups-filters (1.0.44-2) unstable; urgency=medium
 
   [ Jamie Strandboge ]
