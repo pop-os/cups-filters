@@ -1,3 +1,11 @@
+cups-filters (1.0.46-1) unstable; urgency=medium
+
+  * New upstream release 1.0.46
+  * Move LP_LOAD_MODULES configuration away from cups to
+    /etc/modules-load.d/cups-filters.conf
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Feb 2014 15:45:32 +0100
+
 cups-filters (1.0.46-0ubuntu1) trusty; urgency=low
 
   * New upstream release 1.0.46
