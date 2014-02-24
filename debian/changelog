@@ -1,3 +1,13 @@
+cups-filters (1.0.46-0ubuntu1) trusty; urgency=low
+
+  * New upstream release 1.0.46
+     - gstoraster: Ignore SIGCHLD, rely on waitpid instead. Thanks
+       to Lauri Tirkkonen (Upstream bug #1184).
+     - gstoraster: Fix two instances of insufficient EINTR handling.
+       Thanks to Lauri Tirkkonen (Upstream bug #1184).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 19 Feb 2014 20:19:06 +0100
+
 cups-filters (1.0.45-1) unstable; urgency=medium
 
   * New upstream release 1.0.45
