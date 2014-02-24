@@ -59,6 +59,9 @@ binary-post-install/cups-filters::
 	   rsvg-convert debian/local/default-testpage-debian.svg -f pdf > debian/$(cdbs_curpkg)/usr/share/cups/data/default-testpage.pdf; \
 	fi
 
+	# Install the modules loader for lp, ppdev and parport_pc
+	install -D -m 644 debian/local/modules-load.conf debian/$(cdbs_curpkg)/etc/modules-load.d/cups-filters.conf
+
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod 700 debian/$(cdbs_curpkg)/usr/lib/cups/backend/serial
