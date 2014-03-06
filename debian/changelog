@@ -1,3 +1,13 @@
+cups-filters (1.0.46-2) unstable; urgency=medium
+
+  * Convert to dh tiny style away from cdbs, fix and run the tests in the
+    process
+  * Install cups-browsed.service, therefore build-depend on and use dh-systemd
+  * Move the repository from pkg-cups to printing; update the VCS-* fields
+    accordingly
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 06 Mar 2014 17:03:34 +0100
+
 cups-filters (1.0.46-1) unstable; urgency=medium
 
   * New upstream release 1.0.46

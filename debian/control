@@ -10,9 +10,9 @@ Uploaders:
 Build-Depends: 
  autoconf,
  autotools-dev,
- cdbs (>= 0.4.93~),
  debhelper (>= 9~),
  dh-autoreconf,
+ dh-systemd,
  dpkg-dev (>= 1.16.1~),
  dh-apparmor,
  pkg-config,
@@ -35,10 +35,12 @@ Build-Depends:
  libavahi-common-dev,
  libavahi-client-dev,
  libavahi-glib-dev,
- librsvg2-bin
+ librsvg2-bin,
+# Needed for tests
+ fonts-dejavu-core
 Homepage: http://www.openprinting.org/
-Vcs-Git: git://anonscm.debian.org/pkg-cups/cups-filters.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-cups/cups-filters.git;a=summary
+Vcs-Git: https://alioth.debian.org/anonscm/git/printing/cups-filters.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=printing/cups-filters.git
 
 Package: libcupsfilters1
 Section: libs
