@@ -145,8 +145,8 @@ Description: OpenPrinting CUPS Filters - Development files for font embed librar
 Package: cups-browsed
 Architecture: any
 Depends: ${shlibs:Depends}, 
- ${misc:Depends},
- avahi-daemon (>= 0.6.31-3~)
+ ${misc:Depends}
+Recommends: avahi-daemon (>= 0.6.31-3~)
 Breaks: cups-daemon (<< 1.6.4)
 Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed

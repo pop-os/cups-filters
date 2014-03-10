@@ -2,7 +2,7 @@ cups-filters (1.0.47-1) UNRELEASED; urgency=medium
 
   * New upstream release 1.0.47
      - pdftoopvp: SECURITY FIX for CVE-2013-6474, CVE-2013-6475,
-       and CVE-2013-6476: Introductionof gmallocn and gmallocn3
+       and CVE-2013-6476: Introduction of gmallocn and gmallocn3
        to protect against arbitrary code execution with the
        privileges of the "lp" user via malicious PDF files. Also
        restrict the directory from where OPVP drivers can get
@@ -24,6 +24,9 @@ cups-filters (1.0.47-1) UNRELEASED; urgency=medium
        fields for any CUPS/IPP value and get automatically filled
        Thanks to Andrew V. Stepanov from ALT Linux (Bug #1170,
        also first step to fix Ubuntu bug #1196986).
+  * Removed hard dependency of cups-browsed on avahi-daemon, demoted Depends: to
+    Recommends: and removed "on started avahi-daemon" from the "start on ..."
+    rule in /etc/init/cups-browsed.conf (LP: #1242185, LP: #1178172).
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 10 Mar 2014 13:40:06 +0100
 
