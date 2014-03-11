@@ -1,3 +1,17 @@
+cups-filters (1.0.24-2ubuntu0.2) quantal-security; urgency=medium
+
+  * SECURITY UPDATE: arbitrary code execution via overflows in pdftoopvp
+    - debian/patches/CVE-2013-647x.patch: use gmallocn and gmallocn3 in
+      filter/pdftoopvp/{oprs/OPVPSplash.cxx,OPVPOutputDev.cxx}.
+    - CVE-2013-6474
+    - CVE-2013-6475
+  * SECURITY UPDATE: arbitrary code execution via driver in pdftoopvp
+    - debian/patches/CVE-2013-647x.patch: restrict driver path in
+      filter/pdftoopvp/oprs/OPVPWrapper.cxx.
+    - CVE-2013-6476
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 11 Mar 2014 11:01:42 -0400
+
 cups-filters (1.0.24-2ubuntu0.1) quantal-proposed; urgency=low
 
   * debian/patches/pdftopdf-landscape-fix.patch: Auto-rotate functionality
