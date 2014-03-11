@@ -1,3 +1,12 @@
+cups-filters (1.0.47-2) unstable; urgency=high
+
+  * In cups-browsed's initscript, demote avahi-daemon from
+    Required-{Start,Stop}, to Should-{Start,Stop}, to cope with the
+    corresponding demotion in dependencies (Closes: #741343)
+  * Set urgency to high for the fix of four CVEs in -1.
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 11 Mar 2014 19:05:48 +0100
+
 cups-filters (1.0.47-1) unstable; urgency=medium
 
   * New upstream release 1.0.47
