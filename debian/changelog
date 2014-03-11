@@ -1,4 +1,4 @@
-cups-filters (1.0.47-0ubuntu1) trusty; urgency=medium
+cups-filters (1.0.47-1) unstable; urgency=medium
 
   * New upstream release 1.0.47
      - pdftoopvp: SECURITY FIX for CVE-2013-6474, CVE-2013-6475,
@@ -6,29 +6,18 @@ cups-filters (1.0.47-0ubuntu1) trusty; urgency=medium
        to protect against arbitrary code execution with the
        privileges of the "lp" user via malicious PDF files. Also
        restrict the directory from where OPVP drivers can get
-       loaded.
+       loaded (Closes: #741318)
      - urftopdf: SECURITY FIX for CVE-2013-6473: Two heap-based
        buffer overflow flaws in urftopdf. If a malicious URF file
        were processed it could lead to arbitrary code execution
-       with the privileges of the "lp" user.
-     - pdftopdf: Fixed typo in initialization which sets the default
-       value page border to an undefined value. Thanks to Helge
-       Blischke for the patch.
-     - cups-browsed: Check for changes of the URI of a queue which
-       we have created and correct the URI if needed, especially if
-       a queue was not removed on shutdown of cups-browsed (default
-       printer or still having jobs) and before restart of
-       cups-browsed the server's DNS-SD-provided has changed.
-     - bannertopdf: Support PDF forms as banner template. This allows
-       especially internationalized banner pages. Forms can contain
-       fields for any CUPS/IPP value and get automatically filled
-       Thanks to Andrew V. Stepanov from ALT Linux (Bug #1170,
-       also first step to fix Ubuntu bug #1196986).
-  * Removed hard dependency of cups-browsed on avahi-daemon, demoted Depends: to
-    Recommends: and removed "on started avahi-daemon" from the "start on ..."
-    rule in /etc/init/cups-browsed.conf (LP: #1242185, LP: #1178172).
+       with the privileges of the "lp" user (Closes: #741318)
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 10 Mar 2014 13:40:06 +0100
+  [ Till Kamppeter ]
+  * Demote Dependency of cups-browsed on avahi-daemon to Recommends, also
+    remove "on started avahi-daemon" from the "start on ..." rule in
+    /etc/init/cups-browsed.conf (LP: #1242185, LP: #1178172)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 11 Mar 2014 13:36:14 +0100
 
 cups-filters (1.0.46-2) unstable; urgency=medium
 
