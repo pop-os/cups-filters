@@ -1,1 +1,2 @@
 fcfontsort-no-trim.patch
+pdftoopvp-SECURITY-protect-against-arbitrary-code-execution.patch
