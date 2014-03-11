@@ -1,3 +1,14 @@
+cups-filters (1.0.18-2.1+deb7u1) stable-security; urgency=high
+
+  * Backport security fix from cups-filters 1.0.47:
+    pdftoopvp: SECURITY FIX for CVE-2013-6474, CVE-2013-6475, and
+    CVE-2013-6476: Introduction of gmallocn and gmallocn3 to protect against
+    arbitrary code execution with the privileges of the "lp" user via
+    malicious PDF files. Also restrict the directory from where OPVP drivers
+    can get loaded (Closes: #741318)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 11 Mar 2014 14:03:57 +0100
+
 cups-filters (1.0.18-2.1) unstable; urgency=low
 
   * Non-maintainer upload.
