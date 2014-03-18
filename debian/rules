@@ -31,22 +31,15 @@ override_dh_fixperms:
 override_dh_makeshlibs:
 	dh_makeshlibs -- -c4
 
-override_dh_installinit:
-ifeq ($(derives_from_ubuntu),yes)
-	dh_installinit --upstart-only
-else
-	dh_installinit
-endif
-
 override_dh_auto_clean:
 	[ ! -r Makefile ] || make distclean
-	rm -f debian/*.upstart # master copy is in debian/local
+	rm -f debian/*.upstart # master copy is in source tree
 
 override_dh_install:
 ifeq ($(derives_from_ubuntu),yes)
 	# Use upstart script on Ubuntu; we need to hide it away for Debian
 	# builds, as dh_installinit does not have a --sysvinit-only
-	cp debian/local/*.upstart debian
+	cp utils/cups-browsed-upstart.conf debian/cups-browsed.upstart
 endif
 	dh_install
 	
