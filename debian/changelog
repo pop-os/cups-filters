@@ -1,3 +1,13 @@
+cups-filters (1.0.48-0ubuntu2) trusty; urgency=medium
+
+  * Use upstart job in source tree so AppArmor profile is correctly
+    loaded before cups-browsed is started (LP: #1276630)
+    - debian/local/cups-browsed.upstart: removed
+    - debian/rules: copy upstart job from utils directory, stop using
+      deprecated --upstart-only.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 18 Mar 2014 16:02:28 -0400
+
 cups-filters (1.0.48-0ubuntu1) trusty; urgency=high
 
   * New upstream release 1.0.48
