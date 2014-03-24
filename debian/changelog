@@ -1,3 +1,12 @@
+cups-filters (1.0.49-0ubuntu1) trusty; urgency=medium
+
+  * New upstream release
+     - pdftops: Use Poppler also for Toshiba printers (LP: #998087).
+     - pdftops: Fixed typo which always made PostScript level 2 being
+       generated when using Poppler's pdftops (LP: #1294370).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 24 Mar 2014 12:58:18 +0100
+
 cups-filters (1.0.48-0ubuntu2) trusty; urgency=medium
 
   * Use upstart job in source tree so AppArmor profile is correctly
