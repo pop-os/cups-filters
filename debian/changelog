@@ -1,8 +1,24 @@
+cups-filters (1.0.48-1) unstable; urgency=medium
+
+  * New upstream release 1.0.48
+     - cups-browsed: Fix for a crash which happens on Bonjour reports of
+       printers without "product", "usb_MDL", and "ty" fields in the
+       text record (LP: #1284834).
+     - cups-browsed: In README and in the sample startup scripts/configs
+       for System V Init and Upstart taken into account the fact that it
+       is not required any more to start avahi-daemon before starting
+       cups-browsed.
+
+  [ Didier Raboud ]
+  * Fix bugnumber typo in previous changelog entry
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Mar 2014 10:50:53 +0100
+
 cups-filters (1.0.47-2) unstable; urgency=high
 
   * In cups-browsed's initscript, demote avahi-daemon from
     Required-{Start,Stop}, to Should-{Start,Stop}, to cope with the
-    corresponding demotion in dependencies (Closes: #741343)
+    corresponding demotion in dependencies (Closes: #741353)
   * Set urgency to high for the fix of four CVEs in -1.
 
  -- Didier Raboud <odyx@debian.org>  Tue, 11 Mar 2014 19:05:48 +0100
