@@ -1,3 +1,20 @@
+cups-filters (1.0.49-1) unstable; urgency=medium
+
+  [ Till Kamppeter ]
+  * New upstream release
+     - pdftops: Use Poppler also for Toshiba printers (LP: #998087).
+     - pdftops: Fixed typo which always made PostScript level 2 being
+       generated when using Poppler's pdftops (LP: #1294370).
+
+  [ Marc Deslauriers ]
+  * Use upstart job in source tree so AppArmor profile is correctly
+    loaded before cups-browsed is started (LP: #1276630)
+    - debian/local/cups-browsed.upstart: removed
+    - debian/rules: copy upstart job from utils directory, stop using
+      deprecated --upstart-only.
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Mar 2014 21:29:17 +0100
+
 cups-filters (1.0.48-1) unstable; urgency=medium
 
   * New upstream release 1.0.48
