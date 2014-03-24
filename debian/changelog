@@ -1,4 +1,4 @@
-cups-filters (1.0.48-0ubuntu1) trusty; urgency=high
+cups-filters (1.0.48-1) unstable; urgency=medium
 
   * New upstream release 1.0.48
      - cups-browsed: Fix for a crash which happens on Bonjour reports of
@@ -9,7 +9,10 @@ cups-filters (1.0.48-0ubuntu1) trusty; urgency=high
        is not required any more to start avahi-daemon before starting
        cups-browsed.
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 12 Mar 2014 21:03:06 +0100
+  [ Didier Raboud ]
+  * Fix bugnumber typo in previous changelog entry
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 24 Mar 2014 10:50:53 +0100
 
 cups-filters (1.0.47-2) unstable; urgency=high
 
