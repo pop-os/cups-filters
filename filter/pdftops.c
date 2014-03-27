@@ -423,7 +423,7 @@ main(int  argc,				/* I - Number of command-line args */
   * Select the PDF renderer: Ghostscript (gs), Poppler (pdftops),
   * Adobe Reader (arcoread), Poppler with Cairo (pdftocairo), or
   * Hybrid (hybrid, Poppler for Brother, Minolta, Konica Minolta, and
-  * Toshiba and Ghostscript otherwise)
+  * old HP LaserJets and Ghostscript otherwise)
   */
 
   if ((val = cupsGetOption("pdftops-renderer", num_options, options)) != NULL)
@@ -447,14 +447,37 @@ main(int  argc,				/* I - Number of command-line args */
   {
     if (make_model[0] &&
 	(!strncasecmp(make_model, "Brother", 7) ||
-	 strcasestr(make_model, "Minolta") ||
-	 !strncasecmp(make_model, "Toshiba", 7)))
-      {
-	fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, Konica Minolta, and Toshiba to work around bugs in the printer's PS interpreters\n");
-	renderer = PDFTOPS;
-      }
+	 strcasestr(make_model, "Minolta")))
+    {
+      fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, and Konica Minolta to work around bugs in the printer's PS interpreters\n");
+      renderer = PDFTOPS;
+    }
     else
       renderer = GS;
+   /*
+    * Use Poppler instead of Ghostscript for old HP LaserJet printers due to
+    * a bug in their PS interpreters. They are very slow with Ghostscript.
+    * a LaserJet is considered old if its model number does not have a letter
+    * in the beginning, like LaserJet 3 or LaserJet 4000, not LaserJet P2015.
+    * See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=742765
+    */
+    if (make_model[0] &&
+	((!strncasecmp(make_model, "HP", 2) ||
+	  !strncasecmp(make_model, "Hewlett-Packard", 15) ||
+	  !strncasecmp(make_model, "Hewlett Packard", 15)) &&
+	 (ptr = strcasestr(make_model, "LaserJet"))))
+    {
+      for (ptr += 8; *ptr; ptr ++)
+      {
+	if (isspace(*ptr)) continue;
+	if (isdigit(*ptr))
+	{
+	  fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for old HP LaserJet (\"LaserJet <number>\", no letters before <number>) printers to work around bugs in the printer's PS interpreters\n");
+	  renderer = PDFTOPS;
+	}
+	break;
+      }
+    }
   }
 
  /*
@@ -584,8 +607,9 @@ main(int  argc,				/* I - Number of command-line args */
 	   as some do not like it. See https://bugs.launchpad.net/bugs/277404.*/
 	if (!make_model[0] ||
 	    ((!strncasecmp(make_model, "HP", 2) ||
-	      !strncasecmp(make_model, "Hewlett-Packard", 15)) &&
-	     (strcasestr(make_model, "laserjet"))))
+	      !strncasecmp(make_model, "Hewlett-Packard", 15) ||
+	      !strncasecmp(make_model, "Hewlett Packard", 15)) &&
+	     (strcasestr(make_model, "LaserJet"))))
 	  pdf_argv[pdf_argc++] = (char *)"-level2";
 	else
 	  pdf_argv[pdf_argc++] = (char *)"-level3";
@@ -604,8 +628,9 @@ main(int  argc,				/* I - Number of command-line args */
 	 as some do not like it. See https://bugs.launchpad.net/bugs/277404.*/
       if (!make_model[0] ||
 	  ((!strncasecmp(make_model, "HP", 2) ||
-	    !strncasecmp(make_model, "Hewlett-Packard", 15)) &&
-	   (strcasestr(make_model, "laserjet"))))
+	    !strncasecmp(make_model, "Hewlett-Packard", 15) ||
+	    !strncasecmp(make_model, "Hewlett Packard", 15)) &&
+	   (strcasestr(make_model, "LaserJet"))))
 	pdf_argv[pdf_argc++] = (char *)"-level2";
       else
 	pdf_argv[pdf_argc++] = (char *)"-level3";
@@ -790,8 +815,24 @@ main(int  argc,				/* I - Number of command-line args */
       pdf_argv[pdf_argc++] = (char *)"-dEncodeMonoImages=false";
       pdf_argv[pdf_argc++] = (char *)"-dEncodeColorImages=false";
     }
+   /*
+    * Toshiba's PS interpreters have an issue with how we handle
+    * TrueType/Type42 fonts, therefore we add command line options to turn
+    * the TTF outlines into bitmaps, usually Type 3 PostScript fonts, only
+    * large glyphs into normal image data.
+    * See https://bugs.launchpad.net/bugs/978120
+    */
+    if (make_model[0] &&
+	!strncasecmp(make_model, "Toshiba", 7))
+    {
+      fprintf(stderr, "DEBUG: To work around a bug in Toshiba's PS interpreters turn TTF font glyphs into bitmaps, usually Type 3 PS fonts, or images for large characters\n");
+      pdf_argv[pdf_argc++] = (char *)"-dHaveTrueTypes=false";
+    }
     pdf_argv[pdf_argc++] = (char *)"-dNOINTERPOLATE";
     pdf_argv[pdf_argc++] = (char *)"-c";
+    if (make_model[0] &&
+	!strncasecmp(make_model, "Toshiba", 7))
+      pdf_argv[pdf_argc++] = (char *)"<< /MaxFontItem 500000 >> setuserparams";
     pdf_argv[pdf_argc++] = (char *)"save pop";
     pdf_argv[pdf_argc++] = (char *)"-f";
     pdf_argv[pdf_argc++] = filename;
