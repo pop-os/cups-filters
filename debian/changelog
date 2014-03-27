@@ -1,3 +1,19 @@
+cups-filters (1.0.50-1) unstable; urgency=medium
+
+  * New upstream bug fix release
+     - pdftops: Let old HP LaserJet printers (model number without
+       letter, like "LaserJet 3" or "LaserJet 4000") use Poppler
+       instead of Ghostscript (Closes: #742765).
+     - pdftops: Improved workaround for Toshiba printers. Instead
+       of using Poppler do not emit TrueType fonts with Ghostscript
+       (LP: #998087).
+     - cups-browsed: Build the device URIs for all local queues we create
+       with the CUPS library function httpAssembleURIf() for proper
+       percent escaping of characters which are not allowed in URIs
+       (Upstream bug #1187).
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 27 Mar 2014 21:18:05 +0100
+
 cups-filters (1.0.49-1) unstable; urgency=medium
 
   [ Till Kamppeter ]
