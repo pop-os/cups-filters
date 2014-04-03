@@ -1,12 +1,17 @@
-cups-filters (1.0.51-0ubuntu1) trusty; urgency=medium
+cups-filters (1.0.51-1) unstable; urgency=medium
 
   * New upstream bug fix release
      - cups-browsed: SECURITY FIX to prevent arbitrary code
        injection into the System V interface scripts generated for
        queues for discovered native IPP printers by a malicious IPP
        print service with forged make/model and/or PDL string.
+       CVE-2014-2707 (Closes: #743470)
 
- -- Till Kamppeter <till.kamppeter@gmail.com>  Wed,  2 Apr 2014 11:36:06 +0200
+  [ Didier Raboud ]
+  * Add patch to explicitly link to libm as -lm was dropped from
+    cups-config --libs
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 03 Apr 2014 11:11:10 +0200
 
 cups-filters (1.0.50-1) unstable; urgency=medium
 
