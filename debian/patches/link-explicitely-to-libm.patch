@@ -1,0 +1,21 @@
+Description: Link imagetopdf and imagetoraster to libm, as -lm is no longer a given through cups-config --libs
+Author: Didier Raboud <odyx@debian.org>
+Last-Update: 2014-04-03
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -538,6 +538,7 @@
+ 	$(LIBJPEG_LIBS) \
+ 	$(LIBPNG_LIBS) \
+ 	$(TIFF_LIBS) \
++	-lm \
+ 	libcupsfilters.la
+ 
+ imagetoraster_SOURCES = \
+@@ -551,6 +552,7 @@
+ 	-I$(srcdir)/cupsfilters/
+ imagetoraster_LDADD = \
+ 	$(CUPS_LIBS) \
++	-lm \
+ 	libcupsfilters.la
+ 
+ urftopdf_SOURCES = \
