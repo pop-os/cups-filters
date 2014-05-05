@@ -1,1 +1,3 @@
 link-explicitely-to-libm.patch
+CVE-2014-2707-part2.patch
+fix_browseallow.patch
