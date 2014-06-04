@@ -1,3 +1,11 @@
+cups-filters (1.0.53-2) unstable; urgency=medium
+
+  * Re-added ./configure option "--with-pdftops=hybrid" to activate the hybrid
+    rendering mode
+    (LP: #238129, #293832, #1072915, #1053443, #1097105, #1205898, #1326295)
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed,  4 Jun 2014 12:08:06 +0200
+
 cups-filters (1.0.53-1) unstable; urgency=medium
 
   * New upstream bugfix release:
