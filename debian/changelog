@@ -1,3 +1,10 @@
+cups-filters (1.0.52-0ubuntu1.2) trusty-proposed; urgency=low
+
+  * Re-added ./configure option "--with-pdftops=hybrid" to activate
+    the hybrid rendering mode (LP: #1326295).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed,  4 Jun 2014 12:08:06 +0200
+
 cups-filters (1.0.52-0ubuntu1.1) trusty-security; urgency=medium
 
   * SECURITY UPDATE: arbitrary code injection via malicous print servers
