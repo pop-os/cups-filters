@@ -13,6 +13,7 @@ override_dh_auto_configure:
 		--libdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
 		--mandir=/usr/share/man \
 		--enable-static \
+		--with-pdftops=hybrid \
 		--with-test-font-path=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
 
 override_dh_installchangelogs:
