@@ -1,3 +1,17 @@
+cups-filters (1.0.54-1) unstable; urgency=medium
+
+  * New upstream release:
+    - pdftops: Default to "hybrid" setting for the PDF->PostScript
+      renderer
+    - foomatic-rip: Corrected declaration of print_pdf() function in
+      pdf.h file (Closes: #748028)
+    - cups-browsed: Create local queues also to access classes on
+      remote CUPS servers (LP: #1313741)
+  * Drop the ./configure option "--with-pdftops=hybrid" that is now default
+  * Refresh patches
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 09 Jun 2014 11:47:15 +0200
+
 cups-filters (1.0.53-2) unstable; urgency=medium
 
   * Re-added ./configure option "--with-pdftops=hybrid" to activate the hybrid
