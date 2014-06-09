@@ -1,5 +1,54 @@
-NEWS - OpenPrinting CUPS Filters v1.0.53 - 2014-04-25
+NEWS - OpenPrinting CUPS Filters v1.0.54 - 2014-06-06
 -----------------------------------------------------
+
+CHANGES IN V1.0.54
+
+	- pdftoraster: Support for output in the color spaces 18
+	  (CUPS_CSPACE_SW, sGray), 19 (CUPS_CSPACE_SRGB, sRGB), and 20
+	  (CUPS_CSPACE_ADOBERGB, Adobe RGB). No color management
+	  appropriate to these color spaces is added yet.
+	- foomatic-rip, gstoraster, imagetoraster, pdftoraster,
+	  rastertopclx: added boolean option "no-color-management" to
+	  suppress all forms of color correction when
+	  color-calibrating the printer.
+	- pdftops: Default to "hybrid" setting for the PDF->PostScript
+	  renderer.
+	- pdftoraster: Produce correct (compressed) PWG Raster output
+	  when requested by using the correct mode in
+	  cupsRasterOpen().
+	- rastertopdf: Added new filter to convert PWG Raster input
+	  into a PDF file (using QPDF). This filter makes CUPS
+	  supporting the PWG Raster input format which is required to
+	  be supported by IPP Everywhere printers, making a shared
+	  CUPS queue emulating an IPP Everywhere printer. This is a
+	  first implementation which supports the black, RGB, CMYK,
+	  sGray, sRGB, and Adobe RGB color spaces (all mapped to
+	  DeviceGray, DeviceRGB, and DeviceCMYK resp. in the PDF
+	  output) with 1, 8, and 16 bits per component color
+	  depth. sGray, sRGB, and Adobe RGB are currently also mapped
+	  to DeviceGray and DeviceRGB and do not have the correct
+	  color management yet, so color output is not absolutely
+	  correct. Note that mime.types of CUPS up to 1.7.2 has a bug
+	  which prevents PWG Raster to be recognized, the
+	  "priority(100)" of the rule needs to be changed to
+	  "priority(150)".
+	- foomatic-rip: Corrected declaration of print_pdf() function in
+	  pdf.h file (Debian bug #748028).
+	- foomatic-rip: Let it also build with uclibc which does not
+	  provide the mkstemps() function. Thanks to Andreas K.
+	  Huettel for the patch (Gentoo bug #509884).
+	- cups-browsed: Create local queues also to access classes on
+	  remote CUPS servers (Ubuntu bug #1313741).
+	- cups-browsed: Let a newly discovered printer not only
+	  overtaking an existing printer entry if it is from the same
+	  host (usually IPP -> IPPS) or without host entry
+	  (unconfirmed local queue from previous cups-browsed session)
+	  but also if it is marked disappeared. So printer entries get
+	  correctly migrated when things like a host name change of
+	  the remote server happen.
+	- cups-browsed: Always do case-insensitive comparing of
+	  strings, as CUPS queue names and URIs are case-insensitive
+	  (CUPS STR #4411).
 
 CHANGES IN V1.0.53
 
