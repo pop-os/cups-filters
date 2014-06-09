@@ -422,7 +422,8 @@ pkgfilter_PROGRAMS += \
 	rastertoescpx \
 	rastertopclx \
 	texttopdf \
-	urftopdf
+	urftopdf \
+	rastertopdf
 if ENABLE_IMAGEFILTERS
 pkgfilter_PROGRAMS += \
 	imagetopdf \
@@ -561,6 +562,15 @@ urftopdf_SOURCES = \
 urftopdf_CXXFLAGS = \
 	$(LIBQPDF_CFLAGS)
 urftopdf_LDADD = \
+	$(LIBQPDF_LIBS)
+
+rastertopdf_SOURCES = \
+	filter/rastertopdf.cpp
+rastertopdf_CXXFLAGS = \
+	$(CUPS_CFLAGS) \
+	$(LIBQPDF_CFLAGS)
+rastertopdf_LDADD = \
+	$(CUPS_LIBS) \
 	$(LIBQPDF_LIBS)
 
 pdftoijs_SOURCES = \

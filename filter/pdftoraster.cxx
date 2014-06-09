@@ -105,6 +105,7 @@ namespace {
     unsigned int plane, unsigned int pixeli, unsigned char *pixelBuf);
 
   int exitCode = 0;
+  int pwgraster = 0;
   int deviceCopies = 1;
   bool deviceCollate = false;
   cups_page_header2_t header;
@@ -187,6 +188,7 @@ namespace {
   cmsHTRANSFORM colorTransform = NULL;
   cmsCIEXYZ D65WhitePoint;
   int renderingIntent = INTENT_PERCEPTUAL;
+  bool cm_off = false;
 }
 
 #if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 19
@@ -441,13 +443,18 @@ static void parseOpts(int argc, char **argv)
 	}
       }
     }
-    if (getColorProfilePath(ppd,&profilePath)) {
-      /* ICCProfile is specified */
-      colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
+    /* support the "no-color-management" option */
+    if (cupsGetOption("no-color-management", num_options, options) == NULL)
+      cm_off = true;
+    if (!cm_off) {
+      if (getColorProfilePath(ppd,&profilePath)) {
+        /* ICCProfile is specified */
+        colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
+      }
     }
   } else {
 #ifdef HAVE_CUPS_1_7
-    int pwgraster = 1;
+    pwgraster = 1;
     const char *t = cupsGetOption("media-class", num_options, options);
     if (t == NULL)
       t = cupsGetOption("MediaClass", num_options, options);
@@ -731,8 +738,12 @@ static FuncTable specialCaseFuncs[] = {
   {CUPS_CSPACE_KCMY,32,8,rgbToKCMYLine,true,rgbToKCMYLineSwap,true},
   {CUPS_CSPACE_CMY,24,8,rgbToCMYLine,true,rgbToCMYLineSwap,true},
   {CUPS_CSPACE_RGB,24,8,lineNoop,false,lineSwap24,true},
+  {CUPS_CSPACE_SRGB,24,8,lineNoop,false,lineSwap24,true},
+  {CUPS_CSPACE_ADOBERGB,24,8,lineNoop,false,lineSwap24,true},
   {CUPS_CSPACE_W,8,8,lineNoop,false,lineSwapByte,true},
   {CUPS_CSPACE_W,1,1,lineNoop,false,lineSwapBit,true},
+  {CUPS_CSPACE_SW,8,8,lineNoop,false,lineSwapByte,true},
+  {CUPS_CSPACE_SW,1,1,lineNoop,false,lineSwapBit,true},
   {CUPS_CSPACE_WHITE,8,8,lineNoop,false,lineSwapByte,true},
   {CUPS_CSPACE_WHITE,1,1,lineNoop,false,lineSwapBit,true},
   {CUPS_CSPACE_RGB,0,0,NULL,false,NULL,false} /* end mark */
@@ -1414,9 +1425,12 @@ static void selectConvertFunc(cups_raster_t *raster)
       convertCSpace = RGB8toRGBA;
       break;
     case CUPS_CSPACE_RGB:
+    case CUPS_CSPACE_SRGB:
+    case CUPS_CSPACE_ADOBERGB:
       convertCSpace = convertCSpaceNone;
       break;
     case CUPS_CSPACE_W:
+    case CUPS_CSPACE_SW:
     case CUPS_CSPACE_WHITE:
       convertCSpace = convertCSpaceNone;
       break;
@@ -1525,11 +1539,7 @@ static void writePageImage(cups_raster_t *raster, SplashBitmap *bitmap,
         for (unsigned int band = 0;band < nbands;band++) {
           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
                  bytesPerLine);
-          if (cupsRasterWritePixels(raster,dp,bytesPerLine)
-               != bytesPerLine) {
-            pdfError(-1,const_cast<char *>("Can't write page %d image"),pageNo);
-            exit(1);
-          }
+          cupsRasterWritePixels(raster,dp,bytesPerLine);
         }
         bp -= rowsize;
       }
@@ -1544,11 +1554,7 @@ static void writePageImage(cups_raster_t *raster, SplashBitmap *bitmap,
         for (unsigned int band = 0;band < nbands;band++) {
           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
                  bytesPerLine);
-          if (cupsRasterWritePixels(raster,dp,bytesPerLine)
-               != bytesPerLine) {
-            pdfError(-1,const_cast<char *>("Can't write page %d image"),pageNo);
-            exit(1);
-          }
+          cupsRasterWritePixels(raster,dp,bytesPerLine);
         }
         bp += rowsize;
       }
@@ -1777,8 +1783,11 @@ static void setPopplerColorProfile()
     }
     break;
   case CUPS_CSPACE_RGB:
+  case CUPS_CSPACE_SRGB:
+  case CUPS_CSPACE_ADOBERGB:
   case CUPS_CSPACE_K:
   case CUPS_CSPACE_W:
+  case CUPS_CSPACE_SW:
   case CUPS_CSPACE_WHITE:
   case CUPS_CSPACE_GOLD:
   case CUPS_CSPACE_SILVER:
@@ -1926,6 +1935,8 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   case CUPS_CSPACE_RGB:
+  case CUPS_CSPACE_SRGB:
+  case CUPS_CSPACE_ADOBERGB:
   case CUPS_CSPACE_CMY:
   case CUPS_CSPACE_YMC:
   case CUPS_CSPACE_CMYK:
@@ -1947,6 +1958,7 @@ int main(int argc, char *argv[]) {
     break;
   case CUPS_CSPACE_K:
   case CUPS_CSPACE_W:
+  case CUPS_CSPACE_SW:
   case CUPS_CSPACE_WHITE:
   case CUPS_CSPACE_GOLD:
   case CUPS_CSPACE_SILVER:
@@ -1969,7 +1981,9 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  setPopplerColorProfile();
+  if (!cm_off) {
+    setPopplerColorProfile();
+  }
 
   out = new SplashOutputDev(cmode,rowpad/* row padding */,
     gFalse,paperColor,gTrue,gFalse);
@@ -1979,11 +1993,14 @@ int main(int argc, char *argv[]) {
   out->startDoc(doc->getXRef());
 #endif
 
-  if ((raster = cupsRasterOpen(1,CUPS_RASTER_WRITE)) == 0) {
+  if ((raster = cupsRasterOpen(1, pwgraster ? CUPS_RASTER_WRITE_PWG :
+			       CUPS_RASTER_WRITE)) == 0) {
         pdfError(-1,const_cast<char *>("Can't open raster stream"));
 	exit(1);
   }
-  selectConvertFunc(raster);
+  if (!cm_off) {
+    selectConvertFunc(raster);
+  }
   for (i = 1;i <= npages;i++) {
     outPage(doc,catalog,i,out,raster);
   }
