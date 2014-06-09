@@ -97,7 +97,7 @@ pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	gstoraster$(EXEEXT) pdftoijs$(EXEEXT) pdftoippprinter$(EXEEXT) \
 	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
 	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
-	$(am__EXEEXT_1)
+	rastertopdf$(EXEEXT) $(am__EXEEXT_1)
 @ENABLE_IMAGEFILTERS_TRUE@am__append_3 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
@@ -363,6 +363,12 @@ rastertopclx_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 rastertopclx_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rastertopclx_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_rastertopdf_OBJECTS = rastertopdf-rastertopdf.$(OBJEXT)
+rastertopdf_OBJECTS = $(am_rastertopdf_OBJECTS)
+rastertopdf_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+rastertopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(rastertopdf_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_serial_OBJECTS = serial-serial.$(OBJEXT)
 serial_OBJECTS = $(am_serial_OBJECTS)
 serial_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -497,11 +503,12 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(rastertopdf_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
+	$(urftopdf_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
@@ -513,11 +520,12 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(serial_SOURCES) $(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(rastertopdf_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
+	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
+	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
+	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
+	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
+	$(urftopdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1427,6 +1435,17 @@ urftopdf_CXXFLAGS = \
 urftopdf_LDADD = \
 	$(LIBQPDF_LIBS)
 
+rastertopdf_SOURCES = \
+	filter/rastertopdf.cpp
+
+rastertopdf_CXXFLAGS = \
+	$(CUPS_CFLAGS) \
+	$(LIBQPDF_CFLAGS)
+
+rastertopdf_LDADD = \
+	$(CUPS_LIBS) \
+	$(LIBQPDF_LIBS)
+
 pdftoijs_SOURCES = \
 	filter/pdftoijs.cxx \
 	filter/PDFError.h
@@ -2024,6 +2043,10 @@ rastertopclx$(EXEEXT): $(rastertopclx_OBJECTS) $(rastertopclx_DEPENDENCIES) $(EX
 	@rm -f rastertopclx$(EXEEXT)
 	$(AM_V_CCLD)$(rastertopclx_LINK) $(rastertopclx_OBJECTS) $(rastertopclx_LDADD) $(LIBS)
 
+rastertopdf$(EXEEXT): $(rastertopdf_OBJECTS) $(rastertopdf_DEPENDENCIES) $(EXTRA_rastertopdf_DEPENDENCIES) 
+	@rm -f rastertopdf$(EXEEXT)
+	$(AM_V_CXXLD)$(rastertopdf_LINK) $(rastertopdf_OBJECTS) $(rastertopdf_LDADD) $(LIBS)
+
 serial$(EXEEXT): $(serial_OBJECTS) $(serial_DEPENDENCIES) $(EXTRA_serial_DEPENDENCIES) 
 	@rm -f serial$(EXEEXT)
 	$(AM_V_CCLD)$(serial_LINK) $(serial_OBJECTS) $(serial_LDADD) $(LIBS)
@@ -2243,6 +2266,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertoescpx-rastertoescpx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertopclx-pcl-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertopclx-rastertopclx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastertopdf-rastertopdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial-serial.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sfnt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sfnt_subset.Plo@am__quote@
@@ -3566,6 +3590,20 @@ pdftoraster-pdftoraster.obj: filter/pdftoraster.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoraster.cxx' object='pdftoraster-pdftoraster.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoraster_CXXFLAGS) $(CXXFLAGS) -c -o pdftoraster-pdftoraster.obj `if test -f 'filter/pdftoraster.cxx'; then $(CYGPATH_W) 'filter/pdftoraster.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoraster.cxx'; fi`
+
+rastertopdf-rastertopdf.o: filter/rastertopdf.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rastertopdf_CXXFLAGS) $(CXXFLAGS) -MT rastertopdf-rastertopdf.o -MD -MP -MF $(DEPDIR)/rastertopdf-rastertopdf.Tpo -c -o rastertopdf-rastertopdf.o `test -f 'filter/rastertopdf.cpp' || echo '$(srcdir)/'`filter/rastertopdf.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rastertopdf-rastertopdf.Tpo $(DEPDIR)/rastertopdf-rastertopdf.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/rastertopdf.cpp' object='rastertopdf-rastertopdf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rastertopdf_CXXFLAGS) $(CXXFLAGS) -c -o rastertopdf-rastertopdf.o `test -f 'filter/rastertopdf.cpp' || echo '$(srcdir)/'`filter/rastertopdf.cpp
+
+rastertopdf-rastertopdf.obj: filter/rastertopdf.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rastertopdf_CXXFLAGS) $(CXXFLAGS) -MT rastertopdf-rastertopdf.obj -MD -MP -MF $(DEPDIR)/rastertopdf-rastertopdf.Tpo -c -o rastertopdf-rastertopdf.obj `if test -f 'filter/rastertopdf.cpp'; then $(CYGPATH_W) 'filter/rastertopdf.cpp'; else $(CYGPATH_W) '$(srcdir)/filter/rastertopdf.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/rastertopdf-rastertopdf.Tpo $(DEPDIR)/rastertopdf-rastertopdf.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/rastertopdf.cpp' object='rastertopdf-rastertopdf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rastertopdf_CXXFLAGS) $(CXXFLAGS) -c -o rastertopdf-rastertopdf.obj `if test -f 'filter/rastertopdf.cpp'; then $(CYGPATH_W) 'filter/rastertopdf.cpp'; else $(CYGPATH_W) '$(srcdir)/filter/rastertopdf.cpp'; fi`
 
 urftopdf-urftopdf.o: filter/urftopdf.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(urftopdf_CXXFLAGS) $(CXXFLAGS) -MT urftopdf-urftopdf.o -MD -MP -MF $(DEPDIR)/urftopdf-urftopdf.Tpo -c -o urftopdf-urftopdf.o `test -f 'filter/urftopdf.cpp' || echo '$(srcdir)/'`filter/urftopdf.cpp
