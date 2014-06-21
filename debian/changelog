@@ -1,3 +1,13 @@
+cups-filters (1.0.54-2) unstable; urgency=medium
+
+  [ Didier Raboud ]
+  * Install the new rastertopdf filter (Closes: #752146)
+
+  [ Pino Toscano ]
+  * Allow parallel build (Closes: #751196)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 21 Jun 2014 14:41:14 +0200
+
 cups-filters (1.0.54-1) unstable; urgency=medium
 
   * New upstream release:

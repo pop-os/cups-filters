@@ -38,6 +38,7 @@ Build-Depends:
  librsvg2-bin,
 # Needed for tests
  fonts-dejavu-core
+XS-Testsuite: autopkgtest
 Homepage: http://www.openprinting.org/
 Vcs-Git: https://alioth.debian.org/anonscm/git/printing/cups-filters.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=printing/cups-filters.git
