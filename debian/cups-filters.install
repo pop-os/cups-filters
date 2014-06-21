@@ -18,6 +18,7 @@ usr/lib/cups/filter/imagetoraster
 usr/lib/cups/filter/foomatic-rip
 usr/lib/cups/filter/gstopxl
 usr/lib/cups/filter/pstopdf
+usr/lib/cups/filter/rastertopdf
 usr/share/cups/*
 usr/share/ppd/*
 ../*.ppd-updater usr/share/cups/ppd-updaters/
