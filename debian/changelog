@@ -1,3 +1,9 @@
+cups-filters (1.0.54-3) unstable; urgency=medium
+
+  * Brown-paper bag upload without the autopkgtests attempts leftovers.
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 25 Jun 2014 09:49:15 +0200
+
 cups-filters (1.0.54-2) unstable; urgency=medium
 
   [ Didier Raboud ]
