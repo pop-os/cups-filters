@@ -1,7 +1,0 @@
-Tests: cups-filters-core-drivers
-Restrictions: needs-root
-Depends: cups-filters-core-drivers, cups-core-drivers, cups-client
-
-Tests: cups-filters
-Restrictions: needs-root
-Depends: cups-filters, cups, cups-client
