@@ -1,3 +1,18 @@
+cups-filters (1.0.55-1) unstable; urgency=medium
+
+  * New upstream release:
+    - pdftopdf: Fixed manual duplex by adding a blank page to even
+      pages if the total number of pages of the document is
+      odd. Otherwise the last page of the document would stay in
+      the input tray. This fixes also a side effect as the set of
+      even pages reducing to a zero page job if the job consists
+      of only one page, making Poppler's pdftops error out
+      (LP: #1340435)
+    - cups-browsed: Do not create a local queue pointing to a
+      remote raw queue (LP: #1335211).
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 28 Jul 2014 08:44:07 +0200
+
 cups-filters (1.0.54-3) unstable; urgency=medium
 
   * Brown-paper bag upload without the autopkgtests attempts leftovers.
