@@ -53,6 +53,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <cups/raster.h>
 #include <cupsfilters/image.h>
 #include <cupsfilters/raster.h>
+#include <cupsfilters/colord.h>
 #include <splash/SplashTypes.h>
 #include <splash/SplashBitmap.h>
 #include <strings.h>
@@ -188,7 +189,8 @@ namespace {
   cmsHTRANSFORM colorTransform = NULL;
   cmsCIEXYZ D65WhitePoint;
   int renderingIntent = INTENT_PERCEPTUAL;
-  bool cm_off = false;
+  int device_inhibited = 0;
+  bool cm_calibrate = false;
 }
 
 #if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 19
@@ -364,6 +366,7 @@ static void parseOpts(int argc, char **argv)
   int num_options = 0;
   cups_option_t *options = 0;
   GooString profilePath;
+  char tmpstr[1024];
   ppd_attr_t *attr;
 
   if (argc < 6 || argc > 7) {
@@ -443,10 +446,17 @@ static void parseOpts(int argc, char **argv)
 	}
       }
     }
-    /* support the "no-color-management" option */
-    if (cupsGetOption("no-color-management", num_options, options) == NULL)
-      cm_off = true;
-    if (!cm_off) {
+
+    snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
+    device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
+
+    /* support the "cm-calibration" option */
+    if (cupsGetOption("cm-calibration", num_options, options) != NULL) {
+      cm_calibrate = true;
+      device_inhibited = 1;
+    } 
+
+    if (!device_inhibited) {
       if (getColorProfilePath(ppd,&profilePath)) {
         /* ICCProfile is specified */
         colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
@@ -1316,7 +1326,8 @@ static void selectConvertFunc(cups_raster_t *raster)
   }
   allocLineBuf = true;
 
-  if (colorProfile != NULL && popplerColorProfile != colorProfile) {
+  if (colorProfile != NULL && popplerColorProfile != colorProfile 
+      && !device_inhibited) {
     unsigned int bytes;
 
     switch (header.cupsColorSpace) {
@@ -1372,6 +1383,9 @@ static void selectConvertFunc(cups_raster_t *raster)
       pdfError(-1,const_cast<char *>("Can't create color transform"));
       exit(1);
     }
+  } else if (device_inhibited) {
+    convertCSpace = convertCSpaceNone;
+    convertBits = convertBitsNoop;
   } else {
     /* select convertCSpace function */
     switch (header.cupsColorSpace) {
@@ -1837,6 +1851,9 @@ int main(int argc, char *argv[]) {
   globalParams = new GlobalParams();
   parseOpts(argc, argv);
 
+  fprintf(stderr, "DEBUG: Color Management: %s\n", cm_calibrate ?
+          "Calibration Mode/Enabled" : "Calibration Mode/Off");
+
   if (argc == 6) {
     /* stdin */
     int fd;
@@ -1981,7 +1998,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  if (!cm_off) {
+  if (!device_inhibited) {
     setPopplerColorProfile();
   }
 
@@ -1998,9 +2015,7 @@ int main(int argc, char *argv[]) {
         pdfError(-1,const_cast<char *>("Can't open raster stream"));
 	exit(1);
   }
-  if (!cm_off) {
-    selectConvertFunc(raster);
-  }
+  selectConvertFunc(raster);
   for (i = 1;i <= npages;i++) {
     outPage(doc,catalog,i,out,raster);
   }

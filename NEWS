@@ -1,5 +1,53 @@
-NEWS - OpenPrinting CUPS Filters v1.0.54 - 2014-06-06
+NEWS - OpenPrinting CUPS Filters v1.0.55 - 2014-07-27
 -----------------------------------------------------
+
+CHANGES IN V1.0.55
+
+	- pdftopdf: Fixed manual duplex by adding a blank page to evn
+          pages if the total number of pages of the document is
+          odd. Otherwise the last page of the document would stay in
+          the input tray. This fixes also a side effect as the set of
+          even pages reducing to a zero page job if the job consists
+          of only one page, making Poppler's pdftops error out (Ubuntu
+          bug #1340435).
+	- cups-browsed: Do not mark a discovered printer as already
+          provided by another server when the other server's queue has
+          "disappeared" status. This queue can be from the same server
+          before it changed its name.
+	- cups-browsed: Do not create a local queue pointing to a
+	  remote raw queue (Ubuntu bug #1335211).
+	- foomatic-rip, imagetoraster, pdftoraster, rastertopclx,
+	  rastertopdf: Added colord "device_inhibit" support for
+	  color-managed filters.
+	- foomatic-rip: Let it also build correctly on systems which
+	  already provide the strlcat() and strlcpy() functions, like
+	  Mac OS X. Thanks to Matt Broughton for reporting this
+	  (bug #1215).
+	- bannertopdf: Added support for PPD-less printing, especially
+	  one gets a useful test page with PPD-less queues now.
+	- bannertopdf: Fixed "Printer Location" and "Driver Version"
+	  entries on the test page/the banners.
+	- bannertopdf: Added new PDF template files which contain the
+	  text strings appropriate to the banners, before the banners
+	  were all equal, without text. Thanks to Johannes Meixner
+	  from SUSE/Novell for this fix (Bug #1209).
+	- bannertopdf: Fixed Makefile to mark it dependent on
+	  libfontembed.la. Thanks to Tim Waugh from Red Hat for the
+	  patch (Red Hat bug #1106101).
+	- pstopdf: Use "grep -E" instead of "grep -P" as the latter
+	  generates executable code and executes it, requiring
+	  "execmem" privileges which could be not available in some
+	  security policies. Thanks to Tim Waugh from Red Hat for the
+	  patch (Red Hat bug #1079534).
+	- foomatic-rip: NetBSD does not provide a mkstemps() function,
+	  use appropriate workaround then (Bug #1211).
+	- cups-browsed: Reorder inclusion of headers for compatibility
+	  with NetBSD (Bug #1212).
+	- pdftoraster: Fixed segfault caused by introduction of
+	  "no-color-management" option (Bug #1214).
+	- libcupsfilters: Let cupsRasterParseIPPOptions() also accept
+	  "pwg-raster-document-type" settings with hyphen between
+	  color space name and color depth.
 
 CHANGES IN V1.0.54
 
