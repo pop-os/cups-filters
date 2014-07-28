@@ -207,7 +207,13 @@ pkgcupsdata_DATA = \
 	data/form_english_in.odt \
 	data/form_russian_in.odt \
 	data/default-testpage.pdf \
-	data/testprint
+	data/testprint \
+	data/classified.pdf \
+	data/confidential.pdf \
+	data/secret.pdf \
+	data/standard.pdf \
+	data/topsecret.pdf \
+	data/unclassified.pdf
 
 EXTRA_DIST += $(pkgcupsdata_DATA)
 
@@ -467,7 +473,9 @@ bannertopdf_LDADD = \
 	$(FONTCONFIG_LIBS) \
 	libfontembed.la
 
-bannertopdf_DEPENDENCIES = $(GETLINE)
+bannertopdf_DEPENDENCIES = \
+	$(GETLINE) \
+	libfontembed.la
 
 commandtoescpx_SOURCES = \
 	cupsfilters/driver.h \
@@ -566,10 +574,14 @@ rastertopdf_SOURCES = \
 	filter/rastertopdf.cpp
 rastertopdf_CXXFLAGS = \
 	$(CUPS_CFLAGS) \
-	$(LIBQPDF_CFLAGS)
+	$(LCMS_CFLAGS) \
+	$(LIBQPDF_CFLAGS) \
+	-I$(srcdir)/cupsfilters/
 rastertopdf_LDADD = \
 	$(CUPS_LIBS) \
-	$(LIBQPDF_LIBS)
+	$(LCMS_LIBS) \
+	$(LIBQPDF_LIBS) \
+	libcupsfilters.la
 
 pdftoijs_SOURCES = \
 	filter/pdftoijs.cxx \
