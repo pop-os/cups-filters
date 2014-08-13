@@ -1,0 +1,26 @@
+Description: cups-browsed: Do not consider a remote CUPS queue as raw if the
+ TXT record is NULL as for queues broadcasted by the legacy CUPS method the TXT
+ record does not exist. Now consider a queue with NULL TXT record only as raw
+ if the domain entry is not empty (which tells that the queue is
+ Bonjour-broadcasted.
+Bug-Upstream: https://bugs.linuxfoundation.org/show_bug.cgi?id=1223
+Bug-Debian: https://bugs.debian.org/756724
+Author: Till Kamppeter <till.kamppeter@gmail.com>
+Last-Update: 2014-07.29
+
+--- a/utils/cups-browsed.c
++++ b/utils/cups-browsed.c
+@@ -1022,11 +1022,11 @@
+ 	}
+       } else
+ 	raw_queue = 1;
+-    } else
++    } else if (domain && domain[0] != '\0')
+       raw_queue = 1;
+     if (raw_queue) {
+       /* The remote CUPS queue is raw, ignore it */
+-      debug_printf("cups-browsed: Remote CUPS queue %s on host %s is raw, ignored.\n",
++      debug_printf("cups-browsed: Remote Bonjour-advertised CUPS queue %s on host %s is raw, ignored.\n",
+ 		   remote_queue, remote_host);
+       free (remote_host);
+       return;
