@@ -1,1 +1,2 @@
 link-explicitely-to-libm.patch
+fix-rastertopclx-implicit-declaration.patch
