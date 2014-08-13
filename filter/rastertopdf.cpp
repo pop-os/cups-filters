@@ -74,6 +74,7 @@
 #define cmsSig13colorData icSig13colorData
 #define cmsSig14colorData icSig14colorData
 #define cmsSig15colorData icSig15colorData
+#define cmsSaveProfileToMem _cmsSaveProfileToMem
 #else
 #include <lcms2.h>
 #endif
@@ -86,10 +87,7 @@
 
 #define iprintf(format, ...) fprintf(stderr, "INFO: (" PROGRAM ") " format, __VA_ARGS__)
 
-cmsHPROFILE         inputColorProfile = NULL;
-cmsHPROFILE         outputColorProfile = NULL;
-cmsHTRANSFORM       colorTransform = NULL;
-int                 renderingIntent = INTENT_PERCEPTUAL;
+cmsHPROFILE         colorProfile = NULL;
 int                 device_inhibited = 0;
 bool                cm_calibrate = false;
 
@@ -112,6 +110,16 @@ void die(const char * str)
     fprintf(stderr, "ERROR: (" PROGRAM ") %s\n", str);
     exit(1);
 }
+
+// Commonly-used white point and gamma numbers
+double adobergb_wp[3] = {0.95045471, 1.0, 1.08905029};
+double sgray_wp[3] = {0.9420288, 1.0, 0.82490540};
+double adobergb_gamma[3] = {2.2, 2.2, 2.2};
+double sgray_gamma[1] = {2.2};
+double adobergb_matrix[9] = {0.60974121, 0.31111145, 0.01947021, 
+                             0.20527649, 0.62567139, 0.06086731, 
+                             0.14918518, 0.06321716, 0.74456785};
+
 
 //------------- PDF ---------------
 
@@ -161,9 +169,168 @@ QPDFObjectHandle makeBox(double x1, double y1, double x2, double y2)
 
 #define PRE_COMPRESS
 
+// Create an '/ICCBased' array and embed a previously 
+// set ICC Profile in the PDF
+QPDFObjectHandle embedIccProfile(QPDF &pdf)
+{
+    if (colorProfile == NULL) {
+      return QPDFObjectHandle::newNull();
+    }
+    QPDFObjectHandle ret;
+    QPDFObjectHandle array = QPDFObjectHandle::newArray();
+    QPDFObjectHandle iccstream;
+
+    std::map<std::string,QPDFObjectHandle> dict;
+    std::map<std::string,QPDFObjectHandle> streamdict;
+    std::string n_value = "";
+    std::string alternate_cs = "";
+    PointerHolder<Buffer>ph;
+
+#ifdef USE_LCMS1
+    size_t profile_size;
+#else
+    unsigned int profile_size;
+#endif
+
+    cmsColorSpaceSignature css = cmsGetColorSpace(colorProfile);
+
+    // Write color component # for /ICCBased array in stream dictionary
+    switch(css){
+      case cmsSigGrayData:
+        n_value = "1";
+        alternate_cs = "/DeviceGray";
+        break;
+      case cmsSigRgbData:
+        n_value = "3";
+        alternate_cs = "/DeviceRGB";
+        break;
+      case cmsSigCmykData:
+        n_value = "4";
+        alternate_cs = "/DeviceCMYK";
+        break;
+      default:
+        fputs("DEBUG: Failed to embed ICC Profile.\n", stderr);
+        return QPDFObjectHandle::newNull();
+    }
+
+    streamdict["/Alternate"]=QPDFObjectHandle::newName(alternate_cs);
+    streamdict["/N"]=QPDFObjectHandle::newName(n_value);
+
+    // Read profile into memory
+    cmsSaveProfileToMem(colorProfile, NULL, &profile_size);
+    unsigned char buff[profile_size];
+    cmsSaveProfileToMem(colorProfile, buff, &profile_size);
+
+    // Write ICC profile buffer into PDF
+    ph = new Buffer(buff, profile_size);  
+    iccstream = QPDFObjectHandle::newStream(&pdf, ph);
+    iccstream.replaceDict(QPDFObjectHandle::newDictionary(streamdict));
+
+    array.appendItem(QPDFObjectHandle::newName("/ICCBased"));
+    array.appendItem(iccstream);
+
+    // Return a PDF object reference to an '/ICCBased' array
+    ret = pdf.makeIndirectObject(array);
+
+    fputs("DEBUG: ICC Profile embedded in PDF.\n", stderr); 
+
+    return ret;
+}
+
+QPDFObjectHandle embedSrgbProfile(QPDF &pdf)
+{
+    QPDFObjectHandle iccbased_reference;
+
+    // Create an sRGB profile from lcms
+    colorProfile = cmsCreate_sRGBProfile();
+    // Embed it into the profile
+    iccbased_reference = embedIccProfile(pdf);
+
+    return iccbased_reference;
+}
+
+/* 
+Calibration function for non-Lab PDF color spaces 
+Requires white point data, and if available, gamma or matrix numbers.
+
+Output:
+  [/'color_space' 
+     << /Gamma ['gamma[0]'...'gamma[n]']
+        /WhitePoint ['wp[0]' 'wp[1]' 'wp[2]']
+        /Matrix ['matrix[0]'...'matrix[n*n]']
+     >>
+  ]        
+*/
+QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[], 
+                                     double gamma[], double matrix[])
+{    
+    // Check for invalid input
+    if ((!strcmp("/CalGray", color_space) && matrix != NULL) ||
+         wp == NULL)
+      return QPDFObjectHandle();
+
+    QPDFObjectHandle ret;
+    std::string csString = color_space;
+    std::string colorSpaceArrayString = "";
+
+    char gamma_str[128];
+    char wp_str[256];
+    char matrix_str[512];
+
+    // Convert numbers into string data for /Gamma, /WhitePoint, and/or /Matrix
+
+    if (!strcmp("/CalGray", color_space) && gamma != NULL)
+      snprintf(gamma_str, sizeof(gamma_str), "/Gamma %g", 
+                  gamma[0]);
+    else if (!strcmp("/CalRGB", color_space) && gamma != NULL) 
+      snprintf(gamma_str, sizeof(gamma_str), "/Gamma [%g %g %g]", 
+                  gamma[0], gamma[1], gamma[2]); 
+    else
+      gamma_str[0] = '\0';
+    
+    if (wp != NULL)
+      snprintf(wp_str, sizeof(wp_str), "/WhitePoint [%g %g %g]", 
+                  wp[0], wp[1], wp[2]); 
+    else
+      wp_str[0] = '\0';
+
+
+    if (!strcmp("/CalRGB", color_space) && matrix != NULL) {
+      snprintf(matrix_str, sizeof(matrix_str), "/Matrix [%g %g %g %g %g %g %g %g %g]", 
+                  matrix[0], matrix[1], matrix[2],
+                  matrix[3], matrix[4], matrix[5],
+                  matrix[6], matrix[7], matrix[8]);
+    } else
+      matrix_str[0] = '\0';
+
+    // Write array string
+    colorSpaceArrayString = "[" + csString + " <<" 
+                            + gamma_str + " " + wp_str + " " + matrix_str
+                            + " >>]";
+                           
+    ret = QPDFObjectHandle::parse(colorSpaceArrayString);
+
+    return ret;
+}
+
+QPDFObjectHandle getCalRGBArray(double wp[3], double gamma[3], double matrix[9])
+{
+    QPDFObjectHandle ret = getCalibrationArray("/CalRGB", wp, gamma, matrix);
+    return ret;
+}
+
+QPDFObjectHandle getCalGrayArray(double wp[3], double gamma[1])
+{
+    QPDFObjectHandle ret = getCalibrationArray("/CalGray", wp, gamma, 0);
+    return ret;
+}
+
 QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned width, unsigned height, cups_cspace_t cs, unsigned bpc)
 {
     QPDFObjectHandle ret = QPDFObjectHandle::newStream(&pdf);
+
+    QPDFObjectHandle icc_ref;
+    int isProfileEmbedded = 0;
 
     std::map<std::string,QPDFObjectHandle> dict;
 
@@ -173,48 +340,93 @@ QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned 
     dict["/Height"]=QPDFObjectHandle::newInteger(height);
     dict["/BitsPerComponent"]=QPDFObjectHandle::newInteger(bpc);
 
-    /* TODO Adjust for color calibration */
-    if (!device_inhibited) {
-        switch (cs) {       
-            case CUPS_CSPACE_CIELab:
-            case CUPS_CSPACE_ICC1:
-            case CUPS_CSPACE_ICC2:
-            case CUPS_CSPACE_ICC3:
-            case CUPS_CSPACE_ICC4:
-            case CUPS_CSPACE_ICC5:
-            case CUPS_CSPACE_ICC6:
-            case CUPS_CSPACE_ICC7:
-            case CUPS_CSPACE_ICC8:
-            case CUPS_CSPACE_ICC9:
-            case CUPS_CSPACE_ICCA:
-            case CUPS_CSPACE_ICCB:
-            case CUPS_CSPACE_ICCC:
-            case CUPS_CSPACE_ICCD:
-            case CUPS_CSPACE_ICCE:
-            case CUPS_CSPACE_ICCF:
-            case CUPS_CSPACE_CIEXYZ:
-                dict["/ColorSpace"]=QPDFObjectHandle::newName("/CalRGB");
+    if (colorProfile != NULL && !device_inhibited) {
+      icc_ref = embedIccProfile(pdf);
+
+      if (!icc_ref.isNull()) {
+        dict["/ColorSpace"]=icc_ref;
+        isProfileEmbedded = 1;
+      }
+    } else if (!device_inhibited) {
+        switch (cs) {
+            case CUPS_CSPACE_DEVICE1:
+            case CUPS_CSPACE_DEVICE2:
+            case CUPS_CSPACE_DEVICE3:
+            case CUPS_CSPACE_DEVICE4:
+            case CUPS_CSPACE_DEVICE5:
+            case CUPS_CSPACE_DEVICE6:
+            case CUPS_CSPACE_DEVICE7:
+            case CUPS_CSPACE_DEVICE8:
+            case CUPS_CSPACE_DEVICE9:
+            case CUPS_CSPACE_DEVICEA:
+            case CUPS_CSPACE_DEVICEB:
+            case CUPS_CSPACE_DEVICEC:
+            case CUPS_CSPACE_DEVICED:
+            case CUPS_CSPACE_DEVICEE:
+            case CUPS_CSPACE_DEVICEF:
+                // For right now, DeviceN will use /DeviceCMYK in the PDF
+                dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceCMYK");
                 break;
             case CUPS_CSPACE_K:
-            case CUPS_CSPACE_W:
-            case CUPS_CSPACE_SW:
-            case CUPS_CSPACE_WHITE:
                 dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceGray");
+                break;
+            case CUPS_CSPACE_SW:                
+                dict["/ColorSpace"]=getCalGrayArray(sgray_wp, sgray_gamma);
                 break;
             case CUPS_CSPACE_CMYK:
                 dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceCMYK");
                 break;
             case CUPS_CSPACE_RGB:
-            case CUPS_CSPACE_SRGB:
-            case CUPS_CSPACE_ADOBERGB:
                 dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceRGB");
                 break;
-            default: 
+            case CUPS_CSPACE_SRGB:
+                icc_ref = embedSrgbProfile(pdf);
+                if (!icc_ref.isNull())
+                  dict["/ColorSpace"]=icc_ref;
+                else 
+                  dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceRGB");
+                break;
+            case CUPS_CSPACE_ADOBERGB:
+                dict["/ColorSpace"]=getCalRGBArray(adobergb_wp, adobergb_gamma, adobergb_matrix);
+                break;
+            default:
+                fputs("DEBUG: Color space not supported.\n", stderr); 
                 return QPDFObjectHandle();
         }
     } else if (device_inhibited) {
-        dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceRGB");
-    } else 
+        switch(cs) {
+          case CUPS_CSPACE_K:
+          case CUPS_CSPACE_SW:
+            dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceGray");
+            break;
+          case CUPS_CSPACE_RGB:
+          case CUPS_CSPACE_SRGB:
+          case CUPS_CSPACE_ADOBERGB:
+            dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceRGB");
+            break;
+          case CUPS_CSPACE_DEVICE1:
+          case CUPS_CSPACE_DEVICE2:
+          case CUPS_CSPACE_DEVICE3:
+          case CUPS_CSPACE_DEVICE4:
+          case CUPS_CSPACE_DEVICE5:
+          case CUPS_CSPACE_DEVICE6:
+          case CUPS_CSPACE_DEVICE7:
+          case CUPS_CSPACE_DEVICE8:
+          case CUPS_CSPACE_DEVICE9:
+          case CUPS_CSPACE_DEVICEA:
+          case CUPS_CSPACE_DEVICEB:
+          case CUPS_CSPACE_DEVICEC:
+          case CUPS_CSPACE_DEVICED:
+          case CUPS_CSPACE_DEVICEE:
+          case CUPS_CSPACE_DEVICEF:
+          case CUPS_CSPACE_CMYK:
+            dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceCMYK");
+            break;
+          default:
+            fputs("DEBUG: Color space not supported.\n", stderr); 
+            return QPDFObjectHandle();
+        }
+    } else
         return QPDFObjectHandle();
 
     ret.replaceDict(QPDFObjectHandle::newDictionary(dict));
@@ -336,10 +548,9 @@ int convert_raster(cups_raster_t *ras, unsigned width, unsigned height,
 		   int bpp, int bpl, struct pdf_info * info)
 {
     // We should be at raster start
-    int i, pixels;
+    int i;
     unsigned cur_line = 0;
     unsigned char *PixelBuffer, *ptr;
-    unsigned char * TransformBuffer = NULL;
 
     PixelBuffer = (unsigned char *)malloc(bpl);
 
@@ -369,200 +580,81 @@ int convert_raster(cups_raster_t *ras, unsigned width, unsigned height,
 	}
 
 #endif /* !ARCH_IS_BIG_ENDIAN */
-        
-        // write lines        
-        if (colorTransform != NULL && !device_inhibited) {
-          // If a profile was specified, we apply the transformation
-          TransformBuffer = (unsigned char *)malloc(bpl);
-          pixels = bpl / (info->bpp / info->bpc);
 
-          cmsDoTransform(colorTransform, PixelBuffer, 
-                         TransformBuffer, pixels); 
-          pdf_set_line(info, cur_line, TransformBuffer);          
-        } else 
-  	  pdf_set_line(info, cur_line, PixelBuffer);
+        // write lines
+ 	pdf_set_line(info, cur_line, PixelBuffer);
 
 	++cur_line;
     }
     while(cur_line < height);
 
     free(PixelBuffer);
-    if (TransformBuffer != NULL)
-      free(TransformBuffer);
 
     return 0;
-}
-
-static unsigned int getCMSColorSpaceType(cmsColorSpaceSignature cs)
-{
-    switch (cs) {
-    case cmsSigXYZData:
-      return PT_XYZ;
-      break;
-    case cmsSigLabData:
-      return PT_Lab;
-      break;
-    case cmsSigLuvData:
-      return PT_YUV;
-      break;
-    case cmsSigYCbCrData:
-      return PT_YCbCr;
-      break;
-    case cmsSigYxyData:
-      return PT_Yxy;
-      break;
-    case cmsSigRgbData:
-      return PT_RGB;
-      break;
-    case cmsSigGrayData:
-      return PT_GRAY;
-      break;
-    case cmsSigHsvData:
-      return PT_HSV;
-      break;
-    case cmsSigHlsData:
-      return PT_HLS;
-      break;
-    case cmsSigCmykData:
-      return PT_CMYK;
-      break;
-    case cmsSigCmyData:
-      return PT_CMY;
-      break;
-    case cmsSig2colorData:
-    case cmsSig3colorData:
-    case cmsSig4colorData:
-    case cmsSig5colorData:
-    case cmsSig6colorData:
-    case cmsSig7colorData:
-    case cmsSig8colorData:
-    case cmsSig9colorData:
-    case cmsSig10colorData:
-    case cmsSig11colorData:
-    case cmsSig12colorData:
-    case cmsSig13colorData:
-    case cmsSig14colorData:
-    case cmsSig15colorData:
-    default:
-      break;
-    }
-    return PT_RGB;
 }
 
 int setProfile(const char * path) 
 {
     if (path != NULL) 
-      inputColorProfile = cmsOpenProfileFromFile(path,"r");
- 
-    if (inputColorProfile != NULL)
-      // test using sRGB Profile
-      outputColorProfile = cmsCreate_sRGBProfile();
+      colorProfile = cmsOpenProfileFromFile(path,"r");
 
-    if (inputColorProfile != NULL && outputColorProfile != NULL)
+    if (colorProfile != NULL) {
+      fputs("DEBUG: Load profile successful.\n", stderr); 
       return 0;
-    else
+    }
+    else {
+      fputs("DEBUG: Unable to load profile.\n", stderr); 
       return 1;
+    }
 }
 
-/* Obtain a source profile using color qualifiers */
-int setCupsColorProfile(ppd_file_t* ppd, const char* cupsRenderingIntent, 
-                    const char * mediaType, cups_cspace_t cs, unsigned xdpi, unsigned ydpi)
+/* Obtain a source profile name using color qualifiers from raster file */
+const char * getIPPColorProfileName(const char * media_type, cups_cspace_t cs, unsigned dpi)
 {
-    std::string MediaType;
-    std::string resolution;
-    std::string colorModel;
+    std::string mediaType = "";
+    std::string resolution = "";
+    std::string colorModel = "";
    
-    std::string path;
-    ppd_attr_t *attr;
-
-    if (ppd == NULL) {
-        return 1;
-    }      
-
-    if (cupsRenderingIntent != NULL) {
-        if (strcasecmp(cupsRenderingIntent,"PERCEPTUAL") != 0) {
-  	    renderingIntent = INTENT_PERCEPTUAL;
-        } else if (strcasecmp(cupsRenderingIntent,"RELATIVE_COLORIMETRIC") != 0) {
-  	  renderingIntent = INTENT_RELATIVE_COLORIMETRIC;
-        } else if (strcasecmp(cupsRenderingIntent,"SATURATION") != 0) {
-	  renderingIntent = INTENT_SATURATION;
-        } else if (strcasecmp(cupsRenderingIntent,"ABSOLUTE_COLORIMETRIC") != 0) {
-	  renderingIntent = INTENT_ABSOLUTE_COLORIMETRIC;
-        }
-      }
+    std::string iccProfile = "";
 
     // ColorModel
     switch (cs) {
         case CUPS_CSPACE_RGB:
-            colorModel = "Rgb";
+            colorModel = "rgb";
             break;
         case CUPS_CSPACE_SRGB:
-            colorModel = "Srgb";
+            colorModel = "srgb";
             break;
         case CUPS_CSPACE_ADOBERGB:
-            colorModel = "AdobeRgb";
+            colorModel = "adobergb";
             break;
         case CUPS_CSPACE_K:
-            colorModel = "Sgray";
+            colorModel = "gray";
             break;
         case CUPS_CSPACE_CMYK:
-            colorModel = "Cmyk";
+            colorModel = "cmyk";
             break;
         default:
             colorModel = "";
             break;
      }
+ 
+    if (media_type != NULL)
+      mediaType = media_type;
+    if (dpi > 0)
+      resolution = dpi;
 
-    // Resolution
-    resolution = xdpi + "x" + ydpi;
+    // Requires color space and media type qualifiers
+    if (resolution != "" || colorModel != "")
+      return 0;
 
-    // MediaType
-    if (mediaType != NULL)
-      MediaType = mediaType;
+    // profile-uri reference: "http://www.server.com/colorModel-Resolution-mediaType.icc
+    if (mediaType != "")          
+      iccProfile = colorModel + "-" + resolution + ".icc";
+    else 
+      iccProfile = colorModel + "-" + resolution + "-" + mediaType + ".icc";
 
-    for (attr = ppdFindAttr(ppd,"cupsICCProfile",NULL);attr != NULL;
-       attr = ppdFindNextAttr(ppd,"cupsICCProfile",NULL)) {
-	// check color model
-	char buf[PPD_MAX_NAME];
-	char *p, *r;
-
-	strncpy(buf,attr->spec,sizeof(buf));
-	if ((p = strchr(buf,'.')) != NULL) {
-	    *p = '\0';
-	}
-	if (!colorModel.empty() && buf[0] != '\0'
-	    && strcasecmp(buf,colorModel.c_str()) != 0) continue;
-	if (p == NULL) {
-	    break;
-	} else {
-	    p++;
-	    if ((r = strchr(p,'.')) != 0) {
-		*r = '\0';
-	    }
-	}
-	if (!resolution.empty() && p[0] != '\0'
-	    && strcasecmp(p,resolution.c_str()) != 0) continue;
-	if (r == NULL) {
-	    break;
-	} else {
-	    r++;
-	    if ((p = strchr(r,'.')) != 0) {
-		*p = '\0';
-	    }
-	}
-	if (!MediaType.empty() || r[0] == '\0'
-	    || strcasecmp(r,MediaType.c_str()) == 0) break;
-        }
-    if (attr != NULL) {
-	// matched
-	path = "";
-	if (attr->value[0] != '/') {
-	    path = path + CUPS_DATADIR + "/profiles/";
-	}
-	path = path + CUPS_DATADIR + attr->value;
-    }
-
-    return setProfile(path.c_str());
+    return iccProfile.c_str();
 }
 
 int main(int argc, char **argv)
@@ -574,9 +666,9 @@ int main(int argc, char **argv)
     cups_page_header2_t	header;		/* Page header from file */
     ppd_file_t		*ppd;		/* PPD file */
     int			num_options;	/* Number of options */
+    const char*         profile_name;	/* IPP Profile Name */
     cups_option_t	*options;	/* Options */
-    const char		*val;		/* Option value */
-    char                tmpstr[1024];
+    char                tmpstr[1024];   /* Printer name */
 
     // Make sure status messages are not buffered...
     setbuf(stderr, NULL);
@@ -591,13 +683,15 @@ int main(int argc, char **argv)
 
     num_options = cupsParseOptions(argv[5], 0, &options);  
 
-    snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
-    device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
-
-    /* support the "cm-calibration" option */ 
+    /* support the CUPS "cm-calibration" option */ 
     if (cupsGetOption("cm-calibration", num_options, options) != NULL) {
       cm_calibrate = true;
       device_inhibited = 1;
+    } else {
+      /* Check color manager status */
+      snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
+      device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
+      // device_inhibited = isDeviceCm(tmpstr);
     }
 
     // Open the PPD file...
@@ -651,28 +745,14 @@ int main(int argc, char **argv)
       Page ++;
       fprintf(stderr, "INFO: Starting page %d.\n", Page);
 
-      // Set profile from PPD and raster header
       if (!device_inhibited) {
-          // Set user profile from command-line
-          if ((val = cupsGetOption("profile", num_options, options)) != NULL) {
-            setProfile(val);
-          } /* else if (setCupsColorProfile(ppd, header.cupsRenderingIntent, 
-                              header.MediaType, header.cupsColorSpace, 
-                              header.HWResolution[0], header.HWResolution[1]) != 0)  {            
-          } */
-
-          // TESTING create color transformation
-          if (inputColorProfile != NULL && outputColorProfile != NULL) {
-             /* TODO apply conversion by other cases (color space) */
-             unsigned int bytes = header.cupsBitsPerColor/8;
-             unsigned int dcst = getCMSColorSpaceType(cmsGetColorSpace(inputColorProfile));
-             colorTransform = cmsCreateTransform(inputColorProfile,
-                COLORSPACE_SH(dcst) |CHANNELS_SH(header.cupsNumColors) | BYTES_SH(bytes),
-                outputColorProfile,
-                COLORSPACE_SH(PT_RGB) |
-                CHANNELS_SH(3) | BYTES_SH(1),
-                renderingIntent,0);
-          }
+          // Use "profile=profile_name.icc" to embed 'profile_name.icc' into the PDF
+          // for testing.
+          if ((profile_name = cupsGetOption("profile", num_options, options)) != NULL) 
+            setProfile(profile_name);          
+          
+          fprintf(stderr, "DEBUG: ICC Profile: %s\n", !colorProfile ?
+          "None" : profile_name);
       }
       // Add a new page to PDF file
       if (add_pdf_page(&pdf, Page, header.cupsWidth, header.cupsHeight,
@@ -691,14 +771,8 @@ int main(int argc, char **argv)
 
     close_pdf_file(&pdf); // will output to stdout
 
-    if (inputColorProfile != NULL) {
-      cmsCloseProfile(inputColorProfile);
-    }
-    if (outputColorProfile != NULL && outputColorProfile != inputColorProfile) {
-      cmsCloseProfile(outputColorProfile);
-    }
-    if (colorTransform != NULL) {
-      cmsDeleteTransform(colorTransform);
+    if (colorProfile != NULL) {
+      cmsCloseProfile(colorProfile);
     }
 
     cupsFreeOptions(num_options, options);
