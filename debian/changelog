@@ -1,3 +1,10 @@
+cups-filters (1.0.55-2) unstable; urgency=medium
+
+  * Backport upstream patch to fix cups-browsed detection of remote CUPS queues
+    (Closes: #756724)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 13 Aug 2014 13:21:45 +0200
+
 cups-filters (1.0.55-1) unstable; urgency=medium
 
   * New upstream release:
