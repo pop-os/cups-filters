@@ -1,0 +1,14 @@
+Description: Fix implicit declaration of function
+ ‘colord_get_inhibit_for_device_id‘ through inclusion of colord.h
+Author: Didier Raboud <odyx@debian.org>
+Last-Update: 2014-08-13
+--- a/filter/rastertopclx.c
++++ b/filter/rastertopclx.c
+@@ -30,6 +30,7 @@
+  */
+ 
+ #include <cupsfilters/driver.h>
++#include <cupsfilters/colord.h>
+ #include "pcl-common.h"
+ #include <signal.h>
+ 
