@@ -1,3 +1,14 @@
+cups-filters (1.0.56-1) unstable; urgency=medium
+
+  * New upstream release
+  * Patches:
+    - Drop the backported upstream Backport upstream patch to fix cups-browsed
+      detection of remote CUPS queues, was from this version
+    - Add patch to fix implicit declaration of colord_get_inhibit_for_device_id
+      in rastertopclx
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 13 Aug 2014 17:17:56 +0200
+
 cups-filters (1.0.55-2) unstable; urgency=medium
 
   * Backport upstream patch to fix cups-browsed detection of remote CUPS queues
