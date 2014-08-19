@@ -1,3 +1,13 @@
+cups-filters (1.0.57-1ubuntu1) utopic; urgency=medium
+
+  * Added ippusbxd (Support for IPP-over-USB printers) temporarily in
+    debian/local/ippusbxd, generating the new binary package
+    cups-filters-ippusbxd. This serves only to get ippusbxd into Utopic
+    before Feature Freeze. It will be removed again as soon as a proper
+    Debian package for ippusbxd is created.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 19 Aug 2014 13:51:06 +0200
+
 cups-filters (1.0.57-1) unstable; urgency=medium
 
   * Imported Upstream version 1.0.57
