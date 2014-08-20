@@ -15,6 +15,19 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  _cupsImageZoomFill@Base 1.0~b1
  _cupsImageZoomNew@Base 1.0~b1
  _strlcpy@Base 1.0.36
+ adobergb_gamma@Base 1.0.58-0ubuntu1
+ adobergb_matrix@Base 1.0.58-0ubuntu1
+ adobergb_wp@Base 1.0.58-0ubuntu1
+ blackpoint_default@Base 1.0.58-0ubuntu1
+ cmBlackPointDefault@Base 1.0.58-0ubuntu1
+ cmGammaAdobeRgb@Base 1.0.58-0ubuntu1
+ cmGammaSGray@Base 1.0.58-0ubuntu1
+ cmGetCupsColorCalibrateMode@Base 1.0.58-0ubuntu1
+ cmGetPrinterIccProfile@Base 1.0.58-0ubuntu1
+ cmIsPrinterCmDisabled@Base 1.0.58-0ubuntu1
+ cmMatrixAdobeRgb@Base 1.0.58-0ubuntu1
+ cmWhitePointAdobeRgb@Base 1.0.58-0ubuntu1
+ cmWhitePointSGray@Base 1.0.58-0ubuntu1
  colord_get_inhibit_for_device_id@Base 1.0.42
  colord_get_profile_for_device_id@Base 1.0.42
  colord_get_qualifier_for_ppd@Base 1.0.42
@@ -87,3 +100,5 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  sgiOpen@Base 1.0~b1
  sgiOpenFile@Base 1.0~b1
  sgiPutRow@Base 1.0~b1
+ sgray_gamma@Base 1.0.58-0ubuntu1
+ sgray_wp@Base 1.0.58-0ubuntu1
