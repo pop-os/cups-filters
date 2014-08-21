@@ -32,8 +32,8 @@
 #include <signal.h>
 #include <cups/cups.h>
 #include <cups/raster.h>
-#include <cupsfilters/colord.h>
-//#include <cupsfilters/image.h>
+#include <cupsfilters/colormanager.h>
+#include <cupsfilters/image.h>
 
 #include <arpa/inet.h>   // ntohl
 
@@ -87,9 +87,24 @@
 
 #define iprintf(format, ...) fprintf(stderr, "INFO: (" PROGRAM ") " format, __VA_ARGS__)
 
-cmsHPROFILE         colorProfile = NULL;
-int                 device_inhibited = 0;
-bool                cm_calibrate = false;
+
+// Color conversion function
+typedef unsigned char *(*convertFunction)(unsigned char *src,
+  unsigned char *dst, unsigned int pixels);
+
+// Bit conversion function
+typedef unsigned char *(*bitFunction)(unsigned char *src,
+  unsigned char *dst, unsigned int pixels);
+
+// PDF color conversion function
+typedef void (*pdfConvertFunction)(struct pdf_info * info);
+
+cmsHPROFILE         colorProfile = NULL;     // ICC Profile to be applied to PDF
+int                 cm_disabled = 0;         // Flag rasied if color management is disabled 
+cm_calibration_t    cm_calibrate;            // Status of CUPS color management ("on" or "off")
+convertFunction     conversion_function;     // Raster color conversion function
+bitFunction         bit_function;            // Raster bit function
+
 
 #ifdef USE_LCMS1
 static int lcmsErrorHandler(int ErrorCode, const char *ErrorText)
@@ -105,20 +120,77 @@ static void lcmsErrorHandler(cmsContext contextId, cmsUInt32Number ErrorCode,
 }
 #endif
 
+
+
+// Bit conversion functions
+
+unsigned char *invertBits(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{ 
+    unsigned int i;
+
+    // Invert black to grayscale...
+    for (i = pixels, dst = src; i > 0; i --, dst ++)
+      *dst = ~*dst;
+
+    return dst;
+}	
+
+unsigned char *noBitConversion(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    return src;
+}
+
+// Color conversion functions
+
+unsigned char *rgbToCmyk(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageRGBToCMYK(src,dst,pixels);
+    return dst;
+}
+unsigned char *whiteToCmyk(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageWhiteToCMYK(src,dst,pixels);
+    return dst;
+}
+
+unsigned char *cmykToRgb(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageCMYKToRGB(src,dst,pixels);
+    return dst;
+}
+
+unsigned char *whiteToRgb(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageWhiteToRGB(src,dst,pixels);
+    return dst;
+}
+
+unsigned char *rgbToWhite(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageRGBToWhite(src,dst,pixels);
+    return dst;
+}
+
+unsigned char *cmykToWhite(unsigned char *src, unsigned char *dst, unsigned int pixels)
+{
+    cupsImageCMYKToWhite(src,dst,pixels);
+    return dst;
+}
+
+unsigned char *noColorConversion(unsigned char *src,
+  unsigned char *dst, unsigned int pixels)
+{
+    return src;
+}
+
+
+
+
 void die(const char * str)
 {
     fprintf(stderr, "ERROR: (" PROGRAM ") %s\n", str);
     exit(1);
 }
-
-// Commonly-used white point and gamma numbers
-double adobergb_wp[3] = {0.95045471, 1.0, 1.08905029};
-double sgray_wp[3] = {0.9505, 1, 1.0890};
-double adobergb_gamma[3] = {2.2, 2.2, 2.2};
-double sgray_gamma[1] = {2.2};
-double adobergb_matrix[9] = {0.60974121, 0.31111145, 0.01947021, 
-                             0.20527649, 0.62567139, 0.06086731, 
-                             0.14918518, 0.06321716, 0.74456785};
 
 
 //------------- PDF ---------------
@@ -129,7 +201,8 @@ struct pdf_info
       : pagecount(0),
         width(0),height(0),
         line_bytes(0),
-        bpp(0), bpc(0), color_space(CUPS_CSPACE_K),
+        bpp(0), bpc(0), render_intent(""),
+        color_space(CUPS_CSPACE_K),
         page_width(0),page_height(0)
     {
     }
@@ -142,6 +215,7 @@ struct pdf_info
     unsigned line_bytes;
     unsigned bpp;
     unsigned bpc;
+    std::string render_intent;
     cups_cspace_t color_space;
     PointerHolder<Buffer> page_data;
     double page_width,page_height;
@@ -167,6 +241,80 @@ QPDFObjectHandle makeBox(double x1, double y1, double x2, double y2)
     return ret;
 }
 
+
+
+
+
+// PDF color conversion functons...
+
+void modify_pdf_color(struct pdf_info * info, int bpp, int bpc, convertFunction fn)
+{
+    unsigned old_bpp = info->bpp;
+    unsigned old_bpc = info->bpc;
+    double old_ncolor = old_bpp/old_bpc;
+
+    unsigned old_line_bytes = info->line_bytes;
+
+    double new_ncolor = (bpp/bpc);
+
+    info->line_bytes = (unsigned)old_line_bytes*(new_ncolor/old_ncolor);
+    info->bpp = bpp;
+    info->bpc = bpc;
+    conversion_function = fn; 
+
+    return;
+}
+
+void convertPdf_NoConversion(struct pdf_info * info)
+{
+    conversion_function = noColorConversion;
+    bit_function = noBitConversion;
+}
+
+void convertPdf_Cmyk8ToWhite8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 8, 8, cmykToWhite);
+    bit_function = noBitConversion;
+}
+
+void convertPdf_Rgb8ToWhite8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 8, 8, rgbToWhite);
+    bit_function = noBitConversion;
+}
+
+void convertPdf_Cmyk8ToRgb8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 24, 8, cmykToRgb);
+    bit_function = noBitConversion;
+}
+
+void convertPdf_White8ToRgb8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 24, 8, whiteToRgb);
+    bit_function = invertBits;
+}
+
+void convertPdf_Rgb8ToCmyk8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 32, 8, rgbToCmyk);
+    bit_function = noBitConversion;
+}
+
+void convertPdf_White8ToCmyk8(struct pdf_info * info)
+{
+    modify_pdf_color(info, 32, 8, whiteToCmyk);
+    bit_function = invertBits;
+}
+
+void convertPdf_InvertColors(struct pdf_info * info)
+{
+    conversion_function = noColorConversion;
+    bit_function = invertBits;
+}
+
+
+
 #define PRE_COMPRESS
 
 // Create an '/ICCBased' array and embed a previously 
@@ -176,8 +324,12 @@ QPDFObjectHandle embedIccProfile(QPDF &pdf)
     if (colorProfile == NULL) {
       return QPDFObjectHandle::newNull();
     }
+    
+    // Return handler
     QPDFObjectHandle ret;
+    // ICCBased array
     QPDFObjectHandle array = QPDFObjectHandle::newArray();
+    // Profile stream dictionary
     QPDFObjectHandle iccstream;
 
     std::map<std::string,QPDFObjectHandle> dict;
@@ -262,7 +414,7 @@ Output:
   ]        
 */
 QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[], 
-                                     double gamma[], double matrix[])
+                                     double gamma[], double matrix[], double bp[])
 {    
     // Check for invalid input
     if ((!strcmp("/CalGray", color_space) && matrix != NULL) ||
@@ -274,11 +426,20 @@ QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[],
     std::string colorSpaceArrayString = "";
 
     char gamma_str[128];
+    char bp_str[256];
     char wp_str[256];
     char matrix_str[512];
 
+
     // Convert numbers into string data for /Gamma, /WhitePoint, and/or /Matrix
 
+
+    // WhitePoint
+    snprintf(wp_str, sizeof(wp_str), "/WhitePoint [%g %g %g]", 
+                wp[0], wp[1], wp[2]); 
+
+
+    // Gamma
     if (!strcmp("/CalGray", color_space) && gamma != NULL)
       snprintf(gamma_str, sizeof(gamma_str), "/Gamma %g", 
                   gamma[0]);
@@ -288,13 +449,16 @@ QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[],
     else
       gamma_str[0] = '\0';
     
-    if (wp != NULL)
-      snprintf(wp_str, sizeof(wp_str), "/WhitePoint [%g %g %g]", 
-                  wp[0], wp[1], wp[2]); 
+
+    // BlackPoint
+    if (bp != NULL)
+      snprintf(bp_str, sizeof(bp_str), "/BlackPoint [%g %g %g]", 
+                  bp[0], bp[1], bp[2]); 
     else
-      wp_str[0] = '\0';
+      bp_str[0] = '\0';
 
 
+    // Matrix
     if (!strcmp("/CalRGB", color_space) && matrix != NULL) {
       snprintf(matrix_str, sizeof(matrix_str), "/Matrix [%g %g %g %g %g %g %g %g %g]", 
                   matrix[0], matrix[1], matrix[2],
@@ -303,9 +467,10 @@ QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[],
     } else
       matrix_str[0] = '\0';
 
-    // Write array string
+
+    // Write array string...
     colorSpaceArrayString = "[" + csString + " <<" 
-                            + gamma_str + " " + wp_str + " " + matrix_str
+                            + gamma_str + " " + wp_str + " " + matrix_str + " " + bp_str
                             + " >>]";
                            
     ret = QPDFObjectHandle::parse(colorSpaceArrayString);
@@ -313,25 +478,26 @@ QPDFObjectHandle getCalibrationArray(const char * color_space, double wp[],
     return ret;
 }
 
-QPDFObjectHandle getCalRGBArray(double wp[3], double gamma[3], double matrix[9])
+QPDFObjectHandle getCalRGBArray(double wp[3], double gamma[3], double matrix[9], double bp[3])
 {
-    QPDFObjectHandle ret = getCalibrationArray("/CalRGB", wp, gamma, matrix);
+    QPDFObjectHandle ret = getCalibrationArray("/CalRGB", wp, gamma, matrix, bp);
     return ret;
 }
 
-QPDFObjectHandle getCalGrayArray(double wp[3], double gamma[1])
+QPDFObjectHandle getCalGrayArray(double wp[3], double gamma[1], double bp[3])
 {
-    QPDFObjectHandle ret = getCalibrationArray("/CalGray", wp, gamma, 0);
+    QPDFObjectHandle ret = getCalibrationArray("/CalGray", wp, gamma, 0, bp);
     return ret;
 }
 
-QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned width, unsigned height, cups_cspace_t cs, unsigned bpc)
+QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned width, 
+                           unsigned height, std::string render_intent, cups_cspace_t cs, unsigned bpc)
 {
     QPDFObjectHandle ret = QPDFObjectHandle::newStream(&pdf);
 
     QPDFObjectHandle icc_ref;
-    int isProfileEmbedded = 0;
 
+    int use_blackpoint = 0;
     std::map<std::string,QPDFObjectHandle> dict;
 
     dict["/Type"]=QPDFObjectHandle::newName("/XObject");
@@ -340,14 +506,30 @@ QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned 
     dict["/Height"]=QPDFObjectHandle::newInteger(height);
     dict["/BitsPerComponent"]=QPDFObjectHandle::newInteger(bpc);
 
-    if (colorProfile != NULL && !device_inhibited) {
+    if (!cm_disabled) {
+      // Write rendering intent into the PDF based on raster settings
+      if (render_intent == "Perceptual") {
+        dict["/Intent"]=QPDFObjectHandle::newName("/Perceptual");
+      } else if (render_intent == "Absolute") {
+        dict["/Intent"]=QPDFObjectHandle::newName("/AbsoluteColorimetric");
+      } else if (render_intent == "Relative") {
+        dict["/Intent"]=QPDFObjectHandle::newName("/RelativeColorimetric");
+      } else if (render_intent == "Saturation") {
+        dict["/Intent"]=QPDFObjectHandle::newName("/Saturation");
+      } else if (render_intent == "RelativeBpc") {
+        /* Enable blackpoint compensation */
+        dict["/Intent"]=QPDFObjectHandle::newName("/RelativeColorimetric");
+        use_blackpoint = 1;
+      }
+    }
+
+    /* Write "/ColorSpace" dictionary based on raster input */
+    if (colorProfile != NULL && !cm_disabled) {
       icc_ref = embedIccProfile(pdf);
 
-      if (!icc_ref.isNull()) {
+      if (!icc_ref.isNull())
         dict["/ColorSpace"]=icc_ref;
-        isProfileEmbedded = 1;
-      }
-    } else if (!device_inhibited) {
+    } else if (!cm_disabled) {
         switch (cs) {
             case CUPS_CSPACE_DEVICE1:
             case CUPS_CSPACE_DEVICE2:
@@ -370,8 +552,12 @@ QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned 
             case CUPS_CSPACE_K:
                 dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceGray");
                 break;
-            case CUPS_CSPACE_SW:                
-                dict["/ColorSpace"]=getCalGrayArray(sgray_wp, sgray_gamma);
+            case CUPS_CSPACE_SW:
+                if (use_blackpoint)
+                  dict["/ColorSpace"]=getCalGrayArray(cmWhitePointSGray(), cmGammaSGray(), 
+                                                      cmBlackPointDefault());
+                else
+                  dict["/ColorSpace"]=getCalGrayArray(cmWhitePointSGray(), cmGammaSGray(), 0);
                 break;
             case CUPS_CSPACE_CMYK:
                 dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceCMYK");
@@ -387,13 +573,18 @@ QPDFObjectHandle makeImage(QPDF &pdf, PointerHolder<Buffer> page_data, unsigned 
                   dict["/ColorSpace"]=QPDFObjectHandle::newName("/DeviceRGB");
                 break;
             case CUPS_CSPACE_ADOBERGB:
-                dict["/ColorSpace"]=getCalRGBArray(adobergb_wp, adobergb_gamma, adobergb_matrix);
+                if (use_blackpoint)
+                  dict["/ColorSpace"]=getCalRGBArray(cmWhitePointAdobeRgb(), cmGammaAdobeRgb(), 
+                                                         cmMatrixAdobeRgb(), cmBlackPointDefault());
+                else
+                  dict["/ColorSpace"]=getCalRGBArray(cmWhitePointAdobeRgb(), 
+                                                     cmGammaAdobeRgb(), cmMatrixAdobeRgb(), 0);
                 break;
             default:
                 fputs("DEBUG: Color space not supported.\n", stderr); 
                 return QPDFObjectHandle();
         }
-    } else if (device_inhibited) {
+    } else if (cm_disabled) {
         switch(cs) {
           case CUPS_CSPACE_K:
           case CUPS_CSPACE_SW:
@@ -454,7 +645,7 @@ void finish_page(struct pdf_info * info)
     if(!info->page_data.getPointer())
         return;
 
-    QPDFObjectHandle image = makeImage(info->pdf, info->page_data, info->width, info->height, info->color_space, info->bpc);
+    QPDFObjectHandle image = makeImage(info->pdf, info->page_data, info->width, info->height, info->render_intent, info->color_space, info->bpc);
     if(!image.isInitialized()) die("Unable to load image data");
 
     // add it
@@ -471,19 +662,167 @@ void finish_page(struct pdf_info * info)
     info->page_data = PointerHolder<Buffer>();
 }
 
+
+/* Perform modifications to PDF if color space conversions are needed */      
+int prepare_pdf_page(struct pdf_info * info, int width, int height, int bpl, 
+                     int bpp, int bpc, std::string render_intent, cups_cspace_t color_space)
+{
+#define IMAGE_CMYK_8   (bpp == 32 && bpc == 8)
+#define IMAGE_CMYK_16  (bpp == 64 && bpc == 16)
+#define IMAGE_RGB_8    (bpp == 24 && bpc == 8)
+#define IMAGE_RGB_16   (bpp == 48 && bpc == 16)
+#define IMAGE_WHITE_1  (bpp == 1 && bpc == 1)
+#define IMAGE_WHITE_8  (bpp == 8 && bpc == 8)
+#define IMAGE_WHITE_16 (bpp == 16 && bpc == 16)    
+     
+    int error = 0;
+    pdfConvertFunction fn;
+    cmsColorSpaceSignature css;
+
+    /* Register available raster information into the PDF */
+    info->width = width;
+    info->height = height;
+    info->line_bytes = bpl;
+    info->bpp = bpp;
+    info->bpc = bpc;
+    info->render_intent = render_intent;
+    info->color_space = color_space;
+
+    if (colorProfile != NULL) {
+      css = cmsGetColorSpace(colorProfile);
+
+      // Convert image and PDF color space to an embedded ICC Profile color space
+      switch(css) {
+        // Convert PDF to Grayscale when using a gray profile
+        case cmsSigGrayData:
+          if (color_space == CUPS_CSPACE_CMYK)
+            fn = convertPdf_Cmyk8ToWhite8;
+          else if (color_space == CUPS_CSPACE_RGB) 
+            fn = convertPdf_Rgb8ToWhite8;
+          else              
+            fn = convertPdf_InvertColors;
+          info->color_space = CUPS_CSPACE_K;
+          break;
+        // Convert PDF to RGB when using an RGB profile
+        case cmsSigRgbData:
+          if (color_space == CUPS_CSPACE_CMYK) 
+            fn = convertPdf_Cmyk8ToRgb8;
+          else if (color_space == CUPS_CSPACE_K) 
+            fn = convertPdf_White8ToRgb8;
+          else 
+            fn = convertPdf_NoConversion;
+          info->color_space = CUPS_CSPACE_RGB;
+          break;
+        // Convert PDF to CMYK when using an RGB profile
+        case cmsSigCmykData:
+          if (color_space == CUPS_CSPACE_RGB)
+            fn = convertPdf_Rgb8ToCmyk8;
+          else if (color_space == CUPS_CSPACE_K) 
+            fn = convertPdf_White8ToCmyk8;
+          else 
+            fn = convertPdf_NoConversion;
+          info->color_space = CUPS_CSPACE_CMYK;
+          break;
+        default:
+          fputs("DEBUG: Unable to convert PDF from profile.\n", stderr);
+          colorProfile = NULL;
+          error = 1;
+      }
+      // Perform conversion of an image color space 
+    } else if (!cm_disabled) {       
+      switch (color_space) {
+         // Convert image to CMYK
+         case CUPS_CSPACE_CMYK:
+           if (IMAGE_CMYK_8 || IMAGE_CMYK_16)
+             fn = convertPdf_NoConversion;
+           else if (IMAGE_RGB_8)
+             fn = convertPdf_Rgb8ToCmyk8;  
+           else if (IMAGE_RGB_16)
+             fn = convertPdf_NoConversion;
+           else if (IMAGE_WHITE_8)
+             fn = convertPdf_White8ToCmyk8;  
+           else if (IMAGE_WHITE_16) 
+             fn = convertPdf_NoConversion;
+           break;
+         // Convert image to RGB
+         case CUPS_CSPACE_ADOBERGB:
+         case CUPS_CSPACE_RGB:
+         case CUPS_CSPACE_SRGB:
+           if (IMAGE_RGB_8 || IMAGE_RGB_16)
+             fn = convertPdf_NoConversion;  
+           else if (IMAGE_CMYK_8)
+             fn = convertPdf_Cmyk8ToRgb8;
+           else if (IMAGE_CMYK_16)
+             fn = convertPdf_NoConversion;  
+           else if (IMAGE_WHITE_8)
+             fn = convertPdf_White8ToRgb8;
+           else if (IMAGE_WHITE_16) 
+             fn = convertPdf_NoConversion;       
+           break;
+         // Convert image to Grayscale
+         case CUPS_CSPACE_SW:
+         case CUPS_CSPACE_K:           
+           if (IMAGE_WHITE_8 || IMAGE_WHITE_16 || IMAGE_WHITE_1)
+             fn = convertPdf_InvertColors;
+           else if (IMAGE_CMYK_8)
+             fn = convertPdf_Cmyk8ToWhite8;
+           else if (IMAGE_CMYK_16)
+             fn = convertPdf_NoConversion;
+           else if (IMAGE_RGB_8) 
+             fn = convertPdf_Rgb8ToWhite8;
+           else if (IMAGE_RGB_16) 
+             fn = convertPdf_NoConversion;
+           break;    
+         case CUPS_CSPACE_DEVICE1:
+         case CUPS_CSPACE_DEVICE2:
+         case CUPS_CSPACE_DEVICE3:
+         case CUPS_CSPACE_DEVICE4:
+         case CUPS_CSPACE_DEVICE5:
+         case CUPS_CSPACE_DEVICE6:
+         case CUPS_CSPACE_DEVICE7:
+         case CUPS_CSPACE_DEVICE8:
+         case CUPS_CSPACE_DEVICE9:
+         case CUPS_CSPACE_DEVICEA:
+         case CUPS_CSPACE_DEVICEB:
+         case CUPS_CSPACE_DEVICEC:
+         case CUPS_CSPACE_DEVICED:
+         case CUPS_CSPACE_DEVICEE:
+         case CUPS_CSPACE_DEVICEF:
+             // No conversion for right now
+             fn = convertPdf_NoConversion;
+             break;
+         default:
+           fputs("DEBUG: Color space not supported.\n", stderr);
+           error = 1;
+           break;
+      }
+   } else if (cm_disabled) {
+       // If color management is disabled, grayscale data must be
+       // inverted regardless
+       if (IMAGE_WHITE_8 || IMAGE_WHITE_16 || IMAGE_WHITE_1)
+         fn = convertPdf_InvertColors;
+       else
+         fn = convertPdf_NoConversion;
+   } else {
+       fputs("DEBUG: Unable to convert PDF color.\n", stderr);
+       error = 1;
+     }
+
+   if (!error)
+     fn(info);
+
+   return error;
+}
+
 int add_pdf_page(struct pdf_info * info, int pagen, unsigned width,
-		 unsigned height, int bpp, int bpc, int bpl,
+		 unsigned height, int bpp, int bpc, int bpl, std::string render_intent,
 		 cups_cspace_t color_space, unsigned xdpi, unsigned ydpi)
 {
     try {
         finish_page(info); // any active
 
-        info->width = width;
-        info->height = height;
-        info->line_bytes = bpl;
-        info->bpp = bpp;
-        info->bpc = bpc;
-	info->color_space = color_space;
+        prepare_pdf_page(info, width, height, bpl, bpp, 
+                         bpc, render_intent, color_space);
 
         if (info->height > (std::numeric_limits<unsigned>::max() / info->line_bytes)) {
             die("Page too big");
@@ -523,6 +862,7 @@ int close_pdf_file(struct pdf_info * info)
         finish_page(info); // any active
 
         QPDFWriter output(info->pdf,NULL);
+//        output.setMinimumPDFVersion("1.4");
         output.write();
     } catch (...) {
         return 1;
@@ -550,23 +890,18 @@ int convert_raster(cups_raster_t *ras, unsigned width, unsigned height,
     // We should be at raster start
     int i;
     unsigned cur_line = 0;
-    unsigned char *PixelBuffer, *ptr;
+    unsigned char *PixelBuffer, *ptr, *buff;
 
     PixelBuffer = (unsigned char *)malloc(bpl);
+    buff = (unsigned char *)malloc(info->line_bytes);
 
     do
     {
         // Read raster data...
         cupsRasterReadPixels(ras, PixelBuffer, bpl);
 
-	if (info->color_space == CUPS_CSPACE_K)
-	{
-	  // Invert black to grayscale...
-	  for (i = bpl, ptr = PixelBuffer; i > 0; i --, ptr ++)
-	    *ptr = ~*ptr;
-	}
-
 #if !ARCH_IS_BIG_ENDIAN
+
 	if (info->bpc == 16)
 	{
 	  // Swap byte pairs for endianess (cupsRasterReadPixels() switches
@@ -578,16 +913,18 @@ int convert_raster(cups_raster_t *ras, unsigned width, unsigned height,
 	    *(ptr + 1) = swap;
 	  }
 	}
-
 #endif /* !ARCH_IS_BIG_ENDIAN */
 
-        // write lines
- 	pdf_set_line(info, cur_line, PixelBuffer);
+        // perform bit operations if necessary
+        bit_function(PixelBuffer, ptr,  bpl);
 
+        // write lines and color convert when necessary
+ 	pdf_set_line(info, cur_line, conversion_function(PixelBuffer, buff, width));
 	++cur_line;
     }
     while(cur_line < height);
 
+    free(buff);
     free(PixelBuffer);
 
     return 0;
@@ -668,7 +1005,6 @@ int main(int argc, char **argv)
     int			num_options;	/* Number of options */
     const char*         profile_name;	/* IPP Profile Name */
     cups_option_t	*options;	/* Options */
-    char                tmpstr[1024];   /* Printer name */
 
     // Make sure status messages are not buffered...
     setbuf(stderr, NULL);
@@ -684,16 +1020,12 @@ int main(int argc, char **argv)
     num_options = cupsParseOptions(argv[5], 0, &options);  
 
     /* support the CUPS "cm-calibration" option */ 
-    if (cupsGetOption("cm-calibration", num_options, options) != NULL) {
-      cm_calibrate = true;
-      device_inhibited = 1;
-    } else {
-      /* Check color manager status */
-      snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));      
-      if (strcmp(tmpstr, "cups-(null)") != 0) 
-        device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
-      // device_inhibited = isDeviceCm(tmpstr);
-    }
+    cm_calibrate = cmGetCupsColorCalibrateMode(options, num_options);
+
+    if (cm_calibrate == CM_CALIBRATION_ENABLED)
+      cm_disabled = 1;
+    else
+      cm_disabled = cmIsPrinterCmDisabled(getenv("PRINTER"));
 
     // Open the PPD file...
     ppd = ppdOpenFile(getenv("PPD"));
@@ -737,29 +1069,26 @@ int main(int argc, char **argv)
     if (create_pdf_file(&pdf) != 0)
       die("Unable to create PDF file");
 
-    fprintf(stderr, "DEBUG: Color Management: %s\n", cm_calibrate ?
-           "Calibration Mode/Enabled" : "Calibration Mode/Off");
-
     while (cupsRasterReadHeader2(ras, &header))
     {
       // Write a status message with the page number
       Page ++;
       fprintf(stderr, "INFO: Starting page %d.\n", Page);
 
-      if (!device_inhibited) {
-          // Use "profile=profile_name.icc" to embed 'profile_name.icc' into the PDF
-          // for testing.
-          if ((profile_name = cupsGetOption("profile", num_options, options)) != NULL) 
-            setProfile(profile_name);          
-          
-          fprintf(stderr, "DEBUG: ICC Profile: %s\n", !colorProfile ?
-          "None" : profile_name);
+      // Use "profile=profile_name.icc" to embed 'profile_name.icc' into the PDF
+      // for testing. Forces color management to enable.
+      if ((profile_name = cupsGetOption("profile", num_options, options)) != NULL) {
+        setProfile(profile_name);
+        cm_disabled = 0;
       }
+      if (colorProfile != NULL)       
+        fprintf(stderr, "DEBUG: TEST ICC Profile specified (color management forced ON): \n[%s]\n", profile_name);
+
       // Add a new page to PDF file
       if (add_pdf_page(&pdf, Page, header.cupsWidth, header.cupsHeight,
-		       header.cupsBitsPerPixel, header.cupsBitsPerColor,
-		       header.cupsBytesPerLine,
-		       header.cupsColorSpace, header.HWResolution[0],
+		       header.cupsBitsPerPixel, header.cupsBitsPerColor, 
+		       header.cupsBytesPerLine, header.cupsRenderingIntent, 
+                       header.cupsColorSpace, header.HWResolution[0],
 		       header.HWResolution[1]) != 0)
 	die("Unable to start new PDF page");
 
