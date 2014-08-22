@@ -1,3 +1,12 @@
+cups-filters (1.0.58-1) unstable; urgency=medium
+
+  * New upstream release
+     - Completion of color management support. Thanks to Joseph Simon adding
+       color management as his Google Summer of Code 2014 project.
+  * Update libcupsfilters1 symbols file with 15 new symbols
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 22 Aug 2014 06:29:32 +0200
+
 cups-filters (1.0.57-1) unstable; urgency=medium
 
   * Imported Upstream version 1.0.57
