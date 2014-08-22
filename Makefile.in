@@ -182,8 +182,9 @@ libcupsfilters_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 am__objects_1 =
 am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-check.lo libcupsfilters_la-cmyk.lo \
-	libcupsfilters_la-colord.lo libcupsfilters_la-dither.lo \
-	libcupsfilters_la-image.lo libcupsfilters_la-image-bmp.lo \
+	libcupsfilters_la-colord.lo libcupsfilters_la-colormanager.lo \
+	libcupsfilters_la-dither.lo libcupsfilters_la-image.lo \
+	libcupsfilters_la-image-bmp.lo \
 	libcupsfilters_la-image-colorspace.lo \
 	libcupsfilters_la-image-gif.lo libcupsfilters_la-image-jpeg.lo \
 	libcupsfilters_la-image-photocd.lo \
@@ -1018,6 +1019,7 @@ pkgcharset_DATA = \
 pkgfiltersincludedir = $(includedir)/cupsfilters
 pkgfiltersinclude_DATA = \
 	cupsfilters/colord.h \
+	cupsfilters/colormanager.h \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
 	cupsfilters/raster.h
@@ -1040,6 +1042,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/check.c \
 	cupsfilters/cmyk.c \
 	cupsfilters/colord.c \
+	cupsfilters/colormanager.c \
 	cupsfilters/dither.c \
 	cupsfilters/image.c \
 	cupsfilters/image-bmp.c \
@@ -2226,6 +2229,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-check.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-cmyk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-colord.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-colormanager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-dither.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image-bmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image-colorspace.Plo@am__quote@
@@ -2353,6 +2357,13 @@ libcupsfilters_la-colord.lo: cupsfilters/colord.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/colord.c' object='libcupsfilters_la-colord.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-colord.lo `test -f 'cupsfilters/colord.c' || echo '$(srcdir)/'`cupsfilters/colord.c
+
+libcupsfilters_la-colormanager.lo: cupsfilters/colormanager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-colormanager.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-colormanager.Tpo -c -o libcupsfilters_la-colormanager.lo `test -f 'cupsfilters/colormanager.c' || echo '$(srcdir)/'`cupsfilters/colormanager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-colormanager.Tpo $(DEPDIR)/libcupsfilters_la-colormanager.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/colormanager.c' object='libcupsfilters_la-colormanager.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-colormanager.lo `test -f 'cupsfilters/colormanager.c' || echo '$(srcdir)/'`cupsfilters/colormanager.c
 
 libcupsfilters_la-dither.lo: cupsfilters/dither.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-dither.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-dither.Tpo -c -o libcupsfilters_la-dither.lo `test -f 'cupsfilters/dither.c' || echo '$(srcdir)/'`cupsfilters/dither.c
