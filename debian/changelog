@@ -1,3 +1,22 @@
+cups-filters (1.0.59-1) unstable; urgency=medium
+
+  * New upstream release
+
+    - cupsfilters.drv: Added PPD file for a Generic IPP Everywhere
+      Printer, generating PWG Raster output.
+    - gstoraster, pdftoraster, imagetoraster: Allow PWG Raster
+      output with print queues using a PPD file, using the new
+      "PWGRaster" PPD attribute.
+    - pdftoraster: Removed "cm_disabled" flag in selectConvFunc()
+    - libcupsfilters: Allowed color management to continue while
+      invalid input
+    - rastertopdf: Streamlined PDF conversion code
+    - rastertopdf: Invert all CUPS_CSPACE_K documents by default
+    - foomatic-rip: Clean trailing white space from PPD file lines to
+      avoid a segfault caused by it (Bug #1227).
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 27 Sep 2014 21:18:17 +0200
+
 cups-filters (1.0.58-1) unstable; urgency=medium
 
   * New upstream release
