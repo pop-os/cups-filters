@@ -12,7 +12,7 @@
 #include "tcp.h"
 
 
-struct tcp_sock_t *tcp_open(uint32_t port)
+struct tcp_sock_t *tcp_open(uint16_t port)
 {
 	struct tcp_sock_t *this = calloc(1, sizeof *this);
 	if (this == NULL) {
@@ -68,7 +68,7 @@ void tcp_close(struct tcp_sock_t *this)
 	free(this);
 }
 
-uint32_t tcp_port_number_get(struct tcp_sock_t *sock)
+uint16_t tcp_port_number_get(struct tcp_sock_t *sock)
 {
 	sock->info_size = sizeof sock->info;
 	int query_status = getsockname(
@@ -108,7 +108,6 @@ struct http_packet_t *tcp_packet_get(struct tcp_conn_t *tcp,
 		ssize_t gotten_size = recv(tcp->sd, subbuffer, want_size, 0);
 		if (gotten_size < 0) {
 			int errno_saved = errno;
-			// TODO: checkfor timeout
 			ERR("recv failed with err %d:%s", errno_saved,
 				strerror(errno_saved));
 			goto error;
@@ -124,7 +123,7 @@ struct http_packet_t *tcp_packet_get(struct tcp_conn_t *tcp,
 			}
 		}
 
-		packet_mark_received(pkt, gotten_size);
+		packet_mark_received(pkt, (unsigned) gotten_size);
 		want_size = packet_pending_bytes(pkt);
 	}
 
@@ -137,19 +136,27 @@ error:
 	return NULL;
 }
 
-// TODO: handle EPIPE and SIGPIPE with MSG_NOSIGNAL and check for pipe closures
 void tcp_packet_send(struct tcp_conn_t *conn, struct http_packet_t *pkt)
 {
-	ssize_t remaining = pkt->filled_size;
-	ssize_t total = 0;
+	size_t remaining = pkt->filled_size;
+	size_t total = 0;
 	while (remaining > 0) {
 		ssize_t sent = send(conn->sd, pkt->buffer + total,
-		                    remaining, 0);
-		if (sent < 0)
+		                    remaining, MSG_NOSIGNAL);
+		if (sent < 0) {
+			if (errno == EPIPE) {
+				conn->is_closed = 1;
+				return;
+			}
 			ERR_AND_EXIT("Failed to sent data over TCP");
+		}
 
-		total += sent;
-		remaining -= sent;
+		size_t sent_ulong = (unsigned) sent;
+		total += sent_ulong;
+		if (sent_ulong >= remaining)
+			remaining = 0;
+		else
+			remaining -= sent_ulong;
 	}
 	NOTE("TCP: sent %lu bytes", total);
 }
