@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
+#include <stdint.h>
 
 #include <unistd.h>
 #include <getopt.h>
@@ -57,7 +57,7 @@ static void *service_connection(void *arg_void)
 						usb->interface_index);
 			}
 
-			//NOTE("%.*s", (int)pkt->filled_size, pkt->buffer);
+			NOTE("Pkt from tcp\n===\n%.*s\n===", (int)pkt->filled_size, pkt->buffer);
 			usb_conn_packet_send(usb, pkt);
 			packet_free(pkt);
 		}
@@ -67,7 +67,7 @@ static void *service_connection(void *arg_void)
 				usb->interface_index);
 
 
-		// Server's responce
+		// Server's response
 		NOTE("Interface #%d: Server msg starting",
 				usb->interface_index);
 		server_msg = http_message_new();
@@ -81,7 +81,7 @@ static void *service_connection(void *arg_void)
 			if (pkt == NULL)
 				break;
 
-			NOTE("Pkt from usb: \n%.*s",
+			NOTE("Pkt from usb\n===\n%.*s\n===",
 					(int)pkt->filled_size, pkt->buffer);
 			tcp_packet_send(arg->tcp, pkt);
 			packet_free(pkt);
@@ -115,22 +115,28 @@ static void start_daemon()
 		goto cleanup_usb;
 
 	// Capture a socket
-	uint32_t desired_port = g_options.desired_port;
+	uint16_t desired_port = g_options.desired_port;
 	struct tcp_sock_t *tcp_socket = tcp_open(desired_port);
 	if (tcp_socket == NULL)
 		goto cleanup_tcp;
 
-	uint32_t real_port = tcp_port_number_get(tcp_socket);
+	uint16_t real_port = tcp_port_number_get(tcp_socket);
 	if (desired_port != 0 && desired_port != real_port) {
 		ERR("Received port number did not match requested port number."
 		    " The requested port number may be too high.");
 		goto cleanup_tcp;
 	}
-	printf("%u\n", real_port);
+	printf("%u|", real_port);
+	fflush(stdout);
 
 	// Lose connection to caller
 	if (!g_options.nofork_mode && fork() > 0)
 		exit(0);
+
+
+	// Register for unplug event
+	if (usb_can_callback(usb_sock))
+		usb_register_callback(usb_sock);
 
 	for (;;) {
 		struct service_thread_param *args = calloc(1, sizeof(*args));
@@ -173,12 +179,20 @@ cleanup_usb:
 	return;
 }
 
+static uint16_t strto16(const char *str)
+{
+	unsigned long val = strtoul(str, NULL, 16);
+	if (val > UINT16_MAX)
+		exit(1);
+	return (uint16_t)val;
+}
+
 int main(int argc, char *argv[])
 {
 	int c;
 	g_options.log_destination = LOGGING_STDERR;
 
-	while ((c = getopt(argc, argv, "nhdp:u:s:l")) != -1) {
+	while ((c = getopt(argc, argv, "qnhdp:s:lv:m:")) != -1) {
 		switch (c) {
 		case '?':
 		case 'h':
@@ -193,17 +207,14 @@ int main(int argc, char *argv[])
 				ERR("Port number must be non-negative");
 				return 1;
 			}
-			if (port > (long long)UINT_MAX) {
+			if (port > UINT16_MAX) {
 				ERR("Port number must be %u or less, "
-				    "but not negative", UINT_MAX);
+				    "but not negative", UINT16_MAX);
 				return 2;
 			}
-			g_options.desired_port = port;
+			g_options.desired_port = (uint16_t)port;
 			break;
 		}
-		case 'u':
-			// [u]sb device to bind with
-			break;
 		case 'l':
 			g_options.log_destination = LOGGING_SYSLOG;
 			break;
@@ -211,8 +222,21 @@ int main(int argc, char *argv[])
 			g_options.nofork_mode = 1;
 			g_options.verbose_mode = 1;
 			break;
+		case 'q':
+			g_options.verbose_mode = 1;
+			break;
 		case 'n':
 			g_options.nofork_mode = 1;
+			break;
+		case 'v':
+			g_options.vendor_id = strto16(optarg);
+			break;
+		case 'm':
+			g_options.product_id = strto16(optarg);
+			break;
+		case 's':
+			g_options.serial_num = (unsigned char *)optarg;
+			break;
 		}
 	}
 
@@ -226,6 +250,7 @@ int main(int argc, char *argv[])
 		"  -s <serial>  Serial number of desired printer\n"
 		"  -p <portnum> Port number to bind against\n"
 		"  -l           Redirect logging to syslog\n"
+		"  -q           Enable verbose tracing\n"
 		"  -d           Debug mode for verbose output and no fork\n"
 		"  -n           No fork mode\n"
 		, argv[0]);

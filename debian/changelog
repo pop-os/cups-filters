@@ -1,3 +1,27 @@
+cups-filters (1.0.59-0ubuntu1) utopic; urgency=medium
+
+  * New upstream bug fix release
+     - pdftoraster: Removed "cm_disabled" flag in selectConvFunc()
+     - libcupsfilters: Allowed color management to continue while
+       invalid input
+     - rastertopdf: Streamlined PDF conversion code
+     - rastertopdf: Invert all CUPS_CSPACE_K documents by default
+     - foomatic-rip: Clean trailing white space from PPD file lines to
+       avoid a segfault caused by it (Bug #1227).
+     - cupsfilters.drv: Added PPD file for a Generic IPP Everywhere
+       Printer, generating PWG Raster output.
+  * Updated ippusbxd to final 1.21 version with following fixes:
+     - Shuts itself down upon printer unplug or sleep
+     - A few sign conversion bugs have been fixed
+     - Uses the same timeout (6 hours) as Mac OSX (this fixes the bug
+       where only the top portion of pages was printed)
+     - Only claims usb interfaces when needed (something Mike suggested
+       and how Mac OSX handles it)
+     - Supports trailers in http chunk transport messages (rarely used but
+       important feature of http)
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sat, 27 Sep 2014 22:35:42 +0200
+
 cups-filters (1.0.58-0ubuntu1) utopic; urgency=medium
 
   * New upstream release
