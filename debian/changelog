@@ -1,3 +1,14 @@
+cups-filters (1.0.60-0ubuntu1) utopic; urgency=medium
+
+  * New upstream bug fix release
+     - cups-browsed, pdftoippprinter: Do not confuse the PDL "PCLm"
+       with "PCL". The former is a proprietary, PDF-based raster
+       format and has nothing to do with PCL.
+     - cupsfilters.drv: Corrected the CMD: field of the device ID,
+       it must read "PWGRaster" there to conform to the PWG standard.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 06 Oct 2014 17:17:35 +0200
+
 cups-filters (1.0.59-0ubuntu1) utopic; urgency=medium
 
   * New upstream bug fix release
