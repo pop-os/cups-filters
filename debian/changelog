@@ -1,3 +1,19 @@
+cups-filters (1.0.61-1) unstable; urgency=medium
+
+  * New upstream bug fix release
+     - cups-browsed: Fixed memory leak when a cups-browsed-generated print
+       queue is the default printer.
+     - cupsfilters.drv, *-PDF.ppd, textonly.ppd: Added "*cupsFilter2: ..."
+       lines to the PPD files to support data-format-specific behavior of
+       backends, especially of the IPP backend.
+     - cups-browsed, pdftoippprinter: Do not confuse the PDL "PCLm" with
+       "PCL". The former is a proprietary, PDF-based raster format and has
+       nothing to do with PCL.
+     - cupsfilters.drv: Corrected the CMD: field of the device ID, it must
+       read "PWGRaster" there to conform to the PWG standard.
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 15 Oct 2014 16:11:01 +0200
+
 cups-filters (1.0.59-1) unstable; urgency=medium
 
   * New upstream release

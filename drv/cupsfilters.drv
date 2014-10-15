@@ -28,6 +28,7 @@ Throughput 1
 
 // CUPS filters...
 Filter "application/vnd.cups-raster 0 -"
+Attribute "cupsFilter2" "" "application/vnd.cups-raster image/pwg-raster 0 -"
 
 Attribute "RequiresPageRegion" "All" "True"
 
@@ -495,7 +496,7 @@ Attribute "PWGRaster" "" "Yes"
   ModelName "Generic IPP Everywhere Printer"
   Attribute "NickName" "" "Generic IPP Everywhere Printer"
   Attribute "ShortNickName" "" "Generic IPP Everywhere Printer"
-  Attribute "1284DeviceID" "" "MFG:Generic;MDL:IPP Everywhere Printer;DES:Generic IPP Everywhere Printer;CLS:PRINTER;CMD:PWG Raster;DRV:Dpwg-raster,R1,M0;"
+  Attribute "1284DeviceID" "" "MFG:Generic;MDL:IPP Everywhere Printer;DES:Generic IPP Everywhere Printer;CLS:PRINTER;CMD:PWGRaster;DRV:Dpwgraster,R1,M0;"
   PCFileName "pwgrast.ppd"
   Attribute "Product" "" "(Generic IPP Everywhere Printer)"
 
