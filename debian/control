@@ -1,11 +1,10 @@
 Source: cups-filters
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Priority: optional
 Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
 Uploaders: 
  Till Kamppeter <till.kamppeter@gmail.com>,
- Martin Pitt <mpitt@debian.org>,
  Didier Raboud <odyx@debian.org>
 Build-Depends: 
  autoconf,

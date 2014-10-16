@@ -8,6 +8,7 @@
   #include <abstractions/p11-kit>
 
   /etc/cups/cups-browsed.conf r,
+  /etc/cups/lpoptions r,
   /{var/,}run/cups/certs/* r,
   /tmp/** rw,
 
