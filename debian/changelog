@@ -1,3 +1,16 @@
+cups-filters (1.0.61-2) unstable; urgency=medium
+
+  [ Jamie Strandboge ]
+  * Under apparmor, allow cups-browsed to read /etc/cups/lpoptions
+    (Closes: #765583, LP: #1379368)
+
+  [ Didier Raboud ]
+  * Bump Standards-Version to 3.9.6 without changes needed
+  * Remove Martin Pitt from the Uploaders' field with many thanks for his past
+    work on cups-filters
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 16 Oct 2014 14:44:20 +0200
+
 cups-filters (1.0.61-1) unstable; urgency=medium
 
   * New upstream bug fix release
