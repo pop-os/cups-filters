@@ -5,7 +5,6 @@ Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
 Uploaders: 
  Till Kamppeter <till.kamppeter@gmail.com>,
- Martin Pitt <mpitt@debian.org>,
  Didier Raboud <odyx@debian.org>
 Build-Depends: 
  autoconf,
