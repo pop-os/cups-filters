@@ -1,3 +1,7 @@
 link-explicitely-to-libm.patch
 CVE-2014-2707-part2.patch
 fix_browseallow.patch
+rastertopdf-mime-convs.patch
+add-ipp-everywhere-ppd.patch
+support-for-pwgraster-output-with-ppd.patch
+pdftoraster-cspace-18-19-20.patch
