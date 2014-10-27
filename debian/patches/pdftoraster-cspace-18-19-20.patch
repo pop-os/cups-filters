@@ -1,0 +1,57 @@
+--- a/filter/pdftoraster.cxx
++++ b/filter/pdftoraster.cxx
+@@ -742,8 +742,12 @@
+   {CUPS_CSPACE_KCMY,32,8,rgbToKCMYLine,true,rgbToKCMYLineSwap,true},
+   {CUPS_CSPACE_CMY,24,8,rgbToCMYLine,true,rgbToCMYLineSwap,true},
+   {CUPS_CSPACE_RGB,24,8,lineNoop,false,lineSwap24,true},
++  {CUPS_CSPACE_SRGB,24,8,lineNoop,false,lineSwap24,true},
++  {CUPS_CSPACE_ADOBERGB,24,8,lineNoop,false,lineSwap24,true},
+   {CUPS_CSPACE_W,8,8,lineNoop,false,lineSwapByte,true},
+   {CUPS_CSPACE_W,1,1,lineNoop,false,lineSwapBit,true},
++  {CUPS_CSPACE_SW,8,8,lineNoop,false,lineSwapByte,true},
++  {CUPS_CSPACE_SW,1,1,lineNoop,false,lineSwapBit,true},
+   {CUPS_CSPACE_WHITE,8,8,lineNoop,false,lineSwapByte,true},
+   {CUPS_CSPACE_WHITE,1,1,lineNoop,false,lineSwapBit,true},
+   {CUPS_CSPACE_RGB,0,0,NULL,false,NULL,false} /* end mark */
+@@ -1425,9 +1429,12 @@
+       convertCSpace = RGB8toRGBA;
+       break;
+     case CUPS_CSPACE_RGB:
++    case CUPS_CSPACE_SRGB:
++    case CUPS_CSPACE_ADOBERGB:
+       convertCSpace = convertCSpaceNone;
+       break;
+     case CUPS_CSPACE_W:
++    case CUPS_CSPACE_SW:
+     case CUPS_CSPACE_WHITE:
+       convertCSpace = convertCSpaceNone;
+       break;
+@@ -1780,8 +1787,11 @@
+     }
+     break;
+   case CUPS_CSPACE_RGB:
++  case CUPS_CSPACE_SRGB:
++  case CUPS_CSPACE_ADOBERGB:
+   case CUPS_CSPACE_K:
+   case CUPS_CSPACE_W:
++  case CUPS_CSPACE_SW:
+   case CUPS_CSPACE_WHITE:
+   case CUPS_CSPACE_GOLD:
+   case CUPS_CSPACE_SILVER:
+@@ -1929,6 +1939,8 @@
+       exit(1);
+     }
+   case CUPS_CSPACE_RGB:
++  case CUPS_CSPACE_SRGB:
++  case CUPS_CSPACE_ADOBERGB:
+   case CUPS_CSPACE_CMY:
+   case CUPS_CSPACE_YMC:
+   case CUPS_CSPACE_CMYK:
+@@ -1950,6 +1962,7 @@
+     break;
+   case CUPS_CSPACE_K:
+   case CUPS_CSPACE_W:
++  case CUPS_CSPACE_SW:
+   case CUPS_CSPACE_WHITE:
+   case CUPS_CSPACE_GOLD:
+   case CUPS_CSPACE_SILVER:

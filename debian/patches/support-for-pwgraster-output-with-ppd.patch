@@ -1,0 +1,139 @@
+--- a/filter/gstoraster.c
++++ b/filter/gstoraster.c
+@@ -549,6 +549,7 @@
+   struct sigaction sa;
+ #ifdef HAVE_CUPS_1_7
+   int pwgraster;
++  ppd_attr_t *attr;
+ #endif /* HAVE_CUPS_1_7 */
+ 
+   if (argc < 6 || argc > 7) {
+@@ -674,7 +675,19 @@
+   cupsArrayAdd(gs_args, strdup("-sOutputFile=%stdout"));
+ 
+   if (ppd)
++  {
+     cupsRasterInterpretPPD(&h,ppd,num_options,options,0);
++#ifdef HAVE_CUPS_1_7
++    if ((attr = ppdFindAttr(ppd,"PWGRaster",0)) != 0 &&
++	(!strcasecmp(attr->value, "true")
++	 || !strcasecmp(attr->value, "on") ||
++	 !strcasecmp(attr->value, "yes")))
++    {
++      pwgraster = 1;
++      cupsRasterParseIPPOptions(&h, num_options, options, pwgraster, 0);
++    }
++#endif /* HAVE_CUPS_1_7 */
++  }
+   else
+   {
+ #ifdef HAVE_CUPS_1_7
+--- a/filter/imagetoraster.c
++++ b/filter/imagetoraster.c
+@@ -36,6 +36,7 @@
+  */
+ 
+ #include "common.h"
++#include <cupsfilters/raster.h>
+ #include <cupsfilters/image-private.h>
+ #include <unistd.h>
+ #include <math.h>
+@@ -191,6 +192,9 @@
+   int			plane,		/* Current color plane */
+ 			num_planes;	/* Number of color planes */
+   char			filename[1024];	/* Name of file to print */
++#ifdef HAVE_CUPS_1_7
++  int                   pwgraster;
++#endif /* HAVE_CUPS_1_7 */
+ 
+ 
+  /*
+@@ -478,6 +482,21 @@
+     return (1);
+   }
+ 
++#ifdef HAVE_CUPS_1_7
++ /*
++  * Check whether we need PWG Raster output
++  */
++  pwgraster = 0;
++  if ((attr = ppdFindAttr(ppd,"PWGRaster",0)) != 0 &&
++      (!strcasecmp(attr->value, "true")
++       || !strcasecmp(attr->value, "on") ||
++       !strcasecmp(attr->value, "yes")))
++  {
++    pwgraster = 1;
++    cupsRasterParseIPPOptions(&header, num_options, options, pwgraster, 0);
++  }
++#endif /* HAVE_CUPS_1_7 */
++
+  /*
+   * Get the media type and resolution that have been chosen...
+   */
+--- a/filter/pdftoraster.cxx
++++ b/filter/pdftoraster.cxx
+@@ -105,6 +105,7 @@
+     unsigned int plane, unsigned int pixeli, unsigned char *pixelBuf);
+ 
+   int exitCode = 0;
++  int pwgraster = 0;
+   int deviceCopies = 1;
+   bool deviceCollate = false;
+   cups_page_header2_t header;
+@@ -445,9 +446,19 @@
+       /* ICCProfile is specified */
+       colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
+     }
++#ifdef HAVE_CUPS_1_7
++    if ((attr = ppdFindAttr(ppd,"PWGRaster",0)) != 0 &&
++	(!strcasecmp(attr->value, "true")
++	 || !strcasecmp(attr->value, "on") ||
++	 !strcasecmp(attr->value, "yes")))
++    {
++      pwgraster = 1;
++      cupsRasterParseIPPOptions(&header, num_options, options, pwgraster, 0);
++    }
++#endif /* HAVE_CUPS_1_7 */
+   } else {
+ #ifdef HAVE_CUPS_1_7
+-    int pwgraster = 1;
++    pwgraster = 1;
+     const char *t = cupsGetOption("media-class", num_options, options);
+     if (t == NULL)
+       t = cupsGetOption("MediaClass", num_options, options);
+@@ -1525,11 +1536,7 @@
+         for (unsigned int band = 0;band < nbands;band++) {
+           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
+                  bytesPerLine);
+-          if (cupsRasterWritePixels(raster,dp,bytesPerLine)
+-               != bytesPerLine) {
+-            pdfError(-1,const_cast<char *>("Can't write page %d image"),pageNo);
+-            exit(1);
+-          }
++          cupsRasterWritePixels(raster,dp,bytesPerLine);
+         }
+         bp -= rowsize;
+       }
+@@ -1544,11 +1551,7 @@
+         for (unsigned int band = 0;band < nbands;band++) {
+           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
+                  bytesPerLine);
+-          if (cupsRasterWritePixels(raster,dp,bytesPerLine)
+-               != bytesPerLine) {
+-            pdfError(-1,const_cast<char *>("Can't write page %d image"),pageNo);
+-            exit(1);
+-          }
++          cupsRasterWritePixels(raster,dp,bytesPerLine);
+         }
+         bp += rowsize;
+       }
+@@ -1979,7 +1982,8 @@
+   out->startDoc(doc->getXRef());
+ #endif
+ 
+-  if ((raster = cupsRasterOpen(1,CUPS_RASTER_WRITE)) == 0) {
++  if ((raster = cupsRasterOpen(1, pwgraster ? CUPS_RASTER_WRITE_PWG :
++			       CUPS_RASTER_WRITE)) == 0) {
+         pdfError(-1,const_cast<char *>("Can't open raster stream"));
+ 	exit(1);
+   }

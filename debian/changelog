@@ -1,3 +1,26 @@
+cups-filters (1.0.52-0ubuntu1.3) trusty-proposed; urgency=low
+
+  * Added full support for the IPP Everywhere standard for driverless
+    printing (LP: #1386241):
+    - Added ippusbxd (Support for IPP-over-USB printers) generating the
+      new binary package cups-filters-ippusbxd.
+    - Added rastertopdf filter. This filter allows PWG Raster as input
+      format for a CUPS queue. This is needed to make shared CUPS printers
+      fully emulating IPP Everywhere printers (all other requirements are
+      fulfilled by CUPS itself).
+    - rastertopdf-mime-convs.patch: Added conversion rule for rastertopdf
+      filter.
+    - add-ipp-everywhere-ppd.patch: Added PPD file for a generic IPP
+      Everywhere printer (on-the-fly generation via cupsfilters.drv).
+    - support-for-pwgraster-output-with-ppd.patch: Support for PWG-Raster
+      output selected via keyword in the PPD file.
+    - pdftoraster-cspace-18-19-20.patch: pdftoraster: Support for output
+      in the color spaces 18 (CUPS_CSPACE_SW, sGray), 19 (CUPS_CSPACE_SRGB,
+      sRGB), and 20 (CUPS_CSPACE_ADOBERGB, Adobe RGB). No color management
+      appropriate to these color spaces is added yet.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 27 Oct 2014 16:21:06 +0100
+
 cups-filters (1.0.52-0ubuntu1.2) trusty-proposed; urgency=low
 
   * Re-added ./configure option "--with-pdftops=hybrid" to activate
