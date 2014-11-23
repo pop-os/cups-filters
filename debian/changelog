@@ -1,3 +1,10 @@
+cups-filters (1.0.61-4) unstable; urgency=medium
+
+  * Brown-paper bag upload: revert unwanted change from previous upload in
+    installed files.
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 23 Nov 2014 14:56:37 +0100
+
 cups-filters (1.0.61-3) unstable; urgency=medium
 
   * Backport upstream's patch to add support for 'BrowseAllow all' in
