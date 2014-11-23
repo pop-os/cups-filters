@@ -1,3 +1,4 @@
+etc/fonts/conf.d/99pdftoopvp.conf
 usr/bin/*
 usr/lib/cups/backend/*
 usr/lib/cups/filter/imagetopdf
