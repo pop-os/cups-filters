@@ -1,3 +1,10 @@
+cups-filters (1.0.61-3) unstable; urgency=medium
+
+  * Backport upstream's patch to add support for 'BrowseAllow all' in
+    cups-browsed.conf (Closes: #766334)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 23 Nov 2014 14:00:47 +0100
+
 cups-filters (1.0.61-2) unstable; urgency=medium
 
   [ Jamie Strandboge ]
