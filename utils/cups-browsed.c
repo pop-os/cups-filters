@@ -26,12 +26,12 @@
 #if defined(__OpenBSD__)
 #include <sys/socket.h>
 #endif /* __OpenBSD__ */
+#include <sys/types.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <ifaddrs.h>
 #include <resolv.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -117,6 +117,7 @@ typedef struct browsepoll_s {
 cups_array_t *remote_printers;
 static cups_array_t *netifs;
 static cups_array_t *browseallow;
+static gboolean browseallow_all = FALSE;
 
 static GMainLoop *gmainloop = NULL;
 #ifdef HAVE_AVAHI
@@ -593,11 +594,11 @@ create_local_queue (const char *name,
  * Remove all illegal characters and replace each group of such characters
  * by a single dash, return a free()-able string.
  *
- * mode = 0: Only allow letters, numbers, and dashes, for turning make/model
- *           info into a valid print queue name or into a string which can
- *           be supplied as option value in a filter command line without
- *           need of quoting
- * mode = 1: Allow also '/', '.', ',', '_', for cleaning up MIME type
+ * mode = 0: Only allow letters, numbers, dashes, and underscores for
+ *           turning make/model info into a valid print queue name or
+ *           into a string which can be supplied as option value in a
+ *           filter command line without need of quoting
+ * mode = 1: Allow also '/', '.', ',' for cleaning up MIME type
  *           strings (here available Page Description Languages, PDLs) to
  *           supply them on a filter command line without quoting
  *
@@ -629,9 +630,10 @@ remove_bad_chars(const char *str_orig, /* I - Original string */
     if (((str[i] >= 'A') && (str[i] <= 'Z')) ||
 	((str[i] >= 'a') && (str[i] <= 'z')) ||
 	((str[i] >= '0') && (str[i] <= '9')) ||
-	(mode == 1 && (str[i] == '/' || str[i] == '_' ||
+	str[i] == '_' ||
+	(mode == 1 && (str[i] == '/' ||
 		       str[i] == '.' || str[i] == ','))) {
-      /* Letter or number, keep it */
+      /* Allowed character, keep it */
       havedash = 0;
     } else {
       /* Replace all other characters by a single '-' */
@@ -1669,8 +1671,8 @@ static gboolean
 allowed (struct sockaddr *srcaddr)
 {
   allow_t *allow;
-  if (cupsArrayCount(browseallow) == 0) {
-    /* No "BrowseAllow" line, allow all servers */
+  if (browseallow_all || cupsArrayCount(browseallow) == 0) {
+    /* "BrowseAllow All", or no "BrowseAllow" line, so allow all servers */
     return TRUE;
   }
   for (allow = cupsArrayFirst (browseallow);
@@ -2522,7 +2524,14 @@ read_browseallow_value (const char *value)
 {
   char *p;
   struct in_addr addr;
-  allow_t *allow = calloc (1, sizeof (allow_t));
+  allow_t *allow;
+
+  if (!strcasecmp (value, "all")) {
+    browseallow_all = TRUE;
+    return 0;
+  }
+  
+  allow = calloc (1, sizeof (allow_t));
   if (value == NULL)
     goto fail;
   p = strchr (value, '/');
