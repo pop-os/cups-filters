@@ -1,5 +1,20 @@
-NEWS - OpenPrinting CUPS Filters v1.0.61 - 2014-10-10
+NEWS - OpenPrinting CUPS Filters v1.0.62 - 2015-01-14
 -----------------------------------------------------
+
+CHANGES IN V1.0.62
+
+	- cups-browsed: Allow underscore characters in print queue names.
+	  Thanks to Tim Waugh from Red Hat for the bug report (Bug
+	  #1241).
+	- pdftops: Apply workarounds for Kyocera also to Utax printers
+	  as Utax uses hard- and software from Kyocera. Thanks to Edward
+	  Huang from Kyocera.
+	- cups-browsed: Added support for "BrowseAllow All" in the
+	  cups-browsed.conf file.
+	- cups-browsed: Reorder inclusion of headers for compatibility
+	  with NetBSD (Bug #1235).
+	- imagetopdf, pdftopdf: Correct handling of hardware copies in
+	  PJL/JCL and/or when the PPD file has a "Copies" option.
 
 CHANGES IN V1.0.61
 
