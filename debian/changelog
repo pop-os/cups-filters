@@ -1,3 +1,11 @@
+cups-filters (1.0.62-1) experimental; urgency=low
+
+  * New upstream bug fix release
+    - cups-browsed: Added support for "BrowseAllow All" in the
+      cups-browsed.conf file; drop the backported patch.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 15 Jan 2015 18:06:05 +0100
+
 cups-filters (1.0.61-4) unstable; urgency=medium
 
   * Brown-paper bag upload: revert unwanted change from previous upload in
