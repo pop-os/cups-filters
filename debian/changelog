@@ -1,3 +1,9 @@
+cups-filters (1.0.61-0ubuntu4) vivid; urgency=medium
+
+  * No-change rebuild for new poppler
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Wed, 21 Jan 2015 18:03:15 +0000
+
 cups-filters (1.0.61-0ubuntu3) vivid; urgency=medium
 
   * No-change rebuild for new poppler
