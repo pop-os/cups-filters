@@ -4605,7 +4605,8 @@ install-dvi-am:
 
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES \
 	install-sbinPROGRAMS
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
 
 install-html-am:
@@ -4660,8 +4661,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
-.MAKE: all check-am install-am install-data-am install-strip \
-	uninstall-am
+.MAKE: all check-am install-am install-data-am install-exec-am \
+	install-strip uninstall-am
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--refresh check check-TESTS \
 	check-am clean clean-binPROGRAMS clean-checkPROGRAMS \
@@ -4676,9 +4677,9 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	html-am info info-am install install-am install-binPROGRAMS \
 	install-data install-data-am install-data-hook install-docDATA \
 	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
-	install-man1 install-man5 install-man8 install-pdf \
+	install-exec-hook install-html install-html-am install-info \
+	install-info-am install-initrcSCRIPTS install-libLTLIBRARIES \
+	install-man install-man1 install-man5 install-man8 install-pdf \
 	install-pdf-am install-phpextensionLTLIBRARIES \
 	install-pkgbackendPROGRAMS install-pkgbannerDATA \
 	install-pkgcharsetDATA install-pkgconfDATA \
@@ -4708,6 +4709,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 distclean-local:
 	rm -rf *.cache *~
 
+install-exec-hook:
+	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
+	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
+
 install-data-hook:
 @RCLINKS_TRUE@	for level in $(RCLEVELS); do \
 @RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
@@ -4725,6 +4730,7 @@ uninstall-hook:
 @RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
 @RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
+	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
