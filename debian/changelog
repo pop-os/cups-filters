@@ -1,3 +1,15 @@
+cups-filters (1.0.64-0ubuntu1) vivid; urgency=medium
+
+  * New upstream release
+     - cups-browsed: Added PPD file generator for IPP Everywhere and other
+       suitable IPP printers. So IPP printers set up automatically (using
+       "CreateIPPPrinterQueues Yes" in cups-browsed.conf) get PPD files is
+       possible and so printing options are sown in all print dialogs. The
+       dialog does not need to request option information from the printer
+       via IPP. Code taken from CUPS 2.1.x development branch.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 13 Feb 2015 18:37:47 -0200
+
 cups-filters (1.0.61-0ubuntu4) vivid; urgency=medium
 
   * No-change rebuild for new poppler
