@@ -1,3 +1,12 @@
+cups-filters (1.0.65-0ubuntu1) vivid; urgency=medium
+
+  * New upstream release
+     - Lots of bug fixes on legacy browsing/broadcasting. Thanks to Tim Waugh
+       from Red Hat.
+  * debian/control: Added build dependency on libglib2.0-dev.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 13 Feb 2015 22:42:36 -0200
+
 cups-filters (1.0.64-0ubuntu1) vivid; urgency=medium
 
   * New upstream release
