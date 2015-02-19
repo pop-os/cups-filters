@@ -1,3 +1,23 @@
+cups-filters (1.0.65-1) experimental; urgency=medium
+
+  * New 1.0.65 upstream release
+     - Lots of bug fixes on legacy browsing/broadcasting. Thanks to Tim Waugh
+       from Red Hat.
+     - cups-browsed: Added PPD file generator for IPP Everywhere and other
+       suitable IPP printers. So IPP printers set up automatically (using
+       "CreateIPPPrinterQueues Yes" in cups-browsed.conf) get PPD files is
+       possible and so printing options are sown in all print dialogs. The
+       dialog does not need to request option information from the printer
+       via IPP. Code taken from CUPS 2.1.x development branch.
+
+  [ Didier Raboud ]
+  * Update copyright years for Till's contributions
+
+  [ Till Kamppeter ]
+  * Added build dependency on libglib2.0-dev
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 19 Feb 2015 09:36:26 +0100
+
 cups-filters (1.0.62-1) experimental; urgency=low
 
   * New upstream bug fix release
