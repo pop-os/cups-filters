@@ -1,3 +1,17 @@
+cups-filters (1.0.66-0ubuntu1) vivid; urgency=medium
+
+  * New upstream bug fix release
+     - cups-browsed: SECURITY FIX: Fixed a bug in the remove_bad_chars()
+       failing to reliably filter out illegal characters if there are two
+       or more subsequent illegal characters, allowing execution of
+       arbitrary commands with the rights of the "lp" user, using forged
+       print service announcements on DNS-SD servers (Upstream bug #1265).
+     - pdftoopvp: Added conditionals to also build with Poppler 0.31.0
+       and newer. Thanks to Armin K. (krejzi at email dot com) for the
+       patch (Upstream bug #1254).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sat, 28 Feb 2015 08:11:55 +0100
+
 cups-filters (1.0.65-0ubuntu1) vivid; urgency=medium
 
   * New upstream release
