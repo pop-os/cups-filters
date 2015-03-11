@@ -1,3 +1,11 @@
+cups-filters (1.0.67-0ubuntu1) vivid; urgency=medium
+
+  * New upstream release
+     - cups-browsed: Use g_source_remove() instead of g_source_destroy()
+       for killing auto shutdown timers (LP: #1427344).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 11 Mar 2015 16:31:03 +0100
+
 cups-filters (1.0.66-0ubuntu1) vivid; urgency=medium
 
   * New upstream bug fix release
