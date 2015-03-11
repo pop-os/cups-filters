@@ -49,7 +49,10 @@
 #include <avahi-common/error.h>
 #endif /* HAVE_AVAHI */
 
+#include <gio/gio.h>
+
 #include <cups/cups.h>
+#include <cups/ppd.h>
 
 /* Attribute to mark a CUPS queue as created by us */
 #define CUPS_BROWSED_MARK "cups-browsed"
@@ -63,11 +66,11 @@
 
 /* Status of remote printer */
 typedef enum printer_status_e {
-  STATUS_UNCONFIRMED = 0,
-  STATUS_CONFIRMED,
-  STATUS_TO_BE_CREATED,
-  STATUS_BROWSE_PACKET_RECEIVED,
-  STATUS_DISAPPEARED
+  STATUS_UNCONFIRMED = 0,	/* Generated in a previous session */
+  STATUS_CONFIRMED,		/* Avahi confirms UNCONFIRMED printer */
+  STATUS_TO_BE_CREATED,		/* Scheduled for creation */
+  STATUS_BROWSE_PACKET_RECEIVED,/* Scheduled for creation with timeout */
+  STATUS_DISAPPEARED		/* Scheduled for removal */
 } printer_status_t;
 
 /* Data structure for remote printers */
@@ -104,6 +107,12 @@ typedef struct allow_s {
   http_addr_t mask;
 } allow_t;
 
+/* Data struct for a printer discovered using BrowsePoll */
+typedef struct browsepoll_printer_s {
+  char *uri_supported;
+  char *info;
+} browsepoll_printer_t;
+
 /* Data structure for a BrowsePoll server */
 typedef struct browsepoll_s {
   char *server;
@@ -112,12 +121,42 @@ typedef struct browsepoll_s {
   int minor;
   gboolean can_subscribe;
   int subscription_id;
+  int sequence_number;
+
+  /* Remember which printers we discovered. This way we can just ask
+   * if anything has changed, and if not we know these printers are
+   * still there. */
+  GList *printers; /* of browsepoll_printer_t */
 } browsepoll_t;
+
+/* Local printer (key is name) */
+typedef struct local_printer_s {
+  char *device_uri;
+  gboolean cups_browsed_controlled;
+} local_printer_t;
+
+/* Browse data to send for local printer */
+typedef struct browse_data_s {
+  int type;
+  int state;
+  char *uri;
+  char *location;
+  char *info;
+  char *make_model;
+  char *browse_options;
+} browse_data_t;
 
 cups_array_t *remote_printers;
 static cups_array_t *netifs;
 static cups_array_t *browseallow;
 static gboolean browseallow_all = FALSE;
+
+static GHashTable *local_printers;
+static browsepoll_t *local_printers_context = NULL;
+static http_t *local_conn = NULL;
+static gboolean inhibit_local_printers_update = FALSE;
+
+static GList *browse_data = NULL;
 
 static GMainLoop *gmainloop = NULL;
 #ifdef HAVE_AVAHI
@@ -137,6 +176,7 @@ static unsigned int BrowseTimeout = 300;
 static uint16_t BrowsePort = 631;
 static browsepoll_t **BrowsePoll = NULL;
 static size_t NumBrowsePoll = 0;
+static guint update_netifs_sourceid = -1;
 static char *DomainSocket = NULL;
 static unsigned int CreateIPPPrinterQueues = 0;
 static int autoshutdown = 0;
@@ -147,6 +187,11 @@ static guint autoshutdown_exec_id = 0;
 static int debug = 0;
 
 static void recheck_timer (void);
+static void browse_poll_create_subscription (browsepoll_t *context,
+					     http_t *conn);
+static gboolean browse_poll_get_notifications (browsepoll_t *context,
+					       http_t *conn);
+char            *_ppdCreateFromIPP(char *buffer, size_t bufsize, ipp_t *response);
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
 #define HAVE_CUPS_1_6 1
@@ -265,6 +310,336 @@ password_callback (const char *prompt,
   return NULL;
 }
 
+static http_t *
+http_connect_local (void)
+{
+  if (!local_conn)
+    local_conn = httpConnectEncrypt(cupsServer(), ippPort(),
+				    cupsEncryption());
+
+  return local_conn;
+}
+
+static void
+http_close_local (void)
+{
+  if (local_conn) {
+    httpClose (local_conn);
+    local_conn = NULL;
+  }
+}
+
+static local_printer_t *
+new_local_printer (const char *device_uri,
+		   gboolean cups_browsed_controlled)
+{
+  local_printer_t *printer = g_malloc (sizeof (local_printer_t));
+  printer->device_uri = strdup (device_uri);
+  printer->cups_browsed_controlled = cups_browsed_controlled;
+  return printer;
+}
+
+static void
+free_local_printer (gpointer data)
+{
+  local_printer_t *printer = data;
+  free (printer->device_uri);
+  free (printer);
+}
+
+static gboolean
+local_printer_has_uri (gpointer key,
+		       gpointer value,
+		       gpointer user_data)
+{
+  local_printer_t *printer = value;
+  char *device_uri = user_data;
+  return g_str_equal (printer->device_uri, device_uri);
+}
+
+static void
+local_printers_create_subscription (http_t *conn)
+{
+  if (!local_printers_context) {
+    local_printers_context = g_malloc0 (sizeof (browsepoll_t));
+    local_printers_context->server = "localhost";
+    local_printers_context->port = BrowsePort;
+    local_printers_context->can_subscribe = TRUE;
+  }
+
+  browse_poll_create_subscription (local_printers_context, conn);
+}
+
+static void
+get_local_printers (void)
+{
+  cups_dest_t *dests = NULL;
+  int num_dests = cupsGetDests (&dests);
+  debug_printf ("cups-browsed [BrowsePoll localhost:631]: cupsGetDests\n");
+  g_hash_table_remove_all (local_printers);
+  for (int i = 0; i < num_dests; i++) {
+    const char *val;
+    cups_dest_t *dest = &dests[i];
+    local_printer_t *printer;
+    gboolean cups_browsed_controlled;
+    const char *device_uri = cupsGetOption ("device-uri",
+					    dest->num_options,
+					    dest->options);
+    val = cupsGetOption (CUPS_BROWSED_MARK,
+			 dest->num_options,
+			 dest->options);
+    cups_browsed_controlled = val && (!strcasecmp (val, "yes") ||
+				      !strcasecmp (val, "on") ||
+				      !strcasecmp (val, "true"));
+    printer = new_local_printer (device_uri,
+				 cups_browsed_controlled);
+    g_hash_table_insert (local_printers,
+			 g_strdup (dest->name),
+			 printer);
+  }
+
+  cupsFreeDests (num_dests, dests);
+}
+
+static browse_data_t *
+new_browse_data (int type, int state, const gchar *uri,
+		 const gchar *location, const gchar *info,
+		 const gchar *make_model, const gchar *browse_options)
+{
+  browse_data_t *data = g_malloc (sizeof (browse_data_t));
+  data->type = type;
+  data->state = state;
+  data->uri = g_strdup (uri);
+  data->location = g_strdup (location);
+  data->info = g_strdup (info);
+  data->make_model = g_strdup (make_model);
+  data->browse_options = g_strdup (browse_options);
+  return data;
+}
+
+static void
+browse_data_free (gpointer data)
+{
+  browse_data_t *bdata = data;
+  g_free (bdata->uri);
+  g_free (bdata->location);
+  g_free (bdata->info);
+  g_free (bdata->make_model);
+  g_free (bdata->browse_options);
+  g_free (bdata);
+}
+
+static void
+prepare_browse_data (void)
+{
+  static const char * const rattrs[] = { "printer-type",
+					 "printer-state",
+					 "printer-uri-supported",
+					 "printer-info",
+					 "printer-location",
+					 "printer-make-and-model",
+					 "auth-info-required",
+					 "printer-uuid",
+					 "job-template" };
+  ipp_t *request, *response = NULL;
+  ipp_attribute_t *attr;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
+
+  if (conn == NULL) {
+    debug_printf("cups-browsed: browse send failed to connect to localhost\n");
+    goto fail;
+  }
+
+  request = ippNewRequest(CUPS_GET_PRINTERS);
+  ippAddStrings (request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+		 "requested-attributes", sizeof (rattrs) / sizeof (rattrs[0]),
+		 NULL, rattrs);
+  ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_NAME,
+		"requesting-user-name", NULL, cupsUser ());
+
+  debug_printf("cups-browsed: preparing browse data\n");
+  response = cupsDoRequest (conn, request, "/");
+  if (cupsLastError() > IPP_OK_CONFLICT) {
+    debug_printf("cups-browsed: browse send failed for localhost: %s\n",
+		 cupsLastErrorString ());
+    goto fail;
+  }
+
+  g_list_free_full (browse_data, browse_data_free);
+  browse_data = NULL;
+  for (attr = ippFirstAttribute(response); attr;
+       attr = ippNextAttribute(response)) {
+    int type = -1, state = -1;
+    const char *uri = NULL;
+    gchar *location = NULL;
+    gchar *info = NULL;
+    gchar *make_model = NULL;
+    GString *browse_options = g_string_new ("");
+
+    /* Skip any non-printer attributes */
+    while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
+      attr = ippNextAttribute(response);
+
+    if (!attr)
+      break;
+
+    while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
+      const char *attrname = ippGetName(attr);
+      int value_tag = ippGetValueTag(attr);
+
+      if (!strcasecmp(attrname, "printer-type") &&
+	  value_tag == IPP_TAG_ENUM) {
+	type = ippGetInteger(attr, 0);
+	if (type & CUPS_PRINTER_NOT_SHARED) {
+	  /* Skip CUPS queues not marked as shared */
+	  state = -1;
+	  type = -1;
+	  break;
+	}
+      } else if (!strcasecmp(attrname, "printer-state") &&
+	       value_tag == IPP_TAG_ENUM)
+	state = ippGetInteger(attr, 0);
+      else if (!strcasecmp(attrname, "printer-uri-supported") &&
+	       value_tag == IPP_TAG_URI)
+	uri = ippGetString(attr, 0, NULL);
+      else if (!strcasecmp(attrname, "printer-location") &&
+	       value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	location = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "printer-info") &&
+		 value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	info = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "printer-make-and-model") &&
+		 value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	make_model = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "auth-info-required") &&
+		 value_tag == IPP_TAG_KEYWORD) {
+	if (strcasecmp (ippGetString(attr, 0, NULL), "none"))
+	  g_string_append_printf (browse_options, "auth-info-required=%s ",
+				  ippGetString(attr, 0, NULL));
+      } else if (!strcasecmp(attrname, "printer-uuid") &&
+		 value_tag == IPP_TAG_URI)
+	g_string_append_printf (browse_options, "uuid=%s ",
+				ippGetString(attr, 0, NULL));
+      else if (!strcasecmp(attrname, "job-sheets-default") &&
+	       value_tag == IPP_TAG_NAME &&
+	       ippGetCount(attr) == 2)
+	g_string_append_printf (browse_options, "job-sheets=%s,%s ",
+				ippGetString(attr, 0, NULL),
+				ippGetString(attr, 1, NULL));
+      else if (strstr(attrname, "-default")) {
+	gchar *name = g_strdup (attrname);
+	gchar *value = NULL;
+	*strstr (name, "-default") = '\0';
+
+	switch (value_tag) {
+	  gchar **tokens;
+
+	case IPP_TAG_KEYWORD:
+	case IPP_TAG_STRING:
+	case IPP_TAG_NAME:
+	  /* Escape value */
+	  tokens = g_strsplit_set (ippGetString(attr, 0, NULL),
+				   " \"\'\\", -1);
+	  value = g_strjoinv ("\\", tokens);
+	  g_strfreev (tokens);
+	  break;
+
+	default:
+	  /* other values aren't needed? */
+	  debug_printf("cups-browsed: skipping %s (%d)\n", name, value_tag);
+	  break;
+	}
+
+	if (value) {
+	  g_string_append_printf (browse_options, "%s=%s ", name, value);
+	  g_free (value);
+	}
+
+	g_free (name);
+      }
+
+      attr = ippNextAttribute(response);
+    }
+
+    if (type != -1 && state != -1 && uri && location && info && make_model) {
+      gchar *browse_options_str = g_string_free (browse_options, FALSE);
+      browse_data_t *data;
+      browse_options = NULL;
+      g_strchomp (browse_options_str);
+      data = new_browse_data (type, state, uri, location,
+			      info, make_model, browse_options_str);
+      browse_data = g_list_insert (browse_data, data, 0);
+      g_free (browse_options_str);
+    }
+
+    if (make_model)
+      g_free (make_model);
+
+    if (info)
+      g_free (info);
+
+    if (location)
+      g_free (location);
+
+    if (browse_options)
+      g_string_free (browse_options, TRUE);
+
+    if (!attr)
+      break;
+  }
+
+ fail:
+  if (response)
+    ippDelete(response);
+}
+
+static void
+update_local_printers (void)
+{
+  gboolean get_printers = FALSE;
+  http_t *conn;
+
+  if (inhibit_local_printers_update)
+    return;
+
+  conn = http_connect_local ();
+  if (conn &&
+      (!local_printers_context || local_printers_context->can_subscribe)) {
+    if (!local_printers_context ||
+	local_printers_context->subscription_id == -1) {
+      /* No subscription yet. First, create the subscription. */
+      local_printers_create_subscription (conn);
+      get_printers = TRUE;
+    } else
+      /* We already have a subscription, so use it. */
+
+      /* Note: for the moment, browse_poll_get_notifications() just
+       * tells us whether we should re-fetch the printer list, so it
+       * is safe to use here. */
+      get_printers = browse_poll_get_notifications (local_printers_context,
+						    conn);
+  } else
+    get_printers = TRUE;
+
+  if (get_printers) {
+    get_local_printers ();
+
+    if (BrowseLocalProtocols & BROWSE_CUPS)
+      prepare_browse_data ();
+  }
+}
+
 gboolean
 autoshutdown_execute (gpointer data)
 {
@@ -297,53 +672,10 @@ create_local_queue (const char *name,
   char		buffer[8192];		/* Buffer for creating script */
   int           bytes;
   const char	*cups_serverbin;	/* CUPS_SERVERBIN environment variable */
-#if 0
-  int i, uri_status, port, status;
+  int uri_status, port;
   http_t *http;
   char scheme[10], userpass[1024], host_name[1024], resource[1024];
   ipp_t *request, *response;
-  ipp_attribute_t *attr;
-  static const char * const requested_attrs[] =
-    {	/* Requested attributes for getting IPP network printer capabilities */
-	/* Explicit attribute listings for the case that "all" does not cover
-	   everything */
-      "job-template",
-      "printer-description",
-      /*"document-format-supported",
-      "color-supported",
-      "pages-per-minute",
-      "pages-per-minute-color",
-      "media-supported",
-      "media-ready",
-      "media-default",
-      "media-type-supported",
-      "media-source-supported",*/
-      "media-col-database",
-      /*"sides-supported",
-      "sides-default",
-      "output-bin-supported",
-      "output-bin-default",
-      "finishings-supported",
-      "finishings-default",
-      "print-color-mode-supported",
-      "print-color-mode-default",
-      "output-mode-supported",
-      "output-mode-default",
-      "print-quality-supported",
-      "print-quality-default",
-      "printer-resolution-supported",
-      "printer-resolution-default",
-      "copies-supported",
-      "copies-default",*/
-      /* Catch things which were forgotten above or newly introduced */
-      "all"
-    };
-  static int versions_to_try[] =
-    {
-      20,
-      11
-    };
-#endif /* 0 */
 
   /* Mark this as a queue to be created locally pointing to the printer */
   if ((p = (remote_printer_t *)calloc(1, sizeof(remote_printer_t))) == NULL) {
@@ -418,7 +750,7 @@ create_local_queue (const char *name,
        shared printers around. */
 
     if (CreateIPPPrinterQueues == 0) {
-      debug_printf("cups-browsed: Printer %s (%s) is an IPP network printer and cups-browsed id not configured to set up such printers automatically, ignoring this printer.\n",
+      debug_printf("cups-browsed: Printer %s (%s) is an IPP network printer and cups-browsed is not configured to set up such printers automatically, ignoring this printer.\n",
 		   p->name, p->uri);
       goto fail;
     }
@@ -429,7 +761,11 @@ create_local_queue (const char *name,
       goto fail;
     }
 
-#if 0
+    p->duplicate = 0;
+    p->model = NULL;
+
+    /* Request printer properties and try to generate a PPD file for the
+       printer (mainly IPP Everywhere printers) */
     uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, uri,
 				 scheme, sizeof(scheme),
 				 userpass, sizeof(userpass),
@@ -444,71 +780,57 @@ create_local_queue (const char *name,
 		   p->uri, host_name, port);
       goto fail;
     }
-    for (i = 0;
-	 i < sizeof(versions_to_try) / sizeof(versions_to_try[0]);
-	 i ++) {
-      /* Create IPP request */
-      request = ippNewRequest(IPP_GET_PRINTER_ATTRIBUTES);
-      /* Set IPP version */
-      ippSetVersion(request, versions_to_try[i] / 10, versions_to_try[i] % 10);
-      /* Printer URI */
-      ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
-		   "printer-uri", NULL, p->uri);
-      /* Requested IPP attributes */
-      ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-		    "requested-attributes",
-		    sizeof(requested_attrs) / sizeof(requested_attrs[0]),
-		    NULL, requested_attrs);
-      /* Do it */
-      response = cupsDoRequest(http, request, resource);
-      if (response == NULL) {
-	debug_printf("cups-browsed: No answer to Get-Printer-Attributes IPP request from remote printer %s, ignoring this printer (IPP Error: %s %s).\n",
-		     p->uri, ippErrorString(cupsLastError()),
-		     cupsLastErrorString());
-	httpClose(http);
+    request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+    response = cupsDoRequest(http, request, resource);
+
+    if (!_ppdCreateFromIPP(buffer, sizeof(buffer), response)) {
+      debug_printf("cups-browsed: Unable to create PPD file: %s\n", strerror(errno));
+      p->ppd = NULL;
+
+      if ((cups_serverbin = getenv("CUPS_SERVERBIN")) == NULL)
+      cups_serverbin = CUPS_SERVERBIN;
+
+      if ((fd = cupsTempFd(tempfile, sizeof(tempfile))) < 0) {
+	debug_printf("Unable to create interface script file\n");
 	goto fail;
       }
-      status = cupsLastError();
-      debug_printf("cups-browsed: Remote printer %s, IPP %3.1f: %s (%s)\n",
-		   p->uri, versions_to_try[i] / 10.0,
-		   ippErrorString(cupsLastError()),
-		   cupsLastErrorString());
-      /* If succeeded, go on, on error try a lower IPP version */
-      if (status < 0x0400)
-	break;
-    }
-    if (i >= sizeof(versions_to_try) / sizeof(versions_to_try[0])) {
-      /* All IPP versions failed */
-      debug_printf("cups-browsed: Remote printer %s: All IPP versions failed\n",
-		   p->uri);
-      goto fail;
-    }
-    /* Read out the printer's capabilities */
-    attr = ippFirstAttribute(response);
-    while (attr) {
-      debug_printf("Attr: %s\n",
-		   ippGetName(attr));
-      for (i = 0; i < ippGetCount(attr); i ++)
-	debug_printf("Keyword: %s\n",
-		     ippGetString(attr, i, NULL));
-      attr = ippNextAttribute(response);
-    }
-    attr = ippFindAttribute(response,
-			    "document-format-supported",
-			    IPP_TAG_ZERO);
-    if (attr)
-      for (i = 0; i < ippGetCount(attr); i ++)
-	debug_printf("Format: %s\n",
-		     ippGetString(attr, i, NULL));
-    else
-      debug_printf("No formats\n");
-    
-    /* Clean up */
-    ippDelete(response);
-    httpClose(http);
-#endif /* 0 */
+      
+      debug_printf("Creating temp script file \"%s\"\n", tempfile);
 
-    p->duplicate = 0;
+      snprintf(buffer, sizeof(buffer),
+	       "#!/bin/sh\n"
+	       "# System V interface script for printer %s generated by cups-browsed\n"
+	       "\n"
+	       "if [ $# -lt 5 -o $# -gt 6 ]; then\n"
+	       "  echo \"ERROR: $0 job-id user title copies options [file]\" >&2\n"
+	       "  exit 1\n"
+	       "fi\n"
+	       "\n"
+	       "# Read from given file\n"
+	       "if [ -n \"$6\" ]; then\n"
+	       "  exec \"$0\" \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" < \"$6\"\n"
+	       "fi\n"
+	       "\n"
+	       "extra_options=\"output-format=%s make-and-model=%s\"\n"
+	       "\n"
+	       "%s/filter/pdftoippprinter \"$1\" \"$2\" \"$3\" \"$4\" \"$5 $extra_options\"\n",
+	       p->name, pdl, make_model, cups_serverbin);
+
+      bytes = write(fd, buffer, strlen(buffer));
+      if (bytes != strlen(buffer)) {
+	debug_printf("Unable to write interface script into the file\n");
+	goto fail;
+      }
+
+      close(fd);
+
+      p->ifscript = strdup(tempfile);
+    } else {
+      debug_printf("cups-browsed: Created temporary IPP Everywhere PPD: %s\n", buffer);
+      p->ppd = strdup(buffer);
+      p->ifscript = NULL;
+    }
 
     /*p->model = "drv:///sample.drv/laserjet.ppd";
       debug_printf("cups-browsed: PPD from system for %s: %s\n", p->name, p->model);*/
@@ -519,46 +841,6 @@ create_local_queue (const char *name,
     /*p->ifscript = "/usr/lib/cups/filter/pdftoippprinter-wrapper";
       debug_printf("cups-browsed: System V Interface script for %s: %s\n", p->name, p->ifscript);*/
 
-    if ((cups_serverbin = getenv("CUPS_SERVERBIN")) == NULL)
-      cups_serverbin = CUPS_SERVERBIN;
-
-    if ((fd = cupsTempFd(tempfile, sizeof(tempfile))) < 0) {
-      debug_printf("Unable to create interface script file\n");
-      goto fail;
-    }
-
-    debug_printf("Creating temp script file \"%s\"\n", tempfile);
-
-    snprintf(buffer, sizeof(buffer),
-	     "#!/bin/sh\n"
-	     "# System V interface script for printer %s generated by cups-browsed\n"
-	     "\n"
-	     "if [ $# -lt 5 -o $# -gt 6 ]; then\n"
-	     "  echo \"ERROR: $0 job-id user title copies options [file]\" >&2\n"
-	     "  exit 1\n"
-	     "fi\n"
-	     "\n"
-	     "# Read from given file\n"
-	     "if [ -n \"$6\" ]; then\n"
-	     "  exec \"$0\" \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" < \"$6\"\n"
-	     "fi\n"
-	     "\n"
-	     "extra_options=\"output-format=%s make-and-model=%s\"\n"
-	     "\n"
-	     "%s/filter/pdftoippprinter \"$1\" \"$2\" \"$3\" \"$4\" \"$5 $extra_options\"\n",
-	     p->name, pdl, make_model, cups_serverbin);
-
-    bytes = write(fd, buffer, strlen(buffer));
-    if (bytes != strlen(buffer)) {
-      debug_printf("Unable to write interface script into the file\n");
-      goto fail;
-    }
-
-    close(fd);
-
-    p->ppd = NULL;
-    p->model = NULL;
-    p->ifscript = strdup(tempfile);
   }
 
   /* Add the new remote printer entry */
@@ -635,6 +917,7 @@ remove_bad_chars(const char *str_orig, /* I - Original string */
 		       str[i] == '.' || str[i] == ','))) {
       /* Allowed character, keep it */
       havedash = 0;
+      str[j] = str[i];
     } else {
       /* Replace all other characters by a single '-' */
       if (havedash == 1)
@@ -705,8 +988,7 @@ gboolean handle_cups_queues(gpointer unused) {
 
       /* Remove the CUPS queue */
       if (!p->duplicate) { /* Duplicates do not have a CUPS queue */
-	if ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				       cupsEncryption())) == NULL) {
+	if ((http = http_connect_local ()) == NULL) {
 	  debug_printf("cups-browsed: Unable to connect to CUPS!\n");
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  break;
@@ -720,7 +1002,6 @@ gboolean handle_cups_queues(gpointer unused) {
 	if (num_jobs != 0) { /* error or jobs */
 	  debug_printf("cups-browsed: Queue has still jobs or CUPS error!\n");
 	  cupsFreeJobs(num_jobs, jobs);
-	  httpClose(http);
 	  /* Schedule the removal of the queue for later */
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  break;
@@ -760,7 +1041,6 @@ gboolean handle_cups_queues(gpointer unused) {
 	    !strcasecmp(default_printer_name, p->name)) {
 	  /* Printer is currently the system's default printer,
 	     do not remove it */
-	  httpClose(http);
 	  /* Schedule the removal of the queue for later */
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  ippDelete(response);
@@ -784,10 +1064,8 @@ gboolean handle_cups_queues(gpointer unused) {
 	if (cupsLastError() > IPP_OK_CONFLICT) {
 	  debug_printf("cups-browsed: Unable to remove CUPS queue!\n");
 	  p->timeout = current_time + TIMEOUT_RETRY;
-	  httpClose(http);
 	  break;
 	}
-	httpClose(http);
       }
 
       /* CUPS queue removed, remove the list entry */
@@ -837,8 +1115,7 @@ gboolean handle_cups_queues(gpointer unused) {
 		   p->name);
 
       /* Create a new CUPS queue or modify the existing queue */
-      if ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				     cupsEncryption())) == NULL) {
+      if ((http = http_connect_local ()) == NULL) {
 	debug_printf("cups-browsed: Unable to connect to CUPS!\n");
 	p->timeout = current_time + TIMEOUT_RETRY;
 	break;
@@ -895,16 +1172,16 @@ gboolean handle_cups_queues(gpointer unused) {
 	unlink(p->ifscript);
 	free(p->ifscript);
 	p->ifscript = NULL;
-      } else
+      } else {
+	debug_printf("cups-browsed: Raw queue %s\n", p->name);
 	ippDelete(cupsDoRequest(http, request, "/admin/"));
+      }
       cupsFreeOptions(num_options, options);
       if (cupsLastError() > IPP_OK_CONFLICT) {
 	debug_printf("cups-browsed: Unable to create CUPS queue!\n");
 	p->timeout = current_time + TIMEOUT_RETRY;
-	httpClose(http);
 	break;
       }
-      httpClose(http);
 
       if (p->status == STATUS_BROWSE_PACKET_RECEIVED) {
 	p->status = STATUS_DISAPPEARED;
@@ -964,13 +1241,14 @@ recheck_timer (void)
   }
 }
 
-void generate_local_queue(const char *host,
-			  uint16_t port,
-			  char *resource,
-			  const char *name,
-			  const char *type,
-			  const char *domain,
-			  void *txt) {
+static remote_printer_t *
+generate_local_queue(const char *host,
+		     uint16_t port,
+		     char *resource,
+		     const char *name,
+		     const char *type,
+		     const char *domain,
+		     void *txt) {
 
   char uri[HTTP_MAX_URI];
   char *remote_queue = NULL, *remote_host = NULL, *pdl = NULL;
@@ -980,11 +1258,12 @@ void generate_local_queue(const char *host,
   char *key = NULL, *value = NULL;
 #endif /* HAVE_AVAHI */
   remote_printer_t *p;
+  local_printer_t *local_printer;
   char *backup_queue_name = NULL, *local_queue_name = NULL;
-  cups_dest_t *dests = NULL, *dest = NULL;
-  int i, num_dests, is_cups_queue;
+  int is_cups_queue;
   size_t hl = 0;
-  const char *val = NULL;
+  gboolean create = TRUE;
+  
 
   is_cups_queue = 0;
   memset(uri, 0, sizeof(uri));
@@ -1038,7 +1317,7 @@ void generate_local_queue(const char *host,
       debug_printf("cups-browsed: Remote Bonjour-advertised CUPS queue %s on host %s is raw, ignored.\n",
 		   remote_queue, remote_host);
       free (remote_host);
-      return;
+      return NULL;
     }
 #endif /* HAVE_AVAHI */
   } else if (!strncasecmp(resource, "classes/", 8)) {
@@ -1091,57 +1370,30 @@ void generate_local_queue(const char *host,
   sprintf(backup_queue_name, "%s@%s", remote_queue, remote_host);
 
   /* Get available CUPS queues */
-  num_dests = cupsGetDests(&dests);
+  update_local_printers ();
 
   local_queue_name = remote_queue;
-  if (num_dests > 0) {
-    /* Is there a local queue with the same URI as the remote queue? */
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
-      if (((val =
-	    cupsGetOption("device-uri", dest->num_options,
-			  dest->options)) != NULL) &&
-	  (!strcasecmp(val, uri)))
-	break;
-    if (i > 0) {
-      /* Found a local queue with the same URI as our discovered printer
-	 would get, so ignore this remote printer */
-      debug_printf("cups-browsed: Printer with URI %s already exists, printer ignored.\n",
-		   uri);
-      free (remote_host);
-      free (backup_queue_name);
-      free (pdl);
-      free (remote_queue);
-      cupsFreeDests(num_dests, dests);
-      return;
-    }
+
+  /* Is there a local queue with the same URI as the remote queue? */
+  if (g_hash_table_find (local_printers,
+			 local_printer_has_uri,
+			 uri))
+    create = FALSE;
+
+  if (create) {
     /* Is there a local queue with the name of the remote queue? */
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
+    local_printer = g_hash_table_lookup (local_printers,
+					 local_queue_name);
       /* Only consider CUPS queues not created by us */
-      if ((((val =
-	     cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			   dest->options)) == NULL) ||
-	   (strcasecmp(val, "yes") != 0 &&
-	    strcasecmp(val, "on") != 0 &&
-	    strcasecmp(val, "true") != 0)) &&
-	  !strcasecmp(local_queue_name, dest->name))
-	break;
-    if (i > 0) {
+    if (local_printer && !local_printer->cups_browsed_controlled) {
       /* Found local queue with same name as remote queue */
       /* Is there a local queue with the name <queue>@<host>? */
       local_queue_name = backup_queue_name;
       debug_printf("cups-browsed: %s already taken, using fallback name: %s\n",
 		   remote_queue, local_queue_name);
-      for (i = num_dests, dest = dests; i > 0; i --, dest ++)
-	/* Only consider CUPS queues not created by us */
-	if ((((val =
-	       cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			     dest->options)) == NULL) ||
-	     (strcasecmp(val, "yes") != 0 &&
-	      strcasecmp(val, "on") != 0 &&
-	      strcasecmp(val, "true") != 0)) &&
-	    !strcasecmp(local_queue_name, dest->name))
-	  break;
-      if (i > 0) {
+      local_printer = g_hash_table_lookup (local_printers,
+					   local_queue_name);
+      if (local_printer && !local_printer->cups_browsed_controlled) {
 	/* Found also a local queue with name <queue>@<host>, so
 	   ignore this remote printer */
 	debug_printf("cups-browsed: %s also taken, printer ignored.\n",
@@ -1150,11 +1402,9 @@ void generate_local_queue(const char *host,
 	free (remote_host);
 	free (pdl);
 	free (remote_queue);
-	cupsFreeDests(num_dests, dests);
-	return;
+	return NULL;
       }
     }
-    cupsFreeDests(num_dests, dests);
   }
 
   /* Check if we have already created a queue for the discovered
@@ -1167,6 +1417,22 @@ void generate_local_queue(const char *host,
 	 p->status == STATUS_DISAPPEARED ||
 	 !strcasecmp(p->host, remote_host)))
       break;
+
+  if (!create) {
+    free (remote_host);
+    free (backup_queue_name);
+    free (pdl);
+    free (remote_queue);
+    if (p) {
+      return p;
+    } else {
+      /* Found a local queue with the same URI as our discovered printer
+	 would get, so ignore this remote printer */
+      debug_printf("cups-browsed: Printer with URI %s already exists, printer ignored.\n",
+		   uri);
+      return NULL;
+    }
+  }
 
   if (p) {
     /* We have already created a local queue, check whether the
@@ -1185,6 +1451,10 @@ void generate_local_queue(const char *host,
 	debug_printf("cups-browsed: Changing URI of printer %s (Host: %s) to %s.\n",
 		     p->name, remote_host, uri);
       free(p->uri);
+      free(p->host);
+      free(p->service_name);
+      free(p->type);
+      free(p->domain);
       p->uri = strdup(uri);
       p->status = STATUS_TO_BE_CREATED;
       p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
@@ -1208,14 +1478,22 @@ void generate_local_queue(const char *host,
       }
 
     }
-    if (p->host[0] == '\0')
+    if (p->host[0] == '\0') {
+      free (p->host);
       p->host = strdup(remote_host);
-    if (p->service_name[0] == '\0' && name)
+    }
+    if (p->service_name[0] == '\0' && name) {
+      free (p->service_name);
       p->service_name = strdup(name);
-    if (p->type[0] == '\0' && type)
+    }
+    if (p->type[0] == '\0' && type) {
+      free (p->type);
       p->type = strdup(type);
-    if (p->domain[0] == '\0' && domain)
+    }
+    if (p->domain[0] == '\0' && domain) {
+      free (p->domain);
       p->domain = strdup(domain);
+    }
   } else {
 
     /* We need to create a local queue pointing to the
@@ -1234,6 +1512,8 @@ void generate_local_queue(const char *host,
     debug_printf("cups-browsed: Bonjour IDs: Service name: \"%s\", "
 		 "Service type: \"%s\", Domain: \"%s\"\n",
 		 p->service_name, p->type, p->domain);
+
+  return p;
 }
 
 #ifdef HAVE_AVAHI
@@ -1610,6 +1890,10 @@ void avahi_init() {
 }
 #endif /* HAVE_AVAHI */
 
+/*
+ * A CUPS printer has been discovered via CUPS Browsing
+ * or with BrowsePoll
+ */
 void
 found_cups_printer (const char *remote_host, const char *uri,
 		    const char *info)
@@ -1622,6 +1906,7 @@ found_cups_printer (const char *remote_host, const char *uri,
   netif_t *iface;
   char local_resource[HTTP_MAX_URI];
   char *c;
+  remote_printer_t *printer;
 
   memset(scheme, 0, sizeof(scheme));
   memset(username, 0, sizeof(username));
@@ -1663,8 +1948,18 @@ found_cups_printer (const char *remote_host, const char *uri,
   debug_printf("cups-browsed: browsed queue name is %s\n",
 	       local_resource + 9);
 
-  generate_local_queue(host, port, local_resource, info ? info : "",
-		       "", "", NULL);
+  printer = generate_local_queue(host, port, local_resource,
+				 info ? info : "",
+				 "", "", NULL);
+
+  if (printer) {
+    if (printer->status == STATUS_TO_BE_CREATED)
+      printer->status = STATUS_BROWSE_PACKET_RECEIVED;
+    else {
+      printer->status = STATUS_DISAPPEARED;
+      printer->timeout = time(NULL) + BrowseTimeout;
+    }
+  }
 }
 
 static gboolean
@@ -1820,23 +2115,26 @@ process_browse_data (GIOChannel *source,
   if (c >= end)
     return TRUE;
 
-  found_cups_printer (remote_host, uri, info);
+  if (!(type & CUPS_PRINTER_DELETE))
+    found_cups_printer (remote_host, uri, info);
+
   recheck_timer ();
 
   /* Don't remove this I/O source */
   return TRUE;
 }
 
-void
-update_netifs (void)
+static gboolean
+update_netifs (gpointer data)
 {
   struct ifaddrs *ifaddr, *ifa;
   netif_t *iface;
 
+  update_netifs_sourceid = -1;
   if (getifaddrs (&ifaddr) == -1) {
     debug_printf("cups-browsed: unable to get interface addresses: %s\n",
 		 strerror (errno));
-    return;
+    return FALSE;
   }
 
   while ((iface = cupsArrayFirst (netifs)) != NULL) {
@@ -1907,14 +2205,15 @@ update_netifs (void)
   }
 
   freeifaddrs (ifaddr);
+
+  /* If run as a timeout, don't run it again. */
+  return FALSE;
 }
 
-void
-broadcast_browse_packets (int type, int state,
-			  const char *local_uri, const char *location,
-			  const char *info, const char *make_model,
-			  const char *browse_options)
+static void
+broadcast_browse_packets (gpointer data, gpointer user_data)
 {
+  browse_data_t *bdata = data;
   netif_t *browse;
   char packet[2048];
   char uri[HTTP_MAX_URI];
@@ -1928,7 +2227,7 @@ broadcast_browse_packets (int type, int state,
        browse != NULL;
        browse = (netif_t *)cupsArrayNext (netifs)) {
     /* Replace 'localhost' with our IP address on this interface */
-    httpSeparateURI(HTTP_URI_CODING_ALL, local_uri,
+    httpSeparateURI(HTTP_URI_CODING_ALL, bdata->uri,
 		    scheme, sizeof(scheme),
 		    username, sizeof(username),
 		    host, sizeof(host),
@@ -1947,11 +2246,16 @@ broadcast_browse_packets (int type, int state,
 		  "lease-duration=%d" /* BrowseTimeout */
 		  "%s%s" /* other browse options */
 		  "\n",
-		  type, state, uri, location,
-		  info, make_model,
+		  bdata->type,
+		  bdata->state,
+		  uri,
+		  bdata->location,
+		  bdata->info,
+		  bdata->make_model,
 		  BrowseTimeout,
-		  browse_options ? " " : "",
-		  browse_options ? browse_options : "") >= sizeof (packet)) {
+		  bdata->browse_options ? " " : "",
+		  bdata->browse_options ? bdata->browse_options : "")
+	>= sizeof (packet)) {
       debug_printf ("cups-browsed: oversize packet not sent\n");
       continue;
     }
@@ -1962,7 +2266,7 @@ broadcast_browse_packets (int type, int state,
 		      strlen (packet), 0,
 		      &browse->broadcast.addr,
 		      httpAddrLength (&browse->broadcast));
-    if (err)
+    if (err == -1)
       debug_printf("cupsd-browsed: sendto returned %d: %s\n",
 		   err, strerror (errno));
   }
@@ -1971,193 +2275,43 @@ broadcast_browse_packets (int type, int state,
 gboolean
 send_browse_data (gpointer data)
 {
-  static const char * const rattrs[] = { "printer-type",
-					 "printer-state",
-					 "printer-uri-supported",
-					 "printer-info",
-					 "printer-location",
-					 "printer-make-and-model",
-					 "auth-info-required",
-					 "printer-uuid",
-					 "job-template" };
-  ipp_t *request, *response = NULL;
-  ipp_attribute_t *attr;
-  http_t *conn = NULL;
-
-  update_netifs ();
+  update_netifs (NULL);
   res_init ();
-  conn = httpConnectEncrypt ("localhost", BrowsePort,
-			     HTTP_ENCRYPT_IF_REQUESTED);
-
-  if (conn == NULL) {
-    debug_printf("cups-browsed: browse send failed to connect to localhost\n");
-    goto fail;
-  }
-
-  request = ippNewRequest(CUPS_GET_PRINTERS);
-  ippAddStrings (request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-		 "requested-attributes", sizeof (rattrs) / sizeof (rattrs[0]),
-		 NULL, rattrs);
-  ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-		"requesting-user-name", NULL, cupsUser ());
-
-  response = cupsDoRequest (conn, request, "/");
-  if (cupsLastError() > IPP_OK_CONFLICT) {
-    debug_printf("cups-browsed: browse send failed for localhost: %s\n",
-		 cupsLastErrorString ());
-    goto fail;
-  }
-
-  for (attr = ippFirstAttribute(response); attr;
-       attr = ippNextAttribute(response)) {
-    int type = -1, state = -1;
-    const char *uri = NULL;
-    gchar *location = NULL;
-    gchar *info = NULL;
-    gchar *make_model = NULL;
-    GString *browse_options = g_string_new ("");
-
-    /* Skip any non-printer attributes */
-    while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
-      attr = ippNextAttribute(response);
-
-    if (!attr)
-      break;
-
-    while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
-      const char *attrname = ippGetName(attr);
-      int value_tag = ippGetValueTag(attr);
-
-      if (!strcasecmp(attrname, "printer-type") &&
-	  value_tag == IPP_TAG_ENUM) {
-	type = ippGetInteger(attr, 0);
-	if (type & CUPS_PRINTER_NOT_SHARED) {
-	  /* Skip CUPS queues not marked as shared */
-	  state = -1;
-	  type = -1;
-	  break;
-	}
-      } else if (!strcasecmp(attrname, "printer-state") &&
-	       value_tag == IPP_TAG_ENUM)
-	state = ippGetInteger(attr, 0);
-      else if (!strcasecmp(attrname, "printer-uri-supported") &&
-	       value_tag == IPP_TAG_URI)
-	uri = ippGetString(attr, 0, NULL);
-      else if (!strcasecmp(attrname, "printer-location") &&
-	       value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	location = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "printer-info") &&
-		 value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	info = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "printer-make-and-model") &&
-		 value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	make_model = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "auth-info-required") &&
-		 value_tag == IPP_TAG_KEYWORD) {
-	if (strcasecmp (ippGetString(attr, 0, NULL), "none"))
-	  g_string_append_printf (browse_options, "auth-info-required=%s ",
-				  ippGetString(attr, 0, NULL));
-      } else if (!strcasecmp(attrname, "printer-uuid") &&
-		 value_tag == IPP_TAG_URI)
-	g_string_append_printf (browse_options, "uuid=%s ",
-				ippGetString(attr, 0, NULL));
-      else if (!strcasecmp(attrname, "job-sheets-default") &&
-	       value_tag == IPP_TAG_NAME &&
-	       ippGetCount(attr) == 2)
-	g_string_append_printf (browse_options, "job-sheets=%s,%s ",
-				ippGetString(attr, 0, NULL),
-				ippGetString(attr, 1, NULL));
-      else if (strstr(attrname, "-default")) {
-	gchar *name = g_strdup (attrname);
-	gchar *value = NULL;
-	*strstr (name, "-default") = '\0';
-
-	switch (value_tag) {
-	  gchar **tokens;
-
-	case IPP_TAG_KEYWORD:
-	case IPP_TAG_STRING:
-	case IPP_TAG_NAME:
-	  /* Escape value */
-	  tokens = g_strsplit_set (ippGetString(attr, 0, NULL),
-				   " \"\'\\", -1);
-	  value = g_strjoinv ("\\", tokens);
-	  g_strfreev (tokens);
-	  break;
-
-	default:
-	  /* other values aren't needed? */
-	  debug_printf("cups-browsed: skipping %s (%d)\n", name, value_tag);
-	  break;
-	}
-
-	if (value) {
-	  g_string_append_printf (browse_options, "%s=%s ", name, value);
-	  g_free (value);
-	}
-
-	g_free (name);
-      }
-
-      attr = ippNextAttribute(response);
-    }
-
-    if (type != -1 && state != -1 && uri && location && info && make_model) {
-      gchar *browse_options_str = g_string_free (browse_options, FALSE);
-      browse_options = NULL;
-      g_strchomp (browse_options_str);
-
-      broadcast_browse_packets (type, state, uri, location,
-				info, make_model,
-				browse_options_str);
-
-      g_free (browse_options_str);
-    }
-
-    if (make_model)
-      g_free (make_model);
-
-    if (info)
-      g_free (info);
-
-    if (location)
-      g_free (location);
-
-    if (browse_options)
-      g_string_free (browse_options, TRUE);
-
-    if (!attr)
-      break;
-  }
-
- fail:
-  if (response)
-    ippDelete(response);
-
-  if (conn)
-    httpClose (conn);
-
+  update_local_printers ();
+  g_list_foreach (browse_data, broadcast_browse_packets, NULL);
   g_timeout_add_seconds (BrowseInterval, send_browse_data, NULL);
 
   /* Stop this timeout handler, we called a new one */
   return FALSE;
 }
 
+static browsepoll_printer_t *
+new_browsepoll_printer (const char *uri_supported,
+			const char *info)
+{
+  browsepoll_printer_t *printer = g_malloc (sizeof (browsepoll_printer_t));
+  printer->uri_supported = g_strdup (uri_supported);
+  printer->info = g_strdup (info);
+  return printer;
+}
+
+static void
+browsepoll_printer_free (gpointer data)
+{
+  browsepoll_printer_t *printer = data;
+  free (printer->uri_supported);
+  free (printer->info);
+  free (printer);
+}
+
 static void
 browse_poll_get_printers (browsepoll_t *context, http_t *conn)
 {
-  static const char * const rattrs[] = { "printer-uri-supported" };
+  static const char * const rattrs[] = { "printer-uri-supported",
+					 "printer-info"};
   ipp_t *request, *response = NULL;
   ipp_attribute_t *attr;
+  GList *printers = NULL;
 
   debug_printf ("cups-browsed [BrowsePoll %s:%d]: CUPS-Get-Printers\n",
 		context->server, context->port);
@@ -2196,6 +2350,7 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
 
   for (attr = ippFirstAttribute(response); attr;
        attr = ippNextAttribute(response)) {
+    browsepoll_printer_t *printer;
     const char *uri, *info;
 
     while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
@@ -2207,6 +2362,7 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
     uri = NULL;
     info = NULL;
     while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
+
       if (!strcasecmp (ippGetName(attr), "printer-uri-supported") &&
 	  ippGetValueTag(attr) == IPP_TAG_URI)
 	uri = ippGetString(attr, 0, NULL);
@@ -2217,13 +2373,18 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
       attr = ippNextAttribute(response);
     }
 
-    if (uri)
+    if (uri) {
       found_cups_printer (context->server, uri, info);
+      printer = new_browsepoll_printer (uri, info);
+      printers = g_list_insert (printers, printer, 0);
+    }
 
     if (!attr)
       break;
   }
 
+  g_list_free_full (context->printers, browsepoll_printer_free);
+  context->printers = printers;
   recheck_timer ();
 
 fail:
@@ -2315,7 +2476,7 @@ browse_poll_cancel_subscription (browsepoll_t *context)
     return;
   }
 
-  debug_printf ("cups-browsed [BrowsePoll %s:%d] IPP-Cancel-Subscription\n",
+  debug_printf ("cups-browsed [BrowsePoll %s:%d]: IPP-Cancel-Subscription\n",
 		context->server, context->port);
 
   request = ippNewRequest(IPP_CANCEL_SUBSCRIPTION);
@@ -2348,11 +2509,10 @@ static gboolean
 browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 {
   ipp_t *request, *response = NULL;
-  ipp_attribute_t *attr;
   ipp_status_t status;
   gboolean get_printers = FALSE;
 
-  debug_printf ("cups-browsed [BrowsePoll %s:%d] IPP-Get-Notifications\n",
+  debug_printf ("cups-browsed [BrowsePoll %s:%d]: IPP-Get-Notifications\n",
 		context->server, context->port);
 
   request = ippNewRequest(IPP_GET_NOTIFICATIONS);
@@ -2369,6 +2529,8 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 		"requesting-user-name", NULL, cupsUser ());
   ippAddInteger (request, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
 		 "notify-subscription-ids", context->subscription_id);
+  ippAddInteger (request, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
+		 "notify-sequence-numbers", context->sequence_number + 1);
 
   response = cupsDoRequest (conn, request, "/");
   if (!response)
@@ -2378,7 +2540,7 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 
   if (status == IPP_NOT_FOUND) {
     /* Subscription lease has expired. */
-    debug_printf ("cups-browsed [BrowsePoll %s:%d] Lease expired\n",
+    debug_printf ("cups-browsed [BrowsePoll %s:%d]: Lease expired\n",
 		  context->server, context->port);
     browse_poll_create_subscription (context, conn);
     get_printers = TRUE;
@@ -2388,29 +2550,48 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
     context->can_subscribe = FALSE;
     browse_poll_cancel_subscription (context);
     context->subscription_id = -1;
+    context->sequence_number = 0;
     get_printers = TRUE;
-    goto fail;
   }
 
-  for (attr = ippFirstAttribute(response); attr;
-       attr = ippNextAttribute(response))
-    if (ippGetGroupTag (attr) == IPP_TAG_EVENT_NOTIFICATION)
-      /* There is a printer-* event here. */
-      break;
+  if (!get_printers) {
+    ipp_attribute_t *attr;
+    gboolean seen_event = FALSE;
+    int last_seq = context->sequence_number;
+    assert (response != NULL);
+    for (attr = ippFirstAttribute(response); attr;
+	 attr = ippNextAttribute(response))
+      if (ippGetGroupTag (attr) == IPP_TAG_EVENT_NOTIFICATION) {
+	/* There is a printer-* event here. */
+	seen_event = TRUE;
 
-  if (attr) {
-    debug_printf("cups-browsed [BrowsePoll %s:%d]: printer-* event\n",
-		 context->server, context->port);
-    get_printers = TRUE;
-  } else
-    debug_printf("cups-browsed [BrowsePoll %s:%d]: no events\n",
-		 context->server, context->port);
+	if (!strcmp (ippGetName (attr), "notify-sequence-number") &&
+	    ippGetValueTag (attr) == IPP_TAG_INTEGER)
+	  last_seq = ippGetInteger (attr, 0);
+      }
 
-fail:
+    if (seen_event) {
+      debug_printf("cups-browsed [BrowsePoll %s:%d]: printer-* event\n",
+		   context->server, context->port);
+      context->sequence_number = last_seq;
+      get_printers = TRUE;
+    } else
+      debug_printf("cups-browsed [BrowsePoll %s:%d]: no events\n",
+		   context->server, context->port);
+  }
+
   if (response)
-    ippDelete(response);
+    ippDelete (response);
 
   return get_printers;
+}
+
+static void
+browsepoll_printer_keepalive (gpointer data, gpointer user_data)
+{
+  browsepoll_printer_t *printer = data;
+  const char *server = user_data;
+  found_cups_printer (server, printer->uri_supported, printer->info);
 }
 
 gboolean
@@ -2447,8 +2628,15 @@ browse_poll (gpointer data)
   else
     get_printers = TRUE;
 
+  update_local_printers ();
+  inhibit_local_printers_update = TRUE;
   if (get_printers)
     browse_poll_get_printers (context, conn);
+  else
+    g_list_foreach (context->printers, browsepoll_printer_keepalive,
+		    context->server);
+
+  inhibit_local_printers_update = FALSE;
 
 fail:
 
@@ -2634,52 +2822,47 @@ read_configuration (const char *filename)
 	BrowsePoll = old;
       } else {
 	char *colon, *slash;
-	browsepoll_t *b = malloc (sizeof (browsepoll_t));
-	if (!b) {
-	  debug_printf("cups-browsed: unable to malloc: ignoring BrowsePoll line\n");
-	  BrowsePoll = old;
-	} else {
-	  debug_printf("cups-browsed: Adding BrowsePoll server: %s\n", value);
-	  b->server = strdup (value);
-	  b->port = BrowsePort;
-	  b->can_subscribe = TRUE; /* first assume subscriptions work */
-	  b->subscription_id = -1;
-	  slash = strchr (b->server, '/');
-	  if (slash) {
-	    *slash++ = '\0';
-	    if (!strcasecmp (slash, "version=1.0")) {
-	      b->major = 1;
-	      b->minor = 0;
-	    } else if (!strcasecmp (slash, "version=1.1")) {
-	      b->major = 1;
-	      b->minor = 1;
-	    } else if (!strcasecmp (slash, "version=2.0")) {
-	      b->major = 2;
-	      b->minor = 0;
-	    } else if (!strcasecmp (slash, "version=2.1")) {
-	      b->major = 2;
-	      b->minor = 1;
-	    } else if (!strcasecmp (slash, "version=2.2")) {
-	      b->major = 2;
-	      b->minor = 2;
-	    } else {
-	      debug_printf ("ignoring unknown server option: %s\n", slash);
-	    }
-	  } else
-	    b->major = 0;
-
-	  colon = strchr (b->server, ':');
-	  if (colon) {
-	    char *endptr;
-	    unsigned long n;
-	    *colon++ = '\0';
-	    n = strtoul (colon, &endptr, 10);
-	    if (endptr != colon && n < INT_MAX)
-	      b->port = (int) n;
+	browsepoll_t *b = g_malloc0 (sizeof (browsepoll_t));
+	debug_printf("cups-browsed: Adding BrowsePoll server: %s\n", value);
+	b->server = strdup (value);
+	b->port = BrowsePort;
+	b->can_subscribe = TRUE; /* first assume subscriptions work */
+	b->subscription_id = -1;
+	slash = strchr (b->server, '/');
+	if (slash) {
+	  *slash++ = '\0';
+	  if (!strcasecmp (slash, "version=1.0")) {
+	    b->major = 1;
+	    b->minor = 0;
+	  } else if (!strcasecmp (slash, "version=1.1")) {
+	    b->major = 1;
+	    b->minor = 1;
+	  } else if (!strcasecmp (slash, "version=2.0")) {
+	    b->major = 2;
+	    b->minor = 0;
+	  } else if (!strcasecmp (slash, "version=2.1")) {
+	    b->major = 2;
+	    b->minor = 1;
+	  } else if (!strcasecmp (slash, "version=2.2")) {
+	    b->major = 2;
+	    b->minor = 2;
+	  } else {
+	    debug_printf ("ignoring unknown server option: %s\n", slash);
 	  }
+	} else
+	  b->major = 0;
 
-	  BrowsePoll[NumBrowsePoll++] = b;
+	colon = strchr (b->server, ':');
+	if (colon) {
+	  char *endptr;
+	  unsigned long n;
+	  *colon++ = '\0';
+	  n = strtoul (colon, &endptr, 10);
+	  if (endptr != colon && n < INT_MAX)
+	    b->port = (int) n;
 	}
+
+	BrowsePoll[NumBrowsePoll++] = b;
       }
     } else if (!strcasecmp(line, "BrowseAllow")) {
       if (read_browseallow_value (value))
@@ -2729,15 +2912,76 @@ read_configuration (const char *filename)
   cupsFileClose(fp);
 }
 
+static void
+defer_update_netifs (void)
+{
+  if (update_netifs_sourceid != -1)
+    g_source_remove (update_netifs_sourceid);
+
+  update_netifs_sourceid = g_timeout_add_seconds (10, update_netifs, NULL);
+}
+
+static void
+nm_properties_changed (GDBusProxy *proxy,
+		       GVariant *changed_properties,
+		       const gchar *const *invalidated_properties,
+		       gpointer user_data)
+{
+  GVariantIter *iter;
+  const gchar *key;
+  GVariant *value;
+  g_variant_get (changed_properties, "a{sv}", &iter);
+  while (g_variant_iter_loop (iter, "{&sv}", &key, &value)) {
+    if (!strcmp (key, "ActiveConnections")) {
+      debug_printf ("cups-browsed: NetworkManager ActiveConnections changed\n");
+      defer_update_netifs ();
+      break;
+    }
+  }
+
+  g_variant_iter_free (iter);
+}
+
+static void
+find_previous_queue (gpointer key,
+		     gpointer value,
+		     gpointer user_data)
+{
+  const char *name = key;
+  const local_printer_t *printer = value;
+  remote_printer_t *p;
+  if (printer->cups_browsed_controlled) {
+    /* Queue found, add to our list */
+    p = create_local_queue (name,
+			    printer->device_uri,
+			    "", "", "", "", NULL, NULL, 1);
+    if (p) {
+      /* Mark as unconfirmed, if no Avahi report of this queue appears
+	 in a certain time frame, we will remove the queue */
+      p->status = STATUS_UNCONFIRMED;
+
+      if (BrowseRemoteProtocols & BROWSE_CUPS)
+	p->timeout = time(NULL) + BrowseTimeout;
+      else
+	p->timeout = time(NULL) + TIMEOUT_CONFIRM;
+
+      p->duplicate = 0;
+      debug_printf("cups-browsed: Found CUPS queue %s (URI: %s) from previous session.\n",
+		   p->name, p->uri);
+    } else {
+      debug_printf("cups-browsed: ERROR: Unable to allocate memory.\n");
+      exit(1);
+    }
+  }
+}
+
 int main(int argc, char*argv[]) {
   int ret = 1;
   http_t *http;
-  cups_dest_t *dests,
-              *dest;
-  int i,
-      num_dests;
+  int i;
   const char *val;
   remote_printer_t *p;
+  GDBusProxy *proxy = NULL;
 
   /* Turn on debug mode if requested */
   if (argc >= 2)
@@ -2840,54 +3084,24 @@ int main(int argc, char*argv[]) {
 #endif /* HAVE_AVAHI */
 
   /* Wait for CUPS daemon to start */
-  while ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				    cupsEncryption())) == NULL)
+  while ((http = http_connect_local ()) == NULL)
     sleep(1);
 
   /* Initialise the array of network interfaces */
   netifs = cupsArrayNew(compare_pointers, NULL);
-  update_netifs ();
+  update_netifs (NULL);
+
+  local_printers = g_hash_table_new_full (g_str_hash,
+					  g_str_equal,
+					  g_free,
+					  free_local_printer);
 
   /* Read out the currently defined CUPS queues and find the ones which we
      have added in an earlier session */
-  num_dests = cupsGetDests(&dests);
+  update_local_printers ();
   remote_printers = cupsArrayNew((cups_array_func_t)compare_remote_printers,
 				 NULL);
-  if (num_dests > 0) {
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++) {
-      if ((val = cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			       dest->options)) != NULL) {
-	if (strcasecmp(val, "no") != 0 && strcasecmp(val, "off") != 0 &&
-	    strcasecmp(val, "false") != 0) {
-	  /* Queue found, add to our list */
-	  p = create_local_queue (dest->name,
-				  cupsGetOption("device-uri",
-						dest->num_options,
-						dest->options),
-				  "", "", "", "", NULL, NULL, 1);
-	  if (p) {
-	    /* Mark as unconfirmed, if no Avahi report of this queue appears
-	       in a certain time frame, we will remove the queue */
-	    p->status = STATUS_UNCONFIRMED;
-
-	    if (BrowseRemoteProtocols & BROWSE_CUPS)
-	      p->timeout = time(NULL) + BrowseTimeout;
-	    else
-	      p->timeout = time(NULL) + TIMEOUT_CONFIRM;
-
-	    p->duplicate = 0;
-	    debug_printf("cups-browsed: Found CUPS queue %s (URI: %s) from previous session.\n",
-			 p->name, p->uri);
-	  } else {
-	    debug_printf("cups-browsed: ERROR: Unable to allocate memory.\n");
-	    exit(1);
-	  }
-	}
-      }
-    }
-    cupsFreeDests(num_dests, dests);
-  }
-  httpClose(http);
+  g_hash_table_foreach (local_printers, find_previous_queue, NULL);
 
   /* Redirect SIGINT and SIGTERM so that we do a proper shutdown, removing
      the CUPS queues which we have created
@@ -2980,6 +3194,22 @@ int main(int argc, char*argv[]) {
    * prompting for it. */
   cupsSetPasswordCB2 (password_callback, NULL);
 
+  /* Watch NetworkManager for network interface changes */
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					 G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+					 NULL, /* GDBusInterfaceInfo */
+					 "org.freedesktop.NetworkManager",
+					 "/org/freedesktop/NetworkManager",
+					 "org.freedesktop.NetworkManager",
+					 NULL, /* GCancellable */
+					 NULL); /* GError */
+
+  if (proxy)
+    g_signal_connect (proxy,
+		      "g-properties-changed",
+		      G_CALLBACK (nm_properties_changed),
+		      NULL);
+
   /* Run the main loop */
   gmainloop = g_main_loop_new (NULL, FALSE);
   recheck_timer ();
@@ -3027,6 +3257,9 @@ fail:
 
   /* Clean up things */
 
+  if (proxy)
+    g_object_unref (proxy);
+
   /* Remove all queues which we have set up */
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
        p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
@@ -3045,11 +3278,22 @@ fail:
 	browse_poll_cancel_subscription (BrowsePoll[index]);
 
       free (BrowsePoll[index]->server);
+      g_list_free_full (BrowsePoll[index]->printers,
+			browsepoll_printer_free);
       free (BrowsePoll[index]);
     }
 
     free (BrowsePoll);
   }
+
+  if (local_printers_context) {
+    browse_poll_cancel_subscription (local_printers_context);
+    g_list_free_full (local_printers_context->printers,
+		      browsepoll_printer_free);
+    free (local_printers_context);
+  }
+
+  http_close_local ();
 
 #ifdef HAVE_AVAHI
   avahi_shutdown();
@@ -3058,5 +3302,985 @@ fail:
   if (browsesocket != -1)
       close (browsesocket);
 
+  g_hash_table_destroy (local_printers);
+
+  if (BrowseLocalProtocols & BROWSE_CUPS)
+    g_list_free_full (browse_data, browse_data_free);
+
   return ret;
 }
+
+
+/*
+ * The code below is borrowed from the CUPS 2.1.x upstream repository
+ * (via patches attached to https://www.cups.org/str.php?L4258). This
+ * allows for automatic PPD generation already with CUPS versions older
+ * than CUPS 2.1.x. We have also an additional test and development
+ * platform for this code. Taken from cups/ppd-cache.c,
+ * cups/string-private.h, cups/string.c.
+ * 
+ * The advantage of PPD generation instead of working with System V
+ * interface scripts is that the print dialogs of the clients do not
+ * need to ask the printer for its options via IPP. So we have access
+ * to the options with the current PPD-based dialogs and can even share
+ * the automatically created print queue to other CUPS-based machines
+ * without problems.
+ */
+
+
+typedef struct _pwg_finishings_s	/**** PWG finishings mapping data ****/
+{
+  ipp_finishings_t	value;		/* finishings value */
+  int			num_options;	/* Number of options to apply */
+  cups_option_t		*options;	/* Options to apply */
+} _pwg_finishings_t;
+
+#define _PWG_EQUIVALENT(x, y)	(abs((x)-(y)) < 2)
+
+static void	pwg_ppdize_name(const char *ipp, char *name, size_t namesize);
+static void	pwg_ppdize_resolution(ipp_attribute_t *attr, int element, int *xres, int *yres, char *name, size_t namesize);
+
+int			/* O - 1 on match, 0 otherwise */
+_cups_isalnum(int ch)			/* I - Character to test */
+{
+  return ((ch >= '0' && ch <= '9') ||
+          (ch >= 'A' && ch <= 'Z') ||
+          (ch >= 'a' && ch <= 'z'));
+}
+
+int			/* O - 1 on match, 0 otherwise */
+_cups_isalpha(int ch)			/* I - Character to test */
+{
+  return ((ch >= 'A' && ch <= 'Z') ||
+          (ch >= 'a' && ch <= 'z'));
+}
+
+int			/* O - 1 on match, 0 otherwise */
+_cups_islower(int ch)			/* I - Character to test */
+{
+  return (ch >= 'a' && ch <= 'z');
+}
+
+int			/* O - 1 on match, 0 otherwise */
+_cups_isspace(int ch)			/* I - Character to test */
+{
+  return (ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' ||
+          ch == '\v');
+}
+
+int			/* O - 1 on match, 0 otherwise */
+_cups_isupper(int ch)			/* I - Character to test */
+{
+  return (ch >= 'A' && ch <= 'Z');
+}
+
+int			/* O - Converted character */
+_cups_tolower(int ch)			/* I - Character to convert */
+{
+  return (_cups_isupper(ch) ? ch - 'A' + 'a' : ch);
+}
+
+int			/* O - Converted character */
+_cups_toupper(int ch)			/* I - Character to convert */
+{
+  return (_cups_islower(ch) ? ch - 'a' + 'A' : ch);
+}
+
+/*
+ * '_cups_strcasecmp()' - Do a case-insensitive comparison.
+ */
+
+int				/* O - Result of comparison (-1, 0, or 1) */
+_cups_strcasecmp(const char *s,	/* I - First string */
+                 const char *t)	/* I - Second string */
+{
+  while (*s != '\0' && *t != '\0')
+  {
+    if (_cups_tolower(*s) < _cups_tolower(*t))
+      return (-1);
+    else if (_cups_tolower(*s) > _cups_tolower(*t))
+      return (1);
+
+    s ++;
+    t ++;
+  }
+
+  if (*s == '\0' && *t == '\0')
+    return (0);
+  else if (*s != '\0')
+    return (1);
+  else
+    return (-1);
+}
+
+/*
+ * '_cups_strncasecmp()' - Do a case-insensitive comparison on up to N chars.
+ */
+
+int					/* O - Result of comparison (-1, 0, or 1) */
+_cups_strncasecmp(const char *s,	/* I - First string */
+                  const char *t,	/* I - Second string */
+		  size_t     n)		/* I - Maximum number of characters to compare */
+{
+  while (*s != '\0' && *t != '\0' && n > 0)
+  {
+    if (_cups_tolower(*s) < _cups_tolower(*t))
+      return (-1);
+    else if (_cups_tolower(*s) > _cups_tolower(*t))
+      return (1);
+
+    s ++;
+    t ++;
+    n --;
+  }
+
+  if (n == 0)
+    return (0);
+  else if (*s == '\0' && *t == '\0')
+    return (0);
+  else if (*s != '\0')
+    return (1);
+  else
+    return (-1);
+}
+
+#ifndef HAVE_STRLCPY
+/*
+ * '_cups_strlcpy()' - Safely copy two strings.
+ */
+
+size_t					/* O - Length of string */
+strlcpy(char       *dst,		/* O - Destination string */
+	const char *src,		/* I - Source string */
+	size_t      size)		/* I - Size of destination string buffer */
+{
+  size_t	srclen;			/* Length of source string */
+
+
+ /*
+  * Figure out how much room is needed...
+  */
+
+  size --;
+
+  srclen = strlen(src);
+
+ /*
+  * Copy the appropriate amount...
+  */
+
+  if (srclen > size)
+    srclen = size;
+
+  memmove(dst, src, srclen);
+  dst[srclen] = '\0';
+
+  return (srclen);
+}
+#endif /* !HAVE_STRLCPY */
+
+/*
+ * '_ppdCreateFromIPP()' - Create a PPD file describing the capabilities
+ *                         of an IPP printer.
+ */
+
+char *					/* O - PPD filename or NULL on error */
+_ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
+                  size_t bufsize,	/* I - Size of filename buffer */
+		  ipp_t  *response)	/* I - Get-Printer-Attributes response */
+{
+  cups_file_t		*fp;		/* PPD file */
+  ipp_attribute_t	*attr,		/* xxx-supported */
+			*defattr,	/* xxx-default */
+			*x_dim, *y_dim;	/* Media dimensions */
+  ipp_t			*media_size;	/* Media size collection */
+  char			make[256],	/* Make and model */
+			*model,		/* Model name */
+			ppdname[PPD_MAX_NAME];
+		    			/* PPD keyword */
+  int			i, j,		/* Looping vars */
+			count,		/* Number of values */
+			bottom,		/* Largest bottom margin */
+			left,		/* Largest left margin */
+			right,		/* Largest right margin */
+			top;		/* Largest top margin */
+  pwg_media_t		*pwg;		/* PWG media size */
+  int			xres, yres;	/* Resolution values */
+
+
+ /*
+  * Range check input...
+  */
+
+  if (buffer)
+    *buffer = '\0';
+
+  if (!buffer || bufsize < 1 || !response)
+    return (NULL);
+
+ /*
+  * Open a temporary file for the PPD...
+  */
+
+  if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL)
+    return (NULL);
+
+ /*
+  * Standard stuff for PPD file...
+  */
+
+  cupsFilePuts(fp, "*PPD-Adobe: \"4.3\"\n");
+  cupsFilePuts(fp, "*FormatVersion: \"4.3\"\n");
+  cupsFilePrintf(fp, "*FileVersion: \"%d.%d\"\n", CUPS_VERSION_MAJOR, CUPS_VERSION_MINOR);
+  cupsFilePuts(fp, "*LanguageVersion: English\n");
+  cupsFilePuts(fp, "*LanguageEncoding: ISOLatin1\n");
+  cupsFilePuts(fp, "*PSVersion: \"(3010.000) 0\"\n");
+  cupsFilePuts(fp, "*LanguageLevel: \"3\"\n");
+  cupsFilePuts(fp, "*FileSystem: False\n");
+  cupsFilePuts(fp, "*PCFileName: \"ippeve.ppd\"\n");
+
+  if ((attr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != NULL)
+    strlcpy(make, ippGetString(attr, 0, NULL), sizeof(make));
+  else
+    strlcpy(make, "Unknown Printer", sizeof(make));
+
+  if (!_cups_strncasecmp(make, "Hewlett Packard ", 16) ||
+      !_cups_strncasecmp(make, "Hewlett-Packard ", 16))
+  {
+    model = make + 16;
+    strlcpy(make, "HP", sizeof(make));
+  }
+  else if ((model = strchr(make, ' ')) != NULL)
+    *model++ = '\0';
+  else
+    model = make;
+
+  cupsFilePrintf(fp, "*Manufacturer: \"%s\"\n", make);
+  cupsFilePrintf(fp, "*ModelName: \"%s\"\n", model);
+  cupsFilePrintf(fp, "*Product: \"(%s)\"\n", model);
+  cupsFilePrintf(fp, "*NickName: \"%s\"\n", model);
+  cupsFilePrintf(fp, "*ShortNickName: \"%s\"\n", model);
+
+  if ((attr = ippFindAttribute(response, "color-supported", IPP_TAG_BOOLEAN)) != NULL && ippGetBoolean(attr, 0))
+    cupsFilePuts(fp, "*ColorDevice: True\n");
+  else
+    cupsFilePuts(fp, "*ColorDevice: False\n");
+
+  cupsFilePrintf(fp, "*cupsVersion: %d.%d\n", CUPS_VERSION_MAJOR, CUPS_VERSION_MINOR);
+  cupsFilePuts(fp, "*cupsSNMPSupplies: False\n");
+  cupsFilePuts(fp, "*cupsLanguages: \"en\"\n");
+
+ /*
+  * Filters...
+  */
+
+  if ((attr = ippFindAttribute(response, "document-format-supported", IPP_TAG_MIMETYPE)) != NULL)
+  {
+    int formatfound = 0;
+
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      const char *format = ippGetString(attr, i, NULL);
+					/* PDL */
+#if 0
+      if (!_cups_strcasecmp(format, "application/pdf"))
+        cupsFilePuts(fp, "*cupsFilter2: \"application/vnd.cups-pdf application/pdf 10 -\"\n");
+      else if (!_cups_strcasecmp(format, "application/postscript"))
+        cupsFilePuts(fp, "*cupsFilter2: \"application/vnd.cups-postscript application/postscript 10 -\"\n");
+      else if (_cups_strcasecmp(format, "application/octet-stream") && _cups_strcasecmp(format, "application/vnd.hp-pcl") && _cups_strcasecmp(format, "text/plain"))
+        cupsFilePrintf(fp, "*cupsFilter2: \"%s %s 10 -\"\n", format, format);
+#endif
+      /* For now cups-filters only supports these PPD files with PWG Raster
+	 and PostScript, so create a PPD only for these formats */
+      if (!_cups_strcasecmp(format, "image/pwg-raster")) {
+        cupsFilePuts(fp, "*cupsFilter2: \"image/pwg-raster image/pwg-raster 10 -\"\n");
+	formatfound = 1;
+      } else if (!_cups_strcasecmp(format, "application/postscript")) {
+        cupsFilePuts(fp, "*cupsFilter2: \"application/vnd.cups-postscript application/postscript 10 -\"\n");
+	formatfound = 1;
+      }
+    }
+    if (formatfound == 0) {
+      debug_printf("cups-browsed: No data format suitable for PPD auto-generation supported by the printer, not generating PPD\n");
+      unlink(buffer);
+      return(NULL);
+    }
+  }
+
+ /*
+  * PageSize/PageRegion/ImageableArea/PaperDimension
+  */
+
+  if ((attr = ippFindAttribute(response, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != NULL)
+  {
+    for (i = 1, bottom = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+      if (ippGetInteger(attr, i) > bottom)
+        bottom = ippGetInteger(attr, i);
+  }
+  else
+    bottom = 1270;
+
+  if ((attr = ippFindAttribute(response, "media-left-margin-supported", IPP_TAG_INTEGER)) != NULL)
+  {
+    for (i = 1, left = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+      if (ippGetInteger(attr, i) > left)
+        left = ippGetInteger(attr, i);
+  }
+  else
+    left = 635;
+
+  if ((attr = ippFindAttribute(response, "media-right-margin-supported", IPP_TAG_INTEGER)) != NULL)
+  {
+    for (i = 1, right = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+      if (ippGetInteger(attr, i) > right)
+        right = ippGetInteger(attr, i);
+  }
+  else
+    right = 635;
+
+  if ((attr = ippFindAttribute(response, "media-top-margin-supported", IPP_TAG_INTEGER)) != NULL)
+  {
+    for (i = 1, top = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+      if (ippGetInteger(attr, i) > top)
+        top = ippGetInteger(attr, i);
+  }
+  else
+    top = 1270;
+
+  if ((defattr = ippFindAttribute(response, "media-col-default", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+  {
+    if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-size", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+    {
+      media_size = ippGetCollection(attr, 0);
+      x_dim      = ippFindAttribute(media_size, "x-dimension", IPP_TAG_INTEGER);
+      y_dim      = ippFindAttribute(media_size, "y-dimension", IPP_TAG_INTEGER);
+
+      if (x_dim && y_dim)
+      {
+        pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
+	strlcpy(ppdname, pwg->ppd, sizeof(ppdname));
+      }
+      else
+	strlcpy(ppdname, "Unknown", sizeof(ppdname));
+    }
+    else
+      strlcpy(ppdname, "Unknown", sizeof(ppdname));
+  }
+
+  if ((attr = ippFindAttribute(response, "media-size-supported", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+  {
+    cupsFilePrintf(fp, "*OpenUI *PageSize: PickOne\n"
+		       "*OrderDependency: 10 AnySetup *PageSize\n"
+                       "*DefaultPageSize: %s\n", ppdname);
+    if (ippGetCount(attr) == 0) {
+      debug_printf("cups-browsed: No page sizes reported as supported by the printer, not generating PPD\n");
+      unlink(buffer);
+      return(NULL);
+    }
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      media_size = ippGetCollection(attr, i);
+      x_dim      = ippFindAttribute(media_size, "x-dimension", IPP_TAG_INTEGER);
+      y_dim      = ippFindAttribute(media_size, "y-dimension", IPP_TAG_INTEGER);
+
+      if (x_dim && y_dim)
+      {
+        pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
+
+        cupsFilePrintf(fp, "*PageSize %s: \"<</PageSize[%.1f %.1f]>>setpagedevice\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+      }
+    }
+    cupsFilePuts(fp, "*CloseUI: *PageSize\n");
+
+    cupsFilePrintf(fp, "*OpenUI *PageRegion: PickOne\n"
+                       "*OrderDependency: 10 AnySetup *PageRegion\n"
+                       "*DefaultPageRegion: %s\n", ppdname);
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      media_size = ippGetCollection(attr, i);
+      x_dim      = ippFindAttribute(media_size, "x-dimension", IPP_TAG_INTEGER);
+      y_dim      = ippFindAttribute(media_size, "y-dimension", IPP_TAG_INTEGER);
+
+      if (x_dim && y_dim)
+      {
+        pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
+
+        cupsFilePrintf(fp, "*PageRegion %s: \"<</PageSize[%.1f %.1f]>>setpagedevice\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+      }
+    }
+    cupsFilePuts(fp, "*CloseUI: *PageRegion\n");
+
+    cupsFilePrintf(fp, "*DefaultImageableArea: %s\n"
+		       "*DefaultPaperDimension: %s\n", ppdname, ppdname);
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      media_size = ippGetCollection(attr, i);
+      x_dim      = ippFindAttribute(media_size, "x-dimension", IPP_TAG_INTEGER);
+      y_dim      = ippFindAttribute(media_size, "y-dimension", IPP_TAG_INTEGER);
+
+      if (x_dim && y_dim)
+      {
+        pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
+
+        cupsFilePrintf(fp, "*ImageableArea %s: \"%.1f %.1f %.1f %.1f\"\n", pwg->ppd, left * 72.0 / 2540.0, bottom * 72.0 / 2540.0, (pwg->width - right) * 72.0 / 2540.0, (pwg->length - top) * 72.0 / 2540.0);
+        cupsFilePrintf(fp, "*PaperDimension %s: \"%.1f %.1f\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+      }
+    }
+  } else {
+    debug_printf("cups-browsed: No page sizes reported as supported by the printer, not generating PPD\n");
+    unlink(buffer);
+    return(NULL);
+  }
+
+ /*
+  * InputSlot...
+  */
+
+  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-source", IPP_TAG_KEYWORD)) != NULL)
+    pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
+  else
+    strlcpy(ppdname, "Unknown", sizeof(ppdname));
+
+  if ((attr = ippFindAttribute(response, "media-source-supported", IPP_TAG_KEYWORD)) != NULL && (count = ippGetCount(attr)) > 1)
+  {
+    static const char * const sources[][2] =
+    {
+      { "Auto", "Automatic" },
+      { "Main", "Main" },
+      { "Alternate", "Alternate" },
+      { "LargeCapacity", "Large Capacity" },
+      { "Manual", "Manual" },
+      { "Envelope", "Envelope" },
+      { "Disc", "Disc" },
+      { "Photo", "Photo" },
+      { "Hagaki", "Hagaki" },
+      { "MainRoll", "Main Roll" },
+      { "AlternateRoll", "Alternate Roll" },
+      { "Top", "Top" },
+      { "Middle", "Middle" },
+      { "Bottom", "Bottom" },
+      { "Side", "Side" },
+      { "Left", "Left" },
+      { "Right", "Right" },
+      { "Center", "Center" },
+      { "Rear", "Rear" },
+      { "ByPassTray", "Multipurpose" },
+      { "Tray1", "Tray 1" },
+      { "Tray2", "Tray 2" },
+      { "Tray3", "Tray 3" },
+      { "Tray4", "Tray 4" },
+      { "Tray5", "Tray 5" },
+      { "Tray6", "Tray 6" },
+      { "Tray7", "Tray 7" },
+      { "Tray8", "Tray 8" },
+      { "Tray9", "Tray 9" },
+      { "Tray10", "Tray 10" },
+      { "Tray11", "Tray 11" },
+      { "Tray12", "Tray 12" },
+      { "Tray13", "Tray 13" },
+      { "Tray14", "Tray 14" },
+      { "Tray15", "Tray 15" },
+      { "Tray16", "Tray 16" },
+      { "Tray17", "Tray 17" },
+      { "Tray18", "Tray 18" },
+      { "Tray19", "Tray 19" },
+      { "Tray20", "Tray 20" },
+      { "Roll1", "Roll 1" },
+      { "Roll2", "Roll 2" },
+      { "Roll3", "Roll 3" },
+      { "Roll4", "Roll 4" },
+      { "Roll5", "Roll 5" },
+      { "Roll6", "Roll 6" },
+      { "Roll7", "Roll 7" },
+      { "Roll8", "Roll 8" },
+      { "Roll9", "Roll 9" },
+      { "Roll10", "Roll 10" }
+    };
+
+    cupsFilePrintf(fp, "*OpenUI *InputSlot: PickOne\n"
+                       "*OrderDependency: 10 AnySetup *InputSlot\n"
+                       "*DefaultInputSlot: %s\n", ppdname);
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      pwg_ppdize_name(ippGetString(attr, i, NULL), ppdname, sizeof(ppdname));
+
+      for (j = 0; j < (int)(sizeof(sources) / sizeof(sources[0])); j ++)
+        if (!strcmp(sources[j][0], ppdname))
+	{
+	  cupsFilePrintf(fp, "*InputSlot %s/%s: \"<</MediaPosition %d>>setpagedevice\"\n", ppdname, sources[j][1], j);
+	  break;
+	}
+    }
+    cupsFilePuts(fp, "*CloseUI: *InputSlot\n");
+  }
+
+ /*
+  * MediaType...
+  */
+
+  if ((attr = ippFindAttribute(ippGetCollection(defattr, 0), "media-type", IPP_TAG_KEYWORD)) != NULL)
+    pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
+  else
+    strlcpy(ppdname, "Unknown", sizeof(ppdname));
+
+  if ((attr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD)) != NULL && (count = ippGetCount(attr)) > 1)
+  {
+    static const char * const types[][2] =
+    {					/* Media type strings (far from complete) */
+      { "Auto", "Automatic" },
+      { "Cardstock", "Cardstock" },
+      { "Disc", "CD/DVD/Bluray" },
+      { "Envelope", "Envelope" },
+      { "Labels", "Label" },
+      { "Other", "Other" },
+      { "Photographic", "Photo" },
+      { "PhotographicGlossy", "Glossy Photo" },
+      { "PhotographicHighGloss", "High-Gloss Photo" },
+      { "PhotographicMatte", "Matte Photo" },
+      { "PhotographicSatin", "Satin Photo" },
+      { "PhotographicSemiGloss", "Semi-Gloss Photo" },
+      { "Stationery", "Plain Paper" },
+      { "StationeryLetterhead", "Letterhead" },
+      { "Transparency", "Transparency" }
+    };
+
+    cupsFilePrintf(fp, "*OpenUI *MediaType: PickOne\n"
+                       "*OrderDependency: 10 AnySetup *MediaType\n"
+                       "*DefaultMediaType: %s\n", ppdname);
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      pwg_ppdize_name(ippGetString(attr, i, NULL), ppdname, sizeof(ppdname));
+
+      for (j = 0; j < (int)(sizeof(types) / sizeof(types[0])); j ++)
+        if (!strcmp(types[j][0], ppdname))
+	{
+	  cupsFilePrintf(fp, "*MediaType %s/%s: \"<</MediaType(%s)>>setpagedevice\"\n", ppdname, types[j][1], ppdname);
+	  break;
+	}
+
+      if (j >= (int)(sizeof(types) / sizeof(types[0])))
+	cupsFilePrintf(fp, "*MediaType %s: \"<</MediaType(%s)>>setpagedevice\"\n", ppdname, ppdname);
+
+    }
+    cupsFilePuts(fp, "*CloseUI: *MediaType\n");
+  }
+
+ /*
+  * ColorModel...
+  */
+
+  if ((attr = ippFindAttribute(response, "pwg-raster-document-type-supported", IPP_TAG_KEYWORD)) == NULL)
+    attr = ippFindAttribute(response, "print-color-mode-supported", IPP_TAG_KEYWORD);
+
+  if (attr && ippGetCount(attr) > 0)
+  {
+    const char *default_color = NULL;	/* Default */
+
+    cupsFilePuts(fp, "*OpenUI *ColorModel/Color Mode: PickOne\n"
+		     "*OrderDependency: 10 AnySetup *ColorModel\n");
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      const char *keyword = ippGetString(attr, i, NULL);
+					/* Keyword for color/bit depth */
+
+      if (!strcmp(keyword, "black_1") || !strcmp(keyword, "bi-level") || !strcmp(keyword, "process-bi-level"))
+      {
+        cupsFilePuts(fp, "*ColorModel FastGray/Fast Grayscale: \"<</cupsColorSpace 3/cupsBitsPerColor 1/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
+
+        if (!default_color)
+	  default_color = "FastGray";
+      }
+      else if (!strcmp(keyword, "sgray_8") || !strcmp(keyword, "monochrome") || !strcmp(keyword, "process-monochrome"))
+      {
+        cupsFilePuts(fp, "*ColorModel Gray/Grayscale: \"<</cupsColorSpace 18/cupsBitsPerColor 8/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
+
+        if (!default_color || !strcmp(default_color, "FastGray"))
+	  default_color = "Gray";
+      }
+      else if (!strcmp(keyword, "srgb_8") || !strcmp(keyword, "color"))
+      {
+        cupsFilePuts(fp, "*ColorModel RGB/Color: \"<</cupsColorSpace 19/cupsBitsPerColor 8/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
+
+	default_color = "RGB";
+      }
+    }
+
+    if (default_color)
+      cupsFilePrintf(fp, "*DefaultColorModel: %s\n", default_color);
+
+    cupsFilePuts(fp, "*CloseUI: *ColorModel\n");
+  }
+
+ /*
+  * Duplex...
+  */
+
+  if ((attr = ippFindAttribute(response, "sides-supported", IPP_TAG_KEYWORD)) != NULL && ippContainsString(attr, "two-sided-long-edge"))
+  {
+    cupsFilePuts(fp, "*OpenUI *Duplex/2-Sided Printing: PickOne\n"
+                     "*OrderDependency: 10 AnySetup *Duplex\n"
+                     "*DefaultDuplex: None\n"
+                     "*Duplex None/Off (1-Sided): \"<</Duplex false>>setpagedevice\"\n"
+                     "*Duplex DuplexNoTumble/Long-Edge (Portrait): \"<</Duplex true/Tumble false>>setpagedevice\"\n"
+                     "*Duplex DuplexTumble/Short-Edge (Landscape): \"<</Duplex true/Tumble true>>setpagedevice\"\n"
+                     "*CloseUI: *Duplex\n");
+
+    if ((attr = ippFindAttribute(response, "pwg-raster-document-sheet-back", IPP_TAG_KEYWORD)) != NULL)
+    {
+      const char *keyword = ippGetString(attr, 0, NULL);
+					/* Keyword value */
+
+      if (!strcmp(keyword, "flipped"))
+        cupsFilePuts(fp, "*cupsBackSide: Flipped\n");
+      else if (!strcmp(keyword, "manual-tumble"))
+        cupsFilePuts(fp, "*cupsBackSide: ManualTumble\n");
+      else if (!strcmp(keyword, "normal"))
+        cupsFilePuts(fp, "*cupsBackSide: Normal\n");
+      else
+        cupsFilePuts(fp, "*cupsBackSide: Rotated\n");
+    }
+    else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+    {
+      for (i = 0, count = ippGetCount(attr); i < count; i ++)
+      {
+	const char *dm = ippGetString(attr, i, NULL);
+					  /* DM value */
+
+	if (!_cups_strcasecmp(dm, "DM1"))
+	{
+	  cupsFilePuts(fp, "*cupsBackSide: Normal\n");
+	  break;
+	}
+	else if (!_cups_strcasecmp(dm, "DM2"))
+	{
+	  cupsFilePuts(fp, "*cupsBackSide: Flipped\n");
+	  break;
+	}
+	else if (!_cups_strcasecmp(dm, "DM3"))
+	{
+	  cupsFilePuts(fp, "*cupsBackSide: Rotated\n");
+	  break;
+	}
+	else if (!_cups_strcasecmp(dm, "DM4"))
+	{
+	  cupsFilePuts(fp, "*cupsBackSide: ManualTumble\n");
+	  break;
+	}
+      }
+    }
+  }
+
+ /*
+  * cupsPrintQuality and DefaultResolution...
+  */
+
+  if ((attr = ippFindAttribute(response, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
+  {
+    count = ippGetCount(attr);
+
+    pwg_ppdize_resolution(attr, count / 2, &xres, &yres, ppdname, sizeof(ppdname));
+    cupsFilePrintf(fp, "*DefaultResolution: %s\n", ppdname);
+
+    cupsFilePuts(fp, "*OpenUI *cupsPrintQuality/Print Quality: PickOne\n"
+                     "*OrderDependency: 10 AnySetup *cupsPrintQuality\n"
+                     "*DefaultcupsPrintQuality: Normal\n");
+    if (count > 2)
+    {
+      pwg_ppdize_resolution(attr, 0, &xres, &yres, NULL, 0);
+      cupsFilePrintf(fp, "*cupsPrintQuality Draft: \"<</HWResolution[%d %d]>>setpagedevice\"\n", xres, yres);
+    }
+    pwg_ppdize_resolution(attr, count / 2, &xres, &yres, NULL, 0);
+    cupsFilePrintf(fp, "*cupsPrintQuality Normal: \"<</HWResolution[%d %d]>>setpagedevice\"\n", xres, yres);
+    if (count > 1)
+    {
+      pwg_ppdize_resolution(attr, count - 1, &xres, &yres, NULL, 0);
+      cupsFilePrintf(fp, "*cupsPrintQuality High: \"<</HWResolution[%d %d]>>setpagedevice\"\n", xres, yres);
+    }
+
+    cupsFilePuts(fp, "*CloseUI: *cupsPrintQuality\n");
+  }
+  else if ((attr = ippFindAttribute(response, "urf-supported", IPP_TAG_KEYWORD)) != NULL)
+  {
+    int lowdpi = 0, hidpi = 0;		/* Lower and higher resolution */
+
+    for (i = 0, count = ippGetCount(attr); i < count; i ++)
+    {
+      const char *rs = ippGetString(attr, i, NULL);
+					/* RS value */
+
+      if (_cups_strncasecmp(rs, "RS", 2))
+        continue;
+
+      lowdpi = atoi(rs + 2);
+      if ((rs = strrchr(rs, '-')) != NULL)
+        hidpi = atoi(rs + 1);
+      else
+        hidpi = lowdpi;
+      break;
+    }
+
+    if (lowdpi == 0)
+    {
+     /*
+      * Invalid "urf-supported" value...
+      */
+
+      cupsFilePuts(fp, "*DefaultResolution: 300dpi\n");
+    }
+    else
+    {
+     /*
+      * Generate print qualities based on low and high DPIs...
+      */
+
+      cupsFilePrintf(fp, "*DefaultResolution: %ddpi\n", lowdpi);
+
+      cupsFilePuts(fp, "*OpenUI *cupsPrintQuality/Print Quality: PickOne\n"
+		       "*OrderDependency: 10 AnySetup *cupsPrintQuality\n"
+		       "*DefaultcupsPrintQuality: Normal\n");
+      if ((lowdpi & 1) == 0)
+	cupsFilePrintf(fp, "*cupsPrintQuality Draft: \"<</HWResolution[%d %d]>>setpagedevice\"\n", lowdpi, lowdpi / 2);
+      cupsFilePrintf(fp, "*cupsPrintQuality Normal: \"<</HWResolution[%d %d]>>setpagedevice\"\n", lowdpi, lowdpi);
+      if (hidpi > lowdpi)
+	cupsFilePrintf(fp, "*cupsPrintQuality High: \"<</HWResolution[%d %d]>>setpagedevice\"\n", hidpi, hidpi);
+      cupsFilePuts(fp, "*CloseUI: *cupsPrintQuality\n");
+    }
+  }
+  else if ((attr = ippFindAttribute(response, "printer-resolution-default", IPP_TAG_RESOLUTION)) != NULL)
+  {
+    pwg_ppdize_resolution(attr, 0, &xres, &yres, ppdname, sizeof(ppdname));
+    cupsFilePrintf(fp, "*DefaultResolution: %s\n", ppdname);
+  }
+  else
+    cupsFilePuts(fp, "*DefaultResolution: 300dpi\n");
+
+ /*
+  * Close up and return...
+  */
+
+  cupsFileClose(fp);
+
+  return (buffer);
+}
+
+
+/*
+ * '_pwgInputSlotForSource()' - Get the InputSlot name for the given PWG
+ *                              media-source.
+ */
+
+const char *				/* O - InputSlot name */
+_pwgInputSlotForSource(
+    const char *media_source,		/* I - PWG media-source */
+    char       *name,			/* I - Name buffer */
+    size_t     namesize)		/* I - Size of name buffer */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!media_source || !name || namesize < PPD_MAX_NAME)
+    return (NULL);
+
+  if (_cups_strcasecmp(media_source, "main"))
+    strlcpy(name, "Cassette", namesize);
+  else if (_cups_strcasecmp(media_source, "alternate"))
+    strlcpy(name, "Multipurpose", namesize);
+  else if (_cups_strcasecmp(media_source, "large-capacity"))
+    strlcpy(name, "LargeCapacity", namesize);
+  else if (_cups_strcasecmp(media_source, "bottom"))
+    strlcpy(name, "Lower", namesize);
+  else if (_cups_strcasecmp(media_source, "middle"))
+    strlcpy(name, "Middle", namesize);
+  else if (_cups_strcasecmp(media_source, "top"))
+    strlcpy(name, "Upper", namesize);
+  else if (_cups_strcasecmp(media_source, "rear"))
+    strlcpy(name, "Rear", namesize);
+  else if (_cups_strcasecmp(media_source, "side"))
+    strlcpy(name, "Side", namesize);
+  else if (_cups_strcasecmp(media_source, "envelope"))
+    strlcpy(name, "Envelope", namesize);
+  else if (_cups_strcasecmp(media_source, "main-roll"))
+    strlcpy(name, "Roll", namesize);
+  else if (_cups_strcasecmp(media_source, "alternate-roll"))
+    strlcpy(name, "Roll2", namesize);
+  else
+    pwg_ppdize_name(media_source, name, namesize);
+
+  return (name);
+}
+
+
+/*
+ * '_pwgMediaTypeForType()' - Get the MediaType name for the given PWG
+ *                            media-type.
+ */
+
+const char *				/* O - MediaType name */
+_pwgMediaTypeForType(
+    const char *media_type,		/* I - PWG media-type */
+    char       *name,			/* I - Name buffer */
+    size_t     namesize)		/* I - Size of name buffer */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!media_type || !name || namesize < PPD_MAX_NAME)
+    return (NULL);
+
+  if (_cups_strcasecmp(media_type, "auto"))
+    strlcpy(name, "Auto", namesize);
+  else if (_cups_strcasecmp(media_type, "cardstock"))
+    strlcpy(name, "Cardstock", namesize);
+  else if (_cups_strcasecmp(media_type, "envelope"))
+    strlcpy(name, "Envelope", namesize);
+  else if (_cups_strcasecmp(media_type, "photographic-glossy"))
+    strlcpy(name, "Glossy", namesize);
+  else if (_cups_strcasecmp(media_type, "photographic-high-gloss"))
+    strlcpy(name, "HighGloss", namesize);
+  else if (_cups_strcasecmp(media_type, "photographic-matte"))
+    strlcpy(name, "Matte", namesize);
+  else if (_cups_strcasecmp(media_type, "stationery"))
+    strlcpy(name, "Plain", namesize);
+  else if (_cups_strcasecmp(media_type, "stationery-coated"))
+    strlcpy(name, "Coated", namesize);
+  else if (_cups_strcasecmp(media_type, "stationery-inkjet"))
+    strlcpy(name, "Inkjet", namesize);
+  else if (_cups_strcasecmp(media_type, "stationery-letterhead"))
+    strlcpy(name, "Letterhead", namesize);
+  else if (_cups_strcasecmp(media_type, "stationery-preprinted"))
+    strlcpy(name, "Preprinted", namesize);
+  else if (_cups_strcasecmp(media_type, "transparency"))
+    strlcpy(name, "Transparency", namesize);
+  else
+    pwg_ppdize_name(media_type, name, namesize);
+
+  return (name);
+}
+
+
+/*
+ * '_pwgPageSizeForMedia()' - Get the PageSize name for the given media.
+ */
+
+const char *				/* O - PageSize name */
+_pwgPageSizeForMedia(
+    pwg_media_t *media,		/* I - Media */
+    char         *name,			/* I - PageSize name buffer */
+    size_t       namesize)		/* I - Size of name buffer */
+{
+  const char	*sizeptr,		/* Pointer to size in PWG name */
+		*dimptr;		/* Pointer to dimensions in PWG name */
+
+
+ /*
+  * Range check input...
+  */
+
+  if (!media || !name || namesize < PPD_MAX_NAME)
+    return (NULL);
+
+ /*
+  * Copy or generate a PageSize name...
+  */
+
+  if (media->ppd)
+  {
+   /*
+    * Use a standard Adobe name...
+    */
+
+    strlcpy(name, media->ppd, namesize);
+  }
+  else if (!media->pwg || !strncmp(media->pwg, "custom_", 7) ||
+           (sizeptr = strchr(media->pwg, '_')) == NULL ||
+	   (dimptr = strchr(sizeptr + 1, '_')) == NULL ||
+	   (size_t)(dimptr - sizeptr) > namesize)
+  {
+   /*
+    * Use a name of the form "wNNNhNNN"...
+    */
+
+    snprintf(name, namesize, "w%dh%d", (int)PWG_TO_POINTS(media->width),
+             (int)PWG_TO_POINTS(media->length));
+  }
+  else
+  {
+   /*
+    * Copy the size name from class_sizename_dimensions...
+    */
+
+    memcpy(name, sizeptr + 1, (size_t)(dimptr - sizeptr - 1));
+    name[dimptr - sizeptr - 1] = '\0';
+  }
+
+  return (name);
+}
+
+
+/*
+ * 'pwg_ppdize_name()' - Convert an IPP keyword to a PPD keyword.
+ */
+
+static void
+pwg_ppdize_name(const char *ipp,	/* I - IPP keyword */
+                char       *name,	/* I - Name buffer */
+		size_t     namesize)	/* I - Size of name buffer */
+{
+  char	*ptr,				/* Pointer into name buffer */
+	*end;				/* End of name buffer */
+
+
+  *name = (char)toupper(*ipp++);
+
+  for (ptr = name + 1, end = name + namesize - 1; *ipp && ptr < end;)
+  {
+    if (*ipp == '-' && _cups_isalpha(ipp[1]))
+    {
+      ipp ++;
+      *ptr++ = (char)toupper(*ipp++ & 255);
+    }
+    else
+      *ptr++ = *ipp++;
+  }
+
+  *ptr = '\0';
+}
+
+
+
+/*
+ * 'pwg_ppdize_resolution()' - Convert PWG resolution values to PPD values.
+ */
+
+static void
+pwg_ppdize_resolution(
+    ipp_attribute_t *attr,		/* I - Attribute to convert */
+    int             element,		/* I - Element to convert */
+    int             *xres,		/* O - X resolution in DPI */
+    int             *yres,		/* O - Y resolution in DPI */
+    char            *name,		/* I - Name buffer */
+    size_t          namesize)		/* I - Size of name buffer */
+{
+  ipp_res_t units;			/* Units for resolution */
+
+
+  *xres = ippGetResolution(attr, element, yres, &units);
+
+  if (units == IPP_RES_PER_CM)
+  {
+    *xres = (int)(*xres * 2.54);
+    *yres = (int)(*yres * 2.54);
+  }
+
+  if (name && namesize > 4)
+  {
+    if (*xres == *yres)
+      snprintf(name, namesize, "%ddpi", *xres);
+    else
+      snprintf(name, namesize, "%dx%ddpi", *xres, *yres);
+  }
+}
+
+
