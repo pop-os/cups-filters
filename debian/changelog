@@ -1,3 +1,13 @@
+cups-filters (1.0.61-5) unstable; urgency=high
+
+  * Backport upstream's patch to fix a bug in the remove_bad_chars() failing
+    to reliably filter out illegal characters, allowing execution of arbitrary
+    commands with the rights of the "lp" user, using forged print service
+    announcements on DNS-SD servers (Closes: #780267, CVE-2015-2265)
+  * Urgency high for the security fix
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 11 Mar 2015 13:50:30 +0100
+
 cups-filters (1.0.61-4) unstable; urgency=medium
 
   * Brown-paper bag upload: revert unwanted change from previous upload in
