@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[62])
+m4_define([cups_filters_version_micro],[66])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -297,6 +297,14 @@ fi
 
 AC_SUBST(AVAHI_GLIB_CFLAGS)
 AC_SUBST(AVAHI_GLIB_LIBS)
+
+GIO_CFLAGS=""
+GIO_LIBS=""
+if test "x$PKGCONFIG" != x; then
+	PKG_CHECK_MODULES(GIO, [gio-2.0])
+fi
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
 
 AC_ARG_WITH([browseremoteprotocols],
 	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed (default: dnssd cups)])],

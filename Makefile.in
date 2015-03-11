@@ -250,7 +250,7 @@ am_cups_browsed_OBJECTS = cups_browsed-cups-browsed.$(OBJEXT)
 cups_browsed_OBJECTS = $(am_cups_browsed_OBJECTS)
 cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -815,6 +815,8 @@ FONTDIR = @FONTDIR@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
 GETLINE = @GETLINE@
+GIO_CFLAGS = @GIO_CFLAGS@
+GIO_LIBS = @GIO_LIBS@
 GLIB_CFLAGS = @GLIB_CFLAGS@
 GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
@@ -1600,14 +1602,16 @@ cups_browsed_CFLAGS = \
 	$(CUPS_CFLAGS) \
 	$(AVAHI_CFLAGS) \
 	$(AVAHI_GLIB_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(GIO_CFLAGS)
 
 cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
 cups_browsed_LDADD = \
 	$(CUPS_LIBS) \
 	$(AVAHI_LIBS) \
 	$(AVAHI_GLIB_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(GIO_LIBS)
 
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
@@ -4605,7 +4609,8 @@ install-dvi-am:
 
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES \
 	install-sbinPROGRAMS
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
 
 install-html-am:
@@ -4660,8 +4665,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
-.MAKE: all check-am install-am install-data-am install-strip \
-	uninstall-am
+.MAKE: all check-am install-am install-data-am install-exec-am \
+	install-strip uninstall-am
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--refresh check check-TESTS \
 	check-am clean clean-binPROGRAMS clean-checkPROGRAMS \
@@ -4676,9 +4681,9 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	html-am info info-am install install-am install-binPROGRAMS \
 	install-data install-data-am install-data-hook install-docDATA \
 	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
-	install-man1 install-man5 install-man8 install-pdf \
+	install-exec-hook install-html install-html-am install-info \
+	install-info-am install-initrcSCRIPTS install-libLTLIBRARIES \
+	install-man install-man1 install-man5 install-man8 install-pdf \
 	install-pdf-am install-phpextensionLTLIBRARIES \
 	install-pkgbackendPROGRAMS install-pkgbannerDATA \
 	install-pkgcharsetDATA install-pkgconfDATA \
@@ -4708,6 +4713,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 distclean-local:
 	rm -rf *.cache *~
 
+install-exec-hook:
+	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
+	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
+
 install-data-hook:
 @RCLINKS_TRUE@	for level in $(RCLEVELS); do \
 @RCLINKS_TRUE@		$(INSTALL) -d -m 755 $(DESTDIR)$(INITDIR)/rc$${level}.d; \
@@ -4725,6 +4734,7 @@ uninstall-hook:
 @RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
 @RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
+	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
