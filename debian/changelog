@@ -1,3 +1,12 @@
+cups-filters (1.0.61-0ubuntu2.1) utopic-security; urgency=medium
+
+  * SECURITY UPDATE: arbitrary code injection via incorrect filtering
+    - debian/patches/CVE-2015-2265.patch: properly handle multiple
+      consecutive bad chars in utils/cups-browsed.c.
+    - CVE-2015-2265
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 13 Mar 2015 07:32:46 -0400
+
 cups-filters (1.0.61-0ubuntu2) utopic; urgency=medium
 
   * debian/apparmor/usr.sbin.cups-browsed: allow read on /etc/cups/lpoptions
