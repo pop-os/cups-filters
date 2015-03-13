@@ -1,5 +1,10 @@
-NEWS - OpenPrinting CUPS Filters v1.0.66 - 2015-02-27
+NEWS - OpenPrinting CUPS Filters v1.0.67 - 2015-03-11
 -----------------------------------------------------
+
+CHANGES IN V1.0.67
+
+	- cups-browsed: Use g_source_remove() instead of g_source_destroy()
+	  for killing auto shutdown timers (Ubuntu bug #1427344).
 
 CHANGES IN V1.0.66
 
