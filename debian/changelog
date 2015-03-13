@@ -1,3 +1,14 @@
+cups-filters (1.0.52-0ubuntu1.4) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: arbitrary code injection via incorrect filtering
+    - debian/patches/CVE-2015-2265.patch: properly handle multiple
+      consecutive bad chars in utils/cups-browsed.c.
+    - CVE-2015-2265
+  * This package does _not_ contain the changes from 1.0.52-0ubuntu1.3 in
+    trusty-proposed.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 13 Mar 2015 07:42:48 -0400
+
 cups-filters (1.0.52-0ubuntu1.2) trusty-proposed; urgency=low
 
   * Re-added ./configure option "--with-pdftops=hybrid" to activate
