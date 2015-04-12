@@ -1,3 +1,11 @@
+cups-filters (1.0.67-1) experimental; urgency=medium
+
+  * New upstream release
+     - cups-browsed: Use g_source_remove() instead of g_source_destroy()
+       for killing auto shutdown timers (LP: #1427344).
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 12 Apr 2015 10:54:21 +0200
+
 cups-filters (1.0.66-1) experimental; urgency=high
 
   * New 1.0.66 upstream release
