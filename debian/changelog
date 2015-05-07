@@ -1,3 +1,15 @@
+cups-filters (1.0.68-1) unstable; urgency=low
+
+  * New upstream release
+    - cups-browsed: Numeric IDs for GSources of the glib event
+      loop must be positive integers greater than zero according
+      to the documentation of the g_source_get_id() function.
+      Taken care of this at all places.
+    - Ricoh-PDF_Printer-PDF.ppd: Added PPD file for Ricoh's PDF printers
+      (experimental). Thanks to Ulrich Wehner from Ricoh for the file.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 07 May 2015 10:24:17 +0200
+
 cups-filters (1.0.67-1) experimental; urgency=medium
 
   * New upstream release
@@ -39,6 +51,16 @@ cups-filters (1.0.62-1) experimental; urgency=low
       cups-browsed.conf file; drop the backported patch.
 
  -- Didier Raboud <odyx@debian.org>  Thu, 15 Jan 2015 18:06:05 +0100
+
+cups-filters (1.0.61-5) unstable; urgency=high
+
+  * Backport upstream's patch to fix a bug in the remove_bad_chars() failing
+    to reliably filter out illegal characters, allowing execution of arbitrary
+    commands with the rights of the "lp" user, using forged print service
+    announcements on DNS-SD servers (Closes: #780267, CVE-2015-2265)
+  * Urgency high for the security fix
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 11 Mar 2015 13:50:30 +0100
 
 cups-filters (1.0.61-4) unstable; urgency=medium
 
