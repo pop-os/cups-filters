@@ -1,3 +1,15 @@
+cups-filters (1.0.68-1) unstable; urgency=low
+
+  * New upstream release
+    - cups-browsed: Numeric IDs for GSources of the glib event
+      loop must be positive integers greater than zero according
+      to the documentation of the g_source_get_id() function.
+      Taken care of this at all places.
+    - Ricoh-PDF_Printer-PDF.ppd: Added PPD file for Ricoh's PDF printers
+      (experimental). Thanks to Ulrich Wehner from Ricoh for the file.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 07 May 2015 10:24:17 +0200
+
 cups-filters (1.0.67-1) experimental; urgency=medium
 
   * New upstream release
