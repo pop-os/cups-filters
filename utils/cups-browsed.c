@@ -182,7 +182,7 @@ static unsigned int CreateIPPPrinterQueues = 0;
 static int autoshutdown = 0;
 static int autoshutdown_avahi = 0;
 static int autoshutdown_timeout = 30;
-static guint autoshutdown_exec_id = 0;
+static guint autoshutdown_exec_id = -1;
 
 static int debug = 0;
 
@@ -191,11 +191,19 @@ static void browse_poll_create_subscription (browsepoll_t *context,
 					     http_t *conn);
 static gboolean browse_poll_get_notifications (browsepoll_t *context,
 					       http_t *conn);
-char            *_ppdCreateFromIPP(char *buffer, size_t bufsize, ipp_t *response);
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
 #define HAVE_CUPS_1_6 1
 #endif
+
+#ifdef HAVE_CUPS_1_6
+/* The following function uses a lot of CUPS >= 1.6 specific stuff.
+   The following function is only called in create_local_queue()
+   to set up local queues for non-CUPS printer broadcasts
+   that is disabled in create_local_queue() for older CUPS <= 1.5.4.
+   Accordingly the following function is also disabled here for CUPS < 1.6. */
+char            *_ppdCreateFromIPP(char *buffer, size_t bufsize, ipp_t *response);
+#endif /* HAVE_CUPS_1_6 */
 
 /*
  * CUPS 1.6 makes various structures private and
@@ -738,6 +746,14 @@ create_local_queue (const char *name,
 		   p->name, q->host);
     }
   } else {
+#ifndef HAVE_CUPS_1_6
+    /* The following code uses a lot of CUPS >= 1.6 specific stuff.
+       For older CUPS <= 1.5.4 the following functionality is skipped
+       which means for CUPS <= 1.5.4 only for CUPS printer broadcasts
+       there are local queues created which should be sufficient
+       on systems where traditional CUPS <= 1.5.4 is used. */
+    goto fail;
+#else /* HAVE_CUPS_1_6 */
     /* Non-CUPS printer broadcasts are most probably from printers
        directly connected to the network and using the IPP protocol.
        We check whether we can set them up without a device-specific
@@ -841,6 +857,7 @@ create_local_queue (const char *name,
     /*p->ifscript = "/usr/lib/cups/filter/pdftoippprinter-wrapper";
       debug_printf("cups-browsed: System V Interface script for %s: %s\n", p->name, p->ifscript);*/
 
+#endif /* HAVE_CUPS_1_6 */
   }
 
   /* Add the new remote printer entry */
@@ -848,11 +865,11 @@ create_local_queue (const char *name,
 
   /* If auto shutdown is active we have perhaps scheduled a timer to shut down
      due to not having queues any more to maintain, kill the timer now */
-  if (autoshutdown && autoshutdown_exec_id &&
+  if (autoshutdown && autoshutdown_exec_id > 0 &&
       cupsArrayCount(remote_printers) > 0) {
     debug_printf ("cups-browsed: New printers there to make available, killing auto shutdown timer.\n");
     g_source_remove(autoshutdown_exec_id);
-    autoshutdown_exec_id = 0;
+    autoshutdown_exec_id = -1;
   }
 
   return p;
@@ -1083,7 +1100,7 @@ gboolean handle_cups_queues(gpointer unused) {
 
       /* If auto shutdown is active and all printers we have set up got removed
 	 again, schedule the shutdown in autoshutdown_timeout seconds */
-      if (autoshutdown && !autoshutdown_exec_id &&
+      if (autoshutdown && autoshutdown_exec_id <= 0 &&
 	  cupsArrayCount(remote_printers) == 0) {
 	debug_printf ("cups-browsed: No printers there any more to make available, shutting down in %d sec...\n", autoshutdown_timeout);
 	autoshutdown_exec_id =
@@ -1228,7 +1245,7 @@ recheck_timer (void)
     } else if (timeout == (time_t) -1 || p->timeout - now < timeout)
       timeout = p->timeout - now;
 
-  if (queues_timer_id != (guint) -1)
+  if (queues_timer_id > 0)
     g_source_remove (queues_timer_id);
 
   if (timeout != (time_t) -1) {
@@ -1757,7 +1774,7 @@ void avahi_browser_shutdown() {
     debug_printf("cups-browsed: Avahi server disappeared, switching to auto shutdown mode ...\n");
     /* If there are no printers schedule the shutdown in autoshutdown_timeout
        seconds */
-    if (!autoshutdown_exec_id &&
+    if (autoshutdown_exec_id <= 0 &&
 	cupsArrayCount(remote_printers) == 0) {
       debug_printf ("cups-browsed: We entered auto shutdown mode and no printers are there to make available, shutting down in %d sec...\n", autoshutdown_timeout);
       autoshutdown_exec_id =
@@ -1820,7 +1837,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
       if (autoshutdown_exec_id > 0) {
 	debug_printf ("cups-browsed: We have left auto shutdown mode, killing auto shutdown timer.\n");
 	g_source_remove(autoshutdown_exec_id);
-	autoshutdown_exec_id = 0;
+	autoshutdown_exec_id = -1;
       }
     }
 
@@ -2682,7 +2699,7 @@ sigusr1_handler(int sig) {
   if (autoshutdown_exec_id > 0) {
     debug_printf ("cups-browsed: We have left auto shutdown mode, killing auto shutdown timer.\n");
     g_source_remove(autoshutdown_exec_id);
-    autoshutdown_exec_id = 0;
+    autoshutdown_exec_id = -1;
   }
 }
 
@@ -2695,7 +2712,7 @@ sigusr2_handler(int sig) {
   debug_printf("cups-browsed: Caught signal %d, switching to auto shutdown mode ...\n", sig);
   /* If there are no printers schedule the shutdown in autoshutdown_timeout
      seconds */
-  if (!autoshutdown_exec_id &&
+  if (autoshutdown_exec_id <= 0 &&
       cupsArrayCount(remote_printers) == 0) {
     debug_printf ("cups-browsed: We entered auto shutdown mode and no printers are there to make available, shutting down in %d sec...\n", autoshutdown_timeout);
     autoshutdown_exec_id =
@@ -2912,7 +2929,7 @@ read_configuration (const char *filename)
 static void
 defer_update_netifs (void)
 {
-  if (update_netifs_sourceid != -1)
+  if (update_netifs_sourceid > 0)
     g_source_remove (update_netifs_sourceid);
 
   update_netifs_sourceid = g_timeout_add_seconds (10, update_netifs, NULL);
@@ -3236,7 +3253,7 @@ int main(int argc, char*argv[]) {
 
   /* If auto shutdown is active and we do not find any printers initially,
      schedule the shutdown in autoshutdown_timeout seconds */
-  if (autoshutdown && !autoshutdown_exec_id &&
+  if (autoshutdown && autoshutdown_exec_id <= 0 &&
       cupsArrayCount(remote_printers) == 0) {
     debug_printf ("cups-browsed: No printers found to make available, shutting down in %d sec...\n", autoshutdown_timeout);
     autoshutdown_exec_id =
@@ -3307,6 +3324,12 @@ fail:
   return ret;
 }
 
+#ifdef HAVE_CUPS_1_6
+/* The following code uses a lot of CUPS >= 1.6 specific stuff.
+   The following code is only needed for create_local_queue()
+   to set up local queues for non-CUPS printer broadcasts
+   that is disabled in create_local_queue() for older CUPS <= 1.5.4.
+   Accordingly the following code is also disabled here for CUPS < 1.6. */
 
 /*
  * The code below is borrowed from the CUPS 2.1.x upstream repository
@@ -4279,5 +4302,6 @@ pwg_ppdize_resolution(
       snprintf(name, namesize, "%dx%ddpi", *xres, *yres);
   }
 }
+#endif /* HAVE_CUPS_1_6 */
 
 
