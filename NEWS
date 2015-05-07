@@ -1,5 +1,83 @@
-NEWS - OpenPrinting CUPS Filters v1.0.61 - 2014-10-10
+NEWS - OpenPrinting CUPS Filters v1.0.67 - 2015-03-11
 -----------------------------------------------------
+
+CHANGES IN V1.0.67
+
+	- cups-browsed: Use g_source_remove() instead of g_source_destroy()
+	  for killing auto shutdown timers (Ubuntu bug #1427344).
+
+CHANGES IN V1.0.66
+
+	- cups-browsed: SECURITY FIX: Fixed a bug in the remove_bad_chars()
+	  failing to reliably filter out illegal characters if there are two
+	  or more subsequent illegal characters, allowing execution of
+	  arbitrary commands with the rights of the "lp" user, using forged
+	  print service announcements on DNS-SD servers (Bug #1265).
+	- pdftoopvp: Added conditionals to also build with Poppler 0.31.0
+	  and newer. Thanks to Armin K. (krejzi at email dot com) for the
+	  patch (Bug #1254).
+
+CHANGES IN V1.0.65
+
+	- cups-browsed: Listen for NetworkManager changes (Red Hat bug #975933).
+	- cups-browsed: Fix for memory leak introduced in BZR rev 7059.
+	- cups-browsed: Memory leak/uninit fixes.
+	- cups-browsed: Cache prepared browse data to send.
+	- cups-browsed: Only get local notifications once per BrowsePoll run.
+	- cups-browsed: Fix BrowsePoll now notifications work properly. Need 
+	  to maintain a list of printers to keep alive for the case of there
+	  being no notifications of changes.
+	- cups-browsed: Use local browsepolling for getting initial printer
+	  list.
+	- cups-browsed: Ignore browse packets for deleted printers.
+	- cups-browsed: Cache connection to local cupsd.
+	- cups-browsed: Use notifications to track local printers.
+  	  This avoids expensive calls to cupsGetDests().
+	- cups-browsed: Manage subscriptions for local browsepolling.
+	- cups-browsed: Track notify-sequence-number for notifications.
+
+CHANGES IN V1.0.64
+
+	- cups-browsed: Added PPD file generator for IPP Everywhere
+	  printers.  If auto-setup of discovered IPP printers is
+	  activated ("CreateIPPPrinterQueues Yes" in
+	  cups-browsed.conf), the printer provides suitable capability
+	  information via a Get-Printer-Attributes IPP call, and
+	  prints PWG or PostScript input, a PPD is auto-generated
+	  based on the Get-Printer-Attributes IPP response. Otherwise
+	  a System-V interface script is used as befreo. Advantage of
+	  the PPD file is that current print dialogs aloow access to
+	  the options, no IPP request done by the dialog is
+	  required. The PPD generator code is borrowed from the CUPS
+	  2.1.x development code repository. It will perhaps be
+	  removed in the future when CUPS provides proper API function
+	  for its PPD generator.
+
+CHANGES IN V1.0.63
+
+	- foomatic-rip: Added hint to man page that direct, spooler-less mode
+	  is mainly for testing and debugging (Bug #1253).
+	- foomatic-rip: Added a symlink of the filter to the binary executable
+	  directory (usually /usr/bin), so that LSB compliance test scripts
+	  work (Bug #1255).
+	- cups-browsed: Fixed CUPS Browsing timeouts. Thanks to Tim
+          Waugh from Red Hat for the patch (Bug #1252, Red Hat bug
+          #1189254).
+
+CHANGES IN V1.0.62
+
+	- cups-browsed: Allow underscore characters in print queue names.
+	  Thanks to Tim Waugh from Red Hat for the bug report (Bug
+	  #1241).
+	- pdftops: Apply workarounds for Kyocera also to Utax printers
+	  as Utax uses hard- and software from Kyocera. Thanks to Edward
+	  Huang from Kyocera.
+	- cups-browsed: Added support for "BrowseAllow All" in the
+	  cups-browsed.conf file.
+	- cups-browsed: Reorder inclusion of headers for compatibility
+	  with NetBSD (Bug #1235).
+	- imagetopdf, pdftopdf: Correct handling of hardware copies in
+	  PJL/JCL and/or when the PPD file has a "Copies" option.
 
 CHANGES IN V1.0.61
 

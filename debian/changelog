@@ -1,3 +1,45 @@
+cups-filters (1.0.67-1) experimental; urgency=medium
+
+  * New upstream release
+     - cups-browsed: Use g_source_remove() instead of g_source_destroy()
+       for killing auto shutdown timers (LP: #1427344).
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 12 Apr 2015 10:54:21 +0200
+
+cups-filters (1.0.66-1) experimental; urgency=high
+
+  * New 1.0.66 upstream release
+    - cups-browsed: SECURITY FIX: Fixed a bug in the remove_bad_chars()
+      failing to reliably filter out illegal characters if there are two
+      or more subsequent illegal characters, allowing execution of
+      arbitrary commands with the rights of the "lp" user, using forged
+      print service announcements on DNS-SD servers (Bug #1265).
+      (Closes: #780267, CVE-2015-2265)
+    - Lots of bug fixes on legacy browsing/broadcasting. Thanks to Tim Waugh
+      from Red Hat.
+    - cups-browsed: Added PPD file generator for IPP Everywhere and other
+      suitable IPP printers. So IPP printers set up automatically (using
+      "CreateIPPPrinterQueues Yes" in cups-browsed.conf) get PPD files is
+      possible and so printing options are sown in all print dialogs. The
+      dialog does not need to request option information from the printer
+      via IPP. Code taken from CUPS 2.1.x development branch.
+
+  [ Didier Raboud ]
+  * Update copyright years for Till's contributions
+
+  [ Till Kamppeter ]
+  * Added build dependency on libglib2.0-dev
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 11 Mar 2015 14:05:44 +0100
+
+cups-filters (1.0.62-1) experimental; urgency=low
+
+  * New upstream bug fix release
+    - cups-browsed: Added support for "BrowseAllow All" in the
+      cups-browsed.conf file; drop the backported patch.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 15 Jan 2015 18:06:05 +0100
+
 cups-filters (1.0.61-5) unstable; urgency=high
 
   * Backport upstream's patch to fix a bug in the remove_bad_chars() failing
