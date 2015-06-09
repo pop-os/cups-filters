@@ -1,3 +1,12 @@
+cups-filters (1.0.68-2) unstable; urgency=medium
+
+  [ Fabian Greffrath ]
+  * Remove obsolete font symlinks in /usr/share/cups/fonts (Closes: #788046)
+  * Add patch to request the generic 'monospace' font alias from fontconfig
+    instead of the hard-coded FreeMono (Closes: #788048)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 09 Jun 2015 18:36:08 +0200
+
 cups-filters (1.0.68-1) unstable; urgency=low
 
   * New upstream release
