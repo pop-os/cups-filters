@@ -1,0 +1,15 @@
+Description: Request the generic 'monospace' font alias from fontconfig instead
+ of the hard-coded FreeMono
+Author: Fabian Greffrath <fabian@debian.org>
+Bug-Debian: https://bugs.debian.org/788048
+Last-Update: 2015-06-09
+--- a/charset/pdf.utf-8.simple
++++ b/charset/pdf.utf-8.simple
+@@ -28,5 +28,5 @@
+ # printing.
+ #
+ 
+-0000 04FF ltor single FreeMono FreeMono:bold FreeMono:oblique FreeMono:bold:oblique
+-0500 05FF rtol single FreeMono
++0000 04FF ltor single monospace monospace:bold monospace:oblique monospace:bold:oblique
++0500 05FF rtol single monospace
