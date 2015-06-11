@@ -1,3 +1,10 @@
+cups-filters (1.0.69-1) unstable; urgency=low
+
+  * New upstream release
+    - Cope with the {pdfto,sys5}ippprinter filter rename
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 11 Jun 2015 08:41:13 +0200
+
 cups-filters (1.0.68-2) unstable; urgency=medium
 
   [ Fabian Greffrath ]
