@@ -80,6 +80,8 @@ typedef struct remote_printer_s {
   char *ppd;
   char *model;
   char *ifscript;
+  int num_options;
+  cups_option_t *options;
   printer_status_t status;
   time_t timeout;
   int duplicate;
@@ -146,6 +148,13 @@ typedef struct browse_data_s {
   char *browse_options;
 } browse_data_t;
 
+/* Ways how to set up a queue for an IPP network printer */
+typedef enum ipp_queue_type_e {
+  PPD_AUTO,
+  PPD_ONLY,
+  PPD_NEVER
+} ipp_queue_type_t;
+
 cups_array_t *remote_printers;
 static cups_array_t *netifs;
 static cups_array_t *browseallow;
@@ -179,6 +188,7 @@ static size_t NumBrowsePoll = 0;
 static guint update_netifs_sourceid = -1;
 static char *DomainSocket = NULL;
 static unsigned int CreateIPPPrinterQueues = 0;
+static ipp_queue_type_t IPPPrinterQueueType = PPD_AUTO;
 static int autoshutdown = 0;
 static int autoshutdown_avahi = 0;
 static int autoshutdown_timeout = 30;
@@ -402,7 +412,7 @@ get_local_printers (void)
     printer = new_local_printer (device_uri,
 				 cups_browsed_controlled);
     g_hash_table_insert (local_printers,
-			 g_strdup (dest->name),
+			 g_ascii_strdown (dest->name, -1),
 			 printer);
   }
 
@@ -662,6 +672,45 @@ autoshutdown_execute (gpointer data)
   return FALSE;
 }
 
+int
+color_space_score(const char *color_space)
+{
+  int score = 0;
+  const char *p = color_space;
+
+  if (!p) return -1;
+  if (!strncasecmp(p, "s", 1)) {
+    p += 1;
+    score += 2;
+  } else if (!strncasecmp(p, "adobe", 5)) {
+    p += 5;
+    score += 1;
+  } else
+    score += 3;
+  if (!strncasecmp(p, "black", 5)) {
+    p += 5;
+    score += 1000;
+  } else if (!strncasecmp(p, "gray", 4)) {
+    p += 4;
+    score += 2000;
+  } else if (!strncasecmp(p, "cmyk", 4)) {
+    p += 4;
+    score += 4000;
+  } else if (!strncasecmp(p, "cmy", 3)) {
+    p += 3;
+    score += 3000;
+  } else if (!strncasecmp(p, "rgb", 3)) {
+    p += 3;
+    score += 5000;
+  } 
+  if (!strncasecmp(p, "-", 1) || !strncasecmp(p, "_", 1)) {
+    p += 1;
+  }
+  score += strtol(p, (char **)&p, 10) * 10;
+  debug_printf("Score for color space %s: %d\n", color_space, score);
+  return score;
+}
+
 static remote_printer_t *
 create_local_queue (const char *name,
 		    const char *uri,
@@ -670,6 +719,8 @@ create_local_queue (const char *name,
 		    const char *type,
 		    const char *domain,
 		    const char *pdl,
+		    int color,
+		    int duplex,
 		    const char *make_model,
 		    int is_cups_queue)
 {
@@ -684,6 +735,12 @@ create_local_queue (const char *name,
   http_t *http;
   char scheme[10], userpass[1024], host_name[1024], resource[1024];
   ipp_t *request, *response;
+#ifdef HAVE_CUPS_1_6
+  ipp_attribute_t *attr;
+  char valuebuffer[65536];
+  int i, count, left, right, bottom, top;
+  const char *default_page_size = NULL, *best_color_space = NULL, *color_space;
+#endif /* HAVE_CUPS_1_6 */
 
   /* Mark this as a queue to be created locally pointing to the printer */
   if ((p = (remote_printer_t *)calloc(1, sizeof(remote_printer_t))) == NULL) {
@@ -700,6 +757,9 @@ create_local_queue (const char *name,
   if (!p->uri)
     goto fail;
 
+  p->num_options = 0;
+  p->options = NULL;
+  
   p->host = strdup (host);
   if (!p->host)
     goto fail;
@@ -800,9 +860,137 @@ create_local_queue (const char *name,
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     response = cupsDoRequest(http, request, resource);
 
-    if (!_ppdCreateFromIPP(buffer, sizeof(buffer), response)) {
-      debug_printf("cups-browsed: Unable to create PPD file: %s\n", strerror(errno));
+    /* Log all printer attributes for debugging */
+    if (debug) {
+      attr = ippFirstAttribute(response);
+      while (attr) {
+	debug_printf("Attr: %s\n",
+		     ippGetName(attr));
+	ippAttributeString(attr, valuebuffer, sizeof(valuebuffer));
+	debug_printf("Value: %s\n", valuebuffer);
+	for (i = 0; i < ippGetCount(attr); i ++)
+	  debug_printf("Keyword: %s\n",
+		       ippGetString(attr, i, NULL));
+	attr = ippNextAttribute(response);
+      }
+    }
+
+    if (IPPPrinterQueueType == PPD_NEVER || !_ppdCreateFromIPP(buffer, sizeof(buffer), response)) {
+      if (IPPPrinterQueueType == PPD_AUTO || IPPPrinterQueueType == PPD_ONLY) {
+	debug_printf("cups-browsed: Unable to create PPD file: %s\n", strerror(errno));
+	if (IPPPrinterQueueType == PPD_ONLY)
+	  goto fail;
+      }
+      
       p->ppd = NULL;
+
+      /* Find default page size of the printer */
+      attr = ippFindAttribute(response,
+			      "media-default",
+			      IPP_TAG_ZERO);
+      if (attr) {
+	default_page_size = ippGetString(attr, 0, NULL);
+	debug_printf("Default page size: %s\n",
+		     default_page_size);
+	p->num_options = cupsAddOption("media-default",
+				       strdup(default_page_size),
+				       p->num_options, &(p->options));
+      } else {
+	attr = ippFindAttribute(response,
+				"media-ready",
+				IPP_TAG_ZERO);
+	if (attr) {
+	  default_page_size = ippGetString(attr, 0, NULL);
+	  debug_printf("Default page size: %s\n",
+		       default_page_size);
+	  p->num_options = cupsAddOption("media-default",
+					 strdup(default_page_size),
+					 p->num_options, &(p->options));
+	} else
+	  debug_printf("No default page size found!\n");
+      }
+
+      /* Find maximum unprintable margins of the printer */
+      if ((attr = ippFindAttribute(response, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+	for (i = 1, bottom = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+	  if (ippGetInteger(attr, i) > bottom)
+	    bottom = ippGetInteger(attr, i);
+      } else
+	bottom = 1270;
+      snprintf(buffer, sizeof(buffer), "%d", bottom);
+      p->num_options = cupsAddOption("media-bottom-margin-default",
+				     strdup(buffer),
+				     p->num_options, &(p->options));
+
+      if ((attr = ippFindAttribute(response, "media-left-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+	for (i = 1, left = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+	  if (ippGetInteger(attr, i) > left)
+	    left = ippGetInteger(attr, i);
+      } else
+	left = 635;
+      snprintf(buffer, sizeof(buffer), "%d", left);
+      p->num_options = cupsAddOption("media-left-margin-default",
+				     strdup(buffer),
+				     p->num_options, &(p->options));
+
+      if ((attr = ippFindAttribute(response, "media-right-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+	for (i = 1, right = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+	  if (ippGetInteger(attr, i) > right)
+	    right = ippGetInteger(attr, i);
+      } else
+	right = 635;
+      snprintf(buffer, sizeof(buffer), "%d", right);
+      p->num_options = cupsAddOption("media-right-margin-default",
+				     strdup(buffer),
+				     p->num_options, &(p->options));
+
+      if ((attr = ippFindAttribute(response, "media-top-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+	for (i = 1, top = ippGetInteger(attr, 0), count = ippGetCount(attr); i < count; i ++)
+	  if (ippGetInteger(attr, i) > top)
+	    top = ippGetInteger(attr, i);
+      } else
+	top = 1270;
+      snprintf(buffer, sizeof(buffer), "%d", top);
+      p->num_options = cupsAddOption("media-top-margin-default",
+				     strdup(buffer),
+				     p->num_options, &(p->options));
+
+      debug_printf("Margins: Left: %d, Right: %d, Top: %d, Bottom: %d\n",
+		   left, right, top, bottom);
+
+      /* Find best color space of the printer */
+      attr = ippFindAttribute(response,
+			      "pwg-raster-document-type-supported",
+			      IPP_TAG_ZERO);
+      if (attr) {
+	for (i = 0; i < ippGetCount(attr); i ++) {
+	  color_space = ippGetString(attr, i, NULL);
+	  debug_printf("Supported color space: %s\n", color_space);
+	  if (color_space_score(color_space) >
+	      color_space_score(best_color_space))
+	    best_color_space = color_space;
+	}
+	debug_printf("Best color space: %s\n",
+		     best_color_space);
+	p->num_options = cupsAddOption("print-color-mode-default",
+				       strdup(best_color_space),
+				       p->num_options, &(p->options));
+      } else {
+	debug_printf("No info about supported color spaces found!\n");
+	p->num_options = cupsAddOption("print-color-mode-default",
+				       color == 1 ? "rgb" : "black",
+				       p->num_options, &(p->options));
+      }
+
+      if (duplex)
+	p->num_options = cupsAddOption("sides-default", "two-sided-long-edge",
+				       p->num_options, &(p->options));
+	
+      p->num_options = cupsAddOption("output-format-default", strdup(pdl),
+				     p->num_options, &(p->options));
+      p->num_options = cupsAddOption("make-and-model-default",
+				     strdup(make_model),
+				     p->num_options, &(p->options));
 
       if ((cups_serverbin = getenv("CUPS_SERVERBIN")) == NULL)
       cups_serverbin = CUPS_SERVERBIN;
@@ -828,10 +1016,8 @@ create_local_queue (const char *name,
 	       "  exec \"$0\" \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" < \"$6\"\n"
 	       "fi\n"
 	       "\n"
-	       "extra_options=\"output-format=%s make-and-model=%s\"\n"
-	       "\n"
-	       "%s/filter/pdftoippprinter \"$1\" \"$2\" \"$3\" \"$4\" \"$5 $extra_options\"\n",
-	       p->name, pdl, make_model, cups_serverbin);
+	       "%s/filter/sys5ippprinter \"$1\" \"$2\" \"$3\" \"$4\" \"$5\"\n",
+	       p->name, cups_serverbin);
 
       bytes = write(fd, buffer, strlen(buffer));
       if (bytes != strlen(buffer)) {
@@ -854,7 +1040,7 @@ create_local_queue (const char *name,
     /*p->ppd = "/usr/share/ppd/cupsfilters/pxlcolor.ppd";
       debug_printf("cups-browsed: PPD from file for %s: %s\n", p->name, p->ppd);*/
 
-    /*p->ifscript = "/usr/lib/cups/filter/pdftoippprinter-wrapper";
+    /*p->ifscript = "/usr/lib/cups/filter/sys5ippprinter";
       debug_printf("cups-browsed: System V Interface script for %s: %s\n", p->name, p->ifscript);*/
 
 #endif /* HAVE_CUPS_1_6 */
@@ -879,6 +1065,7 @@ create_local_queue (const char *name,
   free (p->type);
   free (p->service_name);
   free (p->host);
+  cupsFreeOptions(p->num_options, p->options);
   free (p->uri);
   free (p->name);
   if (p->ppd) free (p->ppd);
@@ -971,6 +1158,7 @@ gboolean handle_cups_queues(gpointer unused) {
   time_t current_time = time(NULL);
   const char *default_printer_name;
   ipp_attribute_t *attr;
+  int i;
 
   debug_printf("cups-browsed: Processing printer list ...\n");
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
@@ -1088,6 +1276,7 @@ gboolean handle_cups_queues(gpointer unused) {
       cupsArrayRemove(remote_printers, p);
       if (p->name) free (p->name);
       if (p->uri) free (p->uri);
+      cupsFreeOptions(p->num_options, p->options);
       if (p->host) free (p->host);
       if (p->service_name) free (p->service_name);
       if (p->type) free (p->type);
@@ -1167,6 +1356,12 @@ gboolean handle_cups_queues(gpointer unused) {
       /* Location: <Remote host name> */
       num_options = cupsAddOption("printer-location", p->host,
 				  num_options, &options);
+      /* Default option settings from printer entry */
+      for (i = 0; i < p->num_options; i ++)
+	num_options = cupsAddOption(strdup(p->options[i].name),
+				    strdup(p->options[i].value),
+				    num_options, &options);
+      
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
       /* PPD from system's CUPS installation */
       if (p->model) {
@@ -1268,6 +1463,7 @@ generate_local_queue(const char *host,
 
   char uri[HTTP_MAX_URI];
   char *remote_queue = NULL, *remote_host = NULL, *pdl = NULL;
+  int color = 0, duplex = 0;
 #ifdef HAVE_AVAHI
   char *fields[] = { "product", "usb_MDL", "ty", NULL }, **f;
   AvahiStringList *entry = NULL;
@@ -1275,7 +1471,8 @@ generate_local_queue(const char *host,
 #endif /* HAVE_AVAHI */
   remote_printer_t *p;
   local_printer_t *local_printer;
-  char *backup_queue_name = NULL, *local_queue_name = NULL;
+  char *backup_queue_name = NULL, *local_queue_name = NULL,
+       *local_queue_name_lower = NULL;
   int is_cups_queue;
   size_t hl = 0;
   gboolean create = TRUE;
@@ -1371,6 +1568,24 @@ generate_local_queue(const char *host,
 	  pdl = remove_bad_chars(value, 1);
 	}
       }
+      /* Find out if we have a color printer */
+      entry = avahi_string_list_find((AvahiStringList *)txt, "Color");
+      if (entry) {
+	avahi_string_list_get_pair(entry, &key, &value, NULL);
+	if (key && value && !strcasecmp(key, "Color")) {
+	  if (!strcasecmp(value, "T")) color = 1;
+	  if (!strcasecmp(value, "F")) color = 0;
+	}
+      }
+      /* Find out if we have a duplex printer */
+      entry = avahi_string_list_find((AvahiStringList *)txt, "Duplex");
+      if (entry) {
+	avahi_string_list_get_pair(entry, &key, &value, NULL);
+	if (key && value && !strcasecmp(key, "Duplex")) {
+	  if (!strcasecmp(value, "T")) duplex = 1;
+	  if (!strcasecmp(value, "F")) duplex = 0;
+	}
+      }
     }
 #endif /* HAVE_AVAHI */
   }
@@ -1398,17 +1613,21 @@ generate_local_queue(const char *host,
 
   if (create) {
     /* Is there a local queue with the name of the remote queue? */
+    local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
     local_printer = g_hash_table_lookup (local_printers,
-					 local_queue_name);
-      /* Only consider CUPS queues not created by us */
+					 local_queue_name_lower);
+    free(local_queue_name_lower);
+    /* Only consider CUPS queues not created by us */
     if (local_printer && !local_printer->cups_browsed_controlled) {
       /* Found local queue with same name as remote queue */
       /* Is there a local queue with the name <queue>@<host>? */
       local_queue_name = backup_queue_name;
       debug_printf("cups-browsed: %s already taken, using fallback name: %s\n",
 		   remote_queue, local_queue_name);
+      local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
       local_printer = g_hash_table_lookup (local_printers,
-					   local_queue_name);
+					   local_queue_name_lower);
+      free(local_queue_name_lower);
       if (local_printer && !local_printer->cups_browsed_controlled) {
 	/* Found also a local queue with name <queue>@<host>, so
 	   ignore this remote printer */
@@ -1515,8 +1734,8 @@ generate_local_queue(const char *host,
     /* We need to create a local queue pointing to the
        discovered printer */
     p = create_local_queue (local_queue_name, uri, remote_host,
-			    name ? name : "", type, domain, pdl, remote_queue,
-			    is_cups_queue);
+			    name ? name : "", type, domain, pdl, color, duplex,
+			    remote_queue, is_cups_queue);
   }
 
   free (backup_queue_name);
@@ -1660,6 +1879,7 @@ static void browse_callback(
   /* A service (remote printer) has disappeared */
   case AVAHI_BROWSER_REMOVE: {
     remote_printer_t *p, *q;
+    int i;
 
     /* Ignore events from the local machine */
     if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
@@ -1694,6 +1914,7 @@ static void browse_callback(
 	free (p->service_name);
 	free (p->type);
 	free (p->domain);
+	cupsFreeOptions(p->num_options, p->options);
 	if (p->ppd) free (p->ppd);
 	if (p->model) free (p->model);
 	if (p->ifscript) free (p->ifscript);
@@ -1703,6 +1924,10 @@ static void browse_callback(
 	p->service_name = strdup(q->service_name);
 	p->type = strdup(q->type);
 	p->domain = strdup(q->domain);
+	for (i = 0; i < q->num_options; i ++)
+	  p->num_options = cupsAddOption(strdup(q->options[i].name),
+					 strdup(q->options[i].value),
+					 p->num_options, &(p->options));
 	if (q->ppd) p->ppd = strdup(q->ppd);
 	if (q->model) p->model = strdup(q->model);
 	if (q->ifscript) p->ifscript = strdup(q->ifscript);
@@ -2892,6 +3117,13 @@ read_configuration (const char *filename)
       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
 	  !strcasecmp(value, "off") || !strcasecmp(value, "0"))
 	CreateIPPPrinterQueues = 0;
+    } else if (!strcasecmp(line, "IPPPrinterQueueType") && value) {
+      if (!strncasecmp(value, "Auto", 4))
+	IPPPrinterQueueType = PPD_AUTO;
+      else if (!strncasecmp(value, "PPD", 3))
+	IPPPrinterQueueType = PPD_ONLY;
+      else if (!strncasecmp(value, "NoPPD", 5))
+	IPPPrinterQueueType = PPD_NEVER;
     } else if (!strcasecmp(line, "AutoShutdown") && value) {
       char *p, *saveptr;
       p = strtok_r (value, delim, &saveptr);
@@ -2968,7 +3200,7 @@ find_previous_queue (gpointer key,
     /* Queue found, add to our list */
     p = create_local_queue (name,
 			    printer->device_uri,
-			    "", "", "", "", NULL, NULL, 1);
+			    "", "", "", "", NULL, 0, 0, NULL, 1);
     if (p) {
       /* Mark as unconfirmed, if no Avahi report of this queue appears
 	 in a certain time frame, we will remove the queue */
@@ -3406,6 +3638,121 @@ _cups_toupper(int ch)			/* I - Character to convert */
   return (_cups_islower(ch) ? ch - 'a' + 'A' : ch);
 }
 
+#ifndef HAVE_STRLCPY
+/*
+ * '_cups_strlcpy()' - Safely copy two strings.
+ */
+
+size_t					/* O - Length of string */
+strlcpy(char       *dst,		/* O - Destination string */
+	const char *src,		/* I - Source string */
+	size_t      size)		/* I - Size of destination string buffer */
+{
+  size_t	srclen;			/* Length of source string */
+
+
+ /*
+  * Figure out how much room is needed...
+  */
+
+  size --;
+
+  srclen = strlen(src);
+
+ /*
+  * Copy the appropriate amount...
+  */
+
+  if (srclen > size)
+    srclen = size;
+
+  memmove(dst, src, srclen);
+  dst[srclen] = '\0';
+
+  return (srclen);
+}
+#endif /* !HAVE_STRLCPY */
+
+/*
+ * '_cupsStrFormatd()' - Format a floating-point number.
+ */
+
+char *					/* O - Pointer to end of string */
+_cupsStrFormatd(char         *buf,	/* I - String */
+                char         *bufend,	/* I - End of string buffer */
+		double       number,	/* I - Number to format */
+                struct lconv *loc)	/* I - Locale data */
+{
+  char		*bufptr,		/* Pointer into buffer */
+		temp[1024],		/* Temporary string */
+		*tempdec,		/* Pointer to decimal point */
+		*tempptr;		/* Pointer into temporary string */
+  const char	*dec;			/* Decimal point */
+  int		declen;			/* Length of decimal point */
+
+
+ /*
+  * Format the number using the "%.12f" format and then eliminate
+  * unnecessary trailing 0's.
+  */
+
+  snprintf(temp, sizeof(temp), "%.12f", number);
+  for (tempptr = temp + strlen(temp) - 1;
+       tempptr > temp && *tempptr == '0';
+       *tempptr-- = '\0');
+
+ /*
+  * Next, find the decimal point...
+  */
+
+  if (loc && loc->decimal_point)
+  {
+    dec    = loc->decimal_point;
+    declen = (int)strlen(dec);
+  }
+  else
+  {
+    dec    = ".";
+    declen = 1;
+  }
+
+  if (declen == 1)
+    tempdec = strchr(temp, *dec);
+  else
+    tempdec = strstr(temp, dec);
+
+ /*
+  * Copy everything up to the decimal point...
+  */
+
+  if (tempdec)
+  {
+    for (tempptr = temp, bufptr = buf;
+         tempptr < tempdec && bufptr < bufend;
+	 *bufptr++ = *tempptr++);
+
+    tempptr += declen;
+
+    if (*tempptr && bufptr < bufend)
+    {
+      *bufptr++ = '.';
+
+      while (*tempptr && bufptr < bufend)
+        *bufptr++ = *tempptr++;
+    }
+
+    *bufptr = '\0';
+  }
+  else
+  {
+    strlcpy(buf, temp, (size_t)(bufend - buf + 1));
+    bufptr = buf + strlen(buf);
+  }
+
+  return (bufptr);
+}
+
+
 /*
  * '_cups_strcasecmp()' - Do a case-insensitive comparison.
  */
@@ -3464,40 +3811,6 @@ _cups_strncasecmp(const char *s,	/* I - First string */
     return (-1);
 }
 
-#ifndef HAVE_STRLCPY
-/*
- * '_cups_strlcpy()' - Safely copy two strings.
- */
-
-size_t					/* O - Length of string */
-strlcpy(char       *dst,		/* O - Destination string */
-	const char *src,		/* I - Source string */
-	size_t      size)		/* I - Size of destination string buffer */
-{
-  size_t	srclen;			/* Length of source string */
-
-
- /*
-  * Figure out how much room is needed...
-  */
-
-  size --;
-
-  srclen = strlen(src);
-
- /*
-  * Copy the appropriate amount...
-  */
-
-  if (srclen > size)
-    srclen = size;
-
-  memmove(dst, src, srclen);
-  dst[srclen] = '\0';
-
-  return (srclen);
-}
-#endif /* !HAVE_STRLCPY */
 
 /*
  * '_ppdCreateFromIPP()' - Create a PPD file describing the capabilities
@@ -3526,6 +3839,8 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 			top;		/* Largest top margin */
   pwg_media_t		*pwg;		/* PWG media size */
   int			xres, yres;	/* Resolution values */
+  struct lconv		*loc = localeconv();
+					/* Locale data */
 
 
  /*
@@ -3705,9 +4020,15 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
       if (x_dim && y_dim)
       {
+        char	twidth[256],		/* Width string */
+		tlength[256];		/* Length string */
+
         pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
 
-        cupsFilePrintf(fp, "*PageSize %s: \"<</PageSize[%.1f %.1f]>>setpagedevice\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+        _cupsStrFormatd(twidth, twidth + sizeof(twidth), pwg->width * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(tlength, tlength + sizeof(tlength), pwg->length * 72.0 / 2540.0, loc);
+
+        cupsFilePrintf(fp, "*PageSize %s: \"<</PageSize[%s %s]>>setpagedevice\"\n", pwg->ppd, twidth, tlength);
       }
     }
     cupsFilePuts(fp, "*CloseUI: *PageSize\n");
@@ -3723,9 +4044,15 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
       if (x_dim && y_dim)
       {
+        char	twidth[256],		/* Width string */
+		tlength[256];		/* Length string */
+
         pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
 
-        cupsFilePrintf(fp, "*PageRegion %s: \"<</PageSize[%.1f %.1f]>>setpagedevice\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+        _cupsStrFormatd(twidth, twidth + sizeof(twidth), pwg->width * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(tlength, tlength + sizeof(tlength), pwg->length * 72.0 / 2540.0, loc);
+
+        cupsFilePrintf(fp, "*PageRegion %s: \"<</PageSize[%s %s]>>setpagedevice\"\n", pwg->ppd, twidth, tlength);
       }
     }
     cupsFilePuts(fp, "*CloseUI: *PageRegion\n");
@@ -3740,10 +4067,24 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
       if (x_dim && y_dim)
       {
+        char	tleft[256],		/* Left string */
+		tbottom[256],		/* Bottom string */
+		tright[256],		/* Right string */
+		ttop[256],		/* Top string */
+		twidth[256],		/* Width string */
+		tlength[256];		/* Length string */
+
         pwg = pwgMediaForSize(ippGetInteger(x_dim, 0), ippGetInteger(y_dim, 0));
 
-        cupsFilePrintf(fp, "*ImageableArea %s: \"%.1f %.1f %.1f %.1f\"\n", pwg->ppd, left * 72.0 / 2540.0, bottom * 72.0 / 2540.0, (pwg->width - right) * 72.0 / 2540.0, (pwg->length - top) * 72.0 / 2540.0);
-        cupsFilePrintf(fp, "*PaperDimension %s: \"%.1f %.1f\"\n", pwg->ppd, pwg->width * 72.0 / 2540.0, pwg->length * 72.0 / 2540.0);
+        _cupsStrFormatd(tleft, tleft + sizeof(tleft), left * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(tbottom, tbottom + sizeof(tbottom), bottom * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(tright, tright + sizeof(tright), (pwg->width - right) * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(ttop, ttop + sizeof(ttop), (pwg->length - top) * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(twidth, twidth + sizeof(twidth), pwg->width * 72.0 / 2540.0, loc);
+        _cupsStrFormatd(tlength, tlength + sizeof(tlength), pwg->length * 72.0 / 2540.0, loc);
+
+        cupsFilePrintf(fp, "*ImageableArea %s: \"%s %s %s %s\"\n", pwg->ppd, tleft, tbottom, tright, ttop);
+        cupsFilePrintf(fp, "*PaperDimension %s: \"%s %s\"\n", pwg->ppd, twidth, tlength);
       }
     }
   } else {
@@ -3896,8 +4237,6 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   {
     const char *default_color = NULL;	/* Default */
 
-    cupsFilePuts(fp, "*OpenUI *ColorModel/Color Mode: PickOne\n"
-		     "*OrderDependency: 10 AnySetup *ColorModel\n");
     for (i = 0, count = ippGetCount(attr); i < count; i ++)
     {
       const char *keyword = ippGetString(attr, i, NULL);
@@ -3905,6 +4244,9 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
       if (!strcmp(keyword, "black_1") || !strcmp(keyword, "bi-level") || !strcmp(keyword, "process-bi-level"))
       {
+	if (!default_color)
+	  cupsFilePuts(fp, "*OpenUI *ColorModel/Color Mode: PickOne\n"
+		       "*OrderDependency: 10 AnySetup *ColorModel\n");
         cupsFilePuts(fp, "*ColorModel FastGray/Fast Grayscale: \"<</cupsColorSpace 3/cupsBitsPerColor 1/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
 
         if (!default_color)
@@ -3912,6 +4254,9 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       }
       else if (!strcmp(keyword, "sgray_8") || !strcmp(keyword, "monochrome") || !strcmp(keyword, "process-monochrome"))
       {
+	if (!default_color)
+	  cupsFilePuts(fp, "*OpenUI *ColorModel/Color Mode: PickOne\n"
+		       "*OrderDependency: 10 AnySetup *ColorModel\n");
         cupsFilePuts(fp, "*ColorModel Gray/Grayscale: \"<</cupsColorSpace 18/cupsBitsPerColor 8/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
 
         if (!default_color || !strcmp(default_color, "FastGray"))
@@ -3919,6 +4264,9 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       }
       else if (!strcmp(keyword, "srgb_8") || !strcmp(keyword, "color"))
       {
+	if (!default_color)
+	  cupsFilePuts(fp, "*OpenUI *ColorModel/Color Mode: PickOne\n"
+		       "*OrderDependency: 10 AnySetup *ColorModel\n");
         cupsFilePuts(fp, "*ColorModel RGB/Color: \"<</cupsColorSpace 19/cupsBitsPerColor 8/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n");
 
 	default_color = "RGB";
@@ -3926,9 +4274,10 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
     }
 
     if (default_color)
+    {
       cupsFilePrintf(fp, "*DefaultColorModel: %s\n", default_color);
-
-    cupsFilePuts(fp, "*CloseUI: *ColorModel\n");
+      cupsFilePuts(fp, "*CloseUI: *ColorModel\n");
+    }
   }
 
  /*
