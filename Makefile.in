@@ -94,7 +94,7 @@ bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
 	commandtopclx$(EXEEXT) foomatic-rip$(EXEEXT) \
-	gstoraster$(EXEEXT) pdftoijs$(EXEEXT) pdftoippprinter$(EXEEXT) \
+	gstoraster$(EXEEXT) pdftoijs$(EXEEXT) sys5ippprinter$(EXEEXT) \
 	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
 	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
 	rastertopdf$(EXEEXT) $(am__EXEEXT_1)
@@ -299,13 +299,6 @@ pdftoijs_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 pdftoijs_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftoijs_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_pdftoippprinter_OBJECTS = pdftoippprinter-common.$(OBJEXT) \
-	pdftoippprinter-pdftoippprinter.$(OBJEXT)
-pdftoippprinter_OBJECTS = $(am_pdftoippprinter_OBJECTS)
-pdftoippprinter_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(pdftoippprinter_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
 am_pdftoopvp_OBJECTS = pdftoopvp-OPRS.$(OBJEXT) \
 	pdftoopvp-OPVPSplashClip.$(OBJEXT) \
 	pdftoopvp-OPVPSplash.$(OBJEXT) \
@@ -377,6 +370,13 @@ serial_DEPENDENCIES = $(am__DEPENDENCIES_1)
 serial_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(serial_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_sys5ippprinter_OBJECTS = sys5ippprinter-common.$(OBJEXT) \
+	sys5ippprinter-sys5ippprinter.$(OBJEXT)
+sys5ippprinter_OBJECTS = $(am_sys5ippprinter_OBJECTS)
+sys5ippprinter_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(sys5ippprinter_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
+	$@
 am_test1284_OBJECTS = test1284-ieee1284.$(OBJEXT) \
 	test1284-test1284.$(OBJEXT)
 test1284_OBJECTS = $(am_test1284_OBJECTS)
@@ -500,34 +500,34 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
 	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) \
-	$(pdftoippprinter_SOURCES) $(EXTRA_pdftoippprinter_SOURCES) \
-	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(rastertopdf_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
-	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
-	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
-	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
-	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
-	$(urftopdf_SOURCES)
+	$(rastertopdf_SOURCES) $(serial_SOURCES) \
+	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
+	$(test1284_SOURCES) $(test_analyze_SOURCES) \
+	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
+	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
+	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
+	$(ttfread_SOURCES) $(urftopdf_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
 	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
 	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) \
-	$(pdftoippprinter_SOURCES) $(EXTRA_pdftoippprinter_SOURCES) \
-	$(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(rastertopdf_SOURCES) $(serial_SOURCES) $(test1284_SOURCES) \
-	$(test_analyze_SOURCES) $(test_pdf_SOURCES) \
-	$(test_pdf1_SOURCES) $(test_pdf2_SOURCES) $(test_ps_SOURCES) \
-	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
-	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
-	$(urftopdf_SOURCES)
+	$(rastertopdf_SOURCES) $(serial_SOURCES) \
+	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
+	$(test1284_SOURCES) $(test_analyze_SOURCES) \
+	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
+	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
+	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
+	$(ttfread_SOURCES) $(urftopdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1482,15 +1482,15 @@ pdftoijs_LDADD = \
 	$(IJS_LIBS) \
 	$(POPPLER_LIBS)
 
-pdftoippprinter_SOURCES = \
+sys5ippprinter_SOURCES = \
 	filter/common.c \
 	filter/common.h \
-	filter/pdftoippprinter.c
+	filter/sys5ippprinter.c
 
-EXTRA_pdftoippprinter_SOURCES = filter/strcasestr.c
-pdftoippprinter_CFLAGS = $(CUPS_CFLAGS)
-pdftoippprinter_LDADD = $(STRCASESTR) $(CUPS_LIBS)
-pdftoippprinter_DEPENDENCIES = $(STRCASESTR)
+EXTRA_sys5ippprinter_SOURCES = filter/strcasestr.c
+sys5ippprinter_CFLAGS = $(CUPS_CFLAGS)
+sys5ippprinter_LDADD = $(STRCASESTR) $(CUPS_LIBS)
+sys5ippprinter_DEPENDENCIES = $(STRCASESTR)
 pdftops_SOURCES = \
 	filter/common.c \
 	filter/common.h \
@@ -2039,10 +2039,6 @@ pdftoijs$(EXEEXT): $(pdftoijs_OBJECTS) $(pdftoijs_DEPENDENCIES) $(EXTRA_pdftoijs
 	@rm -f pdftoijs$(EXEEXT)
 	$(AM_V_CXXLD)$(pdftoijs_LINK) $(pdftoijs_OBJECTS) $(pdftoijs_LDADD) $(LIBS)
 
-pdftoippprinter$(EXEEXT): $(pdftoippprinter_OBJECTS) $(pdftoippprinter_DEPENDENCIES) $(EXTRA_pdftoippprinter_DEPENDENCIES) 
-	@rm -f pdftoippprinter$(EXEEXT)
-	$(AM_V_CCLD)$(pdftoippprinter_LINK) $(pdftoippprinter_OBJECTS) $(pdftoippprinter_LDADD) $(LIBS)
-
 pdftoopvp$(EXEEXT): $(pdftoopvp_OBJECTS) $(pdftoopvp_DEPENDENCIES) $(EXTRA_pdftoopvp_DEPENDENCIES) 
 	@rm -f pdftoopvp$(EXEEXT)
 	$(AM_V_CXXLD)$(pdftoopvp_LINK) $(pdftoopvp_OBJECTS) $(pdftoopvp_LDADD) $(LIBS)
@@ -2074,6 +2070,10 @@ rastertopdf$(EXEEXT): $(rastertopdf_OBJECTS) $(rastertopdf_DEPENDENCIES) $(EXTRA
 serial$(EXEEXT): $(serial_OBJECTS) $(serial_DEPENDENCIES) $(EXTRA_serial_DEPENDENCIES) 
 	@rm -f serial$(EXEEXT)
 	$(AM_V_CCLD)$(serial_LINK) $(serial_OBJECTS) $(serial_LDADD) $(LIBS)
+
+sys5ippprinter$(EXEEXT): $(sys5ippprinter_OBJECTS) $(sys5ippprinter_DEPENDENCIES) $(EXTRA_sys5ippprinter_DEPENDENCIES) 
+	@rm -f sys5ippprinter$(EXEEXT)
+	$(AM_V_CCLD)$(sys5ippprinter_LINK) $(sys5ippprinter_OBJECTS) $(sys5ippprinter_LDADD) $(LIBS)
 
 test1284$(EXEEXT): $(test1284_OBJECTS) $(test1284_DEPENDENCIES) $(EXTRA_test1284_DEPENDENCIES) 
 	@rm -f test1284$(EXEEXT)
@@ -2260,9 +2260,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-ieee1284.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-parallel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoijs-pdftoijs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoippprinter-common.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoippprinter-pdftoippprinter.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoippprinter-strcasestr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPRS.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPOutputDev.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplash.Po@am__quote@
@@ -2295,6 +2292,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial-serial.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sfnt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sfnt_subset.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys5ippprinter-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys5ippprinter-strcasestr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sys5ippprinter-sys5ippprinter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test1284-ieee1284.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test1284-test1284.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_analyze.Po@am__quote@
@@ -2874,48 +2874,6 @@ parallel-parallel.obj: backend/parallel.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(parallel_CFLAGS) $(CFLAGS) -c -o parallel-parallel.obj `if test -f 'backend/parallel.c'; then $(CYGPATH_W) 'backend/parallel.c'; else $(CYGPATH_W) '$(srcdir)/backend/parallel.c'; fi`
 
-pdftoippprinter-common.o: filter/common.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-common.o -MD -MP -MF $(DEPDIR)/pdftoippprinter-common.Tpo -c -o pdftoippprinter-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-common.Tpo $(DEPDIR)/pdftoippprinter-common.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/common.c' object='pdftoippprinter-common.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
-
-pdftoippprinter-common.obj: filter/common.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-common.obj -MD -MP -MF $(DEPDIR)/pdftoippprinter-common.Tpo -c -o pdftoippprinter-common.obj `if test -f 'filter/common.c'; then $(CYGPATH_W) 'filter/common.c'; else $(CYGPATH_W) '$(srcdir)/filter/common.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-common.Tpo $(DEPDIR)/pdftoippprinter-common.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/common.c' object='pdftoippprinter-common.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-common.obj `if test -f 'filter/common.c'; then $(CYGPATH_W) 'filter/common.c'; else $(CYGPATH_W) '$(srcdir)/filter/common.c'; fi`
-
-pdftoippprinter-pdftoippprinter.o: filter/pdftoippprinter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-pdftoippprinter.o -MD -MP -MF $(DEPDIR)/pdftoippprinter-pdftoippprinter.Tpo -c -o pdftoippprinter-pdftoippprinter.o `test -f 'filter/pdftoippprinter.c' || echo '$(srcdir)/'`filter/pdftoippprinter.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-pdftoippprinter.Tpo $(DEPDIR)/pdftoippprinter-pdftoippprinter.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/pdftoippprinter.c' object='pdftoippprinter-pdftoippprinter.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-pdftoippprinter.o `test -f 'filter/pdftoippprinter.c' || echo '$(srcdir)/'`filter/pdftoippprinter.c
-
-pdftoippprinter-pdftoippprinter.obj: filter/pdftoippprinter.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-pdftoippprinter.obj -MD -MP -MF $(DEPDIR)/pdftoippprinter-pdftoippprinter.Tpo -c -o pdftoippprinter-pdftoippprinter.obj `if test -f 'filter/pdftoippprinter.c'; then $(CYGPATH_W) 'filter/pdftoippprinter.c'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoippprinter.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-pdftoippprinter.Tpo $(DEPDIR)/pdftoippprinter-pdftoippprinter.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/pdftoippprinter.c' object='pdftoippprinter-pdftoippprinter.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-pdftoippprinter.obj `if test -f 'filter/pdftoippprinter.c'; then $(CYGPATH_W) 'filter/pdftoippprinter.c'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoippprinter.c'; fi`
-
-pdftoippprinter-strcasestr.o: filter/strcasestr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-strcasestr.o -MD -MP -MF $(DEPDIR)/pdftoippprinter-strcasestr.Tpo -c -o pdftoippprinter-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-strcasestr.Tpo $(DEPDIR)/pdftoippprinter-strcasestr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='pdftoippprinter-strcasestr.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
-
-pdftoippprinter-strcasestr.obj: filter/strcasestr.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -MT pdftoippprinter-strcasestr.obj -MD -MP -MF $(DEPDIR)/pdftoippprinter-strcasestr.Tpo -c -o pdftoippprinter-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoippprinter-strcasestr.Tpo $(DEPDIR)/pdftoippprinter-strcasestr.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='pdftoippprinter-strcasestr.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoippprinter_CFLAGS) $(CFLAGS) -c -o pdftoippprinter-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
-
 pdftops-common.o: filter/common.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftops_CFLAGS) $(CFLAGS) -MT pdftops-common.o -MD -MP -MF $(DEPDIR)/pdftops-common.Tpo -c -o pdftops-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftops-common.Tpo $(DEPDIR)/pdftops-common.Po
@@ -3013,6 +2971,48 @@ serial-serial.obj: backend/serial.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backend/serial.c' object='serial-serial.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_CFLAGS) $(CFLAGS) -c -o serial-serial.obj `if test -f 'backend/serial.c'; then $(CYGPATH_W) 'backend/serial.c'; else $(CYGPATH_W) '$(srcdir)/backend/serial.c'; fi`
+
+sys5ippprinter-common.o: filter/common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-common.o -MD -MP -MF $(DEPDIR)/sys5ippprinter-common.Tpo -c -o sys5ippprinter-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-common.Tpo $(DEPDIR)/sys5ippprinter-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/common.c' object='sys5ippprinter-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-common.o `test -f 'filter/common.c' || echo '$(srcdir)/'`filter/common.c
+
+sys5ippprinter-common.obj: filter/common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-common.obj -MD -MP -MF $(DEPDIR)/sys5ippprinter-common.Tpo -c -o sys5ippprinter-common.obj `if test -f 'filter/common.c'; then $(CYGPATH_W) 'filter/common.c'; else $(CYGPATH_W) '$(srcdir)/filter/common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-common.Tpo $(DEPDIR)/sys5ippprinter-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/common.c' object='sys5ippprinter-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-common.obj `if test -f 'filter/common.c'; then $(CYGPATH_W) 'filter/common.c'; else $(CYGPATH_W) '$(srcdir)/filter/common.c'; fi`
+
+sys5ippprinter-sys5ippprinter.o: filter/sys5ippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-sys5ippprinter.o -MD -MP -MF $(DEPDIR)/sys5ippprinter-sys5ippprinter.Tpo -c -o sys5ippprinter-sys5ippprinter.o `test -f 'filter/sys5ippprinter.c' || echo '$(srcdir)/'`filter/sys5ippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-sys5ippprinter.Tpo $(DEPDIR)/sys5ippprinter-sys5ippprinter.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/sys5ippprinter.c' object='sys5ippprinter-sys5ippprinter.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-sys5ippprinter.o `test -f 'filter/sys5ippprinter.c' || echo '$(srcdir)/'`filter/sys5ippprinter.c
+
+sys5ippprinter-sys5ippprinter.obj: filter/sys5ippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-sys5ippprinter.obj -MD -MP -MF $(DEPDIR)/sys5ippprinter-sys5ippprinter.Tpo -c -o sys5ippprinter-sys5ippprinter.obj `if test -f 'filter/sys5ippprinter.c'; then $(CYGPATH_W) 'filter/sys5ippprinter.c'; else $(CYGPATH_W) '$(srcdir)/filter/sys5ippprinter.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-sys5ippprinter.Tpo $(DEPDIR)/sys5ippprinter-sys5ippprinter.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/sys5ippprinter.c' object='sys5ippprinter-sys5ippprinter.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-sys5ippprinter.obj `if test -f 'filter/sys5ippprinter.c'; then $(CYGPATH_W) 'filter/sys5ippprinter.c'; else $(CYGPATH_W) '$(srcdir)/filter/sys5ippprinter.c'; fi`
+
+sys5ippprinter-strcasestr.o: filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-strcasestr.o -MD -MP -MF $(DEPDIR)/sys5ippprinter-strcasestr.Tpo -c -o sys5ippprinter-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-strcasestr.Tpo $(DEPDIR)/sys5ippprinter-strcasestr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='sys5ippprinter-strcasestr.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-strcasestr.o `test -f 'filter/strcasestr.c' || echo '$(srcdir)/'`filter/strcasestr.c
+
+sys5ippprinter-strcasestr.obj: filter/strcasestr.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -MT sys5ippprinter-strcasestr.obj -MD -MP -MF $(DEPDIR)/sys5ippprinter-strcasestr.Tpo -c -o sys5ippprinter-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sys5ippprinter-strcasestr.Tpo $(DEPDIR)/sys5ippprinter-strcasestr.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/strcasestr.c' object='sys5ippprinter-strcasestr.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sys5ippprinter_CFLAGS) $(CFLAGS) -c -o sys5ippprinter-strcasestr.obj `if test -f 'filter/strcasestr.c'; then $(CYGPATH_W) 'filter/strcasestr.c'; else $(CYGPATH_W) '$(srcdir)/filter/strcasestr.c'; fi`
 
 test1284-ieee1284.o: backend/ieee1284.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test1284_CFLAGS) $(CFLAGS) -MT test1284-ieee1284.o -MD -MP -MF $(DEPDIR)/test1284-ieee1284.Tpo -c -o test1284-ieee1284.o `test -f 'backend/ieee1284.c' || echo '$(srcdir)/'`backend/ieee1284.c
