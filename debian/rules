@@ -10,6 +10,7 @@ export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		--disable-silent-rules \
+		--with-shell=/bin/sh \
 		--libdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
 		--mandir=/usr/share/man \
 		--enable-static \

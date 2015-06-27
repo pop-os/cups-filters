@@ -1,5 +1,24 @@
-NEWS - OpenPrinting CUPS Filters v1.0.69 - 2015-06-10
+NEWS - OpenPrinting CUPS Filters v1.0.70 - 2015-06-26
 -----------------------------------------------------
+
+CHANGES IN V1.0.70
+
+	- texttopdf: Fixed buffer overflow on size allocation of texttopdf
+	  when working with extremely small line sizes, which causes the size
+	  calculation to result in 0 (CVE-2015-3258, thanks to Stefan
+	  Cornelius fro Red Hat for the patch).
+	- cups-browsed: leak fixes
+	- cups-browsed: Further BrowseAllow fixing
+	- cups-browsed: BrowsePoll is an array of pointers, not structures,
+	  so allocate room for the pointers
+  	- cups-browsed: Prevent NULL dereference when handling BrowseAllow
+	  without value
+  	- cups-browsed: Use memory deallocation function corresponding to
+	  allocation function used
+	- cups-browsed: Fixes for glib source handling (Red Hat bug #1228555)
+	- foomatic-rip: Allow using another shell than /bin/bash using the
+	  "--with-shell=..." option for "./configure". Thanks to Leonardo
+	  Taccari for the patch (Bug #1288).
 
 CHANGES IN V1.0.69
 
