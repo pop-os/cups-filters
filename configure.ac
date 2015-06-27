@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[69])
+m4_define([cups_filters_version_micro],[70])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -622,6 +622,16 @@ fi
 AC_SUBST(SED_EXTENDED_REGEX_OPT)
 AC_SUBST(CUPS_GHOSTSCRIPT)
 
+# =========================================================
+# Select a different shell instead of the default /bin/bash
+# =========================================================
+AC_ARG_WITH([shell],
+	[AS_HELP_STRING([--with-shell=path], [Specify path for a modern shell.])],
+	[with_shell="$withval"],
+	[with_shell="/bin/bash"]
+)
+AC_DEFINE_UNQUOTED([SHELL], "$with_shell", [Path for a modern shell])]
+
 # =====================
 # Prepare all .in files
 # =====================
@@ -659,6 +669,7 @@ Build configuration:
 	png:             ${with_png}
 	php:             ${with_php}
 	php-config:      ${with_php_config}
+	shell:           ${with_shell}
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
 	avahi:           ${enable_avahi}

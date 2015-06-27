@@ -190,6 +190,9 @@
 /* Needed for pdftopdf filter compilation */
 #undef PDFTOPDF
 
+/* Path for a modern shell */
+#undef SHELL
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
