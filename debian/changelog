@@ -1,3 +1,11 @@
+cups-filters (1.0.70-2) unstable; urgency=medium
+
+  * Refresh fix.scanned.copyright to reflect COPYING more closely, add a GPL-2
+    catchall
+  * Update gbp.conf again, changed my mind
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 29 Jun 2015 23:10:02 +0200
+
 cups-filters (1.0.70-1) unstable; urgency=medium
 
   * New upstream release
