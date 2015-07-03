@@ -1,3 +1,10 @@
+cups-filters (1.0.61-5+deb8u1) jessie-security; urgency=high
+
+  * Backport upstream fixes for buffer overflows on size allocation in texttopdf
+    (CVE-2015-3258, CVE-2015-3279)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 03 Jul 2015 17:34:15 +0200
+
 cups-filters (1.0.61-5) unstable; urgency=high
 
   * Backport upstream's patch to fix a bug in the remove_bad_chars() failing
