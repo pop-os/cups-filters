@@ -1,3 +1,10 @@
+cups-filters (1.0.18-2.1+deb7u2) wheezy-security; urgency=high
+
+  * Backport upstream fixes for buffer overflows on size allocation in texttopdf.
+    (CVE-2015-3258, CVE-2015-3279)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 03 Jul 2015 17:30:51 +0200
+
 cups-filters (1.0.18-2.1+deb7u1) stable-security; urgency=high
 
   * Backport security fix from cups-filters 1.0.47:
