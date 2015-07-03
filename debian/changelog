@@ -1,3 +1,15 @@
+cups-filters (1.0.61-0ubuntu2.3) utopic-security; urgency=medium
+
+  * SECURITY UPDATE: denial of service and possible code execution via
+    overflows in testtopdf filter
+    - debian/patches/CVE-2015-3258-3279.patch: move memory allocation from
+      filter/texttopdf.c to filter/textcommon.c and perform bounds
+      checking.
+    - CVE-2015-3258
+    - CVE-2015-3279
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 03 Jul 2015 07:09:47 -0400
+
 cups-filters (1.0.61-0ubuntu2.1) utopic-security; urgency=medium
 
   * SECURITY UPDATE: arbitrary code injection via incorrect filtering
