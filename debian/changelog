@@ -1,3 +1,20 @@
+cups-filters (1.0.71-1ubuntu1) wily; urgency=medium
+
+  * Re-introduced ippusbxd in cups-filters-ippusbxd binary package. It
+    got lost when accidentally syncing new cups-filters upstream versions
+    from Debian.
+  * Updated ippusbxd to the current upstream GIT snapshot.
+  * Applied most recent, not yet upstreamed changes:
+     - Made ippusbxd robust against nmap port scans. Before, it errored
+       out on the null packets.
+     - Introduced new "-P <port>" command line option to specify a port to
+       use but let ippusbxd check the subsequent ports instead of erroring out
+       when the desired port is already taken.
+     - Let ippusbxd return the process ID of the daemon process to the
+       calling console.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue,  7 Jul 2015 20:59:06 -0300
+
 cups-filters (1.0.71-1) unstable; urgency=medium
 
   * New upstream release
