@@ -24,7 +24,7 @@ override_dh_installdocs:
 
 override_dh_fixperms:
 	dh_fixperms -Xusr/lib/cups/backend
-	
+
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod 700 debian/cups-filters/usr/lib/cups/backend/serial
@@ -43,7 +43,7 @@ ifeq ($(derives_from_ubuntu),yes)
 	cp utils/cups-browsed-upstart.conf debian/cups-browsed.upstart
 endif
 	dh_install
-	
+
 ifeq ($(derives_from_ubuntu),yes)
 	#  - Install Apport hook
 	#  - Replace standard test page template by Ubuntu-branded one
@@ -58,3 +58,23 @@ endif
 	install -D -m 644 debian/local/modules-load.conf debian/cups-filters/etc/modules-load.d/cups-filters.conf
 
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
+
+	# Install ippusbxd.
+	# As there is not enough time any more before Feature Freeze for
+	# Utopic to create a proper ippusbxd package in Debian and sync it
+	# into Ubuntu we add ippusbxd (1 single executable) to cups-filters,
+	# binary package cups-filters-ippusbxd. We do not use straight
+	# ippusbxd here as ippusbxd has lower version numbers than
+	# cups-filters and so a transition of the ippusbxd binary package
+	# from the cups-filters source package to the ippusbxd source
+	# package would be more complicated.
+
+	( cd debian/local/ippusbxd; \
+	  gcc -o2 -std=c99 -Wall -Wextra -pedantic -pedantic-errors -o ippusbxd -I /usr/include/libusb-1.0 *.c -pthread -lusb-1.0 -ludev; \
+	)
+	install -D -m 755 debian/local/ippusbxd/ippusbxd debian/cups-filters-ippusbxd/usr/sbin/ippusbxd
+	install -D -m 644 debian/local/ippusbxd/readme.md debian/cups-filters-ippusbxd/usr/share/doc/cups-filters-ippusbxd/readme.md
+	install -D -m 644 debian/local/ippusbxd/license.md debian/cups-filters-ippusbxd/usr/share/doc/cups-filters-ippusbxd/license.md
+	install -D -m 644 debian/local/ippusbxd/behaviour debian/cups-filters-ipppusbxd/usr/share/doc/cups-filters-ippusbxd/behaviour
+	install -D -m 644 debian/local/ippusbxd/ippusbxd.1 debian/cups-filters-ippusbxd/usr/share/man/man1/ippusbxd.1
+	gzip -9 debian/cups-filters-ippusbxd/usr/share/man/man1/ippusbxd.1
