@@ -1,3 +1,10 @@
+cups-filters (1.0.71-1ubuntu2) wily; urgency=medium
+
+  * Updated ippusbxd to the current upstream GIT snapshot so that jobs
+    sent in chunked HTTP transfer mode get correctly to the printer.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 16 Jul 2015 16:30:06 -0300
+
 cups-filters (1.0.71-1ubuntu1) wily; urgency=medium
 
   * Re-introduced ippusbxd in cups-filters-ippusbxd binary package. It
