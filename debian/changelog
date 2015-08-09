@@ -1,6 +1,13 @@
+cups-filters (1.0.71-1ubuntu4) wily; urgency=medium
+
+  * SECURITY FIX: Updated ippusbxd to the current upstream GIT snapshot to
+    assure that only localhost can access the IPP-over-USB printers.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sun,  9 Aug 2015 20:29:06 -0300
+
 cups-filters (1.0.71-1ubuntu3) wily; urgency=medium
 
-  * Updated ippusbxd to the current upstream GIT snapshot so to add
+  * Updated ippusbxd to the current upstream GIT snapshot to add
     the no-printer development/debug mode ("-N" command line option).
 
  -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  7 Aug 2015 00:59:06 -0300
