@@ -1,3 +1,12 @@
+cups-filters (1.0.71-1ubuntu5) wily; urgency=medium
+
+  * Removed ippusbxd (cups-filters-ippusbxd binary packge) from
+    cups-filters as ippusbxd will be in its own package from now on.
+    This package is identical with the 1.0.71-1 Debian package and
+    from 1.0.71-2 or 1.0.72 on we will sync with Debian again.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 12 Aug 2015 20:37:06 -0300
+
 cups-filters (1.0.71-1ubuntu4) wily; urgency=medium
 
   * SECURITY FIX: Updated ippusbxd to the current upstream GIT snapshot to

@@ -37,10 +37,7 @@ Build-Depends:
  libavahi-glib-dev,
  librsvg2-bin,
 # Needed for tests
- fonts-dejavu-core,
-# Needed for ippusbxd
- libudev-dev,
- libusb-1.0-0-dev
+ fonts-dejavu-core
 Homepage: http://www.openprinting.org/
 Vcs-Git: https://alioth.debian.org/anonscm/git/printing/cups-filters.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=printing/cups-filters.git
@@ -177,20 +174,3 @@ Description: OpenPrinting CUPS Filters - cups-browsed
 #Description: OpenPrinting CUPS Filters - Debugging symbols
 # This package provides the debugging symbols for OpenPrinting
 # CUPS Filters.
-
-Package: cups-filters-ippusbxd
-Architecture: any
-Depends: ${shlibs:Depends}, 
- ${misc:Depends}
-Recommends: system-config-printer-udev
-Enhances: cups
-Description: ippusbxd - Daemon for IPP-over-USB printer support
- This package provides ippusbxd, a daemon which lets IPP-over-USB
- printers appear as regular network IPP printers and so one can prints
- on them with CUPS ("ipp" backend) and access the configuration web
- interface with any browser.
- .
- We have added ippusbxd as a binary package to cups-filters only
- temporarily to get ippusbxd into Utopic before Feature Freeze. Later
- on, an own source package for ippusbxd will get introduced in Debian
- and synced to Ubuntu, its binary package replacing this package.
