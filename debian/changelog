@@ -1,10 +1,26 @@
+cups-filters (1.0.73-1) experimental; urgency=low
+
+  * New upstream release
+    - cups-browsed: Added LDAP support. Appropriately configured via
+      cups-browsed.conf remote printers made available via LDAP will be
+      looked up and local queues pointing to them created. Thanks to
+      Raphael Geissert for contributing this patch (Closes: #795185)
+    - foomatic-rip: Prevent crash when supplying "media" option with empty
+      value ("media=", LP: #1479871)
+
+  * Drop patches, all included upstream
+  * Add a B-D on libldap2-dev for the new LDAP browsing support
+  * Correct the CVE identifier in the previous upload
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 19 Aug 2015 18:04:54 +0200
+
 cups-filters (1.0.71-1) unstable; urgency=medium
 
   * New upstream release
     - texttopdf: The Page allocation is moved into textcommon.c, where it does
       all the necessary checking, Thanks to Tim Waugh from Red Hat for the
       patch.
-    - texttopdf: Upper-bounds checking (CVE-2015-3259).
+    - texttopdf: Upper-bounds checking (CVE-2015-3279).
 
   * Update gbp.conf again, use DEFAULTS
   * Amend 1.0.70-1 changelog entry to attribute the patch origin correctly to
