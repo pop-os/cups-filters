@@ -20,6 +20,7 @@ Build-Depends:
  poppler-utils,
  libglib2.0-dev,
  liblcms2-dev,
+ libldap2-dev,
  libpoppler-private-dev (>= 0.16.0),
  libpoppler-cpp-dev,
  libqpdf-dev (>= 4.0.1),

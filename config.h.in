@@ -78,6 +78,18 @@
 /* Define to 1 if you have the <jpeglib.h> header file. */
 #undef HAVE_JPEGLIB_H
 
+/* Define if LDAP support should be enabled */
+#undef HAVE_LDAP
+
+/* If libldap implements ldap_set_rebind_proc */
+#undef HAVE_LDAP_REBIND_PROC
+
+/* If LDAP has SSL/TLS support enabled */
+#undef HAVE_LDAP_SSL
+
+/* Define to 1 if you have the <ldap_ssl.h> header file. */
+#undef HAVE_LDAP_SSL_H
+
 /* Defines if we provide jpeg library. */
 #undef HAVE_LIBJPEG
 
@@ -95,6 +107,12 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* If LDAP support is that of Mozilla */
+#undef HAVE_MOZILLA_LDAP
+
+/* If LDAP support is that of OpenLDAP */
+#undef HAVE_OPENLDAP
 
 /* Define to 1 if you have the `open_memstream' function. */
 #undef HAVE_OPEN_MEMSTREAM
