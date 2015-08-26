@@ -1,5 +1,28 @@
-NEWS - OpenPrinting CUPS Filters v1.0.73 - 2015-08-18
+NEWS - OpenPrinting CUPS Filters v1.0.74 - 2015-08-25
 -----------------------------------------------------
+
+CHANGES IN V1.0.74
+
+	- cups-browsed: Added NULL check when getting the notification of
+	  a printer starting to process a job and checking whether this
+	  printer is created by cups-browsed with the implicitclass:
+	  backend (Ubuntu bug #1488524).
+	- backends: Include unistd.h and fcntl.h in backend-private.h for
+	  all platforms, not only Linux, so that the backends build also
+	  on non-Linux platforms (Bug #1308).
+	- cups-browsed: Do not schedule printers for update when they are
+	  already marked as disappeared.
+	- cups-browsed: Added sanity checks when saving the default printer
+	  selection in a file.
+	- cups-browsed, implicitclass: If remote queues disappear or
+	  cups-browsed shuts down and a cups-browsed-generated queue still
+	  has jobs and needs to be kept therefore, disable it and re-enable
+	  it when cups-browsed starts again and/or the remote queue(s) re-
+	  appear(s). This avoids repeated retries of the jobs while the
+	  remote server is not available, causing unneeded system load and
+	  battery consumption.
+	- cups-browsed: After polling info from remote CUPS servers to find
+	  the best destination job, set the default CUPS server back to local.
 
 CHANGES IN V1.0.73
 
