@@ -50,11 +50,8 @@ static void packet_check_completion(struct http_packet_t *pkt)
 	if (pkt->expected_size && pkt->filled_size >= pkt->expected_size)
 		pkt->is_completed = 1;
 
-	// Pkt at capacity
-	if (pkt->filled_size == pkt->buffer_capacity) {
-		pkt->is_completed = 1;
-		msg->is_completed = 1;
-	} else if (pkt->filled_size > pkt->buffer_capacity) {
+	// Pkt over capacity
+	if (pkt->filled_size > pkt->buffer_capacity) {
 		// Santiy check
 		ERR_AND_EXIT("Overflowed packet buffer");
 	}
@@ -487,8 +484,6 @@ pending_known:
 		ERR_AND_EXIT("Expected cannot be larger than filled");
 
 	size_t pending = expected - pkt->filled_size;
-	
-	packet_check_completion(pkt);
 
 	// Expand buffer as needed
 	while (pending + pkt->filled_size > pkt->buffer_capacity) {
@@ -502,6 +497,8 @@ pending_known:
 			return 0;
 		}
 	}
+
+	packet_check_completion(pkt);
 
 	return pending;
 }

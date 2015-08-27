@@ -116,18 +116,42 @@ static void start_daemon()
 
 	// Capture a socket
 	uint16_t desired_port = g_options.desired_port;
-	struct tcp_sock_t *tcp_socket = tcp_open(desired_port);
-	if (tcp_socket == NULL)
+	struct tcp_sock_t *tcp_socket = NULL, *tcp6_socket = NULL;
+	for (;;) {
+		tcp_socket = tcp_open(desired_port);
+		tcp6_socket = tcp6_open(desired_port);
+		if (tcp_socket || tcp6_socket || g_options.only_desired_port)
+			break;
+		// Search for a free port
+		desired_port ++;
+		// We failed with 0 as port number or we reached the max
+		// port number
+		if (desired_port == 1 || desired_port == 0)
+			// IANA recommendation of 49152 to 65535 for ephemeral
+			// ports
+			// https://en.wikipedia.org/wiki/Ephemeral_port
+			desired_port = 49152;
+		NOTE("Access to desired port failed, trying alternative port %d", desired_port);
+	}
+	if (tcp_socket == NULL && tcp6_socket == NULL)
 		goto cleanup_tcp;
 
-	uint16_t real_port = tcp_port_number_get(tcp_socket);
-	if (desired_port != 0 && desired_port != real_port) {
+	uint16_t real_port;
+	if (tcp_socket)
+	  real_port = tcp_port_number_get(tcp_socket);
+	else
+	  real_port = tcp_port_number_get(tcp6_socket);
+	if (desired_port != 0 && g_options.only_desired_port == 1 &&
+	    desired_port != real_port) {
 		ERR("Received port number did not match requested port number."
 		    " The requested port number may be too high.");
 		goto cleanup_tcp;
 	}
 	printf("%u|", real_port);
 	fflush(stdout);
+
+	NOTE("Port: %d, IPv4 %savailable, IPv6 %savailable",
+	     real_port, tcp_socket ? "" : "not ", tcp6_socket ? "" : "not ");
 
 	// Lose connection to caller
 	if (!g_options.nofork_mode && fork() > 0)
@@ -146,7 +170,10 @@ static void start_daemon()
 		}
 
 		args->usb_sock = usb_sock;
-		args->tcp = tcp_conn_accept(tcp_socket);
+
+		// For each request/response round we use the socket (IPv4 or
+		// IPv6) which receives data first
+		args->tcp = tcp_conn_select(tcp_socket, tcp6_socket);
 		if (args->tcp == NULL) {
 			ERR("Failed to open tcp connection");
 			goto cleanup_thread;
@@ -173,6 +200,8 @@ static void start_daemon()
 cleanup_tcp:
 	if (tcp_socket!= NULL)
 		tcp_close(tcp_socket);
+	if (tcp6_socket!= NULL)
+		tcp_close(tcp6_socket);
 cleanup_usb:
 	if (usb_sock != NULL)
 		usb_close(usb_sock);
@@ -191,14 +220,16 @@ int main(int argc, char *argv[])
 {
 	int c;
 	g_options.log_destination = LOGGING_STDERR;
+	g_options.only_desired_port = 1;
 
-	while ((c = getopt(argc, argv, "qnhdp:s:lv:m:")) != -1) {
+	while ((c = getopt(argc, argv, "qnhdp:P:s:lv:m:")) != -1) {
 		switch (c) {
 		case '?':
 		case 'h':
 			g_options.help_mode = 1;
 			break;
 		case 'p':
+		case 'P':
 		{
 			long long port = 0;
 			// Request specific port
@@ -213,6 +244,10 @@ int main(int argc, char *argv[])
 				return 2;
 			}
 			g_options.desired_port = (uint16_t)port;
+			if (c == 'p')
+			  g_options.only_desired_port = 1;
+			else
+			  g_options.only_desired_port = 0;
 			break;
 		}
 		case 'l':
@@ -248,7 +283,9 @@ int main(int argc, char *argv[])
 		"  -v <vid>     Vendor ID of desired printer\n"
 		"  -m <pid>     Product ID of desired printer\n"
 		"  -s <serial>  Serial number of desired printer\n"
-		"  -p <portnum> Port number to bind against\n"
+		"  -p <portnum> Port number to bind against, error out if port already taken\n"
+		"  -P <portnum> Port number to bind against, use another port if port already\n"
+		"               taken\n"
 		"  -l           Redirect logging to syslog\n"
 		"  -q           Enable verbose tracing\n"
 		"  -d           Debug mode for verbose output and no fork\n"
