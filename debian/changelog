@@ -1,3 +1,19 @@
+cups-filters (1.0.67-0ubuntu2.4) vivid-security; urgency=medium
+
+  * SECURITY UPDATE: printer available on all configured addresses
+    - debian/local/ippusbxd/{ippusbxd.c,tcp.*}: actually restrict printer
+      to localhost.
+    - b420fa9ed581b77fa61008420a66083a5b56fe01
+    - 46844402bca7a38fc224483ba6f0a93c4613203f
+    - a632841f8e65d402e13e81921515f5a1e2736c82
+    - CVE-2015-6520
+  * debian/local/ippusbxd/http.c: fix chunked HTTP transfers bug preventing
+    most printers from actually printing. Patch included in the security
+    update at the request of Till Kamppeter.
+    - 3facde24a3b74168047dcd564bf609fd9911edcb
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 27 Aug 2015 11:30:32 -0400
+
 cups-filters (1.0.67-0ubuntu2.2) vivid-security; urgency=medium
 
   * SECURITY UPDATE: denial of service and possible code execution via
