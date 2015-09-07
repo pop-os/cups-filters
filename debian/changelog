@@ -1,3 +1,9 @@
+cups-filters (1.0.74-2) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 07 Sep 2015 09:26:56 +0200
+
 cups-filters (1.0.74-1) experimental; urgency=low
 
   * New upstream release
