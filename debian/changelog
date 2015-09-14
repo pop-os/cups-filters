@@ -1,3 +1,13 @@
+cups-filters (1.0.76-1) unstable; urgency=medium
+
+  * New upstream release
+
+  [ Till Kamppeter ]
+  * Let AppArmor allow cups-browsed access /var/cache/cups/ as it puts some
+    files for default printer management and load balancing there
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 14 Sep 2015 11:15:58 +0200
+
 cups-filters (1.0.75-1) unstable; urgency=medium
 
   * New upstream release

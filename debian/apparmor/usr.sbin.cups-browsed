@@ -10,6 +10,7 @@
   /etc/cups/cups-browsed.conf r,
   /etc/cups/lpoptions r,
   /{var/,}run/cups/certs/* r,
+  /var/cache/cups/* rw,
   /tmp/** rw,
 
   # Site-specific additions and overrides. See local/README for details.
