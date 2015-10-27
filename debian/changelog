@@ -1,3 +1,9 @@
+cups-filters (1.1.0-1) unstable; urgency=medium
+
+  * New upstream release with version numbering scheme changed
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 27 Oct 2015 19:09:02 +0100
+
 cups-filters (1.0.76-1) unstable; urgency=medium
 
   * New upstream release
