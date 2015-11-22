@@ -1,3 +1,9 @@
+cups-filters (1.1.0-1build2) xenial; urgency=medium
+
+  * No change rebuild against poppler
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 23 Nov 2015 11:36:08 +1300
+
 cups-filters (1.1.0-1build1) xenial; urgency=medium
 
   * No change rebuild against libqpdf17.
