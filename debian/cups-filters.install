@@ -1,7 +1,6 @@
 etc/fonts/conf.d/99pdftoopvp.conf
 usr/bin/*
 usr/lib/cups/backend/*
-usr/lib/cups/filter/imagetopdf
 usr/lib/cups/filter/commandtopclx
 usr/lib/cups/filter/commandtoescpx
 usr/lib/cups/filter/pdftoijs
@@ -18,7 +17,6 @@ usr/lib/cups/filter/imagetoraster
 usr/lib/cups/filter/foomatic-rip
 usr/lib/cups/filter/gstopxl
 usr/lib/cups/filter/pstopdf
-usr/lib/cups/filter/rastertopdf
 usr/share/cups/banners/*
 usr/share/cups/drv/*
 usr/share/cups/data/*
