@@ -3,3 +3,4 @@ usr/lib/cups/filter/pdftops
 usr/lib/cups/filter/pdftoraster
 usr/lib/cups/filter/rastertopclx
 usr/lib/cups/filter/sys5ippprinter
+usr/share/cups/mime/*
