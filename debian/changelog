@@ -1,3 +1,12 @@
+cups-filters (1.0.52-0ubuntu1.6) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: code execution via improper escaping in foomatic-rip
+    - debian/patches/CVE-2015-8327.patch: add backtick to list of shell
+      escape characters in filter/foomatic-rip/util.c.
+    - CVE-2015-8327
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 03 Dec 2015 09:03:20 -0500
+
 cups-filters (1.0.52-0ubuntu1.5) trusty-security; urgency=medium
 
   * SECURITY UPDATE: denial of service and possible code execution via
