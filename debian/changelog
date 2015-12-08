@@ -1,3 +1,9 @@
+cups-filters (1.2.0-1build1) xenial; urgency=high
+
+  * Rebuild against libpoppler57/s390x.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Tue, 08 Dec 2015 21:24:12 +0000
+
 cups-filters (1.2.0-1) unstable; urgency=medium
 
   * New upstream release
