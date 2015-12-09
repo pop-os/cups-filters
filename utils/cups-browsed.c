@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <net/if.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <resolv.h>
 #include <stdio.h>
@@ -36,6 +37,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <signal.h>
+#include <regex.h>
 
 #include <glib.h>
 
@@ -177,17 +179,38 @@ typedef struct netif_s {
   http_addr_t broadcast;
 } netif_t;
 
-/* Data structure for browse allow/deny rules */
+/* Data structures for browse allow/deny rules */
+typedef enum browse_order_e {
+  ORDER_ALLOW_DENY,
+  ORDER_DENY_ALLOW
+} browse_order_t;
 typedef enum allow_type_e {
   ALLOW_IP,
   ALLOW_NET,
   ALLOW_INVALID
 } allow_type_t;
+typedef enum allow_sense_e {
+  ALLOW_ALLOW,
+  ALLOW_DENY
+} allow_sense_t;
 typedef struct allow_s {
   allow_type_t type;
+  allow_sense_t sense;
   http_addr_t addr;
   http_addr_t mask;
 } allow_t;
+
+/* Data structures for browse filter rules */
+typedef enum filter_sense_s {
+  FILTER_MATCH,
+  FILTER_NOT_MATCH
+} filter_sense_t;
+typedef struct browse_filter_s {
+  filter_sense_t sense;
+  char *field;
+  char *regexp;
+  regex_t *cregexp;
+} browse_filter_t;
 
 /* Data struct for a printer discovered using BrowsePoll */
 typedef struct browsepoll_printer_s {
@@ -253,6 +276,9 @@ cups_array_t *remote_printers;
 static cups_array_t *netifs;
 static cups_array_t *browseallow;
 static gboolean browseallow_all = FALSE;
+static gboolean browsedeny_all = FALSE;
+static browse_order_t browse_order;
+static cups_array_t *browsefilter;
 
 static GHashTable *local_printers;
 static browsepoll_t *local_printers_context = NULL;
@@ -2690,7 +2716,19 @@ create_local_queue (const char *name,
       goto fail;
     }
 
-    if (!pdl || pdl[0] == '\0' || (!strcasestr(pdl, "application/postscript") && !strcasestr(pdl, "application/pdf") && !strcasestr(pdl, "image/pwg-raster") && !strcasestr(pdl, "application/vnd.hp-PCL") && !strcasestr(pdl, "application/vnd.hp-PCLXL"))) {
+    if (!pdl || pdl[0] == '\0' ||
+	(!strcasestr(pdl, "application/postscript") &&
+	 !strcasestr(pdl, "application/pdf") &&
+	 !strcasestr(pdl, "image/pwg-raster") &&
+	 ((!strcasestr(pdl, "application/vnd.hp-PCL") &&
+	   !strcasestr(pdl, "application/PCL") &&
+	   !strcasestr(pdl, "application/x-pcl")) ||
+	  ((strncasecmp(make_model, "HP", 2) ||
+	    strncasecmp(make_model, "Hewlett Packard", 15) ||
+	    strncasecmp(make_model, "Hewlett-Packard", 15)) &&
+	   !strcasestr(make_model, "LaserJet") &&
+	   !strcasestr(make_model, "Mopier"))) &&
+	 !strcasestr(pdl, "application/vnd.hp-PCLXL"))) {
       debug_printf("cups-browsed: Cannot create remote printer %s (%s) as its PDLs are not known, ignoring this printer.\n",
 		   p->name, p->uri);
       goto fail;
@@ -3350,6 +3388,134 @@ recheck_timer (void)
   }
 }
 
+static gboolean
+matched_filters (const char *name,
+		 const char *host,
+		 uint16_t port,
+		 const char *service_name,
+		 const char *domain,
+		 void *txt) {
+  browse_filter_t *filter;
+  const char *property = NULL;
+  char buf[10];
+#ifdef HAVE_AVAHI
+  AvahiStringList *entry = NULL;
+  char *key = NULL, *value = NULL;
+#endif /* HAVE_AVAHI */
+
+  debug_printf("cups-browsed: Matching printer \"%s\" with properties Host = \"%s\", Port = %d, Service Name = \"%s\", Domain = \"%s\" with the BrowseFilter lines in cups-browsed.conf\n", name, host, port, service_name, domain);
+  /* Go through all BrowseFilter lines and stop if one line does not match,
+     rejecting this printer */
+  for (filter = cupsArrayFirst (browsefilter);
+       filter;
+       filter = cupsArrayNext (browsefilter)) {
+    debug_printf("cups-browsed: Matching with line \"BrowseFilter %s%s%s %s\"",
+		 (filter->sense == FILTER_NOT_MATCH ? "NOT " : ""),
+		 (filter->regexp && !filter->cregexp ? "EXACT " : ""),
+		 filter->field, (filter->regexp ? filter->regexp : ""));
+#ifdef HAVE_AVAHI
+    /* Go through the TXT record to see whether this rule applies to a field
+       in there */
+    if (txt) {
+      entry = avahi_string_list_find((AvahiStringList *)txt, filter->field);
+      if (entry) {
+	avahi_string_list_get_pair(entry, &key, &value, NULL);
+	if (key) {
+	  debug_printf(", TXT record entry: %s = %s",
+		       key, (value ? value : ""));
+	  if (filter->regexp) {
+	    /* match regexp */
+	    if (!value)
+	      value = "";
+	    if ((filter->cregexp &&
+		 regexec(filter->cregexp, value, 0, NULL, 0) == 0) ||
+		(!filter->cregexp && !strcasecmp(filter->regexp, value))) {
+	      if (filter->sense == FILTER_NOT_MATCH)
+		goto filter_failed;
+	    } else {
+	      if (filter->sense == FILTER_MATCH)
+		goto filter_failed;
+	    }	      
+	  } else {
+	    /* match boolean value */
+	    if (filter->sense == FILTER_MATCH) {
+ 	      if (!value || strcasecmp(value, "T"))
+		goto filter_failed;
+	    } else {
+ 	      if (value && !strcasecmp(value, "T"))
+		goto filter_failed;
+	    }
+	  }
+	}
+	goto filter_matched;
+      }
+    }
+#endif /* HAVE_AVAHI */
+
+    /* Does one of the properties outside the TXT record match? */
+    property = buf;
+    buf[0] = '\0';
+    if (!strcasecmp(filter->field, "Name") ||
+	!strcasecmp(filter->field, "Printer") ||
+	!strcasecmp(filter->field, "PrinterName") ||
+	!strcasecmp(filter->field, "Queue") ||
+	!strcasecmp(filter->field, "QueueName")) {
+      if (name)
+	property = name;
+    } else if (!strcasecmp(filter->field, "Host") ||
+	       !strcasecmp(filter->field, "HostName") ||
+	       !strcasecmp(filter->field, "RemoteHost") ||
+	       !strcasecmp(filter->field, "RemoteHostName") ||
+	       !strcasecmp(filter->field, "Server") ||
+	       !strcasecmp(filter->field, "ServerName")) {
+      if (host)
+	property = host;
+    } else if (!strcasecmp(filter->field, "Port")) {
+      if (port)
+	snprintf(buf, sizeof(buf), "%d", port);
+    } else if (!strcasecmp(filter->field, "Service") ||
+	       !strcasecmp(filter->field, "ServiceName")) {
+      if (service_name)
+	property = service_name;
+    } else if (!strcasecmp(filter->field, "Domain")) {
+      if (domain)
+	property = domain;
+    } else
+      property = NULL;
+    if (property) {
+      if (!filter->regexp)
+	filter->regexp = "";
+      if ((filter->cregexp &&
+	   regexec(filter->cregexp, property, 0, NULL, 0) == 0) ||
+	  (!filter->cregexp && !strcasecmp(filter->regexp, property))) {
+	if (filter->sense == FILTER_NOT_MATCH)
+	  goto filter_failed;
+      } else {
+	if (filter->sense == FILTER_MATCH)
+	  goto filter_failed;
+      }
+      goto filter_matched;
+    }
+
+    debug_printf(": Field not found --> SKIPPED\n");
+    continue;
+
+  filter_matched:
+    debug_printf(" --> MATCHED\n");
+  }
+
+  /* All BrowseFilter lines matching, accept this printer */
+  debug_printf("cups-browsed: All BrowseFilter lines matched or skipped, accepting printer %s\n",
+	       name);
+  return TRUE;
+
+ filter_failed:
+  debug_printf(" --> FAILED\n");
+  debug_printf("cups-browsed: One BrowseFilter line did not match, ignoring printer %s\n",
+	       name);
+  return FALSE;
+}
+
 static remote_printer_t *
 generate_local_queue(const char *host,
 		     const char *ip,
@@ -3543,6 +3709,17 @@ generate_local_queue(const char *host,
     }
   }
 
+  if (!matched_filters (local_queue_name, remote_host, port, name, domain,
+			txt)) {
+    debug_printf("cups-browsed: Printer %s does not match BrowseFilter lines in cups-browsed.conf, printer ignored.\n",
+		 local_queue_name);
+    free (backup_queue_name);
+    free (remote_host);
+    free (pdl);
+    free (remote_queue);
+    return NULL;
+  }
+
   /* Check if we have already created a queue for the discovered
      printer */
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
@@ -3658,6 +3835,115 @@ generate_local_queue(const char *host,
   return p;
 }
 
+static gboolean
+allowed (struct sockaddr *srcaddr)
+{
+  allow_t *allow;
+  int i;
+  gboolean server_allowed;
+  allow_sense_t sense;
+
+  if (browse_order == ORDER_DENY_ALLOW)
+    /* BrowseOrder Deny,Allow: Allow server, then apply BrowseDeny lines,
+       after that BrowseAllow lines */
+    server_allowed = TRUE;
+  else
+    /* BrowseOrder Allow,Deny: Deny server, then apply BrowseAllow lines,
+       after that BrowseDeny lines */
+    server_allowed = FALSE;
+
+  for (i = 0; i <= 1; i ++) {
+    if (browse_order == ORDER_DENY_ALLOW)
+      /* Treat BrowseDeny lines first, then BrowseAllow lines */
+      sense = (i == 0 ? ALLOW_DENY : ALLOW_ALLOW);
+    else
+      /* Treat BrowseAllow lines first, then BrowseDeny lines */
+      sense = (i == 0 ? ALLOW_ALLOW : ALLOW_DENY);
+
+    if (server_allowed == (sense == ALLOW_ALLOW ? TRUE : FALSE))
+      continue;
+
+    if (browseallow_all && sense == ALLOW_ALLOW) {
+      server_allowed = TRUE;
+      continue;
+    }
+    if (browsedeny_all && sense == ALLOW_DENY) {
+      server_allowed = FALSE;
+      continue;
+    }
+
+    for (allow = cupsArrayFirst (browseallow);
+	 allow;
+	 allow = cupsArrayNext (browseallow)) {
+      if (allow->sense != sense)
+	continue;
+
+      switch (allow->type) {
+      case ALLOW_INVALID:
+	break;
+
+      case ALLOW_IP:
+	switch (srcaddr->sa_family) {
+	case AF_INET:
+	  if (((struct sockaddr_in *) srcaddr)->sin_addr.s_addr ==
+	      allow->addr.ipv4.sin_addr.s_addr) {
+	    server_allowed = (sense == ALLOW_ALLOW ? TRUE : FALSE);
+	    goto match;
+	  }
+	  break;
+
+	case AF_INET6:
+	  if (!memcmp (&((struct sockaddr_in6 *) srcaddr)->sin6_addr,
+		       &allow->addr.ipv6.sin6_addr,
+		       sizeof (allow->addr.ipv6.sin6_addr))) {
+	    server_allowed = (sense == ALLOW_ALLOW ? TRUE : FALSE);
+	    goto match;
+	  }
+	  break;
+	}
+	break;
+
+      case ALLOW_NET:
+	switch (srcaddr->sa_family) {
+	  struct sockaddr_in6 *src6addr;
+
+	case AF_INET:
+	  if ((((struct sockaddr_in *) srcaddr)->sin_addr.s_addr &
+	       allow->mask.ipv4.sin_addr.s_addr) ==
+	      allow->addr.ipv4.sin_addr.s_addr) {
+	    server_allowed = (sense == ALLOW_ALLOW ? TRUE : FALSE);
+	    goto match;
+	  }
+	  break;
+
+	case AF_INET6:
+	  src6addr = (struct sockaddr_in6 *) srcaddr;
+	  if (((src6addr->sin6_addr.s6_addr[0] &
+		allow->mask.ipv6.sin6_addr.s6_addr[0]) ==
+	       allow->addr.ipv6.sin6_addr.s6_addr[0]) &&
+	      ((src6addr->sin6_addr.s6_addr[1] &
+		allow->mask.ipv6.sin6_addr.s6_addr[1]) ==
+	       allow->addr.ipv6.sin6_addr.s6_addr[1]) &&
+	      ((src6addr->sin6_addr.s6_addr[2] &
+		allow->mask.ipv6.sin6_addr.s6_addr[2]) ==
+	       allow->addr.ipv6.sin6_addr.s6_addr[2]) &&
+	      ((src6addr->sin6_addr.s6_addr[3] &
+		allow->mask.ipv6.sin6_addr.s6_addr[3]) ==
+	       allow->addr.ipv6.sin6_addr.s6_addr[3])) {
+	    server_allowed = (sense == ALLOW_ALLOW ? TRUE : FALSE);
+	    goto match;
+	  }
+	  break;
+	}
+      }
+    }
+  match:
+    continue;
+  }
+
+  return server_allowed;
+}
+
 #ifdef HAVE_AVAHI
 static void resolve_callback(
   AvahiServiceResolver *r,
@@ -3718,29 +4004,45 @@ static void resolve_callback(
     if (rp_key && rp_value && adminurl_key && adminurl_value &&
 	!strcasecmp(rp_key, "rp") && !strcasecmp(adminurl_key, "adminurl")) {
       /* Determine the remote printer's IP */
-      if (IPBasedDeviceURIs != IP_BASED_URIS_NO) {
+      if (IPBasedDeviceURIs != IP_BASED_URIS_NO ||
+	  (!browseallow_all && cupsArrayCount(browseallow) > 0)) {
+	struct sockaddr saddr;
+	struct sockaddr *addr = &saddr;
 	char addrstr[256];
 	int addrfound = 0;
 	if (address->proto == AVAHI_PROTO_INET &&
 	    IPBasedDeviceURIs != IP_BASED_URIS_IPV6_ONLY) {
 	  avahi_address_snprint(addrstr, sizeof(addrstr), address);
-	  addrfound = 1;
+	  addr->sa_family = AF_INET;
+	  if (inet_aton(addrstr,
+			&((struct sockaddr_in *) addr)->sin_addr) &&
+	      allowed(addr))
+	    addrfound = 1;
 	} else if (address->proto == AVAHI_PROTO_INET6 &&
 		   interface != AVAHI_IF_UNSPEC &&
 		   IPBasedDeviceURIs != IP_BASED_URIS_IPV4_ONLY) {
 	  char ifname[IF_NAMESIZE];
 	  addrstr[0] = '[';
 	  avahi_address_snprint(addrstr + 1, sizeof(addrstr) - 1, address);
-	  snprintf(addrstr + strlen(addrstr), sizeof(addrstr) - strlen(addrstr),
-		   "+%s]", if_indextoname(interface, ifname));
-	  addrfound = 1;
+	  addr->sa_family = AF_INET6;
+	  if (inet_pton(AF_INET6, addrstr + 1,
+			&((struct sockaddr_in6 *) addr)->sin6_addr) &&
+	      allowed(addr)) {
+	    snprintf(addrstr + strlen(addrstr), sizeof(addrstr) -
+		     strlen(addrstr), "+%s]",
+		     if_indextoname(interface, ifname));
+	    addrfound = 1;
+	  }
 	}
 	if (addrfound == 1) {
 	  /* Check remote printer type and create appropriate local queue to
 	     point to it */
-	  debug_printf("cups-browsed: Avahi Resolver: Service '%s' of type '%s' in domain '%s' with IP address %s.\n",
-		       name, type, domain, addrstr);
-	  generate_local_queue(host_name, addrstr, port, rp_value, name, type, domain, txt);
+	  if (IPBasedDeviceURIs != IP_BASED_URIS_NO) {
+	    debug_printf("cups-browsed: Avahi Resolver: Service '%s' of type '%s' in domain '%s' with IP address %s.\n",
+			 name, type, domain, addrstr);
+	    generate_local_queue(host_name, addrstr, port, rp_value, name, type, domain, txt);
+	  } else
+	    generate_local_queue(host_name, NULL, port, rp_value, name, type, domain, txt);
 	} else
 	  debug_printf("cups-browsed: Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not determine IP address.\n",
 		       name, type, domain);
@@ -4173,72 +4475,6 @@ found_cups_printer (const char *remote_host, const char *uri,
       printer->timeout = time(NULL) + BrowseTimeout;
     }
   }
-}
-
-static gboolean
-allowed (struct sockaddr *srcaddr)
-{
-  allow_t *allow;
-  if (browseallow_all || cupsArrayCount(browseallow) == 0) {
-    /* "BrowseAllow All", or no "BrowseAllow" line, so allow all servers */
-    return TRUE;
-  }
-  for (allow = cupsArrayFirst (browseallow);
-       allow;
-       allow = cupsArrayNext (browseallow)) {
-    switch (allow->type) {
-    case ALLOW_INVALID:
-      break;
-
-    case ALLOW_IP:
-      switch (srcaddr->sa_family) {
-      case AF_INET:
-	if (((struct sockaddr_in *) srcaddr)->sin_addr.s_addr ==
-	    allow->addr.ipv4.sin_addr.s_addr)
-	  return TRUE;
-	break;
-
-      case AF_INET6:
-	if (!memcmp (&((struct sockaddr_in6 *) srcaddr)->sin6_addr,
-		     &allow->addr.ipv6.sin6_addr,
-		     sizeof (allow->addr.ipv6.sin6_addr)))
-	  return TRUE;
-	break;
-      }
-      break;
-
-    case ALLOW_NET:
-      switch (srcaddr->sa_family) {
-	struct sockaddr_in6 *src6addr;
-
-      case AF_INET:
-	if ((((struct sockaddr_in *) srcaddr)->sin_addr.s_addr &
-	     allow->mask.ipv4.sin_addr.s_addr) ==
-	    allow->addr.ipv4.sin_addr.s_addr)
-	  return TRUE;
-	break;
-
-      case AF_INET6:
-	src6addr = (struct sockaddr_in6 *) srcaddr;
-	if (((src6addr->sin6_addr.s6_addr[0] &
-	      allow->mask.ipv6.sin6_addr.s6_addr[0]) ==
-	     allow->addr.ipv6.sin6_addr.s6_addr[0]) &&
-	    ((src6addr->sin6_addr.s6_addr[1] &
-	      allow->mask.ipv6.sin6_addr.s6_addr[1]) ==
-	     allow->addr.ipv6.sin6_addr.s6_addr[1]) &&
-	    ((src6addr->sin6_addr.s6_addr[2] &
-	      allow->mask.ipv6.sin6_addr.s6_addr[2]) ==
-	     allow->addr.ipv6.sin6_addr.s6_addr[2]) &&
-	    ((src6addr->sin6_addr.s6_addr[3] &
-	      allow->mask.ipv6.sin6_addr.s6_addr[3]) ==
-	     allow->addr.ipv6.sin6_addr.s6_addr[3]))
-	  return TRUE;
-	break;
-      }
-    }
-  }
-
-  return FALSE;
 }
 
 gboolean
@@ -4992,18 +5228,25 @@ sigusr2_handler(int sig) {
 }
 
 static int
-read_browseallow_value (const char *value)
+read_browseallow_value (const char *value, allow_sense_t sense)
 {
   char *p;
   struct in_addr addr;
   allow_t *allow;
 
   if (value && !strcasecmp (value, "all")) {
-    browseallow_all = TRUE;
-    return 0;
+    if (sense == ALLOW_ALLOW) {
+      browseallow_all = TRUE;
+      return 0;
+    } else if (sense == ALLOW_DENY) {
+      browsedeny_all = TRUE;
+      return 0;
+    } else
+      return 1;
   }
   
   allow = calloc (1, sizeof (allow_t));
+  allow->sense = sense;
   if (value == NULL)
     goto fail;
   p = strchr (value, '/');
@@ -5059,8 +5302,15 @@ read_configuration (const char *filename)
   cups_file_t *fp;
   int linenum;
   char line[HTTP_MAX_BUFFER];
-  char *value;
+  char *value, *ptr, *field;
   const char *delim = " \t,";
+  int browse_allow_line_found = 0;
+  int browse_deny_line_found = 0;
+  int browse_order_line_found = 0;
+  int browse_line_found = 0;
+  browse_filter_t *filter = NULL;
+  int browse_filter_options, exact_match, err;
+  char errbuf[1024];
 
   if (!filename)
     filename = CUPS_SERVERROOT "/cups-browsed.conf";
@@ -5151,9 +5401,116 @@ read_configuration (const char *filename)
 	BrowsePoll[NumBrowsePoll++] = b;
       }
     } else if (!strcasecmp(line, "BrowseAllow")) {
-      if (read_browseallow_value (value))
+      if (read_browseallow_value (value, ALLOW_ALLOW))
 	debug_printf ("cups-browsed: BrowseAllow value \"%s\" not understood\n",
 		      value);
+      else {
+	browse_allow_line_found = 1;
+	browse_line_found = 1;
+      }
+    } else if (!strcasecmp(line, "BrowseDeny")) {
+      if (read_browseallow_value (value, ALLOW_DENY))
+	debug_printf ("cups-browsed: BrowseDeny value \"%s\" not understood\n",
+		      value);
+      else {
+	browse_deny_line_found = 1;
+	browse_line_found = 1;
+      }
+    } else if (!strcasecmp(line, "BrowseOrder") && value) {
+      if (!strncasecmp(value, "Allow", 5) &&
+	  strcasestr(value, "Deny")) { /* Allow,Deny */
+	browse_order = ORDER_ALLOW_DENY;
+	browse_order_line_found = 1;
+	browse_line_found = 1;
+      } else if (!strncasecmp(value, "Deny", 4) &&
+		 strcasestr(value, "Allow")) { /* Deny,Allow */
+	browse_order = ORDER_DENY_ALLOW;
+	browse_order_line_found = 1;
+	browse_line_found = 1;
+      } else
+	debug_printf ("cups-browsed: BrowseOrder value \"%s\" not understood\n",
+		      value);
+    } else if (!strcasecmp(line, "BrowseFilter") && value) {
+      ptr = value;
+      /* Skip whitw space */
+      while (*ptr && isspace(*ptr)) ptr ++;
+      /* Premature line end */
+      if (!*ptr) goto browse_filter_fail;
+      filter = calloc (1, sizeof (browse_filter_t));
+      if (!filter) goto browse_filter_fail;
+      browse_filter_options = 1;
+      filter->sense = FILTER_MATCH;
+      exact_match = 0;
+      while (browse_filter_options) {
+	if (!strncasecmp(ptr, "NOT", 3) && *(ptr + 3) &&
+	    isspace(*(ptr + 3))) {
+	  /* Accept remote printers where regexp does NOT match or where
+	     the boolean field is false */
+	  filter->sense = FILTER_NOT_MATCH;
+	  ptr += 4;
+	  /* Skip white space until next word */
+	  while (*ptr && isspace(*ptr)) ptr ++;
+	  /* Premature line end without field name */
+	  if (!*ptr) goto browse_filter_fail;
+	} else if (!strncasecmp(ptr, "EXACT", 5) && *(ptr + 5) &&
+		   isspace(*(ptr + 5))) {
+	  /* Consider the rest of the line after the field name a string which
+	     has to match the field exactly */
+	  exact_match = 1;
+	  ptr += 6;
+	  /* Skip white space until next word */
+	  while (*ptr && isspace(*ptr)) ptr ++;
+	  /* Premature line end without field name */
+	  if (!*ptr) goto browse_filter_fail;
+	} else
+	  /* No more options, consider next word the name of the field which
+	     should match the regexp */
+	  browse_filter_options = 0;
+      }
+      field = ptr;
+      while (*ptr && !isspace(*ptr)) ptr ++;
+      if (*ptr) {
+	/* Mark end of the field name */
+	*ptr = '\0';
+	/* Skip white space until regexp or line end */
+	ptr ++;
+	while (*ptr && isspace(*ptr)) ptr ++;
+      }
+      filter->field = strdup(field);
+      if (!*ptr) {
+	/* Only field name and no regexp is given, so this rule is
+	   about matching a boolean value */
+	filter->regexp = NULL;
+	filter->cregexp = NULL;
+      } else {
+	/* The rest of the line is the regexp, store and compile it */
+	filter->regexp = strdup(ptr);
+	if (!exact_match) {
+	  /* Compile the regexp only if the line does not require an exact
+	     match (using the EXACT option */
+	  filter->cregexp = calloc(1, sizeof (regex_t));
+	  if ((err = regcomp(filter->cregexp, filter->regexp,
+			     REG_EXTENDED | REG_ICASE)) != 0) {
+	    regerror(err, filter->cregexp, errbuf, sizeof(errbuf));
+	    debug_printf ("cups-browsed: BrowseFilter line with error in regular expression \"%s\": %s\n",
+			  filter->regexp, errbuf);
+	    goto browse_filter_fail;
+	  }
+	} else
+	  filter->cregexp = NULL;
+      }
+      cupsArrayAdd (browsefilter, filter);
+      continue;
+    browse_filter_fail:
+      if (filter) {
+	if (filter->field)
+	  free(filter->field);
+	if (filter->regexp)
+	  free(filter->regexp);
+	if (filter->cregexp)
+	  regfree(filter->cregexp);
+	free(filter);
+      }
     } else if (!strcasecmp(line, "DomainSocket") && value) {
       if (value[0] != '\0')
 	DomainSocket = strdup(value);
@@ -5248,6 +5605,28 @@ read_configuration (const char *filename)
 #endif /* HAVE_LDAP */
   }
 
+  if (browse_line_found == 0) {
+    /* No "Browse..." lines at all */
+    browseallow_all = 1;
+    browse_order = ORDER_DENY_ALLOW;
+    debug_printf("cups-browsed: No \"Browse...\" line at all, accept all servers (\"BrowseOrder Deny,Allow\").\n");
+  } else if (browse_order_line_found == 0) {
+    /* No "BrowseOrder" line */
+    if (browse_allow_line_found == 0) {
+      /* Only "BrowseDeny" lines */
+      browse_order = ORDER_DENY_ALLOW;
+      debug_printf("cups-browsed: No \"BrowseOrder\" line and only \"BrowseDeny\" lines, accept all except what matches the \"BrowseDeny\" lines  (\"BrowseOrder Deny,Allow\").\n");
+    } else if (browse_deny_line_found == 0) {
+      /* Only "BrowseAllow" lines */
+      browse_order = ORDER_ALLOW_DENY;
+      debug_printf("cups-browsed: No \"BrowseOrder\" line and only \"BrowseAllow\" lines, deny all except what matches the \"BrowseAllow\" lines  (\"BrowseOrder Allow,Deny\").\n");
+    } else {
+      /* Default for "BrowseOrder" */
+      browse_order = ORDER_DENY_ALLOW;
+      debug_printf("cups-browsed: No \"BrowseOrder\" line, use \"BrowseOrder Deny,Allow\" as default.\n");
+    }
+  }
+
   cupsFileClose(fp);
 }
 
@@ -5336,6 +5715,9 @@ int main(int argc, char*argv[]) {
 
   /* Initialise the browseallow array */
   browseallow = cupsArrayNew(compare_pointers, NULL);
+
+  /* Initialise the browsefilter array */
+  browsefilter = cupsArrayNew(compare_pointers, NULL);
 
   /* Read in cups-browsed.conf */
   read_configuration (NULL);

@@ -1,5 +1,25 @@
-NEWS - OpenPrinting CUPS Filters v1.2.0 - 2015-11-26
+NEWS - OpenPrinting CUPS Filters v1.3.0 - 2015-12-09
 ----------------------------------------------------
+
+CHANGES IN V1.3.0
+
+	- cups-browsed: Added new BrowseFilter directive in
+	  cups-browsed.conf.  This directive allows filtering of the
+	  remote printers to be accepted on most properties/metadata
+	  supplied with the DNS-SD broadcasts. This allows, in
+	  addition to BrowseAllow/BrowseDeny/BrowseOrder, to reduce
+	  the amount of printers listed in print dialogs to a more
+	  useful amount.
+	- cups-browsed: Added support for BrowseDeny and BrowseOrder
+	  directives in cups-browsed.conf.
+	- cups-browsed: Let the BrowseAllow lines in cups-browsed.conf
+	  also apply to remote printers discovered via DNS-SD.
+	- cups-browsed: Auto-create queues for PCL-5c/e printers but
+	  not for HP inkjet printers (which also advertise themselves
+	  as PCL printers).
+	- cups-browsed, sys5ippprinter: Recognize PCL-5c/e printers
+	  not only by the application/vnd.hp-pcl MIME type but also by
+	  application/pcl and application/x-pcl.
 
 CHANGES IN V1.2.0
 
