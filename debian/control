@@ -37,6 +37,7 @@ Build-Depends:
  libavahi-client-dev,
  libavahi-glib-dev,
  librsvg2-bin,
+ liblouis-dev,
 # Needed for tests
  fonts-dejavu-core
 Homepage: http://www.openprinting.org/
@@ -74,6 +75,7 @@ Depends: ${shlibs:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
+ liblouis-data
 Recommends: colord
 Suggests: foomatic-db-compressed-ppds | foomatic-db
 Conflicts: ghostscript-cups,
