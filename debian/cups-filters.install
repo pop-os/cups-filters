@@ -1,6 +1,7 @@
 etc/fonts/conf.d/99pdftoopvp.conf
 usr/bin/*
-usr/lib/cups/backend/*
+usr/lib/cups/backend/parallel
+usr/lib/cups/backend/serial
 usr/lib/cups/filter/commandtopclx
 usr/lib/cups/filter/commandtoescpx
 usr/lib/cups/filter/pdftoijs
