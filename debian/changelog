@@ -1,3 +1,23 @@
+cups-filters (1.4.0-1) unstable; urgency=medium
+
+  * New upstream release
+   - foomatic-rip: SECURITY FIX: Also consider the semicolon (';') as an
+     illegal shell escape character. Thanks to Adam Chester for the hint
+     (CVE-2015-8560, Closes: #807930)
+   - Added support for Braille embossing via CUPS
+
+  [ Till Kamppeter ]
+  * Changes for the upstream addition of the Braille embosser drivers
+  * Moved the implicitclass backend from the cups-filters into the cups-browsed
+    binary package as it is used by cups-browsed (and so already needed by a
+    level-1 printing stack)
+  * Added dependencies on imagemagick (>= 6.4~), liblouisutdml-bin, and
+    poppler-utils to cups-filters, as they are needed to convert images, text,
+    and PDF to Braille, added antiword and docx2txt to Suggests: as they allow
+    converting Word files to Braille
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 15 Dec 2015 11:04:23 +0100
+
 cups-filters (1.3.0-1) unstable; urgency=medium
 
   * New upstream release
