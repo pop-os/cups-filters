@@ -1,5 +1,20 @@
-NEWS - OpenPrinting CUPS Filters v1.3.0 - 2015-12-09
+NEWS - OpenPrinting CUPS Filters v1.4.0 - 2015-12-14
 ----------------------------------------------------
+
+CHANGES IN V1.4.0
+
+	- foomatic-rip: SECURITY FIX: Also consider the semicolon
+	  (';') as an illegal shell escape character. Thanks to Adam
+	  Chester (adam dot chester at pentest dot co dot uk) for the
+	  hint (CVE-2015-8560).
+	- brftoembosser, imagetobrf, imagetoubrl, imageubrltoindexv3,
+	  imageubrltoindexv4, textbrftoindexv3, textbrftoindexv4,
+	  texttobrf, braille.convs, braille.types, generic-brf.drv,
+	  indexv3.drv, indexv4.drv: Added support for Braille
+	  embossing via CUPS. Text and even images can now be sent to
+	  a Braille embosser like to a printer. Thanks to Samuel
+	  Thibault (samuel dot thibault at ens-lyon dot org) for this
+	  contribution.
 
 CHANGES IN V1.3.0
 
