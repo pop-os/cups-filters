@@ -1,0 +1,18 @@
+Description: foomatic-rip: SECURITY FIX: Also consider the semicolon (';') as
+ an illegal shell escape character. Thanks to Adam Chester for the hint.
+Author: Till Kamppeter <till.kamppeter@gmail.com>
+Bug-CVE: CVE-2015-8560
+Origin: upstream
+Last-Update: 2015-12-12
+
+--- a/filter/foomatic-rip/util.c
++++ b/filter/foomatic-rip/util.c
+@@ -31,7 +31,7 @@
+ #include <assert.h>
+ 
+ 
+-const char* shellescapes = "|<>&!$\'\"`#*?()[]{}";
++const char* shellescapes = "|;<>&!$\'\"`#*?()[]{}";
+ 
+ const char * temp_dir()
+ {
