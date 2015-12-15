@@ -75,9 +75,14 @@ Depends: ${shlibs:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
- liblouis-data
+ liblouis-data,
+ imagemagick (>= 6.4~),
+ liblouisutdml-bin,
+ poppler-utils
 Recommends: colord
-Suggests: foomatic-db-compressed-ppds | foomatic-db
+Suggests: foomatic-db-compressed-ppds | foomatic-db,
+ antiword,
+ docx2txt
 Conflicts: ghostscript-cups,
  foomatic-filters
 Replaces: cups (<< 1.5.0-16), 
