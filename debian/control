@@ -37,6 +37,7 @@ Build-Depends:
  libavahi-client-dev,
  libavahi-glib-dev,
  librsvg2-bin,
+ liblouis-dev,
 # Needed for tests
  fonts-dejavu-core
 Homepage: http://www.openprinting.org/
@@ -74,8 +75,14 @@ Depends: ${shlibs:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
+ liblouis-data,
+ imagemagick (>= 6.4~),
+ liblouisutdml-bin,
+ poppler-utils
 Recommends: colord
-Suggests: foomatic-db-compressed-ppds | foomatic-db
+Suggests: foomatic-db-compressed-ppds | foomatic-db,
+ antiword,
+ docx2txt
 Conflicts: ghostscript-cups,
  foomatic-filters
 Replaces: cups (<< 1.5.0-16), 
@@ -148,7 +155,9 @@ Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends}
 Recommends: avahi-daemon (>= 0.6.31-3~)
-Breaks: cups-daemon (<< 1.6.4)
+Replaces: cups-filters (<< 1.4.0~)
+Breaks: cups-daemon (<< 1.6.4),
+ cups-filters (<< 1.4.0~)
 Enhances: cups
 Description: OpenPrinting CUPS Filters - cups-browsed
  This package provides cups-browsed, a daemon which browses the Bonjour
