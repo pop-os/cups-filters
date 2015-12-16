@@ -1,3 +1,12 @@
+cups-filters (1.0.52-0ubuntu1.7) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: code execution via improper escaping in foomatic-rip
+    - debian/patches/CVE-2015-8560.patch: add semicolon to list of shell
+      escape characters in filter/foomatic-rip/util.c.
+    - CVE-2015-8560
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 16 Dec 2015 08:12:27 -0500
+
 cups-filters (1.0.52-0ubuntu1.6) trusty-security; urgency=medium
 
   * SECURITY UPDATE: code execution via improper escaping in foomatic-rip
