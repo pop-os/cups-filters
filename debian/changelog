@@ -1,3 +1,13 @@
+cups-filters (1.5.0-1) unstable; urgency=medium
+
+  * New upstream release
+   - cups-browsed: Add -c, -o and -h command line options
+  * Remove libpng12-dev Build-Depends alternative to libpng-dev
+    (Closes: #810174)
+  * Remove leftover cups-filter-dbg comment in debian/control
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 13 Jan 2016 16:03:00 +0100
+
 cups-filters (1.4.0-1) unstable; urgency=medium
 
   * New upstream release
