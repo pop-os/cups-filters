@@ -25,7 +25,7 @@ Build-Depends:
  libpoppler-cpp-dev,
  libqpdf-dev (>= 4.0.1),
  libjpeg-dev,
- libpng-dev | libpng12-dev,
+ libpng-dev,
  libtiff-dev,
  libcups2-dev,
  libcupsimage2-dev (>= 1.5.2-6~),
