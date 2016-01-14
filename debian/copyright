@@ -18,6 +18,12 @@ Copyright: 1993-2007 Easy Software Products
  2010 Neil 'Superna' Armstrong
 License: GPL-2
 
+Files: backend/beh.c
+  backend/implicitclass.c
+Copyright: 2015, Till Kamppeter
+  2008-2015, Apple Inc
+License: GPL-2.0 with AOSDL exception
+
 Files: backend/parallel.c
   backend/serial.c
 Copyright: 2007-2011, Apple Inc
@@ -76,6 +82,10 @@ Copyright: 2013, ALT Linux, Andrew V. Stepanov <stanv@altlinux.com>
   2012, Canonical Ltd
 License: GPL-3
 
+Files: filter/braille/*
+Copyright: 2015, Samuel Thibault <samuel.thibault@ens-lyon.org>
+License: Expat
+
 Files: filter/commandtoescpx.c
   filter/commandtopclx.c
   filter/imagetoraster.c
@@ -91,7 +101,11 @@ Copyright: 2008, Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2+
 
 Files: filter/getline.c
-Copyright: 1993, Free Software Foundation, Inc
+Copyright: 1993, 1996-2014, Free Software Foundation, Inc
+License: GPL-2+
+
+Files: filter/gstopxl
+Copyright: 2001-2005, Easy Software Products
 License: GPL-2+
 
 Files: filter/gstopxl* ppd/pxlcolor.ppd ppd/pxlmono.ppd
@@ -104,17 +118,22 @@ Copyright: 2011-2013, Richard Hughes
   2008-2013, Till Kamppeter
 License: Expat
 
+Files: filter/imagetopdf*
+Copyright: 1993-2007, Easy Software Products
+License: GPL-2
+
 Files: filter/pdftoijs.cxx
 Copyright: 2008, Tobias Hoffmann
   2008, BBR Inc.
 License: Expat
 
-Files: filter/pdftoopvp/OPVPError.h
-Copyright: 2008-2012, BBR Inc.
-License: Expat
-
-Files: filter/pdftoopvp/opvp/*
-Copyright: 2003, 2004, AXE, Inc.
+Files: filter/pdftoopvp/*
+Copyright: 2003, 2004, 2005, 2006, AXE,Inc
+  2007, 2008, ModifiedBBR Inc.
+  2003, Glyph & Cog, LLC
+  2006, Fuji Xerox Printing Systems Co., Ltd
+  2006, Free Standards Group
+  2006, Canon Inc
 License: Expat
 
 Files: filter/pdftopdf/*
@@ -126,6 +145,16 @@ Files: filter/pdftops.c
 Copyright: 2011-2013 Till Kamppeter
  2007-2011 Apple Inc
  1997-2006 Easy Software Products
+License: GPL-2
+
+Files: filter/pdfutils.c
+  filter/pdfutils.h
+Copyright: 2008, Tobias Hoffmann
+License: GPL-2.0 with AOSDL exception
+
+Files: filter/pstopdf
+Copyright: 2008-2012, Till Kamppeter <till.kamppeter@gmail.com>
+  2003, Robert Sander <robert.sander@epigenomics.com>
 License: GPL-2
 
 Files: filter/rastertopdf.cpp
@@ -165,10 +194,27 @@ License: BSD-4-clause
  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  SUCH DAMAGE.
 
+Files: filter/sys5ippprinter.c
+Copyright: 2011-2013, Till Kamppeter
+  2007-2011, Apple Inc
+  1997-2006, Easy Software Products
+License: GPL-2.0 with AOSDL exception
+
+Files: filter/textonly
+Copyright: 2003-2006, Tim Waugh <twaugh@redhat.com>
+  2003-2006, Red Hat, Inc
+License: GPL-2+
+
 Files: filter/textonly* ppd/textonly.ppd
 Copyright: 2003-2006 Red Hat, Inc.
  2003-2006 Tim Waugh <twaugh@redhat.com>
 License: GPL-2+
+
+Files: filter/texttopdf.c
+Copyright: 2008, 2012, Tobias Hoffmann
+  2007, Apple Inc
+  1993-2007, Easy Software Products
+License: GPL-2
 
 Files: filter/texttops* filter/imagetops*
 Copyright: 2012 Till Kamppeter <till.kamppeter@gmail.com>
@@ -222,6 +268,65 @@ License: Expat
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
+
+License: GPL-2.0 with AOSDL exception
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, version 2 of the License.
+ .
+ The full text of the GPL is distributed as in
+ /usr/share/common-licenses/GPL-2 on Debian systems.
+ .
+ In addition, as the copyright holder of CUPS, Apple Inc. grants
+ the following special exception:
+ .
+      1. Apple Operating System Development License Exception;
+ .
+ 	a. Software that is developed by any person or entity
+ 	   for an Apple Operating System ("Apple OS-Developed
+ 	   Software"), including but not limited to Apple and
+ 	   third party printer drivers, filters, and backends
+ 	   for an Apple Operating System, that is linked to the
+ 	   CUPS imaging library or based on any sample filters
+ 	   or backends provided with CUPS shall not be
+ 	   considered to be a derivative work or collective work
+ 	   based on the CUPS program and is exempt from the
+ 	   mandatory source code release clauses of the GNU GPL.
+ 	   You may therefore distribute linked combinations of
+ 	   the CUPS imaging library with Apple OS-Developed
+ 	   Software without releasing the source code of the
+ 	   Apple OS-Developed Software. You may also use sample
+ 	   filters and backends provided with CUPS to develop
+ 	   Apple OS-Developed Software without releasing the
+ 	   source code of the Apple OS-Developed Software.
+ .
+ 	b. An Apple Operating System means any operating system
+ 	   software developed and/or marketed by Apple Computer,
+ 	   Inc., including but not limited to all existing
+ 	   releases and versions of Apple's Darwin, Mac OS X,
+ 	   and Mac OS X Server products and all follow-on
+ 	   releases and future versions thereof.
+ .
+ 	c. This exception is only available for Apple
+ 	   OS-Developed Software and does not apply to software
+ 	   that is distributed for use on other operating
+ 	   systems.
+ .
+ 	d. All CUPS software that falls under this license
+ 	   exception have the following text at the top of each
+ 	   source file:
+ .
+ 	     This file is subject to the Apple OS-Developed
+ 	     Software exception.
+ .
+      2. OpenSSL Toolkit License Exception;
+ .
+ 	a. Apple Inc. explicitly allows the compilation and
+ 	   distribution of the CUPS software with the OpenSSL
+ 	   Toolkit.
+ .
+ No developer is required to provide these exceptions in a
+ derived work.
 
 License: GPL-2
  This program is free software; you can redistribute it and/or modify

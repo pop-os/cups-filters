@@ -1,3 +1,17 @@
+cups-filters (1.6.0-1) unstable; urgency=medium
+
+  * New upstream release
+   - foomatic-rip: Fixed buffer overflow when reading environment
+     variables CUPS_FONTPATH, CUPS_DATADIR, and GS_LIB
+     (Bug #1336)
+   - beh: Introduced beh, the Backend Error Handler, a wrapper
+     backend to make handling of backend errors more
+     configurable
+  * Refresh debian/copyright
+  * Install the 'beh' backend in cups-filters
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 14 Jan 2016 12:50:16 +0100
+
 cups-filters (1.5.0-1) unstable; urgency=medium
 
   * New upstream release
