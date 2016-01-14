@@ -6,7 +6,7 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[5])
+m4_define([cups_filters_version_minor],[6])
 m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
@@ -17,6 +17,7 @@ AC_INIT([cups-filters],[cups_filters_version])
 AC_CONFIG_MACRO_DIR([m4])
 m4_include([m4/ac_define_dir.m4])
 m4_include([m4/ax_compare_version.m4])
+m4_include([m4/basic-directories.m4])
 AM_INIT_AUTOMAKE([1.11 gnu dist-xz dist-bzip2])
 AM_SILENT_RULES([yes])
 AC_LANG([C++])
