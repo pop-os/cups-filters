@@ -1,3 +1,14 @@
+cups-filters (1.7.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - cups-browsed: Added possibility to trigger the auto shutdown
+      by the queues of cups-browsed being without jobs. Before
+      auto shutdown was only possible when all queues have gone
+      away. This allows auto shutdown on mobile devices where
+      avahi-daemon is also used for other things than printing.
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 20 Jan 2016 08:36:12 +0100
+
 cups-filters (1.6.0-1) unstable; urgency=medium
 
   * New upstream release
