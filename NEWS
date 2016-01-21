@@ -1,5 +1,29 @@
-NEWS - OpenPrinting CUPS Filters v1.7.0 - 2016-01-18
+NEWS - OpenPrinting CUPS Filters v1.8.0 - 2016-01-18
 ----------------------------------------------------
+
+CHANGES IN V1.8.0
+
+	- COPYING: Replaced the COPYING file by a file in Debian format,
+	  derived from Debian's file but updated and corrected.
+	- braille: Added info about additional packages needed for Braille
+	  printing to the README file.
+	- braille: Let the Braille filters use lou_translate of
+	  liblouis if the more sophisticated file2brl of liblouisutdml
+	  is not installed. This is decided on at run time, so later
+	  installation of liblouisutdml will let the filters
+	  automatically switch to file2brl.
+	- braille: Allow to build with Braille support also if
+	  liblouis is not installed at build time.
+	- braille: Added checks for the presence of helper tools, to
+	  get clear messages in the CUPS error_log if something is
+	  missing.
+	- Fixed copyright headers of files inherited from CUPS or
+          derived from CUPS, pointing to COPYING as license info file,
+          removing Apple exceptions, removing hints that a missing
+          license info file can be found at www.cups.org, and removing
+          "$Id" SVN file ID placeholders.
+	- Updated COPYING file for missing implicitclass and beh
+          backends.
 
 CHANGES IN V1.7.0
 
