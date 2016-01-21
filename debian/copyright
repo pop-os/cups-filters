@@ -8,7 +8,7 @@ Copyright: 1993-2007 Easy Software Products
  2007-2011 Apple Inc.
  2012 Canonical Ltd.
  2006-2012 BBR Inc.
- 2008-2013 Till Kamppeter
+ 2008-2016 Till Kamppeter
  2008,2012 Tobias Hoffmann
  2003 Robert Sander
  2003-2006 Red Hat, Inc.
@@ -16,16 +16,29 @@ Copyright: 1993-2007 Easy Software Products
  2012 Franz Pförtsch
  2012 Tomáš Chvátal
  2010 Neil 'Superna' Armstrong
-License: GPL-2
+ 2015-2016 Samuel Thibault
+ 2008 Lars Übernickel
+License: GPL-2+
+
+Files: debian/*
+Copyright: 1999-2003, Jeff Licquia <licquia@debian.org>
+           2003-2007, Kenshi Muto <kmuto@debian.org>
+           2007-2012, Martin Pitt <mpitt@debian.org>
+           2012-2015, Till Kamppeter <till.kamppeter@gmail.com>
+           2013-2015, Didier Raboud <odyx@debian.org>
+License: GPL-2+
 
 Files: backend/beh.c
   backend/implicitclass.c
 Copyright: 2015, Till Kamppeter
   2008-2015, Apple Inc
-License: GPL-2.0 with AOSDL exception
+License: GPL-2
 
 Files: backend/parallel.c
   backend/serial.c
+  backend/ieee1284.c
+  backend/test1284.c
+  backend/backend-private.h
 Copyright: 2007-2011, Apple Inc
   1993-2007, Easy Software Products
 License: GPL-2
@@ -57,14 +70,6 @@ Files: cupsfilters/colormanager.h
 Copyright: 2014, Joseph Simon
 License: Expat
 
-Files: debian/*
-Copyright: 1999-2003, Jeff Licquia <licquia@debian.org>
-           2003-2007, Kenshi Muto <kmuto@debian.org>
-           2007-2012, Martin Pitt <mpitt@debian.org>
-           2012-2015, Till Kamppeter <till.kamppeter@gmail.com>
-           2013-2015, Didier Raboud <odyx@debian.org>
-License: GPL-2+
-
 Files: filter/PDFError.h
   filter/pdftoraster.cxx
 Copyright: 2008-2012, BBR Inc.
@@ -73,6 +78,8 @@ License: Expat
 Files: filter/banner.c
   filter/banner.h
   filter/pdf.h
+  banners/*
+  data/*
 Copyright: 2012, Canonical Ltd
 License: GPL-3
 
@@ -83,6 +90,9 @@ Copyright: 2013, ALT Linux, Andrew V. Stepanov <stanv@altlinux.com>
 License: GPL-3
 
 Files: filter/braille/*
+ drv/generic-brf.drv
+ drv/indexv*.drv
+ mime/braille.*
 Copyright: 2015, Samuel Thibault <samuel.thibault@ens-lyon.org>
 License: Expat
 
@@ -91,8 +101,20 @@ Files: filter/commandtoescpx.c
   filter/imagetoraster.c
   filter/rastertoescpx.c
   filter/rastertopclx.c
+  filter/common.*
+  filter/pcl-common.*
+  filter/textcommon.*
+  filter/escp.h
+  filter/pcl.h
+  scripting/*
 Copyright: 2007-2011, Apple Inc
   1993-2007, Easy Software Products
+License: GPL-2
+
+Files: mime/cupsfilters.convs*
+Copyright: 2007-2011, Apple Inc
+  1997-2007, Easy Software Products
+  2012-2016, Till Kamppeter
 License: GPL-2
 
 Files: filter/foomatic-rip/*
@@ -104,7 +126,7 @@ Files: filter/getline.c
 Copyright: 1993, 1996-2014, Free Software Foundation, Inc
 License: GPL-2+
 
-Files: filter/gstopxl
+Files: filter/gstopxl.in
 Copyright: 2001-2005, Easy Software Products
 License: GPL-2+
 
@@ -123,6 +145,7 @@ Copyright: 1993-2007, Easy Software Products
 License: GPL-2
 
 Files: filter/pdftoijs.cxx
+ ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 Copyright: 2008, Tobias Hoffmann
   2008, BBR Inc.
 License: Expat
@@ -141,6 +164,10 @@ Copyright: 2012 Tobias Hoffmann
  2006-2011, BBR Inc
 License: Expat
 
+Files: ppd/*-PDF.ppd
+Copyright: 2012-2016 Till Kamppeter
+License: GPL-2+
+
 Files: filter/pdftops.c
 Copyright: 2011-2013 Till Kamppeter
  2007-2011 Apple Inc
@@ -150,7 +177,7 @@ License: GPL-2
 Files: filter/pdfutils.c
   filter/pdfutils.h
 Copyright: 2008, Tobias Hoffmann
-License: GPL-2.0 with AOSDL exception
+License: GPL-2
 
 Files: filter/pstopdf
 Copyright: 2008-2012, Till Kamppeter <till.kamppeter@gmail.com>
@@ -166,39 +193,12 @@ License: GPL-3+
 Files: filter/strcasestr.c
 Copyright: 1990, 1993, The Regents of the University of California
 License: BSD-4-clause
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. All advertising materials mentioning features or use of this software
-    must display the following acknowledgement:
-      This product includes software developed by the University of
-      California, Berkeley and its contributors.
- 4. Neither the name of the University nor the names of its contributors
-    may be used to endorse or promote products derived from this software
-    without specific prior written permission.
- .
- THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- SUCH DAMAGE.
 
 Files: filter/sys5ippprinter.c
 Copyright: 2011-2013, Till Kamppeter
   2007-2011, Apple Inc
   1997-2006, Easy Software Products
-License: GPL-2.0 with AOSDL exception
+License: GPL-2
 
 Files: filter/textonly
 Copyright: 2003-2006, Tim Waugh <twaugh@redhat.com>
@@ -211,12 +211,15 @@ Copyright: 2003-2006 Red Hat, Inc.
 License: GPL-2+
 
 Files: filter/texttopdf.c
+ charset/*
+ filter/test.sh
+ filter/test_pdf*.c
 Copyright: 2008, 2012, Tobias Hoffmann
   2007, Apple Inc
   1993-2007, Easy Software Products
 License: GPL-2
 
-Files: filter/texttops* filter/imagetops*
+Files: filter/texttops filter/imagetops
 Copyright: 2012 Till Kamppeter <till.kamppeter@gmail.com>
 License: GPL-2+
 
@@ -238,8 +241,14 @@ Copyright: 1996-2001, 2003-2011 Free Software Foundation, Inc.
 License: GPL-2+
 
 Files: utils/*
-Copyright: no-info-found
+Copyright: 2012-2016 Till Kamppeter
+ 2013-2015 Tim Waugh
 License: LGPL-2.1+
+
+Files: drv/cupsfilters.drv
+ drv/custom-media-lines
+Copyright: 2012-2016 Till Kamppeter
+License: Expat
 
 License: Expat
  The MIT License
@@ -268,65 +277,6 @@ License: Expat
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
-
-License: GPL-2.0 with AOSDL exception
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, version 2 of the License.
- .
- The full text of the GPL is distributed as in
- /usr/share/common-licenses/GPL-2 on Debian systems.
- .
- In addition, as the copyright holder of CUPS, Apple Inc. grants
- the following special exception:
- .
-      1. Apple Operating System Development License Exception;
- .
- 	a. Software that is developed by any person or entity
- 	   for an Apple Operating System ("Apple OS-Developed
- 	   Software"), including but not limited to Apple and
- 	   third party printer drivers, filters, and backends
- 	   for an Apple Operating System, that is linked to the
- 	   CUPS imaging library or based on any sample filters
- 	   or backends provided with CUPS shall not be
- 	   considered to be a derivative work or collective work
- 	   based on the CUPS program and is exempt from the
- 	   mandatory source code release clauses of the GNU GPL.
- 	   You may therefore distribute linked combinations of
- 	   the CUPS imaging library with Apple OS-Developed
- 	   Software without releasing the source code of the
- 	   Apple OS-Developed Software. You may also use sample
- 	   filters and backends provided with CUPS to develop
- 	   Apple OS-Developed Software without releasing the
- 	   source code of the Apple OS-Developed Software.
- .
- 	b. An Apple Operating System means any operating system
- 	   software developed and/or marketed by Apple Computer,
- 	   Inc., including but not limited to all existing
- 	   releases and versions of Apple's Darwin, Mac OS X,
- 	   and Mac OS X Server products and all follow-on
- 	   releases and future versions thereof.
- .
- 	c. This exception is only available for Apple
- 	   OS-Developed Software and does not apply to software
- 	   that is distributed for use on other operating
- 	   systems.
- .
- 	d. All CUPS software that falls under this license
- 	   exception have the following text at the top of each
- 	   source file:
- .
- 	     This file is subject to the Apple OS-Developed
- 	     Software exception.
- .
-      2. OpenSSL Toolkit License Exception;
- .
- 	a. Apple Inc. explicitly allows the compilation and
- 	   distribution of the CUPS software with the OpenSSL
- 	   Toolkit.
- .
- No developer is required to provide these exceptions in a
- derived work.
 
 License: GPL-2
  This program is free software; you can redistribute it and/or modify
@@ -378,3 +328,32 @@ License: LGPL-2.1+
  .
  On Debian systems, the complete text of version 2.1 of the GNU Lesser
  Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
+
+License: BSD-4-clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. All advertising materials mentioning features or use of this software
+    must display the following acknowledgement:
+      This product includes software developed by the University of
+      California, Berkeley and its contributors.
+ 4. Neither the name of the University nor the names of its contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
