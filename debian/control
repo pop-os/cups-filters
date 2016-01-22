@@ -76,11 +76,12 @@ Depends: ${shlibs:Depends},
  bc,
  ghostscript (>= 9.02~),
  liblouis-data,
+ liblouis-bin,
  imagemagick (>= 6.4~),
- liblouisutdml-bin,
  poppler-utils
 Recommends: colord
 Suggests: foomatic-db-compressed-ppds | foomatic-db,
+ liblouisutdml-bin,
  antiword,
  docx2txt
 Conflicts: ghostscript-cups,

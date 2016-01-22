@@ -1,3 +1,44 @@
+cups-filters (1.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+    - cups-browsed: Do not disable queues which still have jobs (and
+      therefore cannot be removed) when avahi-daemon goes away, the
+      print server is most probably still available and printing can
+      be continued. Especially important on mobile devices where
+      avahi-daemon is shut down when the print dialog is closed (and
+      the job(s) still printing).
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 22 Jan 2016 09:25:46 +0100
+
+cups-filters (1.8.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - COPYING: Replaced the COPYING file by a file in Debian format,
+      derived from Debian's file but updated and corrected
+    - braille: Added info about additional packages needed for Braille
+      printing to the README file
+    - braille: Let the Braille filters use lou_translate of
+      liblouis if the more sophisticated file2brl of liblouisutdml
+      is not installed. This is decided on at run time, so later
+      installation of liblouisutdml will let the filters
+      automatically switch to file2brl
+    - braille: Allow one to build with Braille support also if
+      liblouis is not installed at build time
+    - braille: Added checks for the presence of helper tools, to
+      get clear messages in the CUPS error_log if something is
+      missing
+    - Updated COPYING file for missing implicitclass and beh
+      backends
+
+  [ Till Kamppeter ]
+  * Let cups-drivers not depend on liblouisutdml-bin any more, instead, let it
+    depend on liblouis-bin and move liblouisutdml-bin to Suggests
+    (Closes: #808057)
+  * Updated and cleaned debian/copyright using the new COPYING file from
+    upstream
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 21 Jan 2016 19:26:43 +0100
+
 cups-filters (1.7.0-1) unstable; urgency=medium
 
   * New upstream release
