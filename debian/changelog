@@ -1,3 +1,15 @@
+cups-filters (1.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+    - cups-browsed: Do not disable queues which still have jobs (and
+      therefore cannot be removed) when avahi-daemon goes away, the
+      print server is most probably still available and printing can
+      be continued. Especially important on mobile devices where
+      avahi-daemon is shut down when the print dialog is closed (and
+      the job(s) still printing).
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 22 Jan 2016 09:25:46 +0100
+
 cups-filters (1.8.0-1) unstable; urgency=medium
 
   * New upstream release
