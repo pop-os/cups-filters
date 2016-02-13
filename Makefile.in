@@ -122,16 +122,32 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
-	commandtopclx$(EXEEXT) foomatic-rip$(EXEEXT) \
-	gstoraster$(EXEEXT) pdftoijs$(EXEEXT) sys5ippprinter$(EXEEXT) \
-	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
-	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
-	rastertopdf$(EXEEXT) $(am__EXEEXT_1)
-@ENABLE_IMAGEFILTERS_TRUE@am__append_6 = \
+	commandtopclx$(EXEEXT) pdftoijs$(EXEEXT) \
+	sys5ippprinter$(EXEEXT) pdftops$(EXEEXT) pdftoraster$(EXEEXT) \
+	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
+	texttopdf$(EXEEXT) urftopdf$(EXEEXT) rastertopdf$(EXEEXT) \
+	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_6 = \
+@ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopxl
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
+@ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
+
+@ENABLE_FOOMATIC_TRUE@am__append_8 = \
+@ENABLE_FOOMATIC_TRUE@	foomatic-rip
+
+@ENABLE_IMAGEFILTERS_TRUE@am__append_9 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
+@ENABLE_FOOMATIC_TRUE@am__append_10 = \
+@ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = \
+@ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
+@ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
+
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -257,7 +273,9 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libphpcups_la_CFLAGS) \
 	$(CFLAGS) $(libphpcups_la_LDFLAGS) $(LDFLAGS) -o $@
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
-@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_1 = imagetopdf$(EXEEXT) \
+@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_1 = gstoraster$(EXEEXT)
+@ENABLE_FOOMATIC_TRUE@am__EXEEXT_2 = foomatic-rip$(EXEEXT)
+@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_3 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
@@ -1407,13 +1425,8 @@ pdftopdf_LDADD = \
 # ======================
 # Simple filter binaries
 # ======================
-pkgfilter_SCRIPTS = \
-	filter/gstopxl \
-	filter/imagetops \
-	filter/pstopdf \
-	filter/textonly \
-	filter/texttops
-
+pkgfilter_SCRIPTS = filter/imagetops filter/pstopdf filter/textonly \
+	filter/texttops $(am__append_6)
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
@@ -1739,11 +1752,8 @@ cups_browsed_LDADD = \
 
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
-man_MANS = \
-	utils/cups-browsed.8 \
-	utils/cups-browsed.conf.5 \
-	filter/foomatic-rip/foomatic-rip.1
-
+man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
+	$(am__append_10)
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1751,16 +1761,12 @@ CLEANFILES = $(BUILT_SOURCES)
 # PPD
 # ===
 ppddir = $(datadir)/ppd/cupsfilters
-ppd_DATA = \
-	ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
+ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
-	ppd/Ricoh-PDF_Printer-PDF.ppd \
-	ppd/pxlcolor.ppd \
-	ppd/pxlmono.ppd \
-	ppd/textonly.ppd
-
+	ppd/Ricoh-PDF_Printer-PDF.ppd ppd/textonly.ppd \
+	$(am__append_11)
 
 # =========
 # Scripting
@@ -5030,7 +5036,7 @@ distclean-local:
 install-exec-hook:
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	$(INSTALL) -d -m 755 $(DESTDIR)$(pkgfilterdir)
-	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
+@ENABLE_FOOMATIC_TRUE@	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f imagetobrf $(DESTDIR)$(pkgfilterdir)/imagetoubrl
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f textbrftoindexv3 $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
@@ -5051,7 +5057,7 @@ uninstall-hook:
 @RCLINKS_TRUE@		rmdir $(DESTDIR)$(BUILDROOT)$(INITDIR)/rc?.d || :;\
 @RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
-	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
+@ENABLE_FOOMATIC_TRUE@	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
 @ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/imagetoubrl
 @ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
