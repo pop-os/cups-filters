@@ -1,3 +1,12 @@
+cups-filters (1.8.2-1) unstable; urgency=medium
+
+  * New upstream release
+    - cups-browsed: Optionally generate also local queues pointing
+      to remote raw queues. Usually only queues pointing to remote
+      queues with PPD/driver are created (Closes: #814020)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 13 Feb 2016 16:38:58 +0100
+
 cups-filters (1.8.1-1) unstable; urgency=medium
 
   * New upstream release
