@@ -1,0 +1,4 @@
+debian/local/lsb/initdutils.py /usr/lib/lsb
+debian/local/lsb/install_initd /usr/lib/lsb
+debian/local/lsb/remove_initd /usr/lib/lsb
+debian/local/lsb/lsbinstall /usr/lib/lsb

@@ -1,3 +1,13 @@
+cups-filters (1.8.2-2ubuntu1) xenial; urgency=medium
+
+  * Added the binary packages cups-filters-lsb and cups-filters-invalid-mta
+    to temporarily replace the dropped LSB support in Debian/Ubuntu which
+    we need for distribution-independent printer driver packages. This
+    will be removed as soon as a new concept for distribution-independent
+    printer driver packages is in place.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 15 Feb 2016 16:56:06 -0200
+
 cups-filters (1.8.2-2) unstable; urgency=medium
 
   * Make the liblouis-bin an alternate recommendation of liblouisutdml-bin

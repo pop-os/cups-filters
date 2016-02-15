@@ -28,6 +28,10 @@ Copyright: 1999-2003, Jeff Licquia <licquia@debian.org>
            2013-2015, Didier Raboud <odyx@debian.org>
 License: GPL-2+
 
+Files: debian/local/lsb/*
+Copyright: 2002-2010, Chris Lawrence <lawrencc@debian.org> 
+License: GPL-2
+
 Files: backend/beh.c
   backend/implicitclass.c
 Copyright: 2015, Till Kamppeter
