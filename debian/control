@@ -173,3 +173,182 @@ Description: OpenPrinting CUPS Filters - cups-browsed
  cups-browsed is also useful with a CUPS >= 1.6 server to allow CUPS <
  1.6 clients to browse its printer list (by using the old 'cups'
  protocol in BrowseLocalProtocols).
+
+Package: cups-filters-lsb
+Architecture: all
+Depends: lsb-base (>= 9.20150826),
+ lsb-release (>= 9.20150826),
+# From lsb-core
+ ${glibc},
+ libz1,
+ libncurses5,
+ libpam0g,
+ lsb-invalid-mta | mail-transport-agent,
+ at,
+ bc,
+ binutils,
+ bsdmainutils,
+ bsdutils,
+ cpio,
+ cron | cron-daemon,
+ ed,
+ file,
+ libc6-dev | libc-dev,
+ locales,
+ cups-bsd | lpr,
+ lprng | cups-client,
+ m4,
+ mailx | mailutils,
+ make,
+ man-db,
+ mawk | gawk,
+ ncurses-term,
+ passwd,
+ patch,
+ pax,
+ procps,
+ psmisc,
+ rsync,
+ alien (>= 8.36),
+ python3,
+ ${python3:Depends},
+ time,
+# from lsb-graphics
+ libgl1-mesa-glx | libgl1,
+ libglu1-mesa | libglu1,
+ libx11-6 | xlibs,
+# from lsb-cxx
+ libstdc++6,
+# from lsb-desktop
+ fontconfig (>= 2.6.0),
+ libfontconfig1 (>= 2.6.0),
+ libpng12-0,
+ libjpeg62,
+ libglib2.0-0 (>= 2.12.13),
+ libatk1.0-0 (>= 1.10.3),
+ libpango1.0-0 (>= 1.10.4),
+ libgtk2.0-0 (>= 2.10.14),
+ libcairo2 (>= 1.2.0),
+ libqtcore4,
+ libqtgui4,
+ libqt4-xml,
+ libqt4-opengl,
+ libqt4-sql,
+ libqt4-svg,
+ libqt4-network,
+ libqt4-sql-sqlite,
+ libxml2,
+ libfreetype6,
+ libxrender1,
+ libxtst6,
+ libxft2,
+ xdg-utils,
+ libnss3,
+# from lsb-languages
+ python (>= 2.4),
+ perl (>= 5.8.8),
+ perl (<< 6),
+ libpod-plainer-perl,
+# from lsb-multimedia
+ libasound2,
+# from lsb-printing
+ libcups2,
+ libcupsimage2,
+ cups-filters (>= 1.0.42) | foomatic-filters,
+ ghostscript,
+ cups-filters (>= 1.0.36) | ghostscript-cups,
+# from lsb-security
+ libnss3,
+ libnspr4,
+ ${depends},
+ ${misc:Depends}
+# from lsb-desktop
+Recommends: libqt3-mt (>= 3:3.3.6)
+Provides: lsb ${lsbversion},
+ lsb-core ${lsbversion},
+ lsb-graphics ${lsbversion},
+ lsb-cxx ${lsbversion},
+ lsb-desktop ${lsbversion},
+ lsb-languages ${lsbversion},
+ lsb-multimedia ${lsbversion},
+ lsb-printing ${lsbversion},
+ lsb-security ${lsbversion},
+ lsb-core-noarch ${lsbversion},
+ lsb-graphics-noarch ${lsbversion},
+ lsb-cxx-noarch ${lsbversion},
+ lsb-desktop-noarch ${lsbversion},
+ lsb-languages-noarch ${lsbversion},
+ lsb-multimedia-noarch ${lsbversion},
+ lsb-printing-noarch ${lsbversion},
+ lsb-security-noarch ${lsbversion},
+ ${provides}
+Breaks: lsb ${beforelsbversion},
+ lsb-core ${beforelsbversion},
+ lsb-graphics ${beforelsbversion},
+ lsb-cxx ${beforelsbversion},
+ lsb-desktop ${beforelsbversion},
+ lsb-languages ${beforelsbversion},
+ lsb-multimedia ${beforelsbversion},
+ lsb-printing ${beforelsbversion},
+ lsb-security ${beforelsbversion}
+Replaces: lsb ${beforelsbversion},
+ lsb-core ${beforelsbversion},
+ lsb-graphics ${beforelsbversion},
+ lsb-cxx ${beforelsbversion},
+ lsb-desktop ${beforelsbversion},
+ lsb-languages ${beforelsbversion},
+ lsb-multimedia ${beforelsbversion},
+ lsb-printing ${beforelsbversion},
+ lsb-security ${beforelsbversion}
+Description: OpenPrinting CUPS Filters - LSB 4.1 printer driver package support
+ The LSB (Linux Standard Base, http://www.linuxbase.org/) is a
+ standard core system that third-party applications written for Linux
+ can depend upon. Defining what common Linux distribution have in
+ common as a standard, it allows for creating distribution-independent
+ binary software packages.
+ .
+ OpenPrinting has made use of the LSB to let printer manufacturers be
+ able to supply binary printer driver packages which work on all Linux
+ distributions and Epson has actually adopted this concept.
+ .
+ As Debian has dropped the support for the LSB, there is no "lsb" meta
+ package and auxiliary packages any more, also not in Ubuntu. This
+ binary package replaces them, at least for an interim period until
+ there is a new driver package concept established by Openprinting
+ which does not use the LSB any more.
+
+Package: cups-filters-invalid-mta
+Architecture: all
+Depends: ${misc:Depends}
+Suggests: lsb
+Breaks: lsb-invalid-mta ${beforelsbversion}
+Replaces: lsb-invalid-mta ${beforelsbversion}
+Provides: mail-transport-agent, lsb-invalid-mta ${lsbversion}
+Conflicts: mail-transport-agent
+Description: OpenPrinting CUPS Filters - LSB 4.1 sendmail dummy
+ The Linux Standard Base (http://www.linuxbase.org/) is a standard
+ core system that third-party applications written for Linux can
+ depend upon.
+ .
+ This package contains nothing else than a fake /usr/sbin/sendmail
+ command to fulfill the LSB's requirement of providing this command without
+ requiring an MTA to get installed, which once introduces a daemon which
+ can cause security problems and second, users get asked questions about
+ how they want their MTA configured when in reality they simply wanted to
+ install a desktop application or a printer driver, but the dependency on
+ LSB compliance pulls in an MTA with the installation.
+ .
+ The LSB requirement on /usr/sbin/sendmail comes from old times where Linux
+ and Unix machines had all fixed IPs and did server tasks in data centers.
+ Today's typical desktop Linux machines do not do local e-mail any more as
+ users use external e-mail services.
+ .
+ The /usr/sbin/sendmail always exits with exit status -1 (255) and sends a
+ warning message to stderr, so that if a program actually tries to send e-mail
+ via the sendmail command the user gets note.
+ .
+ As Debian has dropped the support for the LSB, there is no
+ "lsb-invalid-mta" package any more, also not in Ubuntu. This binary
+ package replaces it, at least for an interim period until there is a
+ new driver package concept established by Openprinting which does not
+ use the LSB any more.

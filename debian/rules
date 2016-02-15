@@ -5,7 +5,7 @@ derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes")
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 %:
-	dh $@ --parallel --with autoreconf,systemd
+	dh $@ --parallel --with autoreconf,systemd --with python3
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
@@ -24,7 +24,7 @@ override_dh_installdocs:
 
 override_dh_fixperms:
 	dh_fixperms -Xusr/lib/cups/backend
-	
+
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
 	chmod 700 debian/cups-filters/usr/lib/cups/backend/serial
@@ -43,7 +43,7 @@ ifeq ($(derives_from_ubuntu),yes)
 	cp utils/cups-browsed-upstart.conf debian/cups-browsed.upstart
 endif
 	dh_install
-	
+
 ifeq ($(derives_from_ubuntu),yes)
 	#  - Install Apport hook
 	#  - Replace standard test page template by Ubuntu-branded one
@@ -58,3 +58,37 @@ endif
 	install -D -m 644 debian/local/modules-load.conf debian/cups-filters/etc/modules-load.d/cups-filters.conf
 
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
+
+##############################################################################
+# Temporary addition of LSB compatibility binary packages for printer drivers
+# This, the binary package entries cups-filters-lsb and
+# cups-filters-invalid-mta, the debian/local/lsb directory, and the files
+# debian/cups-filters-lsb.install and debian/cups-filters-invalid-mta.install
+# need to get removed to removethis temporary LSB compatibility support.
+##############################################################################
+
+DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+lsbarch=${DEB_HOST_ARCH}
+ifeq (${lsbarch}, i386)
+lsbarch=ia32
+endif
+ifeq (${lsbarch}, powerpc)
+lsbarch=ppc32
+endif
+LIBC=libc6 (>> 2.3.5)
+ifeq (${lsbarch}, amd64)
+LIBC=libc6 (>= 2.13-17)
+endif
+# Version of the last Debian lsb source package with full LSB support plus
+# something.
+lsbver=4.1+Debian14+cupsfilters1
+
+override_dh_gencontrol:
+	@echo >> debian/cups-filters-lsb.substvars "lsbversion=(= ${lsbver})"
+	@echo >> debian/cups-filters-lsb.substvars "beforelsbversion=(<< ${lsbver})"
+	@echo >> debian/cups-filters-lsb.substvars "glibc=${LIBC}"
+	@echo >> debian/cups-filters-lsb.substvars "provides=lsb-core-${lsbarch}, lsb-cxx-${lsbarch}, lsb-graphics-${lsbarch}, lsb-qt4-${lsbarch}, lsb-desktop-${lsbarch}, lsb-multimedia-${lsbarch}, lsb-languages-${lsbarch}, lsb-printing-${lsbarch}, lsb-security-${lsbarch}"
+	@[ ${DEB_HOST_ARCH} = 'amd64' ] && echo >> debian/cups-filters-lsb.substvars "depends=libc6-i386, lib32z1" || true
+	@echo >> debian/cups-filters-invalid-mta.substvars "lsbversion=(= ${lsbver})"
+	@echo >> debian/cups-filters-invalid-mta.substvars "beforelsbversion=(<< ${lsbver})"
+	dh_gencontrol
