@@ -5,6 +5,7 @@ derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes")
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 %:
+	# --with python3 only needed for cups-filter-lsb
 	dh $@ --parallel --with autoreconf,systemd --with python3
 
 override_dh_auto_configure:
@@ -65,6 +66,8 @@ endif
 # cups-filters-invalid-mta, the debian/local/lsb directory, and the files
 # debian/cups-filters-lsb.install and debian/cups-filters-invalid-mta.install
 # need to get removed to removethis temporary LSB compatibility support.
+# Also the "dh --with python3" call and the build dependency on
+# python3-all-dev is only for the LSB compatibility packages.
 ##############################################################################
 
 DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)

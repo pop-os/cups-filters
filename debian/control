@@ -39,7 +39,9 @@ Build-Depends:
  librsvg2-bin,
  liblouis-dev,
 # Needed for tests
- fonts-dejavu-core
+ fonts-dejavu-core,
+# Needed for cups-filters-lsb
+ python3-all-dev
 Homepage: http://www.openprinting.org/
 Vcs-Git: https://alioth.debian.org/anonscm/git/printing/cups-filters.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=printing/cups-filters.git
