@@ -1,3 +1,10 @@
+cups-filters (1.8.2-2ubuntu2) xenial; urgency=medium
+
+  * Added build dependency on python3-all-dev for the cups-filters-lsb
+    binary package.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 15 Feb 2016 18:40:06 -0200
+
 cups-filters (1.8.2-2ubuntu1) xenial; urgency=medium
 
   * Added the binary packages cups-filters-lsb and cups-filters-invalid-mta
