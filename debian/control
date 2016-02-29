@@ -75,7 +75,6 @@ Depends: ${shlibs:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
  ghostscript (>= 9.02~),
- liblouis-data,
  imagemagick (>= 6.4~),
  poppler-utils
 Recommends: colord,
