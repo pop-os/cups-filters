@@ -1,3 +1,10 @@
+cups-filters (1.8.2-3) unstable; urgency=medium
+
+  * Bump Standards-Version to 3.9.7 without changes needed
+  * Drop superfluous liblouis-data dependency (Closes: #816304)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 29 Feb 2016 22:15:54 +0100
+
 cups-filters (1.8.2-2) unstable; urgency=medium
 
   * Make the liblouis-bin an alternate recommendation of liblouisutdml-bin
