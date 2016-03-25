@@ -1,3 +1,16 @@
+cups-filters (1.8.3-2ubuntu1) xenial; urgency=medium
+
+  * Merge from Debian unstable.  Remaining changes:
+     - Added the binary packages cups-filters-lsb and cups-filters-invalid-mta
+       to temporarily replace the dropped LSB support in Debian/Ubuntu which
+       we need for distribution-independent printer driver packages. This
+       will be removed as soon as a new concept for distribution-independent
+       printer driver packages is in place.
+     - Added build dependency on python3-all-dev for the cups-filters-lsb
+       binary package.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 25 Mar 2016 18:20:06 -0300
+
 cups-filters (1.8.3-2) unstable; urgency=medium
 
   [ Till Kamppeter ]
@@ -25,6 +38,29 @@ cups-filters (1.8.2-3) unstable; urgency=medium
   * Drop superfluous liblouis-data dependency (Closes: #816304)
 
  -- Didier Raboud <odyx@debian.org>  Mon, 29 Feb 2016 22:15:54 +0100
+
+cups-filters (1.8.2-2ubuntu3) xenial; urgency=medium
+
+  * No change rebuild with the new poppler soname
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 29 Feb 2016 10:51:13 +0100
+
+cups-filters (1.8.2-2ubuntu2) xenial; urgency=medium
+
+  * Added build dependency on python3-all-dev for the cups-filters-lsb
+    binary package.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 15 Feb 2016 18:40:06 -0200
+
+cups-filters (1.8.2-2ubuntu1) xenial; urgency=medium
+
+  * Added the binary packages cups-filters-lsb and cups-filters-invalid-mta
+    to temporarily replace the dropped LSB support in Debian/Ubuntu which
+    we need for distribution-independent printer driver packages. This
+    will be removed as soon as a new concept for distribution-independent
+    printer driver packages is in place.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 15 Feb 2016 16:56:06 -0200
 
 cups-filters (1.8.2-2) unstable; urgency=medium
 
