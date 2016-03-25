@@ -5,4 +5,4 @@ usr/lib/cups/filter/pdftoraster
 usr/lib/cups/filter/rastertopclx
 usr/lib/cups/filter/rastertopdf
 usr/lib/cups/filter/sys5ippprinter
-usr/share/cups/mime/cupsfilters.*
+usr/share/cups/mime/cupsfilters*
