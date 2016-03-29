@@ -1,3 +1,11 @@
+cups-filters (1.8.3-2ubuntu2) xenial; urgency=medium
+
+  * Added Conflicts:/Replaces:/Provides: foomatic-filters-beh to the
+    cups-filters binary package due to the fact that the beh backend is
+    now part of cups-filters (LP: #1563686).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 29 Mar 2016 09:29:06 -0300
+
 cups-filters (1.8.3-2ubuntu1) xenial; urgency=medium
 
   * Merge from Debian unstable.  Remaining changes:

@@ -85,17 +85,20 @@ Suggests: foomatic-db-compressed-ppds | foomatic-db,
  antiword,
  docx2txt
 Conflicts: ghostscript-cups,
- foomatic-filters
+ foomatic-filters,
+ foomatic-filters-beh
 Replaces: cups (<< 1.5.0-16), 
  cups-common (<< 1.5.0-16),
  ghostscript-cups,
  foomatic-filters,
+ foomatic-filters-beh,
  cups-ppdc (<< 1.6)
 Breaks: cups (<< 1.5.0-16), 
  cups-common (<< 1.5.0-16),
  cups-ppdc (<< 1.6)
 Provides: ghostscript-cups,
- foomatic-filters
+ foomatic-filters,
+ foomatic-filters-beh
 Description: OpenPrinting CUPS Filters - Main Package
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
