@@ -1,3 +1,10 @@
+cups-filters (1.8.3-2ubuntu3) xenial; urgency=medium
+
+  * Undo cups-filters-lsb and cups-filters-invalid-mta changes, we
+    will fix this in a more generic way in a post-release update.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Wed, 20 Apr 2016 09:29:13 -0600
+
 cups-filters (1.8.3-2ubuntu2) xenial; urgency=medium
 
   * Added Conflicts:/Replaces:/Provides: foomatic-filters-beh to the
