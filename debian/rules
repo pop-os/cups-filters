@@ -5,8 +5,7 @@ derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes")
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 %:
-	# --with python3 only needed for cups-filter-lsb
-	dh $@ --parallel --with autoreconf,systemd --with python3
+	dh $@ --parallel --with autoreconf,systemd
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
@@ -59,39 +58,3 @@ endif
 	install -D -m 644 debian/local/modules-load.conf debian/cups-filters/etc/modules-load.d/cups-filters.conf
 
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
-
-##############################################################################
-# Temporary addition of LSB compatibility binary packages for printer drivers
-# This, the binary package entries cups-filters-lsb and
-# cups-filters-invalid-mta, the debian/local/lsb directory, and the files
-# debian/cups-filters-lsb.install and debian/cups-filters-invalid-mta.install
-# need to get removed to removethis temporary LSB compatibility support.
-# Also the "dh --with python3" call and the build dependency on
-# python3-all-dev is only for the LSB compatibility packages.
-##############################################################################
-
-DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
-lsbarch=${DEB_HOST_ARCH}
-ifeq (${lsbarch}, i386)
-lsbarch=ia32
-endif
-ifeq (${lsbarch}, powerpc)
-lsbarch=ppc32
-endif
-LIBC=libc6 (>> 2.3.5)
-ifeq (${lsbarch}, amd64)
-LIBC=libc6 (>= 2.13-17)
-endif
-# Version of the last Debian lsb source package with full LSB support plus
-# something.
-lsbver=4.1+Debian14+cupsfilters1
-
-override_dh_gencontrol:
-	@echo >> debian/cups-filters-lsb.substvars "lsbversion=(= ${lsbver})"
-	@echo >> debian/cups-filters-lsb.substvars "beforelsbversion=(<< ${lsbver})"
-	@echo >> debian/cups-filters-lsb.substvars "glibc=${LIBC}"
-	@echo >> debian/cups-filters-lsb.substvars "provides=lsb-core-${lsbarch}, lsb-cxx-${lsbarch}, lsb-graphics-${lsbarch}, lsb-qt4-${lsbarch}, lsb-desktop-${lsbarch}, lsb-multimedia-${lsbarch}, lsb-languages-${lsbarch}, lsb-printing-${lsbarch}, lsb-security-${lsbarch}"
-	@[ ${DEB_HOST_ARCH} = 'amd64' ] && echo >> debian/cups-filters-lsb.substvars "depends=libc6-i386, lib32z1" || true
-	@echo >> debian/cups-filters-invalid-mta.substvars "lsbversion=(= ${lsbver})"
-	@echo >> debian/cups-filters-invalid-mta.substvars "beforelsbversion=(<< ${lsbver})"
-	dh_gencontrol
