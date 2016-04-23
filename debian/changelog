@@ -1,3 +1,9 @@
+cups-filters (1.8.3-2ubuntu4) yakkety; urgency=medium
+
+  * No-change rebuild for libpng soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 23 Apr 2016 00:01:55 +0000
+
 cups-filters (1.8.3-2ubuntu3) xenial; urgency=medium
 
   * Undo cups-filters-lsb and cups-filters-invalid-mta changes, we
