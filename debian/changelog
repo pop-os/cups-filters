@@ -1,3 +1,9 @@
+cups-filters (1.8.3-2ubuntu5) yakkety; urgency=medium
+
+  * No change rebuild with the new poppler soname
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Wed, 25 May 2016 09:18:28 +1200
+
 cups-filters (1.8.3-2ubuntu4) yakkety; urgency=medium
 
   * No-change rebuild for libpng soname change.
