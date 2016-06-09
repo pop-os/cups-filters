@@ -1,3 +1,28 @@
+cups-filters (1.9.0-1) unstable; urgency=medium
+
+  * New upstream release
+   - pdftopdf: Added functionality for logging pages in the
+     /var/log/cups/page_log file. Logging can also be forced or suppressed via
+     command line (page-logging=on/off/auto) and page logging is also done for
+     filters which should do but actually do not do: foomatic-rip, gstopxl,
+     hpps (CUPS issue #4798, LP: #1585380)
+   - cups-browsed: Added "Requires=cups-service" to the cups-browsed.service
+     file, so that systemd keeps CUPS running while shutting down cups-browsed
+     on system shutdown (LP: #1579905)
+   - cups-browsed/sys5ippprinter: Fixed documentation about the allowed input
+     formats for auto-created network printer queues using sys5ippprinter, also
+     improved NEWS entry about renaming of sys5ippprinter (Closes: #819665)
+
+  [ Till Kamppeter ]
+  * Added Conflicts:/Replaces:/Provides: foomatic-filters-beh to the
+    cups-filters binary package due to the fact that the beh backend is now
+    part of cups-filters (LP: #1563686, Closes: #816700)
+
+  [ Didier Raboud ]
+  * Bump S-V to 3.9.8 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 09 Jun 2016 22:16:37 +0200
+
 cups-filters (1.8.3-2) unstable; urgency=medium
 
   [ Till Kamppeter ]
