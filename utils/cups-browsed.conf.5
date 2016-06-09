@@ -9,6 +9,19 @@ located in the /etc/cups directory. Each line in the file can be a
 configuration directive, a blank line, or a comment. Comment lines start
 with the # character.
 .SH DIRECTIVES
+The "DebugLogging" directive determines how should debug logging be done.
+Into the file /var/log/cups/cups-browsed_log ("file"), to stderr ("stderr"), or
+not at all ("none").
+.PP
+.nf
+.fam C
+        DebugLogging file
+        DebugLogging stderr
+        DebugLogging file stderr
+        DebugLogging none
+
+.fam T
+.fi
 Only browse remote printers (via DNS-SD or CUPS browsing) from
 selected servers using the "BrowseAllow", "BrowseDeny", and
 "BrowseOrder" directives
@@ -422,9 +435,10 @@ script to control the filter chain). Clients have to IPP-poll the
 capabilities of the printer and send option settings as standard IPP
 attributes. We do not poll the capabilities by ourselves to not wake
 up the printer from power-saving mode when creating the queues. Jobs
-have to be sent in PDF format. Other formats are not accepted. This
-functionality is primarily for mobile devices running CUPS to not need
-a printer setup tool nor a collection of printer drivers and PPDs.
+have to be sent in one of PDF, PWG Raster, or JPEG format. Other
+formats are not accepted. This functionality is primarily for mobile
+devices running CUPS to not need a printer setup tool nor a collection
+of printer drivers and PPDs.
 .PP
 .nf
 .fam C

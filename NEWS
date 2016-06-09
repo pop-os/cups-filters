@@ -1,5 +1,52 @@
-NEWS - OpenPrinting CUPS Filters v1.8.3 - 2016-03-23
+NEWS - OpenPrinting CUPS Filters v1.9.0 - 2016-06-09
 ----------------------------------------------------
+
+CHANGES IN V1.9.0
+
+	- foomatic-rip: Removed page logging via insertion of PostScript code.
+	  This works only with Ghostscript and PostScript input and even
+	  then it can break things or simply not work. We do the page logging
+	  for foomatic-rip in pdftopdf now, which is more universal and more
+	  reliable.
+	- sys5ippprinter: Added page logging (to /var/log/cups/page_log)
+	  functionality.
+	- pdftopdf: Added functionality for logging pages in the
+	  /var/log/cups/page_log file. Logging can also be forced or
+	  surpressed via command line (page-logging=on/off/auto) and
+	  page logging is also done for filters which should do but
+	  actually do not do: foomatic-rip, gstopxl, hpps (CUPS issue #4798,
+	  Ubuntu bug #1585380).
+	- pdftopdf: Whitespace and indentation clean-up.
+	- README: Removed the documentation of the old Poppler-based pdftopdf
+	  filter which is not included any more.
+	- cups-browsed: Do not schedule failed operations for later repetition
+	  during shutdown.
+	- cups-browsed: Added support for debug logging into a file (usually
+	  /var/log/cups/cups-browsed_log, to be activated via "-l" or
+	  "--logfile" option or via "DebugLogging file" option in
+	  cups-browsed.conf.
+	- cups-browesd: Consistent use of debug_printf() in the LDAP support.
+	- cups-browsed: Added "Requires=cups-service" to the
+	  cups-browsed.service file, so that systemd keeps CUPS running while
+	  shutting down cups-browsed on system shutdown (Ubuntu bug #1579905).
+	- README: Extended pdftopdf's documentation.
+	- README: Added documentation for the pdfAutorotate option in
+	  pdftopdf.
+	- gstoraster: Treat status output of the waitpid() function properly,
+	  to avoid gstoraster exiting with zero status when Ghostscript
+	  exited with non-zero status or got terminated by a signal
+	  (Bug #1354).
+	- README: Fixed typos. Thanks to Pranjal Bhor (bhor dot pranjal at
+	  gmail dot com) for the patch.
+	- braille: Recognize application/vnd.cups-pdf-banner MIME type and
+	  read standard input directly instead of using /dev/stdin.
+	- braille: Drop output of the "type" command when checking the
+	  presence of helper utilities.
+	- braille: Do not send EOF twice to the braille embosser.
+	- cups-browsed/sys5ippprinter: Fixed documentation about the allowed
+	  input formats for auto-created network printer queues using
+	  sys5ippprinter, also improved NEWS entry about renaming of
+	  sys5ippprinter (Debian bug #819665).
 
 CHANGES IN V1.8.3
 
@@ -350,8 +397,8 @@ CHANGES IN V1.0.69
 	  capabilities.
 	- imagetopdf: Make this filter also work with auto-generated PPD-less
 	  print queues for IPP network printers.
-	- sys5ippprinter: Renamed pdftoippprinter to reflect that it is
-	  once a System 5 interface script and second does not accept only
+	- sys5ippprinter: Renamed from pdftoippprinter to reflect that
+	  it is a System 5 interface script and does not accept only
 	  PDF as input.
 	- pdftoippprinter: Support also PWG Raster and JPEG as input formats
 	  so that an auto-generated, PPD-less queue for an IPP printer emulates
