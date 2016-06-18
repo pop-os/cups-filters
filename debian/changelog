@@ -1,3 +1,12 @@
+cups-filters (1.9.0-2) unstable; urgency=medium
+
+  [ Till Kamppeter ]
+  * Added dependency on cups-daemon to the cups-browsed binary package, as
+    cups-browsed does not actually work without cupsd
+   (Closes: #827455, Closes: #827457)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 18 Jun 2016 11:59:01 +0200
+
 cups-filters (1.9.0-1) unstable; urgency=medium
 
   * New upstream release
