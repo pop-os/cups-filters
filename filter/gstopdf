@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# gstopxl - Ghostscript-based PCL-XL filter for CUPS
+# gstopdf - Ghostscript-based PDF filter for CUPS
 #
 # Note: This is only a wrapper filter, the real work is done by gstoraster
 #
@@ -9,11 +9,11 @@
 # Released under GPL 2 or later
 #
 
-echo "DEBUG: gstopxl argv[$#] = $@" >&2
+echo "DEBUG: gstopdf argv[$#] = $@" >&2
 echo "DEBUG: PPD: $PPD" >&2
 
 if [ $# -lt 5 -o $# -gt 6 ]; then
-    echo "ERROR: gstopxl job-id user title copies options [file]" >&2
+    echo "ERROR: gstopdf job-id user title copies options [file]" >&2
     exit 1
 fi
 
@@ -22,4 +22,4 @@ if [ -n "$6" ]; then
     exec <"$6"
 fi
 
-OUTFORMAT=PXL $CUPS_SERVERBIN/filter/gstoraster "$1" "$2" "$3" "$4" "$5"
+OUTFORMAT=PDF $CUPS_SERVERBIN/filter/gstoraster "$1" "$2" "$3" "$4" "$5"
