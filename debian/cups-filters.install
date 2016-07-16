@@ -6,7 +6,7 @@ usr/lib/cups/backend/serial
 usr/lib/cups/filter/commandtopclx
 usr/lib/cups/filter/commandtoescpx
 usr/lib/cups/filter/pdftoijs
-usr/lib/cups/filter/textonly
+usr/lib/cups/filter/texttotext
 usr/lib/cups/filter/gstoraster
 usr/lib/cups/filter/urftopdf
 usr/lib/cups/filter/texttopdf
@@ -18,7 +18,7 @@ usr/lib/cups/filter/pdftoopvp
 usr/lib/cups/filter/imagetoraster
 usr/lib/cups/filter/foomatic-rip
 usr/lib/cups/filter/gstopxl
-usr/lib/cups/filter/pstopdf
+usr/lib/cups/filter/gstopdf
 usr/lib/cups/filter/brftoembosser
 usr/lib/cups/filter/imagetobrf
 usr/lib/cups/filter/imagetoubrl
