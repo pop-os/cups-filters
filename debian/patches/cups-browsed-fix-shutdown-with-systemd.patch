@@ -1,0 +1,17 @@
+Description: Added "Requires=cups-service" to the cups-browsed.service file to make cups-browsed always shut down before CUPS to avoid the system hanging during shutdown.
+Author: Till Kamppeter <till.kamppeter@gmail.com>
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/1579905
+Last-Update: 2016-08-18
+
+--- a/utils/cups-browsed.service
++++ b/utils/cups-browsed.service
+@@ -1,7 +1,8 @@
+ [Unit]
+ Description=Make remote CUPS printers available locally
++Requires=cups.service
+ After=cups.service avahi-daemon.service
+-Wants=cups.service avahi-daemon.service
++Wants=avahi-daemon.service
+ 
+ [Service]
+ ExecStart=/usr/sbin/cups-browsed

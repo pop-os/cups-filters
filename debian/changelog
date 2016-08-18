@@ -1,3 +1,11 @@
+cups-filters (1.8.3-2ubuntu3.1) xenial-proposed; urgency=medium
+
+  * Added "Requires=cups-service" to the cups-browsed.service file to make
+    cups-browsed always shut down before CUPS to avoid the system hanging
+    during shutdown (LP: #1579905).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 18 Aug 2016 17:23:06 -0300
+
 cups-filters (1.8.3-2ubuntu3) xenial; urgency=medium
 
   * Undo cups-filters-lsb and cups-filters-invalid-mta changes, we
