@@ -1,3 +1,30 @@
+cups-filters (1.11.1-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release
+    - Added support for MuPDF as PDF renderer. MuPDF is a lightweight
+      renderer especially interesting for mobile devices.
+    - cups-browsed: Allow configuring where the files produced by
+      cups-browsed will get stored. This makes it easier to run
+      cups-filters in a sandbox.
+    - cups-browsed, implicitclass: Avoid the use of files for the
+      communication between cups-browsed and the load-balancing
+      backend implicitclass. This makes it easier to run
+      cups-filters in a sandbox.
+    - gstoraster, pdftops, foomatic-rip: Use -dNOMEDIAATTRS when
+      calling Ghostscript. This way Ghostscript does not try to
+      match media sizes with internal lists.
+    - cups-browsed: Fixed several memory leaks, especially when
+      using IPP requests and DNS-SD TXT record look-ups. Thanks to
+      Ivo Straka for finding them with Valgrind and supplying
+      patches to fix them (Upstream bug #1365, Upstream bug #1368,
+      LP: #1203276).
+    - beh: Fixed printing multiple copies with beh (LP: #1605514).
+    - Several minor fixes
+  * Update debian/copyright from upstream's
+  * Added the new upstream files to the appropriate binary packages.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 18 Aug 2016 02:04:06 -0300
+
 cups-filters (1.10.0-1) unstable; urgency=medium
 
   * New upstream release

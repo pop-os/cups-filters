@@ -1,5 +1,57 @@
-NEWS - OpenPrinting CUPS Filters v1.10.0 - 2016-07-15
+NEWS - OpenPrinting CUPS Filters v1.11.1 - 2016-08-18
 -----------------------------------------------------
+
+CHANGES IN V1.11.1
+
+	- mupdftoraster: Lowered the priority (raised the cost value)
+	  in the cupsfilters-mupdf.convs file so that in a full
+	  cups-filters installation MuPDF is not prioritized.
+
+CHANGES IN V1.11.0
+
+	- pdftops: Added support for MuPDF as PDF renderer. MuPDF can
+	  be selected by the "pdftops-renderer=mupdf" option.
+	- rastertops: Removed unneeded page logging.
+	- rastertops: Fixed DSC comments, some were only preceded by
+	  a single '%' instead of a double "%%".
+	- gstoraster, pdftops, foomatic-rip: Use -dNOMEDIAATTRS when
+	  calling Ghostscript. This way Ghostscript does not try to
+	  match media sizes with internal lists.
+	- Build system: Allow building cups-filters without Poppler
+	  (--disable-poppler in ./configure command line) This skips
+	  the build of pdftoraster, bannertopdf, pdftoijs, and
+	  pdftoopvp and the installation of these filters and their
+	  auxiliary files. With this cups-filters can be easily
+	  installed on mobile/appliance systems with MuPDF as the only
+	  PDF interpreter.
+	- mupdftoraster: Added filter to support MuPDF as PDF
+	  interpreter. MuPDF is a lightweight PDF interpreter
+	  especially interesting for mobile systems and
+	  appliances. Thanks to Pranjal Bhor for contributing this as
+	  part of his Google Summer of Code project.
+	- gstoraster: Fix setting of width and height of the page in
+	  pixels when there is no Resolution option in the PPD.
+	- cups-browsed, implicitclass: Avoid the use of files for the
+	  communication between cups-browsed and the load-balancing
+	  backend implicitclass. Instead of in a file, cups-brwsed
+	  stores the destination server name in an option (which CUPS
+	  saves in printers.conf) which the implicitclass backend
+	  reads via IPP. This not only makes it easier to run
+	  cups-filters in a sandbox, but it is also better in terms of
+	  system security.
+	- cups-browsed: Allow configuring where the files produced by
+	  cups-browsed will get stored. This makes it easier to run
+	  cups-filters in a sandbox.
+        - beh: Fixed printing multiple copies with beh (Ubuntu bug
+          #1605514).
+	- cups-browsed: Fixed several memory leaks, especially when
+	  using IPP requests and DNS-SD TXT record look-ups. Thanks to
+	  Ivo Straka for finding them with Valgrind and supplying
+	  patches to fix them (Bug #1365, Bug #1368, Ubuntu bug
+	  #1203276).
+	- libcupsfilters: Added missing "#include <cups/ppd.h>" to
+	  make sure that the package builds on all systems (Bug
+	  #1366).
 
 CHANGES IN V1.10.0
 
