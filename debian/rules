@@ -14,6 +14,8 @@ override_dh_auto_configure:
 		--libdir=/usr/lib/$(DEB_HOST_MULTIARCH) \
 		--mandir=/usr/share/man \
 		--enable-static \
+		--enable-mutool \
+		--with-mutool-path=/usr/bin/mutool \
 		--with-test-font-path=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
 
 override_dh_installchangelogs:

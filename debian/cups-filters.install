@@ -8,6 +8,7 @@ usr/lib/cups/filter/commandtoescpx
 usr/lib/cups/filter/pdftoijs
 usr/lib/cups/filter/texttotext
 usr/lib/cups/filter/gstoraster
+usr/lib/cups/filter/mupdftoraster
 usr/lib/cups/filter/urftopdf
 usr/lib/cups/filter/texttopdf
 usr/lib/cups/filter/texttops
@@ -31,6 +32,7 @@ usr/share/cups/banners/*
 usr/share/cups/braille/*
 usr/share/cups/drv/*
 usr/share/cups/data/*
+usr/share/cups/mime/cupsfilters-mupdf.convs
 usr/share/cups/mime/braille.*
 usr/share/cups/ppdc/*
 usr/share/cups/charsets/*
