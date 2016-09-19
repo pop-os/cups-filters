@@ -1,3 +1,34 @@
+cups-filters (1.11.3-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release
+    - cups-browsed: For remote CUPS queues always download the
+      PPD from the server and assign it to the queue to make sure
+      options show in print dialogs and get saved for the next
+      cups-browsed session. Also make sure PPD options of IPP network
+      printers get correctly saved.
+    - cups-browsed: make load-balanced queue clusters also work when
+      the printers are discovered by legacy CUPS browsing.
+    - cups-browsed: Shorten timeouts for HTTP/IPP access to avoid
+      hang on shutdown.
+    - cups-browsed: Cleaned up HTTP access to local and remote
+      CUPS servers and IPP printers, to assure that the local CUPS
+      daemon is always accessed the same (user-defined) way
+      (domain socket/localhost:port). This especially prevents
+      cups-browwsed hanging on shutdown (Closes: #832637).
+    - Fixes to make the printing stack work in a sandbox (like
+      a snap for example): Do not use build-time hardcoded paths
+      in the filters and in cups-browsed, read the PPD files always
+      through CUPS' library functions, make paths and file locations
+      configurable in cups-browsed.conf. Allow for alternative
+      foomatic-rip config file in CUPS_SERVERROOT
+      (/etc/cups/foomatic-rip.conf).
+  * Added rules to AppArmor profile to allow cups-browsed to do its
+    debug log and to access PPDs for saving options.
+  * Update debian/copyright and added the new upstream files to the
+    appropriate binary packages.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 19 Sep 2016 00:16:06 -0300
+
 cups-filters (1.11.1-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release
