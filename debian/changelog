@@ -1,3 +1,16 @@
+cups-filters (1.11.4-0ubuntu1) yakkety; urgency=medium
+
+  * New upstream release
+    - gstoraster: Allow Ghostscript to render filled paths with the
+      center-of-pixel method. This prevents barcodes on low-resolution (label)
+      printers to come out unreadable (Upstream bug #1373).
+    - cups-browsed: Fixes to avoid unneeded calls of handle_cups_queues()
+      and even infinite loops (Upstream bug #1376). Also make sure that
+      queues left over from the previous cups-browsed session are integrated
+      correctly.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 21 Sep 2016 19:14:06 -0300
+
 cups-filters (1.11.3-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release
