@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[10])
-m4_define([cups_filters_version_micro],[0])
+m4_define([cups_filters_version_minor],[11])
+m4_define([cups_filters_version_micro],[4])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -425,15 +425,20 @@ AS_IF([test x"$lcms2" = "xno"], [
 PKG_CHECK_MODULES([FREETYPE], [freetype2], [AC_DEFINE([HAVE_FREETYPE_H], [1], [Have FreeType2 include files])])
 PKG_CHECK_MODULES([FONTCONFIG], [fontconfig >= 2.0.0])
 PKG_CHECK_MODULES([IJS], [ijs], [have_ijs=yes], [have_ijs=no])
-PKG_CHECK_MODULES([POPPLER], [poppler >= 0.18])
 PKG_CHECK_MODULES([ZLIB], [zlib])
 AC_DEFINE([HAVE_LIBZ], [], [Define that we use zlib])
 PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 3.0.2])
 
-# ================
-# Poppler features
-# ================
-AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
+# =================
+# Check for Poppler
+# =================
+AC_ARG_ENABLE(poppler, AS_HELP_STRING([--enable-poppler],[enable Poppler-based filters]),
+	      enable_poppler=$enableval,enable_poppler=yes)
+AM_CONDITIONAL(ENABLE_POPPLER, test x$enable_poppler = xyes)
+if test x$enable_poppler = xyes; then
+	PKG_CHECK_MODULES([POPPLER], [poppler >= 0.18])
+	AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
+fi
 
 # ===============
 # Check for D-Bus
@@ -463,6 +468,21 @@ AS_IF([test x"$long_long_found" = "xyes"], [
 ])
 
 # ================
+# Check for Mutool
+# ================
+AC_ARG_ENABLE([mutool],
+	[AS_HELP_STRING([--disable-mutool], [Disable filters using mutool.])],
+	[enable_mutool="$enableval"],
+	[enable_mutool=yes]
+)
+
+AC_ARG_WITH([mutool-path],
+	[AS_HELP_STRING([--with-mutool-path=value], [Set path to mutool binary (default: system).])],
+	[with_mutool_path="$withval"],
+	[with_mutool_path=system]
+)
+
+# ================
 # Check for pdf2ps
 # ================
 AC_ARG_ENABLE([ghostscript],
@@ -480,12 +500,12 @@ AS_IF([test "x$enable_ijs" = "xyes" -a "x$have_ijs" != "xyes"], [
 ])
 AM_CONDITIONAL(ENABLE_IJS, test "x$enable_ijs" = "xyes")
 AC_ARG_WITH([pdftops],
-	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread,hybrid).])],
+	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread,mupdf,hybrid).])],
 	[with_pdftops="$withval"],
 	[with_pdftops=hybrid]
 )
 AS_CASE([x$with_pdftops],
-        [xgs|xpdftops|xpdftocairo|xacroread|xhybrid], [],
+        [xgs|xpdftops|xpdftocairo|xacroread|xmupdf|xhybrid], [],
         [AC_MSG_ERROR([Unknown value of with-pdftops provided: $with_pdftops])]
 )
 AC_ARG_WITH([gs-path],
@@ -550,10 +570,28 @@ AS_IF([test "x$enable_ghostscript" != "xyes"], [
 AM_CONDITIONAL(ENABLE_GHOSTSCRIPT, test "x$enable_ghostscript" = xyes)
 AC_SUBST(CUPS_GHOSTSCRIPT)
 
+CUPS_MUTOOL=""
+AS_IF([test "x$enable_mutool" != "xyes"], [
+	AS_IF([test "x$with_mutool_path" != "xsystem"], [
+	       AC_MSG_ERROR([Cannot supply both --disable-mutool and --mutool-path=])
+	], [
+		with_mutool_path=""
+	])
+], [
+	AS_IF([test "x$with_mutool_path" != "xsystem"], [
+		CUPS_MUTOOL="$with_mutool_path"
+	], [
+		AC_PATH_PROG(CUPS_MUTOOL, [mutool], [AC_MSG_ERROR([Required mutool binary is missing. Please install mutool.])])
+	])
+	AS_IF([test x"$with_pdftops" = xmupdf], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [MUPDF], [Define default renderer])])
+])
+AM_CONDITIONAL(ENABLE_MUTOOL, test "x$enable_mutool" = xyes)
+AC_SUBST(CUPS_MUTOOL)
+
 AS_IF([test "x$with_pdftops_path" != "xsystem"], [
 	CUPS_PDFTOPS="$with_pdftops_path"
 ], [
-	AC_PATH_PROG(CUPS_PDFTOPS, [pdftops], [AC_MSG_ERROR([Required pdftops is missing. Please install CUPS developer packages.])])
+	AC_PATH_PROG(CUPS_PDFTOPS, [pdftops], [AC_MSG_ERROR([Required pdftops is missing. Please install the pdftops utility of Poppler.])])
 ])
 AS_IF([test "x$CUPS_PDFTOPS" != "x"], [
 	AC_DEFINE([HAVE_POPPLER_PDFTOPS], [], [Define that we provide poppler pdftops.])
@@ -604,6 +642,7 @@ AS_IF([test "x$CUPS_GHOSTSCRIPT" != "x" -a "x$CUPS_PDFTOPS" != "x"], [
 ])
 
 AC_DEFINE_UNQUOTED([CUPS_GHOSTSCRIPT], "$CUPS_GHOSTSCRIPT", [gs binary to use])
+AC_DEFINE_UNQUOTED([CUPS_MUTOOL],"$CUPS_MUTOOL",[mutool binary to use])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOPS], "$CUPS_PDFTOPS", [pdftops binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOCAIRO], "$CUPS_PDFTOCAIRO", [pdftocairo binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_ACROREAD], "$CUPS_ACROREAD", [acroread binary to use.])
@@ -744,8 +783,11 @@ Build configuration:
 	foomatic:        ${enable_foomatic}
 	init directory:  ${INITDDIR}
 	cups dom socket: ${CUPS_DEFAULT_DOMAINSOCKET}
+	poppler:         ${enable_poppler}
 	ghostscript:     ${enable_ghostscript}
 	gs-path:         ${with_gs_path}
+	mutool:          ${enable_mutool}
+	mutool-path:     ${with_mutool_path}
 	imagefilters:    ${enable_imagefilters}
 	jpeg:            ${with_jpeg}
 	pdftocairo-path: ${with_pdftocairo_path}

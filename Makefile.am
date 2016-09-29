@@ -68,7 +68,9 @@ test1284_CFLAGS = $(CUPS_CFLAGS)
 # Banners
 # =======
 pkgbannerdir = $(CUPS_DATADIR)/banners
-pkgbanner_DATA = \
+pkgbanner_DATA =
+if ENABLE_POPPLER
+pkgbanner_DATA += \
 	banners/classified \
 	banners/confidential \
 	banners/secret \
@@ -76,7 +78,7 @@ pkgbanner_DATA = \
 	banners/form \
 	banners/topsecret \
 	banners/unclassified
-
+endif
 EXTRA_DIST += $(pkgbanner_DATA)
 
 # ========
@@ -292,9 +294,17 @@ pkgmimedir = $(CUPS_DATADIR)/mime
 pkgmime_DATA = \
 	mime/cupsfilters.convs \
 	mime/cupsfilters.types
+if ENABLE_POPPLER
+pkgmime_DATA += \
+	mime/cupsfilters-poppler.convs
+endif
 if ENABLE_GHOSTSCRIPT
 pkgmime_DATA += \
 	mime/cupsfilters-ghostscript.convs
+endif
+if ENABLE_MUTOOL
+pkgmime_DATA += \
+	mime/cupsfilters-mupdf.convs
 endif
 if ENABLE_BRAILLE
 pkgmime_DATA += \
@@ -382,11 +392,16 @@ EXTRA_DIST += \
 	$(pkgfontembedinclude_DATA) \
 	fontembed/README
 
+pkgfilter_PROGRAMS =
+
 # ===========
 # PDF to OPVP
 # ===========
 pkgfilterdir = $(CUPS_SERVERBIN)/filter
-pkgfilter_PROGRAMS = pdftoopvp
+if ENABLE_POPPLER
+pkgfilter_PROGRAMS += \
+	pdftoopvp
+endif
 
 pkgfontconfigdir = $(sysconfdir)/$(FONTDIR)
 pkgfontconfig_DATA = filter/pdftoopvp/99pdftoopvp.conf
@@ -490,26 +505,33 @@ nodist_pkgfilter_SCRIPTS = \
 	filter/braille/filters/texttobrf
 endif
 pkgfilter_PROGRAMS += \
-	bannertopdf \
 	commandtoescpx \
 	commandtopclx \
 	sys5ippprinter \
 	texttotext \
 	pdftops \
-	pdftoraster \
 	rastertoescpx \
 	rastertopclx \
 	texttopdf \
 	urftopdf \
 	rastertopdf \
 	rastertops
+if ENABLE_POPPLER
+pkgfilter_PROGRAMS += \
+	bannertopdf \
+	pdftoraster
 if ENABLE_IJS
 pkgfilter_PROGRAMS += \
 	pdftoijs
 endif
+endif
 if ENABLE_GHOSTSCRIPT
 pkgfilter_PROGRAMS += \
 	gstoraster
+endif
+if ENABLE_MUTOOL
+pkgfilter_PROGRAMS += \
+	mupdftoraster
 endif
 if ENABLE_FOOMATIC
 pkgfilter_PROGRAMS += \
@@ -602,6 +624,7 @@ foomatic_rip_CFLAGS = \
 	-DCONFIG_PATH='"$(sysconfdir)/foomatic"' \
 	-I$(srcdir)/cupsfilters/
 foomatic_rip_LDADD = \
+	$(CUPS_LIBS) \
 	-lm \
 	libcupsfilters.la
 
@@ -669,6 +692,15 @@ rastertopdf_LDADD = \
 	$(LCMS_LIBS) \
 	$(LIBQPDF_LIBS) \
 	libcupsfilters.la
+
+mupdftoraster_SOURCES = \
+        filter/mupdftoraster.c
+mupdftoraster_CFLAGS = \
+        $(CUPS_CFLAGS) \
+        -I$(srcdir)/cupsfilters/
+mupdftoraster_LDADD = \
+        $(CUPS_LIBS) \
+        libcupsfilters.la
 
 rastertops_SOURCES = \
 	filter/rastertops.c
@@ -872,9 +904,11 @@ ppd_DATA = \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/Ricoh-PDF_Printer-PDF.ppd
+if ENABLE_POPPLER
 if ENABLE_IJS
 ppd_DATA += \
 	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
+endif
 endif
 if ENABLE_GHOSTSCRIPT
 ppd_DATA += \

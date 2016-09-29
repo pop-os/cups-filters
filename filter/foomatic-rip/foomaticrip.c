@@ -152,11 +152,13 @@ char cupsfilter[256];
 char **jclprepend = NULL;
 dstr_t *jclappend;
 
-/* Set debug to 1 to enable the debug logfile for this filter; it will appear
- * as defined by LOG_FILE. It will contain status from this filter, plus the
- * renderer's stderr output. You can also add a line "debug: 1" to your
- * /etc/foomatic/filter.conf to get all your Foomatic filters into debug mode.
- * WARNING: This logfile is a security hole; do not use in production. */
+/* Set debug to 1 to enable the debug logfile for this filter; it will
+ * appear as defined by LOG_FILE. It will contain status from this
+ * filter, plus the renderer's stderr output. You can also add a line
+ * "debug: 1" to your /etc/cups/foomatic-rip.conf or
+ * /etc/foomatic/filter.conf to get all your Foomatic filters into
+ * debug mode.  WARNING: This logfile is a security hole; do not use
+ * in production. */
 int debug = 0;
 
 /* Path to the GhostScript which foomatic-rip shall use */
@@ -198,7 +200,7 @@ void config_set_option(const char *key, const char *value)
         strlcpy(echopath, value, PATH_MAX);
 }
 
-void config_from_file(const char *filename)
+int config_from_file(const char *filename)
 {
     FILE *fh;
     char line[256];
@@ -206,7 +208,7 @@ void config_from_file(const char *filename)
 
     fh = fopen(filename, "r");
     if (fh == NULL)
-        return; /* no error here, only read config file if it is present */
+        return 0;
 
     while (fgets(line, 256, fh) != NULL)
     {
@@ -217,6 +219,8 @@ void config_from_file(const char *filename)
         config_set_option(key, value);
     }
     fclose(fh);
+
+    return 1;
 }
 
 const char * get_modern_shell()
@@ -630,6 +634,10 @@ int print_file(const char *filename, int convert)
 		   The "-dNOINTERPOLATE" makes Ghostscript rendering
 		   significantly faster.
 
+		   The "-dNOMEDIAATTRS" makes Ghostscript not checking the
+		   page sizes against a list of known sizes and try to
+		   correct them.
+
 		   Note that Ghostscript's "pswrite" output device turns text
 		   into bitmaps and therefore produces huge PostScript files.
 		   In addition, this output device is deprecated. Therefore
@@ -645,7 +653,7 @@ int print_file(const char *filename, int convert)
 		else
 		  snprintf(pdf2ps_cmd, CMDLINE_MAX,
 			   "gs -q -sstdout=%%stderr -sDEVICE=ps2write -sOutputFile=- "
-			   "-dBATCH -dNOPAUSE -dPARANOIDSAFER -dNOINTERPOLATE %s 2>/dev/null || "
+			   "-dBATCH -dNOPAUSE -dPARANOIDSAFER -dNOINTERPOLATE -dNOMEDIAATTRS %s 2>/dev/null || "
 			   "pdftops -level2 -origpagesizes %s - 2>/dev/null",
 			   filename, filename);
 
@@ -717,7 +725,6 @@ int main(int argc, char** argv)
     const char* str;
     char *p, *filename;
     const char *path;
-    FILE *ppdfh = NULL;
     char tmp[1024], gstoraster[256];
     int havefilter, havegstoraster;
     dstr_t *filelist;
@@ -745,8 +752,16 @@ int main(int argc, char** argv)
     signal(SIGTERM, signal_terminate);
     signal(SIGINT, signal_terminate);
 
-
-    config_from_file(CONFIG_PATH "/filter.conf");
+    /* First try to find a config file in the CUS config directory, like
+       /etc/cups/foomatic-rip.conf */
+    i = 0;
+    if ((str = getenv("CUPS_SERVERROOT")) != NULL) {
+	snprintf(tmp, sizeof(tmp), "%s/foomatic-rip.conf", str);
+	i = config_from_file(tmp);
+    }
+    /* If there is none, fall back to /etc/foomatic/filter.conf */
+    if (i == 0) 
+        i = config_from_file(CONFIG_PATH "/filter.conf");
 
     /* Command line options for verbosity */
     if (arglist_remove_flag(arglist, "-v"))
@@ -796,6 +811,9 @@ int main(int argc, char** argv)
     if (getenv("PPD")) {
         strncpy(job->ppdfile, getenv("PPD"), 256);
         spooler = SPOOLER_CUPS;
+	if (getenv("CUPS_SERVERBIN"))
+	    strncpy(cupsfilterpath, getenv("CUPS_SERVERBIN"),
+		    sizeof(cupsfilterpath));
     }
 
     /* Check status of printer color management from the color manager */
@@ -911,10 +929,12 @@ int main(int argc, char** argv)
     /* PPD File */
     /* Load the PPD file and build a data structure for the renderer's
        command line and the options */
-    if (!(ppdfh = fopen(job->ppdfile, "r")))
-        rip_die(EXIT_PRNERR_NORETRY_BAD_SETTINGS, "Unable to open PPD file %s\n", job->ppdfile);
-
-    read_ppd_file(job->ppdfile);
+    if (spooler == SPOOLER_CUPS && job->printer && strlen(job->printer) > 0) {
+      str = cupsGetPPD(job->printer);
+      read_ppd_file(str);
+      unlink(str);
+    } else 
+      read_ppd_file(job->ppdfile);
 
     /* We do not need to parse the PostScript job when we don't have
        any options. If we have options, we must check whether the
@@ -977,7 +997,8 @@ int main(int argc, char** argv)
                   _log("INFO: Using qualifer: '%s.%s.%s'\n",
                         qualifier[0], qualifier[1], qualifier[2]);
 
-                  cmGetPrinterIccProfile(getenv("PRINTER"), &icc_profile, 0);
+                  cmGetPrinterIccProfile(getenv("PRINTER"),
+					 (char **)&icc_profile, 0);
 
                   /* fall back to PPD */
                   if (icc_profile == NULL) {
