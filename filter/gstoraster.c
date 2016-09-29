@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2008-2013, Till Kamppeter
+Copyright (c) 2008-2016, Till Kamppeter
 Copyright (c) 2011, Tim Waugh
 Copyright (c) 2011-2013, Richard Hughes
 
@@ -49,13 +49,6 @@ MIT Open Source License  -  http://www.opensource.org/
 #include <errno.h>
 
 #define PDF_MAX_CHECK_COMMENT_LINES	20
-
-#ifndef CUPS_FONTPATH
-#define CUPS_FONTPATH "/usr/share/cups/fonts"
-#endif
-#ifndef CUPSDATA
-#define CUPSDATA "/usr/share/cups"
-#endif
 
 typedef enum {
   GS_DOC_TYPE_PDF,
@@ -561,6 +554,7 @@ get_ppd_icc_fallback (ppd_file_t *ppd, char **qualifier)
   char qualifer_tmp[1024];
   const char *profile_key;
   ppd_attr_t *attr;
+  char *datadir;
 
   /* get profile attr, falling back to CUPS */
   profile_key = "APTiogaProfile";
@@ -583,6 +577,9 @@ get_ppd_icc_fallback (ppd_file_t *ppd, char **qualifier)
     goto out;
   }
 
+  if ((datadir = getenv("CUPS_DATADIR")) == NULL)
+    datadir = CUPS_DATADIR;
+
   /* try to find a profile that matches the qualifier exactly */
   for (;attr != NULL; attr = ppdFindNextAttr(ppd, profile_key, NULL)) {
     fprintf(stderr, "INFO: found profile %s in PPD with qualifier '%s'\n",
@@ -595,7 +592,7 @@ get_ppd_icc_fallback (ppd_file_t *ppd, char **qualifier)
     /* expand to a full path if not already specified */
     if (attr->value[0] != '/')
       snprintf(full_path, sizeof(full_path),
-               "%s/profiles/%s", CUPSDATA, attr->value);
+               "%s/profiles/%s", datadir, attr->value);
     else
       strncpy(full_path, attr->value, sizeof(full_path));
 
@@ -773,8 +770,7 @@ main (int argc, char **argv, char *envp[])
   cupsArrayAdd(gs_args, strdup("-dNOPAUSE"));
   cupsArrayAdd(gs_args, strdup("-dBATCH"));
   cupsArrayAdd(gs_args, strdup("-dNOINTERPOLATE"));
-  if (doc_type == GS_DOC_TYPE_PS)
-    cupsArrayAdd(gs_args, strdup("-dNOMEDIAATTRS"));
+  cupsArrayAdd(gs_args, strdup("-dNOMEDIAATTRS"));
   if (cm_disabled)
     cupsArrayAdd(gs_args, strdup("-dUseFastColor"));
   cupsArrayAdd(gs_args, strdup("-sstdout=%stderr"));
@@ -867,6 +863,8 @@ main (int argc, char **argv, char *envp[])
       h.HWResolution[0] = 300;
       h.HWResolution[1] = 300;
     }
+    h.cupsWidth = h.HWResolution[0] * h.PageSize[0] / 72;
+    h.cupsHeight = h.HWResolution[1] * h.PageSize[1] / 72;
   }
 
   /* set PDF-specific options */
@@ -910,6 +908,27 @@ main (int argc, char **argv, char *envp[])
     snprintf(tmpstr, sizeof(tmpstr), "<</cupsProfile(%s)>>setpagedevice", t);
     cupsArrayAdd(gs_args, strdup(tmpstr));
   }
+
+  /* Do we have a "center-of-pixel" command line option or
+     "CenterOfPixel" PPD option set to "true"? In this case let
+     Ghostscript use the center-of-pixel rule instead of the
+     PostScript-standard any-part-of-pixel rule when filling a
+     path. This improves the accuracy of graphics (like bar codes for
+     example) on low-resolution printers (like label printers with
+     typically 203 dpi). See
+     https://bugs.linuxfoundation.org/show_bug.cgi?id=1373 */
+  if (((t = cupsGetOption("CenterOfPixel", num_options, options)) == NULL &&
+       (t = cupsGetOption("center-of-pixel", num_options, options)) == NULL &&
+       ppd && (attr = ppdFindAttr(ppd,"DefaultCenterOfPixel", NULL)) != NULL &&
+       (!strcasecmp(attr->value, "true") ||
+	!strcasecmp(attr->value, "on") ||
+	!strcasecmp(attr->value, "yes"))) ||
+      (t && (!strcasecmp(t, "true") || !strcasecmp(t, "on") ||
+	     !strcasecmp(t, "yes")))) {
+    fprintf(stderr, "DEBUG: Ghostscript using Center-of-Pixel method to fill paths.\n");
+    cupsArrayAdd(gs_args, strdup("0 .setfilladjust"));
+  } else
+    fprintf(stderr, "DEBUG: Ghostscript using Any-Part-of-Pixel method to fill paths.\n");
 
   /* Mark the end of PostScript commands supplied on the Ghostscript command
      line (with the "-c" option), so that we can supply the input file name */

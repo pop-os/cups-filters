@@ -1,3 +1,33 @@
+cups-filters (1.11.4-1) unstable; urgency=medium
+
+  * New 1.11.4 upstream release
+    - cups-browsed: Cleaned up HTTP access to local and remote
+      CUPS servers and IPP printers, to assure that the local CUPS
+      daemon is always accessed the same (user-defined) way
+      (domain socket/localhost:port). This especially prevents
+      cups-browsed hanging on shutdown (Closes: #832637).
+    - Added support for MuPDF as PDF renderer. MuPDF is a lightweight
+      renderer especially interesting for mobile devices.
+    - cups-browsed: Fixed several memory leaks, especially when
+      using IPP requests and DNS-SD TXT record look-ups. Thanks to
+      Ivo Straka for finding them with Valgrind and supplying
+      patches to fix them (Upstream bug #1365, Upstream bug #1368,
+      LP: #1203276).
+    - beh: Fixed printing multiple copies with beh (LP: #1605514).
+    - libcupsfilters: Added missing "#include <cups/ppd.h>" to make
+      sure that the package builds on all systems (Bug #1366,
+      Closes: #838972)
+    - README: Added documentation for the pdfAutorotate option in
+      pdftopdf (Closes: #824419)
+
+  [ Till Kamppeter ]
+  * Update debian/copyright and added the new upstream files to the appropriate
+    binary packages
+  * Added rules to AppArmor profile to allow cups-browsed to do its debug log
+    and to access PPDs for saving options.
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 29 Sep 2016 23:22:14 +0200
+
 cups-filters (1.10.0-1) unstable; urgency=medium
 
   * New upstream release

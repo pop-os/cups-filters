@@ -97,16 +97,25 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	testdither$(EXEEXT) testimage$(EXEEXT) testrgb$(EXEEXT) \
 	test_analyze$(EXEEXT) test_pdf$(EXEEXT) test_ps$(EXEEXT) \
 	test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
+@ENABLE_POPPLER_TRUE@am__append_1 = \
+@ENABLE_POPPLER_TRUE@	banners/classified \
+@ENABLE_POPPLER_TRUE@	banners/confidential \
+@ENABLE_POPPLER_TRUE@	banners/secret \
+@ENABLE_POPPLER_TRUE@	banners/standard \
+@ENABLE_POPPLER_TRUE@	banners/form \
+@ENABLE_POPPLER_TRUE@	banners/topsecret \
+@ENABLE_POPPLER_TRUE@	banners/unclassified
+
 TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
-@BUILD_DBUS_TRUE@am__append_1 = $(DBUS_CFLAGS) -DHAVE_DBUS
-@BUILD_DBUS_TRUE@am__append_2 = $(DBUS_LIBS)
-@ENABLE_BRAILLE_TRUE@am__append_3 = \
+@BUILD_DBUS_TRUE@am__append_2 = $(DBUS_CFLAGS) -DHAVE_DBUS
+@BUILD_DBUS_TRUE@am__append_3 = $(DBUS_LIBS)
+@ENABLE_BRAILLE_TRUE@am__append_4 = \
 @ENABLE_BRAILLE_TRUE@	drv/generic-brf.drv \
 @ENABLE_BRAILLE_TRUE@	drv/indexv3.drv \
 @ENABLE_BRAILLE_TRUE@	drv/indexv4.drv
 
-@ENABLE_BRAILLE_TRUE@am__append_4 = \
+@ENABLE_BRAILLE_TRUE@am__append_5 = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/media-braille.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/braille.defs \
@@ -115,47 +124,63 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_5 = \
+@ENABLE_POPPLER_TRUE@am__append_6 = \
+@ENABLE_POPPLER_TRUE@	mime/cupsfilters-poppler.convs
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	mime/cupsfilters-ghostscript.convs
 
-@ENABLE_BRAILLE_TRUE@am__append_6 = \
+@ENABLE_MUTOOL_TRUE@am__append_8 = \
+@ENABLE_MUTOOL_TRUE@	mime/cupsfilters-mupdf.convs
+
+@ENABLE_BRAILLE_TRUE@am__append_9 = \
 @ENABLE_BRAILLE_TRUE@	mime/braille.convs \
 @ENABLE_BRAILLE_TRUE@	mime/braille.types
 
 bin_PROGRAMS = ttfread$(EXEEXT)
-pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
-	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
-	commandtopclx$(EXEEXT) sys5ippprinter$(EXEEXT) \
-	texttotext$(EXEEXT) pdftops$(EXEEXT) pdftoraster$(EXEEXT) \
+pkgfilter_PROGRAMS = $(am__EXEEXT_1) pdftopdf$(EXEEXT) \
+	commandtoescpx$(EXEEXT) commandtopclx$(EXEEXT) \
+	sys5ippprinter$(EXEEXT) texttotext$(EXEEXT) pdftops$(EXEEXT) \
 	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
 	texttopdf$(EXEEXT) urftopdf$(EXEEXT) rastertopdf$(EXEEXT) \
-	rastertops$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4)
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
+	rastertops$(EXEEXT) $(am__EXEEXT_2) $(am__EXEEXT_3) \
+	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6) \
+	$(am__EXEEXT_7)
+@ENABLE_POPPLER_TRUE@am__append_10 = \
+@ENABLE_POPPLER_TRUE@	pdftoopvp
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopxl \
 @ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopdf
 
-@ENABLE_IJS_TRUE@am__append_8 = \
-@ENABLE_IJS_TRUE@	pdftoijs
+@ENABLE_POPPLER_TRUE@am__append_12 = \
+@ENABLE_POPPLER_TRUE@	bannertopdf \
+@ENABLE_POPPLER_TRUE@	pdftoraster
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_9 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_13 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_14 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_10 = \
+@ENABLE_MUTOOL_TRUE@am__append_15 = \
+@ENABLE_MUTOOL_TRUE@	mupdftoraster
+
+@ENABLE_FOOMATIC_TRUE@am__append_16 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_11 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_17 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__append_12 = \
+@ENABLE_FOOMATIC_TRUE@am__append_18 = \
 @ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
 
-@ENABLE_IJS_TRUE@am__append_13 = \
-@ENABLE_IJS_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_19 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_14 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_20 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
 
@@ -284,10 +309,15 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libphpcups_la_CFLAGS) \
 	$(CFLAGS) $(libphpcups_la_LDFLAGS) $(LDFLAGS) -o $@
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
-@ENABLE_IJS_TRUE@am__EXEEXT_1 = pdftoijs$(EXEEXT)
-@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_2 = gstoraster$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__EXEEXT_3 = foomatic-rip$(EXEEXT)
-@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_4 = imagetopdf$(EXEEXT) \
+@ENABLE_POPPLER_TRUE@am__EXEEXT_1 = pdftoopvp$(EXEEXT)
+@ENABLE_POPPLER_TRUE@am__EXEEXT_2 = bannertopdf$(EXEEXT) \
+@ENABLE_POPPLER_TRUE@	pdftoraster$(EXEEXT)
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_3 =  \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs$(EXEEXT)
+@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_4 = gstoraster$(EXEEXT)
+@ENABLE_MUTOOL_TRUE@am__EXEEXT_5 = mupdftoraster$(EXEEXT)
+@ENABLE_FOOMATIC_TRUE@am__EXEEXT_6 = foomatic-rip$(EXEEXT)
+@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_7 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
@@ -334,7 +364,7 @@ am_foomatic_rip_OBJECTS = foomatic_rip-foomaticrip.$(OBJEXT) \
 	foomatic_rip-process.$(OBJEXT) foomatic_rip-renderer.$(OBJEXT) \
 	foomatic_rip-spooler.$(OBJEXT) foomatic_rip-util.$(OBJEXT)
 foomatic_rip_OBJECTS = $(am_foomatic_rip_OBJECTS)
-foomatic_rip_DEPENDENCIES = libcupsfilters.la
+foomatic_rip_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 foomatic_rip_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(foomatic_rip_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -364,6 +394,12 @@ implicitclass_OBJECTS = $(am_implicitclass_OBJECTS)
 implicitclass_DEPENDENCIES = $(am__DEPENDENCIES_1)
 implicitclass_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(implicitclass_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_mupdftoraster_OBJECTS = mupdftoraster-mupdftoraster.$(OBJEXT)
+mupdftoraster_OBJECTS = $(am_mupdftoraster_OBJECTS)
+mupdftoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
+mupdftoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mupdftoraster_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_parallel_OBJECTS = parallel-ieee1284.$(OBJEXT) \
 	parallel-parallel.$(OBJEXT)
@@ -593,12 +629,12 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(cups_browsed_SOURCES) $(nodist_cups_browsed_SOURCES) \
 	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(implicitclass_SOURCES) $(parallel_SOURCES) \
-	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
-	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
-	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
-	$(rastertopclx_SOURCES) $(rastertopdf_SOURCES) \
-	$(rastertops_SOURCES) $(serial_SOURCES) \
+	$(implicitclass_SOURCES) $(mupdftoraster_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
+	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
+	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
 	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
 	$(test1284_SOURCES) $(test_analyze_SOURCES) \
 	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
@@ -613,11 +649,12 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(cups_browsed_SOURCES) $(foomatic_rip_SOURCES) \
 	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
 	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
+	$(mupdftoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(rastertopdf_SOURCES) \
+	$(rastertops_SOURCES) $(serial_SOURCES) \
 	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
 	$(test1284_SOURCES) $(test_analyze_SOURCES) \
 	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
@@ -900,6 +937,7 @@ CUPS_DEFAULT_DOMAINSOCKET = @CUPS_DEFAULT_DOMAINSOCKET@
 CUPS_FONTPATH = @CUPS_FONTPATH@
 CUPS_GHOSTSCRIPT = @CUPS_GHOSTSCRIPT@
 CUPS_LIBS = @CUPS_LIBS@
+CUPS_MUTOOL = @CUPS_MUTOOL@
 CUPS_PDFTOCAIRO = @CUPS_PDFTOCAIRO@
 CUPS_PDFTOPS = @CUPS_PDFTOPS@
 CUPS_SERVERBIN = @CUPS_SERVERBIN@
@@ -1128,15 +1166,7 @@ test1284_CFLAGS = $(CUPS_CFLAGS)
 # Banners
 # =======
 pkgbannerdir = $(CUPS_DATADIR)/banners
-pkgbanner_DATA = \
-	banners/classified \
-	banners/confidential \
-	banners/secret \
-	banners/standard \
-	banners/form \
-	banners/topsecret \
-	banners/unclassified
-
+pkgbanner_DATA = $(am__append_1)
 
 # ========
 # Charsets
@@ -1202,9 +1232,9 @@ libcupsfilters_la_SOURCES = \
 	$(pkgfiltersinclude_DATA)
 
 libcupsfilters_la_LIBADD = $(CUPS_LIBS) $(LIBJPEG_LIBS) $(LIBPNG_LIBS) \
-	$(TIFF_LIBS) -lm $(am__append_2)
+	$(TIFF_LIBS) -lm $(am__append_3)
 libcupsfilters_la_CFLAGS = $(CUPS_CFLAGS) $(LIBJPEG_CFLAGS) \
-	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_1)
+	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_2)
 libcupsfilters_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1
@@ -1282,13 +1312,13 @@ pkgcupsserverroot_DATA = \
 # Drivers
 # =======
 pkgdriverdir = $(CUPS_DATADIR)/drv
-pkgdriver_DATA = drv/cupsfilters.drv $(am__append_3)
+pkgdriver_DATA = drv/cupsfilters.drv $(am__append_4)
 
 # =======
 # Definitions for drivers
 # =======
 pkgppdcdir = $(CUPS_DATADIR)/ppdc
-pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_4)
+pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_5)
 @ENABLE_BRAILLE_TRUE@GENERATED_LIBLOUIS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis2.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis3.defs \
@@ -1304,7 +1334,8 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_4)
 # =====
 pkgmimedir = $(CUPS_DATADIR)/mime
 pkgmime_DATA = mime/cupsfilters.convs mime/cupsfilters.types \
-	$(am__append_5) $(am__append_6)
+	$(am__append_6) $(am__append_7) $(am__append_8) \
+	$(am__append_9)
 
 # =================
 # Braille aux files
@@ -1449,7 +1480,7 @@ pdftopdf_LDADD = \
 # ======================
 # Simple filter binaries
 # ======================
-pkgfilter_SCRIPTS = filter/imagetops filter/texttops $(am__append_7)
+pkgfilter_SCRIPTS = filter/imagetops filter/texttops $(am__append_11)
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
@@ -1536,6 +1567,7 @@ foomatic_rip_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 
 foomatic_rip_LDADD = \
+	$(CUPS_LIBS) \
 	-lm \
 	libcupsfilters.la
 
@@ -1613,6 +1645,17 @@ rastertopdf_LDADD = \
 	$(LCMS_LIBS) \
 	$(LIBQPDF_LIBS) \
 	libcupsfilters.la
+
+mupdftoraster_SOURCES = \
+        filter/mupdftoraster.c
+
+mupdftoraster_CFLAGS = \
+        $(CUPS_CFLAGS) \
+        -I$(srcdir)/cupsfilters/
+
+mupdftoraster_LDADD = \
+        $(CUPS_LIBS) \
+        libcupsfilters.la
 
 rastertops_SOURCES = \
 	filter/rastertops.c
@@ -1795,7 +1838,7 @@ cups_browsed_LDADD = \
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
-	$(am__append_12)
+	$(am__append_18)
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1806,8 +1849,8 @@ ppddir = $(datadir)/ppd/cupsfilters
 ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_13) \
-	$(am__append_14)
+	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_19) \
+	$(am__append_20)
 
 # =========
 # Scripting
@@ -2229,6 +2272,10 @@ implicitclass$(EXEEXT): $(implicitclass_OBJECTS) $(implicitclass_DEPENDENCIES) $
 	@rm -f implicitclass$(EXEEXT)
 	$(AM_V_CCLD)$(implicitclass_LINK) $(implicitclass_OBJECTS) $(implicitclass_LDADD) $(LIBS)
 
+mupdftoraster$(EXEEXT): $(mupdftoraster_OBJECTS) $(mupdftoraster_DEPENDENCIES) $(EXTRA_mupdftoraster_DEPENDENCIES) 
+	@rm -f mupdftoraster$(EXEEXT)
+	$(AM_V_CCLD)$(mupdftoraster_LINK) $(mupdftoraster_OBJECTS) $(mupdftoraster_LDADD) $(LIBS)
+
 parallel$(EXEEXT): $(parallel_OBJECTS) $(parallel_DEPENDENCIES) $(EXTRA_parallel_DEPENDENCIES) 
 	@rm -f parallel$(EXEEXT)
 	$(AM_V_CCLD)$(parallel_LINK) $(parallel_OBJECTS) $(parallel_LDADD) $(LIBS)
@@ -2536,6 +2583,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-srgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libphpcups_la-phpcups.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mupdftoraster-mupdftoraster.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-ieee1284.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-parallel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoijs-pdftoijs.Po@am__quote@
@@ -3169,6 +3217,20 @@ implicitclass-implicitclass.obj: backend/implicitclass.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backend/implicitclass.c' object='implicitclass-implicitclass.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(implicitclass_CFLAGS) $(CFLAGS) -c -o implicitclass-implicitclass.obj `if test -f 'backend/implicitclass.c'; then $(CYGPATH_W) 'backend/implicitclass.c'; else $(CYGPATH_W) '$(srcdir)/backend/implicitclass.c'; fi`
+
+mupdftoraster-mupdftoraster.o: filter/mupdftoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mupdftoraster_CFLAGS) $(CFLAGS) -MT mupdftoraster-mupdftoraster.o -MD -MP -MF $(DEPDIR)/mupdftoraster-mupdftoraster.Tpo -c -o mupdftoraster-mupdftoraster.o `test -f 'filter/mupdftoraster.c' || echo '$(srcdir)/'`filter/mupdftoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mupdftoraster-mupdftoraster.Tpo $(DEPDIR)/mupdftoraster-mupdftoraster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/mupdftoraster.c' object='mupdftoraster-mupdftoraster.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mupdftoraster_CFLAGS) $(CFLAGS) -c -o mupdftoraster-mupdftoraster.o `test -f 'filter/mupdftoraster.c' || echo '$(srcdir)/'`filter/mupdftoraster.c
+
+mupdftoraster-mupdftoraster.obj: filter/mupdftoraster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mupdftoraster_CFLAGS) $(CFLAGS) -MT mupdftoraster-mupdftoraster.obj -MD -MP -MF $(DEPDIR)/mupdftoraster-mupdftoraster.Tpo -c -o mupdftoraster-mupdftoraster.obj `if test -f 'filter/mupdftoraster.c'; then $(CYGPATH_W) 'filter/mupdftoraster.c'; else $(CYGPATH_W) '$(srcdir)/filter/mupdftoraster.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/mupdftoraster-mupdftoraster.Tpo $(DEPDIR)/mupdftoraster-mupdftoraster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/mupdftoraster.c' object='mupdftoraster-mupdftoraster.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mupdftoraster_CFLAGS) $(CFLAGS) -c -o mupdftoraster-mupdftoraster.obj `if test -f 'filter/mupdftoraster.c'; then $(CYGPATH_W) 'filter/mupdftoraster.c'; else $(CYGPATH_W) '$(srcdir)/filter/mupdftoraster.c'; fi`
 
 parallel-ieee1284.o: backend/ieee1284.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(parallel_CFLAGS) $(CFLAGS) -MT parallel-ieee1284.o -MD -MP -MF $(DEPDIR)/parallel-ieee1284.Tpo -c -o parallel-ieee1284.o `test -f 'backend/ieee1284.c' || echo '$(srcdir)/'`backend/ieee1284.c

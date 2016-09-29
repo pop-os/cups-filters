@@ -9,8 +9,10 @@
 
   /etc/cups/cups-browsed.conf r,
   /etc/cups/lpoptions r,
+  /etc/cups/ppd/* r,
   /{var/,}run/cups/certs/* r,
   /var/cache/cups/* rw,
+  /var/log/cups/* rw,
   /tmp/** rw,
 
   # Site-specific additions and overrides. See local/README for details.
