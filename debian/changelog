@@ -1,3 +1,16 @@
+cups-filters (1.11.4-0ubuntu2) yakkety; urgency=medium
+
+  * pdftopdf: Count the actual output pages also if the
+    number-up option is not used, to correctly find out whether
+    we have an even or odd number of pages, even if the
+    page-ranges option is used. This is needed to correctly
+    decide whether for duplex printing a blank page has to be
+    added (Upstream bug #1377).
+  * foomatic-rip: Replace old manpage macro calls from
+    foomatic-filters 3.0.2-20050114.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed,  5 Oct 2016 12:55:06 -0300
+
 cups-filters (1.11.4-0ubuntu1) yakkety; urgency=medium
 
   * New upstream release
