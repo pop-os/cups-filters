@@ -3032,14 +3032,15 @@ create_local_queue (const char *name,
 	 ((!strcasestr(pdl, "application/vnd.hp-PCL") &&
 	   !strcasestr(pdl, "application/PCL") &&
 	   !strcasestr(pdl, "application/x-pcl")) ||
-	  ((strncasecmp(make_model, "HP", 2) ||
-	    strncasecmp(make_model, "Hewlett Packard", 15) ||
-	    strncasecmp(make_model, "Hewlett-Packard", 15)) &&
+	  ((!strncasecmp(make_model, "HP", 2) || /* HP inkjets not supported */
+	    !strncasecmp(make_model, "Hewlett Packard", 15) ||
+	    !strncasecmp(make_model, "Hewlett-Packard", 15)) &&
 	   !strcasestr(make_model, "LaserJet") &&
 	   !strcasestr(make_model, "Mopier"))) &&
 	 !strcasestr(pdl, "application/vnd.hp-PCLXL"))) {
-      debug_printf("Cannot create remote printer %s (%s) as its PDLs are not known, ignoring this printer.\n",
-		   p->name, p->uri);
+      debug_printf("Cannot create remote printer %s (URI: %s, Model: %s, Accepted data formats: %s) as its PDLs are not known, ignoring this printer.\n",
+		   p->name, p->uri, make_model, pdl);
+      debug_printf("Supported PDLs: PWG Raster, PostScript, PDF, PCL XL, PCL 5c/e (HP inkjets report themselves as PCL printers but their PCL is not supported)\n");
       goto fail;
     }
 
@@ -3337,9 +3338,9 @@ remove_bad_chars(const char *str_orig, /* I - Original string */
     if (((str[i] >= 'A') && (str[i] <= 'Z')) ||
 	((str[i] >= 'a') && (str[i] <= 'z')) ||
 	((str[i] >= '0') && (str[i] <= '9')) ||
-	str[i] == '_' ||
+	str[i] == '_' || str[i] == '.' ||
 	(mode == 1 && (str[i] == '/' ||
-		       str[i] == '.' || str[i] == ','))) {
+		       str[i] == ','))) {
       /* Allowed character, keep it */
       havedash = 0;
       str[j] = str[i];
@@ -6262,6 +6263,19 @@ read_configuration (const char *filename)
 	  regfree(filter->cregexp);
 	free(filter);
       }
+    } else if ((!strcasecmp(line, "BrowseInterval") || !strcasecmp(line, "BrowseTimeout")) && value) {
+      int t = atoi(value);
+      if (t >= 0) {
+	if (!strcasecmp(line, "BrowseInterval"))
+	  BrowseInterval = t;
+	else if (!strcasecmp(line, "BrowseTimeout"))
+	  BrowseTimeout = t;
+
+	debug_printf("Set %s to %d sec.\n",
+		     line, t);
+      } else
+	debug_printf("Invalid %s value: %d\n",
+		     line, t);
     } else if (!strcasecmp(line, "DomainSocket") && value) {
       if (value[0] != '\0')
 	DomainSocket = strdup(value);
@@ -6491,7 +6505,7 @@ int main(int argc, char*argv[]) {
   browsefilter = cupsArrayNew(compare_pointers, NULL);
 
   /* Read command line options */
-  if (argc >= 2)
+  if (argc >= 2) {
     for (i = 1; i < argc; i++)
       if (!strcasecmp(argv[i], "--debug") || !strcasecmp(argv[i], "-d") ||
 	  !strncasecmp(argv[i], "-v", 2)) {
@@ -6634,6 +6648,7 @@ int main(int argc, char*argv[]) {
 		argv[i]);
         goto help;
       }
+  }
 
   debug_printf("cups-browsed of cups-filters version "VERSION" starting.\n");
   

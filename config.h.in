@@ -45,9 +45,6 @@
 /* Transient run-time state dir of CUPS */
 #undef CUPS_STATEDIR
 
-/* Define that we provide acroread. */
-#undef HAVE_ACROREAD
-
 /* Define if you have the avahi library */
 #undef HAVE_AVAHI
 
@@ -119,9 +116,6 @@
 
 /* Define to 1 if you have the `open_memstream' function. */
 #undef HAVE_OPEN_MEMSTREAM
-
-/* Define that we provide poppler pdftocairo. */
-#undef HAVE_POPPLER_PDFTOCAIRO
 
 /* Define that we provide poppler pdftops. */
 #undef HAVE_POPPLER_PDFTOPS
