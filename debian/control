@@ -156,7 +156,8 @@ Package: cups-browsed
 Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
- cups-daemon
+ cups-daemon,
+ lsb-base,
 Recommends: avahi-daemon (>= 0.6.31-3~)
 Replaces: cups-filters (<< 1.4.0~)
 Breaks: cups-daemon (<< 1.6.4),
