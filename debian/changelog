@@ -1,3 +1,13 @@
+cups-filters (1.11.6-1) unstable; urgency=medium
+
+  * New 1.11.6 upstream release
+    - cups-browsed: Allow changing BrowseInterval and BrowseTimeout via
+      cups-browsed.conf, as it was formerly with CUPS (Closes: #794655)
+  * Use full hardening
+  * Add required lsb-base dependency to cups-browsed
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 01 Nov 2016 19:00:00 +0100
+
 cups-filters (1.11.4-1) unstable; urgency=medium
 
   * New 1.11.4 upstream release
