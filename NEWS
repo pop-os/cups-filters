@@ -1,5 +1,50 @@
-NEWS - OpenPrinting CUPS Filters v1.11.4 - 2016-09-21
+NEWS - OpenPrinting CUPS Filters v1.11.6 - 2016-10-31
 -----------------------------------------------------
+
+CHANGES IN V1.11.6
+
+	- pdftops: Do not default to simply "pdftops" when calling the
+	  Poppler pdftops utility, as the $PATH of CUPS when running
+	  filters/backends starts with /usr/lib/cups/filter/ and then
+	  pdftops would call itself (Bug #1380).
+
+CHANGES IN V1.11.5
+
+	- cups-browsed: Fixed several typos in the documentation (Bug
+	  #1378).
+	- gstoraster, mupdftoraster, pdftops, sys5ippprinter: Use
+	  execvp() and execvpe() to call programs so that the $PATH
+	  environment variable gets used to find the programs (Bug
+	  #1378).
+	- build system: Several fixes, especially to make it work when
+	  cross-compiling or using a build server (Bug #1378).
+	- cups-browsed: Silenced a warning.
+	- cups-browsed: For remote CUPS queues with a dot in their
+	  name no local queue got created (Bug #1379).
+	- pdftopdf: Do the page logging also for IPP Everywhere
+	  printers which use the PWG Raster data format as the
+	  ...toraster filters being the last filter then do not log.
+	- gstoraster, pdftoraster: Let filters generate PWG Raster if
+          the environment variable FINAL_CONTENT_TYPE is set to
+          image/pwg-raster, make sure full-page bitmaps are generated
+          in PWG_raster mode, and added mime conversion rules for
+          direct PWG Raster output.
+	- cups-browsed: Corrected checking of the PDLs of an IPP network
+	  printer. Now PCL 5c/e printers (not HP inkjets) should get
+	  recognized correctly.
+	- texttopdf: Added missing NULL check to avoid a segfault when
+	  texttopdf does not find a suitable (monospace TTF) font.
+	- foomatic-rip: Replace old manpage macro calls from
+	  foomatic-filters 3.0.2-20050114.
+	- cups-browsed: Allow changing BrowseInterval and
+	  BrowseTimeout via cups-browsed.conf, as it was formerly with
+	  CUPS (Debian bug #794655).
+	- pdftopdf: Count the actual output pages also if the
+	  number-up option is not used, to correctly find out whether
+	  we have an even or odd number of pages, even if the
+	  page-ranges option is used. This is needed to correctly
+	  decide whether for duplex printing a blank page has to be
+	  added (Bug #1377).
 
 CHANGES IN V1.11.4
 
