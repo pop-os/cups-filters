@@ -1,3 +1,19 @@
+cups-filters (1.8.3-2ubuntu3.2) xenial-proposed; urgency=medium
+
+  * Applied several measure to avoid cups-browsed hanging on shutdowb
+    (LP: #1638986):
+     - Made sure that the local CUPS daemon is always accessed the same way
+       and not sometimes via domain socket and sometimes via localhost:631.
+     - Shortened timeouts for http connections so that in case of a
+       server access failure the functions return more quickly.
+     - Always close http connections correctly after use.
+     - If the implicitclass backend fails to access a remote server, do
+       not repeat the job immediately but after a certain time interval,
+       to avoid cups-browsed getting notification bombs.
+     - Call g_main_context_wakeup(NULL) after each g_main_loop_quit(gmainloop)
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon,  7 Nov 2016 14:38:06 -0200
+
 cups-filters (1.8.3-2ubuntu3.1) xenial-proposed; urgency=medium
 
   * Added "Requires=cups-service" to the cups-browsed.service file to make

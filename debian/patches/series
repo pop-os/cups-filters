@@ -1,1 +1,2 @@
 cups-browsed-fix-shutdown-with-systemd.patch
+fix-http-access.patch
