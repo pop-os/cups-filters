@@ -1,3 +1,19 @@
+cups-filters (1.11.4-0ubuntu2.1) yakkety-proposed; urgency=medium
+
+  * cups-browsed, gstoraster, pdftoraster: Assorted fixes to make IPP
+    Everywhere printers correctly working (LP: #1637583):
+    - MIME conversion rules for PWG Raster output using gstoraster and
+      pdftoraster.
+    - Let gstoraster and pdftoraster output PWG Raster instead of CUPS
+      Raster for IPP Everywhere printers.
+    - Let pdftoraster generate correct PWG Raster (full page bitmaps
+      without removal of unprintable borders).
+    - Let pdftopdf log the pages of PWG Raster jobs in page_log.
+    - Let cups-browsed also auto-create queues only for IPP Everywhere
+      printers and not for legacy IPP printers.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 14 Nov 2016 19:00:00 -0200
+
 cups-filters (1.11.4-0ubuntu2) yakkety; urgency=medium
 
   * pdftopdf: Count the actual output pages also if the
