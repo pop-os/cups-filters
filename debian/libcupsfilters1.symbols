@@ -14,6 +14,20 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  _cupsImageZoomDelete@Base 1.0~b1
  _cupsImageZoomFill@Base 1.0~b1
  _cupsImageZoomNew@Base 1.0~b1
+ _cupsLangString@Base 1.12.0
+ _cupsStrFormatd@Base 1.12.0
+ _cups_isalnum@Base 1.12.0
+ _cups_isalpha@Base 1.12.0
+ _cups_islower@Base 1.12.0
+ _cups_isspace@Base 1.12.0
+ _cups_isupper@Base 1.12.0
+ _cups_strcasecmp@Base 1.12.0
+ _cups_strncasecmp@Base 1.12.0
+ _cups_tolower@Base 1.12.0
+ _cups_toupper@Base 1.12.0
+ _pwgInputSlotForSource@Base 1.12.0
+ _pwgMediaTypeForType@Base 1.12.0
+ _pwgPageSizeForMedia@Base 1.12.0
  _strlcpy@Base 1.0.36
  adobergb_gamma@Base 1.0.58
  adobergb_matrix@Base 1.0.58
@@ -95,6 +109,8 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  cups_scmy_lut@Base 1.0~b1
  cups_srgb_lut@Base 1.0~b1
  get_profile_inhibitors@Base 1.0.42
+ ppdCreateFromIPP@Base 1.12.0
+ ppdgenerator_msg@Base 1.12.0
  sgiClose@Base 1.0~b1
  sgiGetRow@Base 1.0~b1
  sgiOpen@Base 1.0~b1
@@ -102,3 +118,4 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  sgiPutRow@Base 1.0~b1
  sgray_gamma@Base 1.0.58
  sgray_wp@Base 1.0.58
+ strlcpy@Base 1.12.0

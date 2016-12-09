@@ -27,7 +27,7 @@ Build-Depends:
  libjpeg-dev,
  libpng-dev,
  libtiff-dev,
- libcups2-dev,
+ libcups2-dev (>= 2.2.1-41-g49c592936),
  libcupsimage2-dev (>= 1.5.2-6~),
  libijs-dev,
  zlib1g-dev,
@@ -112,9 +112,9 @@ Depends: ${shlibs:Depends},
  bc,
  poppler-utils
 Replaces: cups (<< 1.5.0-16),
- cups-filters (<< 1.1.0-2~)
+ cups-filters (<< 1.13.0)
 Breaks: cups (<< 1.5.0-16),
- cups-filters (<< 1.1.0-2~)
+ cups-filters (<< 1.13.0)
 Description: OpenPrinting CUPS Filters - PPD-less printing
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based

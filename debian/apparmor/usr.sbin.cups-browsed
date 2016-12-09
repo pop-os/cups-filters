@@ -1,6 +1,6 @@
 #include <tunables/global>
 
-/usr/sbin/cups-browsed {
+/usr/sbin/cups-browsed flags=(attach_disconnected) {
   #include <abstractions/base>
   #include <abstractions/nameservice>
   #include <abstractions/cups-client>
