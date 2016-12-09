@@ -97,6 +97,7 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	testdither$(EXEEXT) testimage$(EXEEXT) testrgb$(EXEEXT) \
 	test_analyze$(EXEEXT) test_pdf$(EXEEXT) test_ps$(EXEEXT) \
 	test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
+@ENABLE_DRIVERLESS_TRUE@pkgppdgen_PROGRAMS = driverless$(EXEEXT)
 @ENABLE_POPPLER_TRUE@am__append_1 = \
 @ENABLE_POPPLER_TRUE@	banners/classified \
 @ENABLE_POPPLER_TRUE@	banners/confidential \
@@ -174,13 +175,14 @@ pkgfilter_PROGRAMS = $(am__EXEEXT_1) pdftopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__append_18 = \
+@ENABLE_DRIVERLESS_TRUE@am__append_18 = utils/driverless.1
+@ENABLE_FOOMATIC_TRUE@am__append_19 = \
 @ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_19 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_20 = \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_20 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_21 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
 
@@ -244,14 +246,14 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
-	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" \
-	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" \
-	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" \
-	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" \
-	"$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" \
-	"$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" \
-	"$(DESTDIR)$(pkgcupsdatadir)" \
+	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" \
+	"$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" \
+	"$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" \
+	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" \
+	"$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" \
+	"$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" \
+	"$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" \
+	"$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" \
 	"$(DESTDIR)$(pkgcupsserverrootdir)" \
 	"$(DESTDIR)$(pkgdriverdir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
@@ -279,9 +281,9 @@ am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-image-sgilib.lo \
 	libcupsfilters_la-image-sun.lo libcupsfilters_la-image-tiff.lo \
 	libcupsfilters_la-image-zoom.lo libcupsfilters_la-lut.lo \
-	libcupsfilters_la-pack.lo libcupsfilters_la-raster.lo \
-	libcupsfilters_la-rgb.lo libcupsfilters_la-srgb.lo \
-	$(am__objects_1)
+	libcupsfilters_la-pack.lo libcupsfilters_la-ppdgenerator.lo \
+	libcupsfilters_la-raster.lo libcupsfilters_la-rgb.lo \
+	libcupsfilters_la-srgb.lo $(am__objects_1)
 libcupsfilters_la_OBJECTS = $(am_libcupsfilters_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -320,7 +322,7 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 @ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_7 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
-	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
+	$(pkgfilter_PROGRAMS) $(pkgppdgen_PROGRAMS) $(sbin_PROGRAMS)
 am_bannertopdf_OBJECTS = bannertopdf-banner.$(OBJEXT) \
 	bannertopdf-bannertopdf.$(OBJEXT) bannertopdf-pdf.$(OBJEXT)
 bannertopdf_OBJECTS = $(am_bannertopdf_OBJECTS)
@@ -354,9 +356,19 @@ cups_browsed_OBJECTS = $(am_cups_browsed_OBJECTS) \
 cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) libcupsfilters.la
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__driverless_SOURCES_DIST = utils/driverless.c
+@ENABLE_DRIVERLESS_TRUE@am_driverless_OBJECTS =  \
+@ENABLE_DRIVERLESS_TRUE@	driverless-driverless.$(OBJEXT)
+driverless_OBJECTS = $(am_driverless_OBJECTS)
+@ENABLE_DRIVERLESS_TRUE@driverless_DEPENDENCIES =  \
+@ENABLE_DRIVERLESS_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_DRIVERLESS_TRUE@	libcupsfilters.la
+driverless_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(driverless_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_foomatic_rip_OBJECTS = foomatic_rip-foomaticrip.$(OBJEXT) \
 	foomatic_rip-options.$(OBJEXT) foomatic_rip-pdf.$(OBJEXT) \
@@ -627,14 +639,15 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
 	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
 	$(cups_browsed_SOURCES) $(nodist_cups_browsed_SOURCES) \
-	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
-	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
-	$(implicitclass_SOURCES) $(mupdftoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
+	$(driverless_SOURCES) $(foomatic_rip_SOURCES) \
+	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
+	$(mupdftoraster_SOURCES) $(parallel_SOURCES) \
+	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
+	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
+	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
+	$(rastertopclx_SOURCES) $(rastertopdf_SOURCES) \
+	$(rastertops_SOURCES) $(serial_SOURCES) \
 	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
 	$(test1284_SOURCES) $(test_analyze_SOURCES) \
 	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
@@ -646,15 +659,15 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
 	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
-	$(cups_browsed_SOURCES) $(foomatic_rip_SOURCES) \
-	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
-	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
-	$(mupdftoraster_SOURCES) $(parallel_SOURCES) \
-	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
-	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
-	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
-	$(rastertopclx_SOURCES) $(rastertopdf_SOURCES) \
-	$(rastertops_SOURCES) $(serial_SOURCES) \
+	$(cups_browsed_SOURCES) $(am__driverless_SOURCES_DIST) \
+	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
+	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
+	$(implicitclass_SOURCES) $(mupdftoraster_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
+	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
+	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
 	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
 	$(test1284_SOURCES) $(test_analyze_SOURCES) \
 	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
@@ -1110,7 +1123,8 @@ doc_DATA = \
 EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	libfontembed.pc.in utils/cups-browsed.service \
 	utils/cups-browsed-upstart.conf \
-	filter/braille/drivers/index/ubrlto4dot.c $(pkgbanner_DATA) \
+	filter/braille/drivers/index/ubrlto4dot.c \
+	filter/braille/filters/TODO.txt $(pkgbanner_DATA) \
 	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
 	cupsfilters/image.pgm cupsfilters/image.ppm \
 	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(pkgppdc_DATA) \
@@ -1160,6 +1174,23 @@ test1284_SOURCES = \
 test1284_LDADD = $(CUPS_LIBS)
 test1284_CFLAGS = $(CUPS_CFLAGS)
 
+# ==============
+# PPD Generators
+# ==============
+@ENABLE_DRIVERLESS_TRUE@pkgppdgendir = $(CUPS_SERVERBIN)/driver
+@ENABLE_DRIVERLESS_TRUE@driverless_SOURCES = \
+@ENABLE_DRIVERLESS_TRUE@	utils/driverless.c
+
+@ENABLE_DRIVERLESS_TRUE@driverless_CFLAGS = \
+@ENABLE_DRIVERLESS_TRUE@	$(CUPS_CFLAGS) \
+@ENABLE_DRIVERLESS_TRUE@	-I$(srcdir)/cupsfilters/
+
+@ENABLE_DRIVERLESS_TRUE@driverless_CXXFLAGS = $(driverless_CFLAGS)
+@ENABLE_DRIVERLESS_TRUE@driverless_LDADD = \
+@ENABLE_DRIVERLESS_TRUE@	$(CUPS_LIBS) \
+@ENABLE_DRIVERLESS_TRUE@	libcupsfilters.la
+
+
 # =======
 # Banners
 # =======
@@ -1184,7 +1215,8 @@ pkgfiltersinclude_DATA = \
 	cupsfilters/colormanager.h \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
-	cupsfilters/raster.h
+	cupsfilters/raster.h \
+	cupsfilters/ppdgenerator.h
 
 lib_LTLIBRARIES = libcupsfilters.la libfontembed.la
 #	testcmyk # fails as it opens some image.ppm which is nowerhe to be found.
@@ -1224,6 +1256,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/image-zoom.c \
 	cupsfilters/lut.c \
 	cupsfilters/pack.c \
+	cupsfilters/ppdgenerator.c \
 	cupsfilters/raster.c \
 	cupsfilters/rgb.c \
 	cupsfilters/srgb.c \
@@ -1822,7 +1855,8 @@ cups_browsed_CFLAGS = \
 	$(AVAHI_GLIB_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GIO_CFLAGS) \
-	$(GIO_UNIX_CFLAGS)
+	$(GIO_UNIX_CFLAGS) \
+	-I$(srcdir)/cupsfilters/
 
 cups_browsed_CXXFLAGS = $(cups_browsed_CFLAGS)
 cups_browsed_LDADD = \
@@ -1831,12 +1865,13 @@ cups_browsed_LDADD = \
 	$(AVAHI_GLIB_LIBS) \
 	$(GLIB_LIBS) \
 	$(GIO_LIBS) \
-	$(GIO_UNIX_LIBS)
+	$(GIO_UNIX_LIBS) \
+	libcupsfilters.la
 
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
-	$(am__append_18)
+	$(am__append_18) $(am__append_19)
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1847,8 +1882,8 @@ ppddir = $(datadir)/ppd/cupsfilters
 ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_19) \
-	$(am__append_20)
+	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_20) \
+	$(am__append_21)
 
 # =========
 # Scripting
@@ -2180,6 +2215,55 @@ clean-pkgfilterPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+install-pkgppdgenPROGRAMS: $(pkgppdgen_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(pkgppdgen_PROGRAMS)'; test -n "$(pkgppdgendir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgppdgendir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgppdgendir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(pkgppdgendir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(pkgppdgendir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-pkgppdgenPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgppdgen_PROGRAMS)'; test -n "$(pkgppdgendir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(pkgppdgendir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pkgppdgendir)" && rm -f $$files
+
+clean-pkgppdgenPROGRAMS:
+	@list='$(pkgppdgen_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 install-sbinPROGRAMS: $(sbin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(sbin_PROGRAMS)'; test -n "$(sbindir)" || list=; \
@@ -2249,6 +2333,10 @@ commandtopclx$(EXEEXT): $(commandtopclx_OBJECTS) $(commandtopclx_DEPENDENCIES) $
 cups-browsed$(EXEEXT): $(cups_browsed_OBJECTS) $(cups_browsed_DEPENDENCIES) $(EXTRA_cups_browsed_DEPENDENCIES) 
 	@rm -f cups-browsed$(EXEEXT)
 	$(AM_V_CCLD)$(cups_browsed_LINK) $(cups_browsed_OBJECTS) $(cups_browsed_LDADD) $(LIBS)
+
+driverless$(EXEEXT): $(driverless_OBJECTS) $(driverless_DEPENDENCIES) $(EXTRA_driverless_DEPENDENCIES) 
+	@rm -f driverless$(EXEEXT)
+	$(AM_V_CCLD)$(driverless_LINK) $(driverless_OBJECTS) $(driverless_LDADD) $(LIBS)
 
 foomatic-rip$(EXEEXT): $(foomatic_rip_OBJECTS) $(foomatic_rip_DEPENDENCIES) $(EXTRA_foomatic_rip_DEPENDENCIES) 
 	@rm -f foomatic-rip$(EXEEXT)
@@ -2534,6 +2622,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/commandtopclx-commandtopclx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cups_browsed-cups-browsed.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cups_browsed-cups-notifier.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/driverless-driverless.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dynstring.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/embed.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/embed_pdf.Plo@am__quote@
@@ -2576,6 +2665,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-lut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pack.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-raster.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-rgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-srgb.Plo@am__quote@
@@ -2817,6 +2907,13 @@ libcupsfilters_la-pack.lo: cupsfilters/pack.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-pack.lo `test -f 'cupsfilters/pack.c' || echo '$(srcdir)/'`cupsfilters/pack.c
 
+libcupsfilters_la-ppdgenerator.lo: cupsfilters/ppdgenerator.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-ppdgenerator.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-ppdgenerator.Tpo -c -o libcupsfilters_la-ppdgenerator.lo `test -f 'cupsfilters/ppdgenerator.c' || echo '$(srcdir)/'`cupsfilters/ppdgenerator.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-ppdgenerator.Tpo $(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/ppdgenerator.c' object='libcupsfilters_la-ppdgenerator.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-ppdgenerator.lo `test -f 'cupsfilters/ppdgenerator.c' || echo '$(srcdir)/'`cupsfilters/ppdgenerator.c
+
 libcupsfilters_la-raster.lo: cupsfilters/raster.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-raster.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-raster.Tpo -c -o libcupsfilters_la-raster.lo `test -f 'cupsfilters/raster.c' || echo '$(srcdir)/'`cupsfilters/raster.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-raster.Tpo $(DEPDIR)/libcupsfilters_la-raster.Plo
@@ -3019,6 +3116,20 @@ cups_browsed-cups-notifier.obj: cups-notifier.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cups-notifier.c' object='cups_browsed-cups-notifier.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(cups_browsed_CFLAGS) $(CFLAGS) -c -o cups_browsed-cups-notifier.obj `if test -f 'cups-notifier.c'; then $(CYGPATH_W) 'cups-notifier.c'; else $(CYGPATH_W) '$(srcdir)/cups-notifier.c'; fi`
+
+driverless-driverless.o: utils/driverless.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(driverless_CFLAGS) $(CFLAGS) -MT driverless-driverless.o -MD -MP -MF $(DEPDIR)/driverless-driverless.Tpo -c -o driverless-driverless.o `test -f 'utils/driverless.c' || echo '$(srcdir)/'`utils/driverless.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/driverless-driverless.Tpo $(DEPDIR)/driverless-driverless.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils/driverless.c' object='driverless-driverless.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(driverless_CFLAGS) $(CFLAGS) -c -o driverless-driverless.o `test -f 'utils/driverless.c' || echo '$(srcdir)/'`utils/driverless.c
+
+driverless-driverless.obj: utils/driverless.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(driverless_CFLAGS) $(CFLAGS) -MT driverless-driverless.obj -MD -MP -MF $(DEPDIR)/driverless-driverless.Tpo -c -o driverless-driverless.obj `if test -f 'utils/driverless.c'; then $(CYGPATH_W) 'utils/driverless.c'; else $(CYGPATH_W) '$(srcdir)/utils/driverless.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/driverless-driverless.Tpo $(DEPDIR)/driverless-driverless.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils/driverless.c' object='driverless-driverless.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(driverless_CFLAGS) $(CFLAGS) -c -o driverless-driverless.obj `if test -f 'utils/driverless.c'; then $(CYGPATH_W) 'utils/driverless.c'; else $(CYGPATH_W) '$(srcdir)/utils/driverless.c'; fi`
 
 foomatic_rip-foomaticrip.o: filter/foomatic-rip/foomaticrip.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(foomatic_rip_CFLAGS) $(CFLAGS) -MT foomatic_rip-foomaticrip.o -MD -MP -MF $(DEPDIR)/foomatic_rip-foomaticrip.Tpo -c -o foomatic_rip-foomaticrip.o `test -f 'filter/foomatic-rip/foomaticrip.c' || echo '$(srcdir)/'`filter/foomatic-rip/foomaticrip.c
@@ -4979,7 +5090,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -5023,7 +5134,8 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 	clean-libLTLIBRARIES clean-libtool \
 	clean-phpextensionLTLIBRARIES clean-pkgbackendPROGRAMS \
-	clean-pkgfilterPROGRAMS clean-sbinPROGRAMS mostlyclean-am
+	clean-pkgfilterPROGRAMS clean-pkgppdgenPROGRAMS \
+	clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -5054,7 +5166,7 @@ install-data-am: install-docDATA install-initrcSCRIPTS install-man \
 	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
 	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
 	install-pkgfontembedincludeDATA install-pkgmimeDATA \
-	install-pkgppdcDATA install-ppdDATA
+	install-pkgppdcDATA install-pkgppdgenPROGRAMS install-ppdDATA
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
@@ -5116,7 +5228,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
 	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
-	uninstall-pkgppdcDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
+	uninstall-pkgppdcDATA uninstall-pkgppdgenPROGRAMS \
+	uninstall-ppdDATA uninstall-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
@@ -5128,18 +5241,19 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	check-am clean clean-binPROGRAMS clean-checkPROGRAMS \
 	clean-cscope clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-phpextensionLTLIBRARIES clean-pkgbackendPROGRAMS \
-	clean-pkgfilterPROGRAMS clean-sbinPROGRAMS cscope \
-	cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
-	distcheck distclean distclean-compile distclean-generic \
-	distclean-hdr distclean-libtool distclean-local distclean-tags \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-data-hook install-docDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-exec-hook install-html install-html-am install-info \
-	install-info-am install-initrcSCRIPTS install-libLTLIBRARIES \
-	install-man install-man1 install-man5 install-man8 \
+	clean-pkgfilterPROGRAMS clean-pkgppdgenPROGRAMS \
+	clean-sbinPROGRAMS cscope cscopelist-am ctags ctags-am dist \
+	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-compile \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-local distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
+	install-data-am install-data-hook install-docDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
+	install-man1 install-man5 install-man8 \
 	install-nodist_pkgbrailleSCRIPTS \
 	install-nodist_pkgfilterSCRIPTS install-nodist_pkgppdcDATA \
 	install-pdf install-pdf-am install-phpextensionLTLIBRARIES \
@@ -5149,9 +5263,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	install-pkgdriverDATA install-pkgfilterPROGRAMS \
 	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
 	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
-	install-pkgmimeDATA install-pkgppdcDATA install-ppdDATA \
-	install-ps install-ps-am install-sbinPROGRAMS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-pkgmimeDATA install-pkgppdcDATA \
+	install-pkgppdgenPROGRAMS install-ppdDATA install-ps \
+	install-ps-am install-sbinPROGRAMS install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am \
@@ -5167,7 +5282,8 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
 	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
-	uninstall-pkgppdcDATA uninstall-ppdDATA uninstall-sbinPROGRAMS
+	uninstall-pkgppdcDATA uninstall-pkgppdgenPROGRAMS \
+	uninstall-ppdDATA uninstall-sbinPROGRAMS
 
 .PRECIOUS: Makefile
 
@@ -5189,6 +5305,7 @@ install-exec-hook:
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	$(INSTALL) -d -m 755 $(DESTDIR)$(pkgfilterdir)
 @ENABLE_FOOMATIC_TRUE@	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
+@ENABLE_DRIVERLESS_TRUE@	$(LN_S) -f $(pkgppdgendir)/driverless $(DESTDIR)$(bindir)
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f imagetobrf $(DESTDIR)$(pkgfilterdir)/imagetoubrl
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f textbrftoindexv3 $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
@@ -5210,6 +5327,7 @@ uninstall-hook:
 @RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 @ENABLE_FOOMATIC_TRUE@	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
+@ENABLE_DRIVERLESS_TRUE@	$(RM) $(DESTDIR)$(bindir)/driverless
 @ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/imagetoubrl
 @ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
