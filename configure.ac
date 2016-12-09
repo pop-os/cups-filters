@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[11])
-m4_define([cups_filters_version_micro],[6])
+m4_define([cups_filters_version_minor],[13])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -112,6 +112,33 @@ AC_SUBST(CUPS_SERVERBIN)
 AX_COMPARE_VERSION([$CUPS_VERSION],[gt],[1.4], [
 	AC_DEFINE(CUPS_1_4, 1, [CUPS Version is 1.4 or newer])
 ])
+
+AC_ARG_ENABLE([driverless], [AS_HELP_STRING([--disable-driverless], [enable PPD generator for driverless printing in /usr/lib/cups/drivers/.])],
+        [enable_driverless="$enableval"],
+        [enable_driverless=yes]
+)
+AX_COMPARE_VERSION([$CUPS_VERSION],[ge],[1.6], [
+	AM_CONDITIONAL([ENABLE_DRIVERLESS],
+	[test "x$enable_driverless" != "xno"])
+])
+
+APPLE_RASTER_FILTER=rastertopdf
+AX_COMPARE_VERSION([$CUPS_VERSION],[lt],[2.2.2], [
+	APPLE_RASTER_FILTER=urftopdf
+])
+AC_ARG_WITH([apple-raster-filter],
+	[AS_HELP_STRING([--with-apple-raster-filter=rastertopdf|urftopdf], [Select filter for Apple Raster input. Default: rastertopdf for CUPS 2.2.2+, urftopdf for older CUPS])],
+	[with_apple_raster_filter="$withval"],
+	[with_apple_raster_filter="$APPLE_RASTER_FILTER"]
+)
+AS_CASE([x$with_apple_raster_filter],
+	[xrastertopdf|xurftopdf], [APPLE_RASTER_FILTER=$with_apple_raster_filter],
+	[AC_MSG_ERROR([Unknown value of with-apple-raster-filter provided: $with_apple_raster_filter])]
+)
+AM_CONDITIONAL([ENABLE_URFTOPDF],
+	       [test "x$APPLE_RASTER_FILTER" == "xurftopdf"])
+AC_SUBST(APPLE_RASTER_FILTER)
+
 AC_DEFINE(PDFTOPDF, [], [Needed for pdftopdf filter compilation])
 AC_DEFINE_DIR(BANNERTOPDF_DATADIR, "{CUPS_DATADIR}/data", [Directory where bannertopdf finds its data files (PDF templates)])
 
@@ -527,6 +554,11 @@ AC_ARG_WITH([acroread-path],
         [with_acroread_path="$withval"],
         [with_acroread_path=system]
 )
+AC_ARG_WITH([ippfind-path],
+        [AS_HELP_STRING([--with-ippfind-path=value], [Set path to ippfind binary (default: system).])],
+        [with_ippfind_path="$withval"],
+        [with_ippfind_path=system]
+)
 AC_ARG_WITH([pdftops-maxres],
 	[AS_HELP_STRING([--with-pdftops-maxres=value], [Set maximum image rendering resolution for pdftops filter (0, 75, 150, 300, 600, 1200, 2400, 4800, 90, 180, 360, 720, 1440, 2880, 5760, unlimited). Default: 1440])],
 	[with_pdftops_maxres="$withval"],
@@ -650,6 +682,11 @@ AS_IF([test "x$with_acroread_path" != "xsystem"], [
 AS_IF([test "x$CUPS_ACROREAD" != "x"], [
 	AS_IF([test x"$with_pdftops" = xacroread], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [ACROREAD], [Define default renderer])])
 ])
+AS_IF([test "x$with_ippfind_path" != "xsystem"], [
+	CUPS_IPPFIND="$with_ippfind_path"
+], [
+	CUPS_IPPFIND="ippfind"
+])
 
 AS_IF([test "x$CUPS_GHOSTSCRIPT" != "x" -a "x$CUPS_PDFTOPS" != "x"], [
 	AS_IF([test x"$with_pdftops" = xhybrid], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [HYBRID], [Define default renderer])])
@@ -660,6 +697,7 @@ AC_DEFINE_UNQUOTED([CUPS_MUTOOL],"$CUPS_MUTOOL",[mutool binary to use])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOPS], "$CUPS_PDFTOPS", [pdftops binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_POPPLER_PDFTOCAIRO], "$CUPS_PDFTOCAIRO", [pdftocairo binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_ACROREAD], "$CUPS_ACROREAD", [acroread binary to use.])
+AC_DEFINE_UNQUOTED([CUPS_IPPFIND], "$CUPS_IPPFIND", [ippfind binary to use.])
 AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_MAX_RESOLUTION], [$CUPS_PDFTOPS_MAXRES], [max resolution used for pdftops when converting images])
 
 # ==================
@@ -779,6 +817,7 @@ AC_CONFIG_FILES([
 	filter/braille/filters/cups-braille.sh
 	filter/braille/filters/imagetobrf
 	filter/braille/filters/texttobrf
+	mime/cupsfilters.convs
 ])
 AC_OUTPUT
 
@@ -802,6 +841,7 @@ Build configuration:
 	gs-path:         ${with_gs_path}
 	mutool:          ${enable_mutool}
 	mutool-path:     ${with_mutool_path}
+	ippfind-path:    ${with_ippfind_path}
 	imagefilters:    ${enable_imagefilters}
 	jpeg:            ${with_jpeg}
 	pdftocairo-path: ${with_pdftocairo_path}
@@ -819,5 +859,7 @@ Build configuration:
 	werror:          ${enable_werror}
 	braille:	 ${enable_braille}
 	braille tables:  ${TABLESDIR}
+	driverless:      ${enable_driverless}
+	apple-raster:    ${APPLE_RASTER_FILTER}
 ==============================================================================
 ])
