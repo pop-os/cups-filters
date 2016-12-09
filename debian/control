@@ -27,7 +27,7 @@ Build-Depends:
  libjpeg-dev,
  libpng-dev,
  libtiff-dev,
- libcups2-dev (>= 2.2.2),
+ libcups2-dev (>= 2.2.1-41-g49c592936),
  libcupsimage2-dev (>= 1.5.2-6~),
  libijs-dev,
  zlib1g-dev,
