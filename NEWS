@@ -1,5 +1,22 @@
-NEWS - OpenPrinting CUPS Filters v1.12.0 - 2016-11-27
+NEWS - OpenPrinting CUPS Filters v1.13.0 - 2016-12-09
 -----------------------------------------------------
+
+CHANGES IN V1.13.0
+
+	- cups-browsed: Use the httpGetAddr() only with CUPS 2.0.x or
+	  newer, as older CUPS versions do not provide it (Bug #1381).
+	- cups-browsed: Minor corrections in the handling of the data
+	  records of the discovered printers.
+	- rastertopdf, urftopdf: As with libcupsimage from CUPS 2.2.2
+	  on rastertopdf also understands Apple Raster and much better
+	  than urftopdf does, use rastertopdf for Apple Raster
+	  (image/urf) input files then. Also allow for manually
+	  choosing by the ./configure command line.
+	- driverless: Added a CUPS backend mode to the driverless
+	  utility. Running as a CUPS backend in discovery mode it
+	  lists the IPP URIs of the suitable printers in printer setup
+	  tools and in "lpinfo -v", as conneting via IPP is required
+	  for driverless printing.
 
 CHANGES IN V1.12.0
 

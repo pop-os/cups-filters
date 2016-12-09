@@ -534,9 +534,12 @@ pkgfilter_PROGRAMS += \
 	rastertoescpx \
 	rastertopclx \
 	texttopdf \
-	urftopdf \
 	rastertopdf \
 	rastertops
+if ENABLE_URFTOPDF
+pkgfilter_PROGRAMS += \
+	urftopdf
+endif
 if ENABLE_POPPLER
 pkgfilter_PROGRAMS += \
 	bannertopdf \
@@ -693,6 +696,7 @@ imagetoraster_LDADD = \
 	-lm \
 	libcupsfilters.la
 
+if ENABLE_URFTOPDF
 urftopdf_SOURCES = \
 	filter/urftopdf.cpp \
 	filter/unirast.h
@@ -700,6 +704,7 @@ urftopdf_CXXFLAGS = \
 	$(LIBQPDF_CFLAGS)
 urftopdf_LDADD = \
 	$(LIBQPDF_LIBS)
+endif
 
 rastertopdf_SOURCES = \
 	filter/rastertopdf.cpp
@@ -969,11 +974,13 @@ distclean-local:
 install-exec-hook:
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	$(INSTALL) -d -m 755 $(DESTDIR)$(pkgfilterdir)
+	$(INSTALL) -d -m 755 $(DESTDIR)$(pkgbackenddir)
 if ENABLE_FOOMATIC
 	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
 endif
 if ENABLE_DRIVERLESS
 	$(LN_S) -f $(pkgppdgendir)/driverless $(DESTDIR)$(bindir)
+	$(LN_S) -f $(pkgppdgendir)/driverless $(DESTDIR)$(pkgbackenddir)
 endif
 if ENABLE_BRAILLE
 	$(LN_S) -f imagetobrf $(DESTDIR)$(pkgfilterdir)/imagetoubrl
@@ -1007,6 +1014,7 @@ if ENABLE_FOOMATIC
 endif
 if ENABLE_DRIVERLESS
 	$(RM) $(DESTDIR)$(bindir)/driverless
+	$(RM) $(DESTDIR)$(pkgbackenddir)/driverless
 endif
 if ENABLE_BRAILLE
 	$(RM) $(DESTDIR)$(pkgfilterdir)/imagetoubrl
