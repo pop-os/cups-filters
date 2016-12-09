@@ -1,5 +1,6 @@
 etc/fonts/conf.d/99pdftoopvp.conf
-usr/bin/*
+usr/bin/ttfread
+usr/bin/foomatic-rip
 usr/lib/cups/backend/beh
 usr/lib/cups/backend/parallel
 usr/lib/cups/backend/serial

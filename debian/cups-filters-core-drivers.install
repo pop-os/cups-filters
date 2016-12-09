@@ -1,3 +1,5 @@
+usr/bin/driverless
+usr/lib/cups/backend/driverless
 usr/lib/cups/driver/driverless
 usr/lib/cups/filter/imagetopdf
 usr/lib/cups/filter/pdftopdf
