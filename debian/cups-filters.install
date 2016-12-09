@@ -9,11 +9,11 @@ usr/lib/cups/filter/pdftoijs
 usr/lib/cups/filter/texttotext
 usr/lib/cups/filter/gstoraster
 usr/lib/cups/filter/mupdftoraster
-usr/lib/cups/filter/urftopdf
 usr/lib/cups/filter/texttopdf
 usr/lib/cups/filter/texttops
 usr/lib/cups/filter/imagetops
 usr/lib/cups/filter/rastertoescpx
+usr/lib/cups/filter/rastertopdf
 usr/lib/cups/filter/bannertopdf
 usr/lib/cups/filter/pdftoopvp
 usr/lib/cups/filter/imagetoraster
