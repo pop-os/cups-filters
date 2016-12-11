@@ -1,3 +1,9 @@
+cups-filters (1.13.0-2) experimental; urgency=medium
+
+  * Don't install rastertopdf twice (Closes: #847653)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 11 Dec 2016 10:00:34 +0100
+
 cups-filters (1.13.0-1) experimental; urgency=medium
 
   * New upstream version 1.13.0
