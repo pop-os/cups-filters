@@ -1,3 +1,19 @@
+cups-filters (1.13.1-1) experimental; urgency=medium
+
+  * New upstream version 1.13.1
+    - cups-browsed: If CUPS is stopped while cups-browsed is
+      running and there are queue for IPP network printers (not
+      remote CUPS queues) on restart of CUPS the still existing
+      local CUPS queue is not correctly re-connected with
+      cups-browsed and therefore gets removed after a
+      timeout. This should be fixed after a clean-up of
+      re-connecting with remaining queues from a previous session
+      (Closes: #848223)
+    - cups-browsed: Generated queues did not get removed on
+      shutdown (Closes: #848167)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 19 Dec 2016 08:45:27 +0100
+
 cups-filters (1.13.0-2) experimental; urgency=medium
 
   * Don't install rastertopdf twice (Closes: #847653)
