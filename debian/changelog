@@ -1,3 +1,21 @@
+cups-filters (1.13.2-1) experimental; urgency=medium
+
+  * New upstream version 1.13.2
+    - driverless: Fixes on the man page (Closes: #849075)
+    - imagetoraster: Fixed several bugs in the calculation of the
+      page geometry (Closes: #849380)
+    - driverless: Added "-T 3" to the ippfind command line. This
+      makes ippfind search the Bonjour broadcasts for up to 3
+      seconds when searching for IPP printers, raising the
+      reliability in finding all of them (Closes: #848712)
+
+  [ Till Kamppeter ]
+  * Updated debian/control: cups-ipp-utils is now needed by the new
+    "driverless" utility in cups-filters-core-drivers and current CUPS does not
+    support PPD-less printing any more, and we do driverless printing instead
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 29 Dec 2016 09:33:24 +0100
+
 cups-filters (1.13.1-1) experimental; urgency=medium
 
   * New upstream version 1.13.1

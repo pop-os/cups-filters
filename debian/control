@@ -110,19 +110,20 @@ Architecture: any
 Depends: ${shlibs:Depends}, 
  ${misc:Depends},
  bc,
- poppler-utils
+ poppler-utils,
+ cups-ipp-utils
 Replaces: cups (<< 1.5.0-16),
  cups-filters (<< 1.13.0)
 Breaks: cups (<< 1.5.0-16),
  cups-filters (<< 1.13.0)
-Description: OpenPrinting CUPS Filters - PPD-less printing
+Description: OpenPrinting CUPS Filters - Driverless printing
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
  printing workflow.
  .
- This package contains only the filters needed for PPD-less printing of
+ This package contains only the filters needed for driverless printing of
  PDF input files on IPP printers with known, common languages (PDF,
- PostScript, PWG Raster, PCL).
+ PostScript, PWG Raster, Apple Raster, PCL).
 
 Package: libcupsfilters-dev
 Section: libdevel
