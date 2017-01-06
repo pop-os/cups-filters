@@ -1,2 +1,4 @@
 cups-browsed-fix-shutdown-with-systemd.patch
 fix-http-access.patch
+cups-browsed-do-not-repeat-failed-operations-during-shutdown.patch
+cups-browsed-debug-log-into-file.patch

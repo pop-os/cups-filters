@@ -1,0 +1,98 @@
+Index: cups-filters-1.8.3/utils/cups-browsed.c
+===================================================================
+--- cups-filters-1.8.3.orig/utils/cups-browsed.c
++++ cups-filters-1.8.3/utils/cups-browsed.c
+@@ -337,6 +337,7 @@ static unsigned int CreateIPPPrinterQueu
+ static ipp_queue_type_t IPPPrinterQueueType = PPD_AUTO;
+ static load_balancing_type_t LoadBalancingType = QUEUE_ON_CLIENT;
+ static const char *DefaultOptions = NULL;
++static int in_shutdown = 0;
+ static int autoshutdown = 0;
+ static int autoshutdown_avahi = 0;
+ static int autoshutdown_timeout = 30;
+@@ -3246,7 +3247,8 @@ gboolean handle_cups_queues(gpointer unu
+       if (!p->duplicate_of) { /* Duplicates do not have a CUPS queue */
+ 	if ((http = http_connect_local ()) == NULL) {
+ 	  debug_printf("cups-browsed: Unable to connect to CUPS!\n");
+-	  p->timeout = current_time + TIMEOUT_RETRY;
++	  if (in_shutdown == 0)
++	    p->timeout = current_time + TIMEOUT_RETRY;
+ 	  break;
+ 	}
+ 
+@@ -3272,8 +3274,10 @@ gboolean handle_cups_queues(gpointer unu
+ 	    disable_printer(p->name,
+ 			    "Printer disappeared or cups-browsed shutdown");
+ 	  /* Schedule the removal of the queue for later */
+-	  p->timeout = current_time + TIMEOUT_RETRY;
+-	  break;
++	  if (in_shutdown == 0) {
++	    p->timeout = current_time + TIMEOUT_RETRY;
++	    break;
++	  }
+ 	}
+ 
+ 	/* If this queue was the default printer, note that fact so that
+@@ -3288,8 +3292,10 @@ gboolean handle_cups_queues(gpointer unu
+ 	   printer is the default printer. */
+ 	if (cups_notifier == NULL && is_cups_default_printer(p->name)) {
+ 	  /* Schedule the removal of the queue for later */
+-	  p->timeout = current_time + TIMEOUT_RETRY;
+-	  break;
++	  if (in_shutdown == 0) {
++	    p->timeout = current_time + TIMEOUT_RETRY;
++	    break;
++	  }
+ 	}
+ 	
+ 	/* No jobs, remove the CUPS queue */
+@@ -3306,8 +3312,10 @@ gboolean handle_cups_queues(gpointer unu
+ 	ippDelete(cupsDoRequest(http, request, "/admin/"));
+ 	if (cupsLastError() > IPP_OK_CONFLICT) {
+ 	  debug_printf("cups-browsed: Unable to remove CUPS queue!\n");
+-	  p->timeout = current_time + TIMEOUT_RETRY;
+-	  break;
++	  if (in_shutdown == 0) {
++	    p->timeout = current_time + TIMEOUT_RETRY;
++	    break;
++	  }
+ 	}
+       } else {
+ 	/* "master printer" of this duplicate */
+@@ -3342,7 +3350,7 @@ gboolean handle_cups_queues(gpointer unu
+ 	 again, schedule the shutdown in autoshutdown_timeout seconds 
+          Note that in this case we also do not have jobs any more so if we
+          auto shutdown on running out of jobs, trigger it here, too. */
+-      if (autoshutdown && !autoshutdown_exec_id &&
++      if (in_shutdown == 0 && autoshutdown && !autoshutdown_exec_id &&
+ 	  (cupsArrayCount(remote_printers) == 0 ||
+ 	   (autoshutdown_on == NO_JOBS && check_jobs() == 0))) {
+ 	debug_printf ("cups-browsed: No printers there any more to make available or no jobs, shutting down in %d sec...\n", autoshutdown_timeout);
+@@ -3539,7 +3547,8 @@ gboolean handle_cups_queues(gpointer unu
+     }
+   }
+ 
+-  recheck_timer ();
++  if (in_shutdown == 0)
++    recheck_timer ();
+ 
+   /* Don't run this callback again */
+   return FALSE;
+@@ -4461,7 +4470,7 @@ void avahi_browser_shutdown() {
+   }
+ 
+   /* Switch on auto shutdown mode */
+-  if (autoshutdown_avahi) {
++  if (autoshutdown_avahi && in_shutdown == 0) {
+     autoshutdown = 1;
+     debug_printf("cups-browsed: Avahi server disappeared, switching to auto shutdown mode ...\n");
+     /* If there are no printers or no jobs schedule the shutdown in
+@@ -6380,6 +6389,8 @@ fail:
+ 
+   /* Clean up things */
+ 
++  in_shutdown = 1;
++
+   if (proxy)
+     g_object_unref (proxy);
+ 

@@ -1,3 +1,14 @@
+cups-filters (1.8.3-2ubuntu3.3) xenial-proposed; urgency=medium
+
+  * Applied another measure to avoid cups-browsed hanging on shutdown
+    (LP: #1638986):
+     - Do not schedule failed operations for repeating during shutdown.
+  * Added facility for time-stamped debug logging into a file (Use
+    "-l" command line option or "DebugLogging file" cups-browsed.conf
+    directive).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  6 Jan 2017 21:29:06 -0200
+
 cups-filters (1.8.3-2ubuntu3.2) xenial-proposed; urgency=medium
 
   * Applied several measure to avoid cups-browsed hanging on shutdowb
