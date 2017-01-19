@@ -64,6 +64,19 @@ cups-filters (1.12.0-1) experimental; urgency=medium
 
  -- Didier Raboud <odyx@debian.org>  Fri, 09 Dec 2016 10:32:22 +0100
 
+cups-filters (1.11.6-3) unstable; urgency=medium
+
+  [ Didier Raboud ]
+  * Backport bug-fixes from the 1.13 branch:
+    - cups-browsed: Fixed handling of IPP network printer queues when
+      cupsd gets temporarily stopped while cups-browsed keeps running
+      (Closes: #848167, #848223)
+    - imagetoraster: Fixed several bugs in the calculation of the page
+      geometry (Closes: #849380)
+    - cups-browsed: Make support for printers with IPv6 IP addresses work
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 19 Jan 2017 14:44:34 +0100
+
 cups-filters (1.11.6-2) unstable; urgency=medium
 
   [ intrigeri ]
