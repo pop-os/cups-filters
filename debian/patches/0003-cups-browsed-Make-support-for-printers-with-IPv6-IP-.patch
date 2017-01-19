@@ -1,0 +1,89 @@
+From e4b7e7783d7c6d1fc1ed34b6563f126e09b119d8 Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Fri, 30 Dec 2016 21:14:22 -0200
+Subject: cups-browsed: Make support for printers with IPv6 IP address work.
+
+cups-browsed: (Also) Generate correct IPv6 URIs also for printers with link-local addresses.
+
+This is a backport from 1.13.3
+
+Backport-by: Didier Raboud <odyx@debian.org>
+---
+ utils/cups-browsed.c | 37 ++++++++++++++++++++++++++++---------
+ 1 file changed, 28 insertions(+), 9 deletions(-)
+
+diff --git a/utils/cups-browsed.c b/utils/cups-browsed.c
+index c03e1ea8..991d6da9 100644
+--- a/utils/cups-browsed.c
++++ b/utils/cups-browsed.c
+@@ -4691,11 +4691,18 @@ static void resolve_callback(
+ 	  (!browseallow_all && cupsArrayCount(browseallow) > 0)) {
+ 	struct sockaddr saddr;
+ 	struct sockaddr *addr = &saddr;
+-	char addrstr[256];
++	char *addrstr;
++	int addrlen;
++	char ifname[IF_NAMESIZE];
+ 	int addrfound = 0;
++	if ((addrstr = calloc(256, sizeof(char))) == NULL) {
++	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not allocate memory to determine IP address.\n",
++		       name, type, domain);
++	  goto clean_up;
++	}
+ 	if (address->proto == AVAHI_PROTO_INET &&
+ 	    IPBasedDeviceURIs != IP_BASED_URIS_IPV6_ONLY) {
+-	  avahi_address_snprint(addrstr, sizeof(addrstr), address);
++	  avahi_address_snprint(addrstr, 256, address);
+ 	  addr->sa_family = AF_INET;
+ 	  if (inet_aton(addrstr,
+ 			&((struct sockaddr_in *) addr)->sin_addr) &&
+@@ -4704,16 +4711,25 @@ static void resolve_callback(
+ 	} else if (address->proto == AVAHI_PROTO_INET6 &&
+ 		   interface != AVAHI_IF_UNSPEC &&
+ 		   IPBasedDeviceURIs != IP_BASED_URIS_IPV4_ONLY) {
+-	  char ifname[IF_NAMESIZE];
+-	  addrstr[0] = '[';
+-	  avahi_address_snprint(addrstr + 1, sizeof(addrstr) - 1, address);
++	  strncpy(addrstr, "[v1.", 256);
++	  avahi_address_snprint(addrstr + 4, 256 - 6, address);
++	  addrlen = strlen(addrstr + 4);
+ 	  addr->sa_family = AF_INET6;
+-	  if (inet_pton(AF_INET6, addrstr + 1,
++	  if (inet_pton(AF_INET6, addrstr + 4,
+ 			&((struct sockaddr_in6 *) addr)->sin6_addr) &&
+ 	      allowed(addr)) {
+-	    snprintf(addrstr + strlen(addrstr), sizeof(addrstr) -
+-		     strlen(addrstr), "+%s]",
+-		     if_indextoname(interface, ifname));
++	    if (!strncasecmp(addrstr + 4, "fe", 2) &&
++		(addrstr[6] == '8' || addrstr[6] == '9' ||
++		 addrstr[6] == 'A' || addrstr[6] == 'B' ||
++		 addrstr[6] == 'a' || addrstr[6] == 'B'))
++	      /* Link-local address, needs specification of interface */
++	      snprintf(addrstr + addrlen + 4, 256 -
++		       addrlen - 4, "%%%s]",
++		       if_indextoname(interface, ifname));
++	    else {
++	      addrstr[addrlen + 4] = ']';
++	      addrstr[addrlen + 5] = '\0';
++	    }
+ 	    addrfound = 1;
+ 	  }
+ 	}
+@@ -4729,6 +4745,7 @@ static void resolve_callback(
+ 	} else
+ 	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not determine IP address.\n",
+ 		       name, type, domain);
++	free(addrstr);
+       } else {
+ 	/* Check remote printer type and create appropriate local queue to
+ 	   point to it */
+@@ -4736,6 +4753,8 @@ static void resolve_callback(
+       }
+     }
+ 
++    clean_up:
++
+     /* Clean up */
+ 
+     if (rp_entry) {
