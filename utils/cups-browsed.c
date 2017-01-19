@@ -4173,8 +4173,6 @@ generate_local_queue(const char *host,
   char *backup_queue_name = NULL, *local_queue_name = NULL,
        *local_queue_name_lower = NULL;
   int is_cups_queue;
-  /*size_t hl = 0;*/
-  gboolean create = TRUE;
   
 
   is_cups_queue = 0;
@@ -4323,41 +4321,33 @@ generate_local_queue(const char *host,
 
   local_queue_name = remote_queue;
 
-  /* Is there a local queue with the same URI as the remote queue? */
-  if (g_hash_table_find (local_printers,
-			 local_printer_has_uri,
-			 uri))
-    create = FALSE;
-
-  if (create) {
-    /* Is there a local queue with the name of the remote queue? */
+  /* Is there a local queue with the name of the remote queue? */
+  local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
+  local_printer = g_hash_table_lookup (local_printers,
+				       local_queue_name_lower);
+  free(local_queue_name_lower);
+  /* Only consider CUPS queues not created by us */
+  if (local_printer && !local_printer->cups_browsed_controlled) {
+    /* Found local queue with same name as remote queue */
+    /* Is there a local queue with the name <queue>@<host>? */
+    local_queue_name = backup_queue_name;
+    debug_printf("%s already taken, using fallback name: %s\n",
+		 remote_queue, local_queue_name);
     local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
     local_printer = g_hash_table_lookup (local_printers,
 					 local_queue_name_lower);
     free(local_queue_name_lower);
-    /* Only consider CUPS queues not created by us */
     if (local_printer && !local_printer->cups_browsed_controlled) {
-      /* Found local queue with same name as remote queue */
-      /* Is there a local queue with the name <queue>@<host>? */
-      local_queue_name = backup_queue_name;
-      debug_printf("%s already taken, using fallback name: %s\n",
-		   remote_queue, local_queue_name);
-      local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
-      local_printer = g_hash_table_lookup (local_printers,
-					   local_queue_name_lower);
-      free(local_queue_name_lower);
-      if (local_printer && !local_printer->cups_browsed_controlled) {
-	/* Found also a local queue with name <queue>@<host>, so
-	   ignore this remote printer */
-	debug_printf("%s also taken, printer ignored.\n",
-		     local_queue_name);
-	free (backup_queue_name);
-	free (remote_host);
-	free (pdl);
-	free (remote_queue);
-	free (make_model);
-	return NULL;
-      }
+      /* Found also a local queue with name <queue>@<host>, so
+	 ignore this remote printer */
+      debug_printf("%s also taken, printer ignored.\n",
+		   local_queue_name);
+      free (backup_queue_name);
+      free (remote_host);
+      free (pdl);
+      free (remote_queue);
+      free (make_model);
+      return NULL;
     }
   }
 
@@ -4384,21 +4374,20 @@ generate_local_queue(const char *host,
 	 (!strcasecmp(p->host, remote_host) && p->port == port)))
       break;
 
-  if (!create) {
+  /* Is there a local queue with the same URI as the remote queue? */
+  if (!p && g_hash_table_find (local_printers,
+			       local_printer_has_uri,
+			       uri)) {
+    /* Found a local queue with the same URI as our discovered printer
+       would get, so ignore this remote printer */
+    debug_printf("Printer with URI %s already exists, printer ignored.\n",
+		 uri);
     free (remote_host);
     free (backup_queue_name);
     free (pdl);
     free (remote_queue);
     free (make_model);
-    if (p) {
-      return p;
-    } else {
-      /* Found a local queue with the same URI as our discovered printer
-	 would get, so ignore this remote printer */
-      debug_printf("Printer with URI %s already exists, printer ignored.\n",
-		   uri);
-      return NULL;
-    }
+    return NULL;
   }
 
   if (p) {
@@ -4501,6 +4490,7 @@ generate_local_queue(const char *host,
       free (p->domain);
       p->domain = strdup(domain);
     }
+    p->netprinter = is_cups_queue ? 0 : 1;
   } else {
 
     /* We need to create a local queue pointing to the
@@ -4701,11 +4691,18 @@ static void resolve_callback(
 	  (!browseallow_all && cupsArrayCount(browseallow) > 0)) {
 	struct sockaddr saddr;
 	struct sockaddr *addr = &saddr;
-	char addrstr[256];
+	char *addrstr;
+	int addrlen;
+	char ifname[IF_NAMESIZE];
 	int addrfound = 0;
+	if ((addrstr = calloc(256, sizeof(char))) == NULL) {
+	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not allocate memory to determine IP address.\n",
+		       name, type, domain);
+	  goto clean_up;
+	}
 	if (address->proto == AVAHI_PROTO_INET &&
 	    IPBasedDeviceURIs != IP_BASED_URIS_IPV6_ONLY) {
-	  avahi_address_snprint(addrstr, sizeof(addrstr), address);
+	  avahi_address_snprint(addrstr, 256, address);
 	  addr->sa_family = AF_INET;
 	  if (inet_aton(addrstr,
 			&((struct sockaddr_in *) addr)->sin_addr) &&
@@ -4714,16 +4711,25 @@ static void resolve_callback(
 	} else if (address->proto == AVAHI_PROTO_INET6 &&
 		   interface != AVAHI_IF_UNSPEC &&
 		   IPBasedDeviceURIs != IP_BASED_URIS_IPV4_ONLY) {
-	  char ifname[IF_NAMESIZE];
-	  addrstr[0] = '[';
-	  avahi_address_snprint(addrstr + 1, sizeof(addrstr) - 1, address);
+	  strncpy(addrstr, "[v1.", 256);
+	  avahi_address_snprint(addrstr + 4, 256 - 6, address);
+	  addrlen = strlen(addrstr + 4);
 	  addr->sa_family = AF_INET6;
-	  if (inet_pton(AF_INET6, addrstr + 1,
+	  if (inet_pton(AF_INET6, addrstr + 4,
 			&((struct sockaddr_in6 *) addr)->sin6_addr) &&
 	      allowed(addr)) {
-	    snprintf(addrstr + strlen(addrstr), sizeof(addrstr) -
-		     strlen(addrstr), "+%s]",
-		     if_indextoname(interface, ifname));
+	    if (!strncasecmp(addrstr + 4, "fe", 2) &&
+		(addrstr[6] == '8' || addrstr[6] == '9' ||
+		 addrstr[6] == 'A' || addrstr[6] == 'B' ||
+		 addrstr[6] == 'a' || addrstr[6] == 'B'))
+	      /* Link-local address, needs specification of interface */
+	      snprintf(addrstr + addrlen + 4, 256 -
+		       addrlen - 4, "%%%s]",
+		       if_indextoname(interface, ifname));
+	    else {
+	      addrstr[addrlen + 4] = ']';
+	      addrstr[addrlen + 5] = '\0';
+	    }
 	    addrfound = 1;
 	  }
 	}
@@ -4739,12 +4745,15 @@ static void resolve_callback(
 	} else
 	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not determine IP address.\n",
 		       name, type, domain);
+	free(addrstr);
       } else {
 	/* Check remote printer type and create appropriate local queue to
 	   point to it */
 	generate_local_queue(host_name, NULL, port, rp_value, name, type, domain, txt);
       }
     }
+
+    clean_up:
 
     /* Clean up */
 
@@ -6967,12 +6976,11 @@ fail:
     g_object_unref (proxy);
 
   /* Remove all queues which we have set up */
-  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
-       p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
+  while ((p = (remote_printer_t *)cupsArrayFirst(remote_printers)) != NULL) {
     p->status = STATUS_DISAPPEARED;
     p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+    handle_cups_queues(NULL);
   }
-  handle_cups_queues(NULL);
 
   cancel_subscription (subscription_id);
   if (cups_notifier)

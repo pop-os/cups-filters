@@ -1,0 +1,158 @@
+From 9cd9316b9c5c56c55f58e76994e6377057c96a8d Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Fri, 16 Dec 2016 20:58:34 -0200
+Subject: cups-browsed: Fixed handling of IPP network printer queues when cupsd
+ gets temporarily stopped while cups-browsed keeps running.
+
+This is a backport from 1.13.1
+
+- cups-browsed: If CUPS is stopped while cups-browsed is
+  running and there are queue for IPP network printers (not
+  remote CUPS queues) on restart of CUPS the still existing
+  local CUPS queue is not correctly re-connected with
+  cups-browsed and therefore gets removed after a
+  timeout. This should be fixed after a clean-up of
+  re-connecting with remaining queues from a previous session
+  (Debian bug #848223).
+- cups-browsed: Generated queues did not get removed on
+  shutdown (Debian bug #848167).
+
+Bug-Debian: #848167
+Bug-Debian: #848223
+
+Backport-by: Didier Raboud <odyx@debian.org>
+---
+ utils/cups-browsed.c | 79 ++++++++++++++++++++++------------------------------
+ 1 file changed, 34 insertions(+), 45 deletions(-)
+
+diff --git a/utils/cups-browsed.c b/utils/cups-browsed.c
+index ed4abe62..c03e1ea8 100644
+--- a/utils/cups-browsed.c
++++ b/utils/cups-browsed.c
+@@ -4173,8 +4173,6 @@ generate_local_queue(const char *host,
+   char *backup_queue_name = NULL, *local_queue_name = NULL,
+        *local_queue_name_lower = NULL;
+   int is_cups_queue;
+-  /*size_t hl = 0;*/
+-  gboolean create = TRUE;
+   
+ 
+   is_cups_queue = 0;
+@@ -4323,41 +4321,33 @@ generate_local_queue(const char *host,
+ 
+   local_queue_name = remote_queue;
+ 
+-  /* Is there a local queue with the same URI as the remote queue? */
+-  if (g_hash_table_find (local_printers,
+-			 local_printer_has_uri,
+-			 uri))
+-    create = FALSE;
+-
+-  if (create) {
+-    /* Is there a local queue with the name of the remote queue? */
++  /* Is there a local queue with the name of the remote queue? */
++  local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
++  local_printer = g_hash_table_lookup (local_printers,
++				       local_queue_name_lower);
++  free(local_queue_name_lower);
++  /* Only consider CUPS queues not created by us */
++  if (local_printer && !local_printer->cups_browsed_controlled) {
++    /* Found local queue with same name as remote queue */
++    /* Is there a local queue with the name <queue>@<host>? */
++    local_queue_name = backup_queue_name;
++    debug_printf("%s already taken, using fallback name: %s\n",
++		 remote_queue, local_queue_name);
+     local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
+     local_printer = g_hash_table_lookup (local_printers,
+ 					 local_queue_name_lower);
+     free(local_queue_name_lower);
+-    /* Only consider CUPS queues not created by us */
+     if (local_printer && !local_printer->cups_browsed_controlled) {
+-      /* Found local queue with same name as remote queue */
+-      /* Is there a local queue with the name <queue>@<host>? */
+-      local_queue_name = backup_queue_name;
+-      debug_printf("%s already taken, using fallback name: %s\n",
+-		   remote_queue, local_queue_name);
+-      local_queue_name_lower = g_ascii_strdown(local_queue_name, -1);
+-      local_printer = g_hash_table_lookup (local_printers,
+-					   local_queue_name_lower);
+-      free(local_queue_name_lower);
+-      if (local_printer && !local_printer->cups_browsed_controlled) {
+-	/* Found also a local queue with name <queue>@<host>, so
+-	   ignore this remote printer */
+-	debug_printf("%s also taken, printer ignored.\n",
+-		     local_queue_name);
+-	free (backup_queue_name);
+-	free (remote_host);
+-	free (pdl);
+-	free (remote_queue);
+-	free (make_model);
+-	return NULL;
+-      }
++      /* Found also a local queue with name <queue>@<host>, so
++	 ignore this remote printer */
++      debug_printf("%s also taken, printer ignored.\n",
++		   local_queue_name);
++      free (backup_queue_name);
++      free (remote_host);
++      free (pdl);
++      free (remote_queue);
++      free (make_model);
++      return NULL;
+     }
+   }
+ 
+@@ -4384,21 +4374,20 @@ generate_local_queue(const char *host,
+ 	 (!strcasecmp(p->host, remote_host) && p->port == port)))
+       break;
+ 
+-  if (!create) {
++  /* Is there a local queue with the same URI as the remote queue? */
++  if (!p && g_hash_table_find (local_printers,
++			       local_printer_has_uri,
++			       uri)) {
++    /* Found a local queue with the same URI as our discovered printer
++       would get, so ignore this remote printer */
++    debug_printf("Printer with URI %s already exists, printer ignored.\n",
++		 uri);
+     free (remote_host);
+     free (backup_queue_name);
+     free (pdl);
+     free (remote_queue);
+     free (make_model);
+-    if (p) {
+-      return p;
+-    } else {
+-      /* Found a local queue with the same URI as our discovered printer
+-	 would get, so ignore this remote printer */
+-      debug_printf("Printer with URI %s already exists, printer ignored.\n",
+-		   uri);
+-      return NULL;
+-    }
++    return NULL;
+   }
+ 
+   if (p) {
+@@ -4501,6 +4490,7 @@ generate_local_queue(const char *host,
+       free (p->domain);
+       p->domain = strdup(domain);
+     }
++    p->netprinter = is_cups_queue ? 0 : 1;
+   } else {
+ 
+     /* We need to create a local queue pointing to the
+@@ -6967,12 +6957,11 @@ fail:
+     g_object_unref (proxy);
+ 
+   /* Remove all queues which we have set up */
+-  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
+-       p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
++  while ((p = (remote_printer_t *)cupsArrayFirst(remote_printers)) != NULL) {
+     p->status = STATUS_DISAPPEARED;
+     p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
++    handle_cups_queues(NULL);
+   }
+-  handle_cups_queues(NULL);
+ 
+   cancel_subscription (subscription_id);
+   if (cups_notifier)
