@@ -1,3 +1,13 @@
+cups-filters (1.13.3-1) experimental; urgency=medium
+
+  * New upstream version 1.13.3
+    - libcupsfilters: When auto-generating PPD files added support for
+      passing through JPEG input to printers which understand JPEG. This
+      is also done in CUPS-generated PPDs (Closes: #851499)
+  * Build-Depend on CUPS 2.2.2
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 19 Jan 2017 14:02:51 +0100
+
 cups-filters (1.13.2-1) experimental; urgency=medium
 
   * New upstream version 1.13.2
