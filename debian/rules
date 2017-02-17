@@ -66,7 +66,7 @@ get-orig-source:
 	set -e;\
 	quilt pop -af || true ;\
 	rm -Rf .pc ;\
-	gbp import-orig --pristine-tar --uscan --upstream-branch=upstream/latest;\
+	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
 	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
 	ucommit=`git rev-parse --verify upstream/latest`;\
 	git dpm record-new-upstream --rebase-patched --allow-changes-in-debian-branch ../cups-filters_$$utag.orig.tar.xz $$ucommit ;\
