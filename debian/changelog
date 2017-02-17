@@ -1,3 +1,14 @@
+cups-filters (1.13.4-1) experimental; urgency=medium
+
+  * New upstream version 1.13.3
+    - cups-browsed: Corrected determination whether an IPP status is an error,
+      to avoid "Unable to create/modify CUPS queue (Success)" and infinite
+      repetition of a succeeded operation (Closes: #852436)
+
+  * Add get-orig-source target to shorten git-dpm
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 17 Feb 2017 21:06:06 +0100
+
 cups-filters (1.13.3-1) experimental; urgency=medium
 
   * New upstream version 1.13.3
