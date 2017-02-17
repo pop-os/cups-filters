@@ -61,3 +61,13 @@ endif
 	install -D -m 644 debian/local/modules-load.conf debian/cups-filters/etc/modules-load.d/cups-filters.conf
 
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
+
+get-orig-source:
+	set -e;\
+	quilt pop -af || true ;\
+	rm -Rf .pc ;\
+	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
+	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
+	ucommit=`git rev-parse --verify upstream/latest`;\
+	git dpm record-new-upstream --rebase-patched --allow-changes-in-debian-branch ../cups-filters_$$utag.orig.tar.xz $$ucommit ;\
+	git dpm update-patches -m "Merge upstream-repacked $$utag version and refresh git-dpm patches"
