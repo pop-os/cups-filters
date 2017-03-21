@@ -1,3 +1,10 @@
+cups-filters (1.13.4-1ubuntu1) zesty; urgency=medium
+
+  * Let print queues for IPP printers which support driverless printing
+    (IPP Everywhere, Apple AirPrint) be set up automatically.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 21 Mar 2017 15:36:06 -0300
+
 cups-filters (1.13.4-1) experimental; urgency=medium
 
   * New upstream version 1.13.3
