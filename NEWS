@@ -1,5 +1,31 @@
-NEWS - OpenPrinting CUPS Filters v1.13.4 - 2017-02-17
+NEWS - OpenPrinting CUPS Filters v1.13.5 - 2017-04-27
 -----------------------------------------------------
+
+CHANGES IN V1.13.5
+
+	- foomatic-rip: When called via the utility cupsfilter from
+          CUPS, foomatic-rip was not able to read the PPD file with
+          the file name supplied as environment variable PPD (Bug
+          #1388).
+	- driverless: Improved error message output.
+	- libcupsfilters: Fixed error handling of the PPD file
+	  generator for driverless printing, so that callers get
+	  decent error messages.
+	- libcupsfilters: Do not generate a PPD file where the only
+	  output data format is JPEG, as JPEG does not support
+	  multi-page documents.
+	- libcupsfilters: Let PPD generator skip broken page size
+	  records and add warnings for debugging to the PPD.
+	- libcupsfilters: Updated PPD generator to match with the
+	  current GIT state of the one of CUPS.
+	- braille: Automatically select a table according to the
+	  current locale.
+	- braille: Update for liblouis table list.
+	- braille: Added support for text margins.
+	- cups-browsed: When creating a local queue for a remote CUPS
+	  printer, add the line '*APRemoteQueueID: ""' to the PPD file
+	  so that CUPS sets the CUPS_PRINTER_REMOTE bit for the
+	  printer type of the local queue (Bug #1386).
 
 CHANGES IN V1.13.4
 
