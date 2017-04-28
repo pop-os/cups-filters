@@ -1,4 +1,5 @@
 libcupsfilters.so.1 libcupsfilters1 #MINVER#
+ _CFcupsSetError@Base 1.13.5
  _cupsImagePutCol@Base 1.0~b1
  _cupsImagePutRow@Base 1.0~b1
  _cupsImageReadBMP@Base 1.0~b1
