@@ -1,6 +1,14 @@
+cups-filters (1.13.5-1) experimental; urgency=medium
+
+  * New upstream version 1.13.5
+  * Fix version typo in previous changelog entry
+  * Add _CFcupsSetError symbol to libcupsfilters.so.1
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 28 Apr 2017 10:05:35 +0200
+
 cups-filters (1.13.4-1) experimental; urgency=medium
 
-  * New upstream version 1.13.3
+  * New upstream version 1.13.4
     - cups-browsed: Corrected determination whether an IPP status is an error,
       to avoid "Unable to create/modify CUPS queue (Success)" and infinite
       repetition of a succeeded operation (Closes: #852436)

@@ -121,7 +121,7 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/braille.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagemagick.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs.gen.in \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
 
@@ -218,7 +218,9 @@ CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
 	filter/braille/drivers/generic/brftoembosser \
 	filter/braille/filters/cups-braille.sh \
 	filter/braille/filters/imagetobrf \
-	filter/braille/filters/texttobrf mime/cupsfilters.convs
+	filter/braille/filters/texttobrf \
+	filter/braille/filters/liblouis1.defs.gen \
+	mime/cupsfilters.convs
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -906,6 +908,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/filter/braille/drivers/index/textbrftoindexv3.in \
 	$(top_srcdir)/filter/braille/filters/cups-braille.sh.in \
 	$(top_srcdir)/filter/braille/filters/imagetobrf.in \
+	$(top_srcdir)/filter/braille/filters/liblouis1.defs.gen.in \
 	$(top_srcdir)/filter/braille/filters/texttobrf.in \
 	$(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in \
 	$(top_srcdir)/mime/cupsfilters.convs.in \
@@ -1363,7 +1366,10 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_5)
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis3.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis4.defs
 
-@ENABLE_BRAILLE_TRUE@GENERATED_DEFS = $(GENERATED_LIBLOUIS)
+@ENABLE_BRAILLE_TRUE@GENERATED_DEFS = \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs \
+@ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
+
 @ENABLE_BRAILLE_TRUE@nodist_pkgppdc_DATA = \
 @ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
 
@@ -1987,6 +1993,8 @@ filter/braille/filters/cups-braille.sh: $(top_builddir)/config.status $(top_srcd
 filter/braille/filters/imagetobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/imagetobrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/braille/filters/texttobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/texttobrf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/liblouis1.defs.gen: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/liblouis1.defs.gen.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 mime/cupsfilters.convs: $(top_builddir)/config.status $(top_srcdir)/mime/cupsfilters.convs.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -5298,8 +5306,15 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 .PRECIOUS: Makefile
 
 
+@ENABLE_BRAILLE_TRUE@filter/braille/filters/liblouis1.defs: filter/braille/filters/liblouis1.defs.gen
+@ENABLE_BRAILLE_TRUE@	$< > $@
+
 @ENABLE_BRAILLE_TRUE@$(GENERATED_LIBLOUIS): filter/braille/filters/liblouis%.defs: filter/braille/filters/liblouis1.defs
-@ENABLE_BRAILLE_TRUE@	sed -e "s/Braille transcription/Additional Braille transcription ($*)/" -e s/LibLouis/LibLouis$*/ < $< > $@
+@ENABLE_BRAILLE_TRUE@	sed -e "s/Braille transcription/Additional Braille transcription ($*)/" \
+@ENABLE_BRAILLE_TRUE@	    -e "s/^  \\*Choice /  Choice /" \
+@ENABLE_BRAILLE_TRUE@	    -e "s/^  Choice \"None\//  *Choice \"None\//" \
+@ENABLE_BRAILLE_TRUE@	    -e s/LibLouis/LibLouis$*/ \
+@ENABLE_BRAILLE_TRUE@	    < $< > $@
 
 $(cups_notifier_sources): utils/org.cups.cupsd.Notifier.xml
 	gdbus-codegen \

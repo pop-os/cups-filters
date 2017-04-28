@@ -33,6 +33,7 @@
  * Include necessary headers.
  */
 
+#include <errno.h>
 #include "driver.h"
 #include <string.h>
 #include <ctype.h>
@@ -77,6 +78,34 @@ char ppdgenerator_msg[1024];
 
 static void	pwg_ppdize_name(const char *ipp, char *name, size_t namesize);
 static void	pwg_ppdize_resolution(ipp_attribute_t *attr, int element, int *xres, int *yres, char *name, size_t namesize);
+
+/*
+ * '_cupsSetError()' - Set the last PPD generator status-message.
+ *
+ * This function replaces the original _cupsSetError() of the private
+ * API of the CUPS library. The #define and the renamed function prevent
+ * from the linker using the original function of the CUPS library instead 
+ * of this replacement function.
+ */
+
+#define _cupsSetError(x, y, z) _CFcupsSetError(x, y, z)
+
+void
+_CFcupsSetError(ipp_status_t status,	/* I - IPP status code
+					   (for compatibility, ignored) */
+		const char   *message,	/* I - status-message value */
+		int          localize)	/* I - Localize the message?
+					   (for compatibility, ignored) */
+{
+  (void)status;
+  (void)localize;
+
+  if (!message && errno)
+    message  = strerror(errno);
+
+  if (message)
+    snprintf(ppdgenerator_msg, sizeof(ppdgenerator_msg), "%s", message);
+}
 
 int			/* O - 1 on match, 0 otherwise */
 _cups_isalnum(int ch)			/* I - Character to test */
@@ -328,12 +357,13 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 		 const char *make_model,/* I - Make and model from DNS-SD */
 		 const char *pdl,       /* I - List of PDLs from DNS-SD */
 		 int    color,          /* I - Color printer? (from DNS-SD) */
-		 int    duplex)         /* O - Error/status message */
+		 int    duplex)         /* I - Duplex printer? (from DNS-SD) */
 {
   cups_file_t		*fp;		/* PPD file */
   cups_array_t		*sizes;		/* Media sizes we've added */
   ipp_attribute_t	*attr,		/* xxx-supported */
 			*defattr,	/* xxx-default */
+                        *quality,	/* print-quality-supported */
 			*x_dim, *y_dim;	/* Media dimensions */
   ipp_t			*media_size;	/* Media size collection */
   char			make[256],	/* Make and model */
@@ -434,15 +464,27 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   if (buffer)
     *buffer = '\0';
 
-  if (!buffer || bufsize < 1 || !response)
+  if (!buffer || bufsize < 1)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(EINVAL), 0);
     return (NULL);
+  }
+
+  if (!response)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("No IPP attributes."), 1);
+    return (NULL);
+  }
 
  /*
   * Open a temporary file for the PPD...
   */
 
   if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL)
+  {
+    _cupsSetError(IPP_STATUS_ERROR_INTERNAL, strerror(errno), 0);
     return (NULL);
+  }
 
  /*
   * Standard stuff for PPD file...
@@ -548,10 +590,8 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 	formatfound = 1;
 	is_apple = 1;
 #endif
-      } else if (!_cups_strncasecmp(format, "image/jpeg", 10)) {
+      } else if (!_cups_strncasecmp(format, "image/jpeg", 10))
 	cupsFilePuts(fp, "*cupsFilter2: \"image/jpeg image/jpeg 0 -\"\n");
-	formatfound = 1;
-      }
       if (attr)
 	/* Next format in attribute */
 	i ++;
@@ -565,11 +605,8 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       }
     }
   }
-  if (formatfound == 0) {
-    snprintf(ppdgenerator_msg, sizeof(ppdgenerator_msg),
-	     "No data format suitable for PPD auto-generation supported by the printer, not generating PPD file.");
+  if (formatfound == 0)
     goto bad_ppd;
-  }
 
  /*
   * PageSize/PageRegion/ImageableArea/PaperDimension
@@ -668,6 +705,18 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
           continue;
         }
 
+	if (!pwg->ppd || pwg->width <= 0 || pwg->length <= 0) {
+	  cupsFilePrintf(fp, "*%% warning: Invalid size '%s' (%dx%d pt, %.1fx%.1f inches, %.1fx%.1f cm) reported by printer.\n",
+			 (pwg->ppd ? pwg->ppd : "NO SIZE NAME"),
+			 (int)(pwg->width * 72.0 / 2540.0),
+			 (int)(pwg->length * 72.0 / 2540.0),
+			 pwg->width / 2540.0,
+			 pwg->length / 2540.0,
+			 pwg->width / 1000.0,
+			 pwg->length / 1000.0);
+	  continue;
+	}
+
         cupsArrayAdd(sizes, (void *)pwg->ppd);
 
         _cupsStrFormatd(twidth, twidth + sizeof(twidth), pwg->width * 72.0 / 2540.0, loc);
@@ -705,6 +754,9 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
         if (cupsArrayFind(sizes, (void *)pwg->ppd))
           continue;
+
+	if (!pwg->ppd || pwg->width <= 0 || pwg->length <= 0)
+	  continue;
 
         cupsArrayAdd(sizes, (void *)pwg->ppd);
 
@@ -746,6 +798,9 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
         if (cupsArrayFind(sizes, (void *)pwg->ppd))
           continue;
+
+	if (!pwg->ppd || pwg->width <= 0 || pwg->length <= 0)
+	  continue;
 
         cupsArrayAdd(sizes, (void *)pwg->ppd);
 
@@ -929,6 +984,19 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       { "cardboard", _("Cardboard") },
       { "cardstock", _("Cardstock") },
       { "cd", _("CD") },
+      { "com.hp.advanced-photo", _("Advanced Photo Paper") }, /* HP */
+      { "com.hp.brochure-glossy", _("Glossy Brochure Paper") }, /* HP */
+      { "com.hp.brochure-matte", _("Matte Brochure Paper") }, /* HP */
+      { "com.hp.cover-matte", _("Matte Cover Paper") }, /* HP */
+      { "com.hp.ecosmart-lite", _("Office Recycled Paper") }, /* HP */
+      { "com.hp.everyday-glossy", _("Everyday Glossy Photo Paper") }, /* HP */
+      { "com.hp.everyday-matte", _("Everyday Matte Paper") }, /* HP */
+      { "com.hp.extra-heavy", _("Extra Heavyweight Paper") }, /* HP */
+      { "com.hp.intermediate", _("Multipurpose Paper") }, /* HP */
+      { "com.hp.mid-weight", _("Mid-Weight Paper") }, /* HP */
+      { "com.hp.premium-inkjet", _("Premium Inkjet Paper") }, /* HP */
+      { "com.hp.premium-photo", _("Premium Photo Glossy Paper") }, /* HP */
+      { "com.hp.premium-presentation-matte", _("Premium Presentation Matte Paper") }, /* HP */
       { "continuous", _("Continuous") },
       { "continuous-long", _("Continuous Long") },
       { "continuous-short", _("Continuous Short") },
@@ -976,6 +1044,10 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       { "gravure-cylinder", _("Gravure Cylinder") },
       { "image-setter-paper", _("Image Setter Paper") },
       { "imaging-cylinder", _("Imaging Cylinder") },
+      { "jp.co.canon_photo-paper-plus-glossy-ii", _("Photo Paper Plus Glossy II") }, /* Canon */
+      { "jp.co.canon_photo-paper-pro-platinum", _("Photo Paper Pro Platinum") }, /* Canon */
+      { "jp.co.canon-photo-paper-plus-glossy-ii", _("Photo Paper Plus Glossy II") }, /* Canon */
+      { "jp.co.canon-photo-paper-pro-platinum", _("Photo Paper Pro Platinum") }, /* Canon */
       { "labels", _("Labels") },
       { "labels-colored", _("Colored Labels") },
       { "labels-glossy", _("Glossy Labels") },
@@ -999,8 +1071,9 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       { "multi-part-form", _("Multi Part Form") },
       { "other", _("Other") },
       { "paper", _("Paper") },
+      { "photo", _("Photo Paper") }, /* HP mis-spelling */
       { "photographic", _("Photo Paper") },
-      { "photographic-archival", _("Photographic Archival") },
+      { "photographic-archival", _("Archival Photo Paper") },
       { "photographic-film", _("Photo Film") },
       { "photographic-glossy", _("Glossy Photo Paper") },
       { "photographic-high-gloss", _("High Gloss Photo Paper") },
@@ -1027,14 +1100,14 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       { "single-face", _("Single Face") },
       { "single-wall", _("Single Wall Cardboard") },
       { "sleeve", _("Sleeve") },
-      { "stationery", _("Stationery") },
-      { "stationery-archival", _("Stationery Archival") },
+      { "stationery", _("Plain Paper") },
+      { "stationery-archival", _("Archival Paper") },
       { "stationery-coated", _("Coated Paper") },
-      { "stationery-cotton", _("Stationery Cotton") },
+      { "stationery-cotton", _("Cotton Paper") },
       { "stationery-fine", _("Vellum Paper") },
       { "stationery-heavyweight", _("Heavyweight Paper") },
-      { "stationery-heavyweight-coated", _("Stationery Heavyweight Coated") },
-      { "stationery-inkjet", _("Stationery Inkjet Paper") },
+      { "stationery-heavyweight-coated", _("Heavyweight Coated Paper") },
+      { "stationery-inkjet", _("Inkjet Paper") },
       { "stationery-letterhead", _("Letterhead") },
       { "stationery-lightweight", _("Lightweight Paper") },
       { "stationery-preprinted", _("Preprinted Paper") },
@@ -1050,14 +1123,20 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
     cupsFilePrintf(fp, "*OpenUI *MediaType: PickOne\n"
                        "*OrderDependency: 10 AnySetup *MediaType\n"
                        "*DefaultMediaType: %s\n", ppdname);
-    for (i = 0; i < (int)(sizeof(media_types) / sizeof(media_types[0])); i ++)
+    for (i = 0; i < count; i ++)
     {
-      if (!ippContainsString(attr, media_types[i][0]))
-        continue;
+      const char *keyword = ippGetString(attr, i, NULL);
 
-      pwg_ppdize_name(media_types[i][0], ppdname, sizeof(ppdname));
+      pwg_ppdize_name(keyword, ppdname, sizeof(ppdname));
 
-      cupsFilePrintf(fp, "*MediaType %s/%s: \"<</MediaType(%s)>>setpagedevice\"\n", ppdname, _cupsLangString(lang, media_types[i][1]), ppdname);
+      for (j = 0; j < (int)(sizeof(media_types) / sizeof(media_types[0])); j ++)
+        if (!strcmp(keyword, media_types[j][0]))
+          break;
+
+      if (j < (int)(sizeof(media_types) / sizeof(media_types[0])))
+        cupsFilePrintf(fp, "*MediaType %s/%s: \"<</MediaType(%s)>>setpagedevice\"\n", ppdname, _cupsLangString(lang, media_types[j][1]), ppdname);
+      else
+        cupsFilePrintf(fp, "*MediaType %s/%s: \"<</MediaType(%s)>>setpagedevice\"\n", ppdname, keyword, ppdname);
     }
     cupsFilePuts(fp, "*CloseUI: *MediaType\n");
   }
@@ -1280,93 +1359,186 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 
  /*
   * Finishing options...
+  *
+  * Eventually need to re-add support for finishings-col-database, however
+  * it is difficult to map arbitrary finishing-template values to PPD options
+  * and have the right constraints apply (e.g. stapling vs. folding vs.
+  * punching, etc.)
   */
 
-  if ((attr = ippFindAttribute(response, "finishings-col-database", IPP_TAG_BEGIN_COLLECTION)) != NULL)
+  if ((attr = ippFindAttribute(response, "finishings-supported", IPP_TAG_ENUM)) != NULL)
   {
-    ipp_t		*col;		/* Collection value */
-    ipp_attribute_t	*template;	/* "finishing-template" member */
     const char		*name;		/* String name */
-    int			value;		/* Enum value, if any */
+    int			value;		/* Enum value */
     cups_array_t	*names;		/* Names we've added */
 
     count = ippGetCount(attr);
     names = cupsArrayNew3((cups_array_func_t)strcmp, NULL, NULL, 0, (cups_acopy_func_t)strdup, (cups_afree_func_t)free);
 
-    cupsFilePrintf(fp, "*OpenUI *cupsFinishingTemplate/%s: PickMany\n"
-		       "*OrderDependency: 10 AnySetup *cupsFinishingTemplate\n"
-		       "*DefaultcupsFinishingTemplate: none\n"
-		       "*cupsFinishingTemplate none/%s: \"\"\n"
-		       "*cupsIPPFinishings 3/none: \"*cupsFinishingTemplate none\"\n", _cupsLangString(lang, _("Finishing")), _cupsLangString(lang, _("No Finishing")));
+   /*
+    * Staple/Bind/Stitch
+    */
 
     for (i = 0; i < count; i ++)
     {
-      col      = ippGetCollection(attr, i);
-      template = ippFindAttribute(col, "finishing-template", IPP_TAG_ZERO);
+      value = ippGetInteger(attr, i);
+      name  = ippEnumString("finishings", value);
 
-      if ((name = ippGetString(template, 0, NULL)) == NULL || !strcmp(name, "none"))
-        continue;
+      if (!strncmp(name, "staple-", 7) || !strncmp(name, "bind-", 5) || !strncmp(name, "edge-stitch-", 12) || !strcmp(name, "saddle-stitch"))
+        break;
+    }
 
-      if (cupsArrayFind(names, (char *)name))
-        continue;			/* Already did this finishing template */
+    if (i < count)
+    {
+      cupsFilePrintf(fp, "*OpenUI *StapleLocation/%s: PickOne\n", _cupsLangString(lang, _("Staple")));
+      cupsFilePuts(fp, "*OrderDependency: 10 AnySetup *StapleLocation\n");
+      cupsFilePuts(fp, "*DefaultStapleLocation: None\n");
+      cupsFilePrintf(fp, "*StapleLocation None/%s: \"\"\n", _cupsLangString(lang, _("None")));
 
-      cupsArrayAdd(names, (char *)name);
-
-      for (j = 0; j < (int)(sizeof(finishings) / sizeof(finishings[0])); j ++)
+      for (; i < count; i ++)
       {
-        if (!strcmp(finishings[j][0], name))
-	{
-          cupsFilePrintf(fp, "*cupsFinishingTemplate %s/%s: \"\"\n", name, _cupsLangString(lang, finishings[j][1]));
+        value = ippGetInteger(attr, i);
+        name  = ippEnumString("finishings", value);
 
-	  value = ippEnumValue("finishings", name);
+        if (strncmp(name, "staple-", 7) && strncmp(name, "bind-", 5) && strncmp(name, "edge-stitch-", 12) && strcmp(name, "saddle-stitch"))
+          continue;
 
-	  if (value)
-	    cupsFilePrintf(fp, "*cupsIPPFinishings %d/%s: \"*cupsFinishingTemplate %s\"\n", value, name, name);
-          break;
-	}
+        if (cupsArrayFind(names, (char *)name))
+          continue;			/* Already did this finishing template */
+
+        cupsArrayAdd(names, (char *)name);
+
+        for (j = 0; j < (int)(sizeof(finishings) / sizeof(finishings[0])); j ++)
+        {
+          if (!strcmp(finishings[j][0], name))
+          {
+            cupsFilePrintf(fp, "*StapleLocation %s/%s: \"\"\n", name, _cupsLangString(lang, finishings[j][1]));
+            cupsFilePrintf(fp, "*cupsIPPFinishings %d/%s: \"*StapleLocation %s\"\n", value, name, name);
+            break;
+          }
+        }
       }
+
+      cupsFilePuts(fp, "*CloseUI: *StapleLocation\n");
+    }
+
+   /*
+    * Fold
+    */
+
+    for (i = 0; i < count; i ++)
+    {
+      value = ippGetInteger(attr, i);
+      name  = ippEnumString("finishings", value);
+
+      if (!strncmp(name, "fold-", 5))
+        break;
+    }
+
+    if (i < count)
+    {
+      cupsFilePrintf(fp, "*OpenUI *FoldType/%s: PickOne\n", _cupsLangString(lang, _("Fold")));
+      cupsFilePuts(fp, "*OrderDependency: 10 AnySetup *FoldType\n");
+      cupsFilePuts(fp, "*DefaultFoldType: None\n");
+      cupsFilePrintf(fp, "*FoldType None/%s: \"\"\n", _cupsLangString(lang, _("None")));
+
+      for (; i < count; i ++)
+      {
+        value = ippGetInteger(attr, i);
+        name  = ippEnumString("finishings", value);
+
+        if (strncmp(name, "fold-", 5))
+          continue;
+
+        if (cupsArrayFind(names, (char *)name))
+          continue;			/* Already did this finishing template */
+
+        cupsArrayAdd(names, (char *)name);
+
+        for (j = 0; j < (int)(sizeof(finishings) / sizeof(finishings[0])); j ++)
+        {
+          if (!strcmp(finishings[j][0], name))
+          {
+            cupsFilePrintf(fp, "*FoldType %s/%s: \"\"\n", name, _cupsLangString(lang, finishings[j][1]));
+            cupsFilePrintf(fp, "*cupsIPPFinishings %d/%s: \"*FoldType %s\"\n", value, name, name);
+            break;
+          }
+        }
+      }
+
+      cupsFilePuts(fp, "*CloseUI: *FoldType\n");
+    }
+
+   /*
+    * Punch
+    */
+
+    for (i = 0; i < count; i ++)
+    {
+      value = ippGetInteger(attr, i);
+      name  = ippEnumString("finishings", value);
+
+      if (!strncmp(name, "punch-", 6))
+        break;
+    }
+
+    if (i < count)
+    {
+      cupsFilePrintf(fp, "*OpenUI *PunchMedia/%s: PickOne\n", _cupsLangString(lang, _("Punch")));
+      cupsFilePuts(fp, "*OrderDependency: 10 AnySetup *PunchMedia\n");
+      cupsFilePuts(fp, "*DefaultPunchMedia: None\n");
+      cupsFilePrintf(fp, "*PunchMedia None/%s: \"\"\n", _cupsLangString(lang, _("None")));
+
+      for (i = 0; i < count; i ++)
+      {
+        value = ippGetInteger(attr, i);
+        name  = ippEnumString("finishings", value);
+
+        if (strncmp(name, "punch-", 6))
+          continue;
+
+        if (cupsArrayFind(names, (char *)name))
+          continue;			/* Already did this finishing template */
+
+        cupsArrayAdd(names, (char *)name);
+
+        for (j = 0; j < (int)(sizeof(finishings) / sizeof(finishings[0])); j ++)
+        {
+          if (!strcmp(finishings[j][0], name))
+          {
+            cupsFilePrintf(fp, "*PunchMedia %s/%s: \"\"\n", name, _cupsLangString(lang, finishings[j][1]));
+            cupsFilePrintf(fp, "*cupsIPPFinishings %d/%s: \"*PunchMedia %s\"\n", value, name, name);
+            break;
+          }
+        }
+      }
+
+      cupsFilePuts(fp, "*CloseUI: *PunchMedia\n");
+    }
+
+   /*
+    * Booklet
+    */
+
+    if (ippContainsInteger(attr, IPP_FINISHINGS_BOOKLET_MAKER))
+    {
+      cupsFilePrintf(fp, "*OpenUI *Booklet/%s: Boolean\n", _cupsLangString(lang, _("Booklet")));
+      cupsFilePuts(fp, "*OrderDependency: 10 AnySetup *Booklet\n");
+      cupsFilePuts(fp, "*DefaultBooklet: False\n");
+      cupsFilePuts(fp, "*Booklet False: \"\"\n");
+      cupsFilePuts(fp, "*Booklet True: \"\"\n");
+      cupsFilePrintf(fp, "*cupsIPPFinishings %d/booklet-maker: \"*Booklet True\"\n", IPP_FINISHINGS_BOOKLET_MAKER);
+      cupsFilePuts(fp, "*CloseUI: *Booklet\n");
     }
 
     cupsArrayDelete(names);
-
-    cupsFilePuts(fp, "*CloseUI: *cupsFinishingTemplate\n");
-  }
-  else if ((attr = ippFindAttribute(response, "finishings-supported", IPP_TAG_ENUM)) != NULL && (count = ippGetCount(attr)) > 1 )
-  {
-    const char		*name;		/* String name */
-    int			value;		/* Enum value, if any */
-
-    count = ippGetCount(attr);
-
-    cupsFilePrintf(fp, "*OpenUI *cupsFinishingTemplate/%s: PickMany\n"
-		       "*OrderDependency: 10 AnySetup *cupsFinishingTemplate\n"
-		       "*DefaultcupsFinishingTemplate: none\n"
-		       "*cupsFinishingTemplate none/%s: \"\"\n"
-		       "*cupsIPPFinishings 3/none: \"*cupsFinishingTemplate none\"\n", _cupsLangString(lang, _("Finishing")), _cupsLangString(lang, _("No Finishing")));
-
-    for (i = 0; i < count; i ++)
-    {
-      if ((value = ippGetInteger(attr, i)) == 3)
-        continue;
-
-      name = ippEnumString("finishings", value);
-      for (j = 0; j < (int)(sizeof(finishings) / sizeof(finishings[0])); j ++)
-      {
-        if (!strcmp(finishings[j][0], name))
-	{
-          cupsFilePrintf(fp, "*cupsFinishingTemplate %s/%s: \"\"\n", name, _cupsLangString(lang, finishings[j][1]));
-	  cupsFilePrintf(fp, "*cupsIPPFinishings %d/%s: \"*cupsFinishingTemplate %s\"\n", value, name, name);
-          break;
-	}
-      }
-    }
-
-    cupsFilePuts(fp, "*CloseUI: *cupsFinishingTemplate\n");
   }
 
  /*
   * cupsPrintQuality and DefaultResolution...
   */
+
+  quality = ippFindAttribute(response, "print-quality-supported", IPP_TAG_ENUM);
 
   if ((attr = ippFindAttribute(response, "pwg-raster-document-resolution-supported", IPP_TAG_RESOLUTION)) != NULL)
   {
@@ -1378,16 +1550,19 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
     cupsFilePrintf(fp, "*OpenUI *cupsPrintQuality/%s: PickOne\n"
 		       "*OrderDependency: 10 AnySetup *cupsPrintQuality\n"
 		       "*DefaultcupsPrintQuality: Normal\n", _cupsLangString(lang, _("Print Quality")));
-    if (count > 2)
+    if (count > 2 || ippContainsInteger(quality, IPP_QUALITY_DRAFT))
     {
       pwg_ppdize_resolution(attr, 0, &xres, &yres, NULL, 0);
       cupsFilePrintf(fp, "*cupsPrintQuality Draft/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Draft")), xres, yres);
     }
     pwg_ppdize_resolution(attr, count / 2, &xres, &yres, NULL, 0);
     cupsFilePrintf(fp, "*cupsPrintQuality Normal/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Normal")), xres, yres);
-    if (count > 1)
+    if (count > 1 || ippContainsInteger(quality, IPP_QUALITY_HIGH))
     {
-      pwg_ppdize_resolution(attr, count - 1, &xres, &yres, NULL, 0);
+      if (count > 1)
+        pwg_ppdize_resolution(attr, count - 1, &xres, &yres, NULL, 0);
+      else
+        pwg_ppdize_resolution(attr, 0, &xres, &yres, NULL, 0);
       cupsFilePrintf(fp, "*cupsPrintQuality High/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("High")), xres, yres);
     }
 
@@ -1419,10 +1594,7 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
       * Invalid "urf-supported" value...
       */
 
-      snprintf(ppdgenerator_msg, sizeof(ppdgenerator_msg),
-	       "Invalid resolution entry in \"urf-supported\" IPP attribute: %s. Not generating PPD file.",
-	       ippGetString(attr, i, NULL));
-	       goto bad_ppd;
+      goto bad_ppd;
     }
     else
     {
@@ -1437,19 +1609,38 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 			 "*DefaultcupsPrintQuality: Normal\n", _cupsLangString(lang, _("Print Quality")));
       if ((lowdpi & 1) == 0)
 	cupsFilePrintf(fp, "*cupsPrintQuality Draft/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Draft")), lowdpi, lowdpi / 2);
+      else if (ippContainsInteger(quality, IPP_QUALITY_DRAFT))
+	cupsFilePrintf(fp, "*cupsPrintQuality Draft/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Draft")), lowdpi, lowdpi);
       cupsFilePrintf(fp, "*cupsPrintQuality Normal/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Normal")), lowdpi, lowdpi);
-      if (hidpi > lowdpi)
+      if (hidpi > lowdpi || ippContainsInteger(quality, IPP_QUALITY_HIGH))
 	cupsFilePrintf(fp, "*cupsPrintQuality High/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("High")), hidpi, hidpi);
       cupsFilePuts(fp, "*CloseUI: *cupsPrintQuality\n");
     }
   }
-  else if ((attr = ippFindAttribute(response, "printer-resolution-default", IPP_TAG_RESOLUTION)) != NULL)
-  {
-    pwg_ppdize_resolution(attr, 0, &xres, &yres, ppdname, sizeof(ppdname));
-    cupsFilePrintf(fp, "*DefaultResolution: %s\n", ppdname);
-  }
   else
-    cupsFilePuts(fp, "*DefaultResolution: 300dpi\n");
+  {
+    if ((attr = ippFindAttribute(response, "printer-resolution-default", IPP_TAG_RESOLUTION)) != NULL)
+    {
+      pwg_ppdize_resolution(attr, 0, &xres, &yres, ppdname, sizeof(ppdname));
+    }
+    else
+    {
+      xres = yres = 300;
+      strlcpy(ppdname, "300dpi", sizeof(ppdname));
+    }
+
+    cupsFilePrintf(fp, "*DefaultResolution: %s\n", ppdname);
+
+    cupsFilePrintf(fp, "*OpenUI *cupsPrintQuality/%s: PickOne\n"
+                       "*OrderDependency: 10 AnySetup *cupsPrintQuality\n"
+                       "*DefaultcupsPrintQuality: Normal\n", _cupsLangString(lang, _("Print Quality")));
+    if (ippContainsInteger(quality, IPP_QUALITY_DRAFT))
+      cupsFilePrintf(fp, "*cupsPrintQuality Draft/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Draft")), xres, yres);
+    cupsFilePrintf(fp, "*cupsPrintQuality Normal/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("Normal")), xres, yres);
+    if (ippContainsInteger(quality, IPP_QUALITY_HIGH))
+      cupsFilePrintf(fp, "*cupsPrintQuality High/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n", _cupsLangString(lang, _("High")), xres, yres);
+    cupsFilePuts(fp, "*CloseUI: *cupsPrintQuality\n");
+  }
 
  /*
   * Close up and return...
@@ -1474,6 +1665,8 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   cupsFileClose(fp);
   unlink(buffer);
   *buffer = '\0';
+
+  _cupsSetError(IPP_STATUS_ERROR_INTERNAL, _("Printer does not support required IPP attributes or document formats."), 1);
 
   return (NULL);
 }
