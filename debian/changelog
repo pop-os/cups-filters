@@ -1,6 +1,6 @@
 cups-filters (1.13.4-1) experimental; urgency=medium
 
-  * New upstream version 1.13.3
+  * New upstream version 1.13.4
     - cups-browsed: Corrected determination whether an IPP status is an error,
       to avoid "Unable to create/modify CUPS queue (Success)" and infinite
       repetition of a succeeded operation (Closes: #852436)
