@@ -16,6 +16,7 @@ override_dh_auto_configure:
 		--mandir=/usr/share/man \
 		--enable-static \
 		--enable-mutool \
+		--enable-auto-setup-driverless \
 		--with-mutool-path=/usr/bin/mutool \
 		--with-test-font-path=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
 
