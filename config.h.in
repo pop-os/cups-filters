@@ -48,6 +48,9 @@
 /* Transient run-time state dir of CUPS */
 #undef CUPS_STATEDIR
 
+/* Auto-setup driverless IPP network printers? */
+#undef DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
+
 /* Define if you have the avahi library */
 #undef HAVE_AVAHI
 
