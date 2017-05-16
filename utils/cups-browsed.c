@@ -274,6 +274,7 @@ typedef enum ip_based_uris_e {
    IPP printers, for all printers */
 typedef enum create_ipp_printer_queues_e {
   IPP_PRINTERS_NO,
+  IPP_PRINTERS_LOCAL_ONLY,
   IPP_PRINTERS_EVERYWHERE,
   IPP_PRINTERS_APPLERASTER,
   IPP_PRINTERS_DRIVERLESS,
@@ -354,7 +355,11 @@ static char *DomainSocket = NULL;
 static ip_based_uris_t IPBasedDeviceURIs = IP_BASED_URIS_NO;
 static unsigned int CreateRemoteRawPrinterQueues = 0;
 static unsigned int CreateRemoteCUPSPrinterQueues = 1;
-static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_NO;
+#ifdef DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
+static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_DRIVERLESS;
+#else
+static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_LOCAL_ONLY;
+#endif
 static ipp_queue_type_t IPPPrinterQueueType = PPD_YES;
 static int NewIPPPrinterQueuesShared = 0;
 static load_balancing_type_t LoadBalancingType = QUEUE_ON_CLIENT;
@@ -2954,7 +2959,7 @@ create_local_queue (const char *name,
   if (!p->service_name)
     goto fail;
 
-  /* Record Bonjour service parameters to identify print queue
+  /* Record DNS-SD service parameters to identify print queue
      entry for removal when service disappears */
   p->type = strdup (type);
   if (!p->type)
@@ -2973,7 +2978,7 @@ create_local_queue (const char *name,
   p->no_autosave = 0;
 
   /* Flag to mark whether this printer was discovered through a legacy
-     CUPS broadcast (1) or through DNS-SD/Bonjour (0) */
+     CUPS broadcast (1) or through DNS-SD (0) */
   p->is_legacy = 0;
 
   /* Remote CUPS printer or local queue remaining from previous cups-browsed
@@ -3515,14 +3520,14 @@ gboolean handle_cups_queues(gpointer unused) {
       if (p->timeout > current_time)
 	break;
 
-      /* Queue not reported again by Bonjour, remove it */
+      /* Queue not reported again by DNS-SD, remove it */
       p->status = STATUS_DISAPPEARED;
       p->timeout = current_time + TIMEOUT_IMMEDIATELY;
 
       debug_printf("No remote printer named %s available, removing entry from previous session.\n",
 		   p->name);
 
-    /* Bonjour has reported this printer as disappeared or we have replaced
+    /* DNS-SD has reported this printer as disappeared or we have replaced
        this printer by another one */
     case STATUS_DISAPPEARED:
 
@@ -3657,7 +3662,7 @@ gboolean handle_cups_queues(gpointer unused) {
 
       break;
 
-    /* Bonjour has reported a new remote printer, create a CUPS queue for it,
+    /* DNS-SD has reported a new remote printer, create a CUPS queue for it,
        or upgrade an existing queue, or update a queue to use a backup host
        when it has disappeared on the currently used host */
       /* (...or, we've just received a CUPS Browsing packet for this queue) */
@@ -3946,7 +3951,7 @@ gboolean handle_cups_queues(gpointer unused) {
       /* Option cups-browsed=true, marking that we have created this queue */
       num_options = cupsAddOption(CUPS_BROWSED_MARK "-default", "true",
 				  num_options, &options);
-      /* Description: <Bonjour service name> */
+      /* Description: <DNS-SD service name> */
       num_options = cupsAddOption("printer-info", p->service_name,
 				  num_options, &options);
       /* Location: <Remote host name> (Port: <port>) */
@@ -4366,7 +4371,7 @@ generate_local_queue(const char *host,
       raw_queue = 1;
     if (raw_queue && CreateRemoteRawPrinterQueues == 0) {
       /* The remote CUPS queue is raw, ignore it */
-      debug_printf("Remote Bonjour-advertised CUPS queue %s on host %s is raw, ignored.\n",
+      debug_printf("Remote DNS-SD-advertised CUPS queue %s on host %s is raw, ignored.\n",
 		   remote_queue, remote_host);
       free (remote_queue);
       free (remote_host);
@@ -4374,14 +4379,14 @@ generate_local_queue(const char *host,
     }
 #endif /* HAVE_AVAHI */
   } else if (!strncasecmp(resource, "classes/", 8)) {
-    /* This is a remote CUPS queue, use the remote queue name for the
+    /* This is a remote CUPS class, use the remote class name for the
        local queue */
     is_cups_queue = 1;
     /* Not directly used in script generation input later, but taken from
        packet, so better safe than sorry. (consider second loop with
        backup_queue_name) */
     remote_queue = remove_bad_chars(resource + 8, 0);
-    debug_printf("Found CUPS queue: %s on host %s.\n",
+    debug_printf("Found CUPS class: %s on host %s.\n",
 		 remote_queue, remote_host);
   } else {
     /* This is an IPP-based network printer */
@@ -4536,7 +4541,7 @@ generate_local_queue(const char *host,
     /* We have already created a local queue, check whether the
        discovered service allows us to upgrade the queue to IPPS
        or whether the URI part after ipp(s):// has changed, or
-       whether the discovered queue is discovered via Bonjour
+       whether the discovered queue is discovered via DNS-SD
        having more info in contrary to the existing being
        discovered by legacy CUPS or LDAP */
     if ((strcasestr(type, "_ipps") &&
@@ -4559,7 +4564,7 @@ generate_local_queue(const char *host,
 	  domain != NULL && domain[0] != '\0' &&
 	  (p->type == NULL || p->type[0] == '\0') &&
 	  type != NULL && type[0] != '\0') {
-	debug_printf("Discovered printer %s (Host: %s, Port: %d, URI: %s) by Bonjour now.\n",
+	debug_printf("Discovered printer %s (Host: %s, Port: %d, URI: %s) by DNS-SD now.\n",
 		     p->name, remote_host, port, uri);
 	if (p->is_legacy) {
 	  p->is_legacy = 0;
@@ -4647,7 +4652,7 @@ generate_local_queue(const char *host,
   free (make_model);
 
   if (p)
-    debug_printf("Bonjour IDs: Service name: \"%s\", "
+    debug_printf("DNS-SD IDs: Service name: \"%s\", "
 		 "Service type: \"%s\", Domain: \"%s\"\n",
 		 p->service_name, p->type, p->domain);
 
@@ -4778,6 +4783,7 @@ static void resolve_callback(
   AvahiStringList *txt,
   AvahiLookupResultFlags flags,
   AVAHI_GCC_UNUSED void* userdata) {
+  char ifname[IF_NAMESIZE];
 
   if (r == NULL)
     return;
@@ -4786,14 +4792,19 @@ static void resolve_callback(
   if (flags & AVAHI_LOOKUP_RESULT_LOCAL && port == ippPort())
     goto ignore;
 
+  /* Get the interface name */
+  if_indextoname(interface, ifname);
+
   /* Called whenever a service has been resolved successfully or timed out */
 
   switch (event) {
 
   /* Resolver error */
   case AVAHI_RESOLVER_FAILURE:
-    debug_printf("Avahi-Resolver: Failed to resolve service '%s' of type '%s' in domain '%s': %s\n",
-		 name, type, domain,
+    debug_printf("Avahi-Resolver: Failed to resolve service '%s' of type '%s' in domain '%s' on interface '%s' (%s): %s\n",
+		 name, type, domain, ifname,
+		 (address->proto == AVAHI_PROTO_INET ? "IPv4" :
+		  address->proto == AVAHI_PROTO_INET6 ? "IPv6" : "Unknown"),
 		 avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
     break;
 
@@ -4802,8 +4813,10 @@ static void resolve_callback(
     AvahiStringList *rp_entry, *adminurl_entry;
     char *rp_key, *rp_value, *adminurl_key, *adminurl_value;
 
-    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s'.\n",
-		 name, type, domain);
+    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' on interface '%s' (%s).\n",
+		 name, type, domain, ifname,
+		 (address->proto == AVAHI_PROTO_INET ? "IPv4" :
+		  address->proto == AVAHI_PROTO_INET6 ? "IPv6" : "Unknown"));
 
     rp_entry = avahi_string_list_find(txt, "rp");
     if (rp_entry)
@@ -4824,16 +4837,22 @@ static void resolve_callback(
 	adminurl_value = strdup("");
     }
 
+    if (CreateIPPPrinterQueues == IPP_PRINTERS_LOCAL_ONLY &&
+	strcasecmp(ifname, "lo")) {
+      debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, not a local service.\n",
+		   name, type, domain);
+      goto clean_up;
+    }
+
     if (rp_key && rp_value && adminurl_key && adminurl_value &&
 	!strcasecmp(rp_key, "rp") && !strcasecmp(adminurl_key, "adminurl")) {
       /* Determine the remote printer's IP */
-      if (IPBasedDeviceURIs != IP_BASED_URIS_NO ||
+      if (IPBasedDeviceURIs != IP_BASED_URIS_NO || !strcasecmp(ifname, "lo") ||
 	  (!browseallow_all && cupsArrayCount(browseallow) > 0)) {
 	struct sockaddr saddr;
 	struct sockaddr *addr = &saddr;
 	char *addrstr;
 	int addrlen;
-	char ifname[IF_NAMESIZE];
 	int addrfound = 0;
 	if ((addrstr = calloc(256, sizeof(char))) == NULL) {
 	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not allocate memory to determine IP address.\n",
@@ -4865,7 +4884,7 @@ static void resolve_callback(
 	      /* Link-local address, needs specification of interface */
 	      snprintf(addrstr + addrlen + 4, 256 -
 		       addrlen - 4, "%%%s]",
-		       if_indextoname(interface, ifname));
+		       ifname);
 	    else {
 	      addrstr[addrlen + 4] = ']';
 	      addrstr[addrlen + 5] = '\0';
@@ -4876,10 +4895,13 @@ static void resolve_callback(
 	if (addrfound == 1) {
 	  /* Check remote printer type and create appropriate local queue to
 	     point to it */
-	  if (IPBasedDeviceURIs != IP_BASED_URIS_NO) {
+	  if (IPBasedDeviceURIs != IP_BASED_URIS_NO ||
+	      !strcasecmp(ifname, "lo")) {
 	    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with IP address %s.\n",
 			 name, type, domain, addrstr);
-	    generate_local_queue(host_name, addrstr, port, rp_value, name, type, domain, txt);
+	    generate_local_queue((strcasecmp(ifname, "lo") ?
+				  host_name : addrstr),
+				 addrstr, port, rp_value, name, type, domain, txt);
 	  } else
 	    generate_local_queue(host_name, NULL, port, rp_value, name, type, domain, txt);
 	} else
@@ -4934,8 +4956,13 @@ static void browse_callback(
   void* userdata) {
 
   AvahiClient *c = userdata;
+  char ifname[IF_NAMESIZE];
+
   if (b == NULL)
     return;
+
+  /* Get the interface name */
+  if_indextoname(interface, ifname);
 
   /* Called whenever a new services becomes available on the LAN or
      is removed from the LAN */
@@ -4954,8 +4981,8 @@ static void browse_callback(
   /* New service (remote printer) */
   case AVAHI_BROWSER_NEW:
 
-    debug_printf("Avahi Browser: NEW: service '%s' of type '%s' in domain '%s'\n",
-		 name, type, domain);
+    debug_printf("Avahi Browser: NEW: service '%s' of type '%s' in domain '%s' on interface '%s'\n",
+		 name, type, domain, ifname);
 
     /* We ignore the returned resolver object. In the callback
        function we free it. If the server is terminated before
@@ -4975,8 +5002,8 @@ static void browse_callback(
     if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
       break;
 
-    debug_printf("Avahi Browser: REMOVE: service '%s' of type '%s' in domain '%s'\n",
-		 name, type, domain);
+    debug_printf("Avahi Browser: REMOVE: service '%s' of type '%s' in domain '%s'on interface '%s'\n",
+		 name, type, domain, ifname);
 
     /* Check whether we have listed this printer */
     for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
@@ -5062,7 +5089,7 @@ static void browse_callback(
 
       }
 
-      debug_printf("Bonjour IDs: Service name: \"%s\", Service type: \"%s\", Domain: \"%s\"\n",
+      debug_printf("DNS-SD IDs: Service name: \"%s\", Service type: \"%s\", Domain: \"%s\"\n",
 		   p->service_name, p->type, p->domain);
 
       if (in_shutdown == 0)
@@ -5087,7 +5114,7 @@ void avahi_browser_shutdown() {
 
   avahi_present = 0;
 
-  /* Remove all queues which we have set up based on Bonjour discovery*/
+  /* Remove all queues which we have set up based on DNS-SD discovery*/
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
        p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
     if (p->type && p->type[0]) {
@@ -5097,7 +5124,7 @@ void avahi_browser_shutdown() {
   }
   recheck_timer();
 
-  /* Free the data structures for Bonjour browsing */
+  /* Free the data structures for DNS-SD browsing */
   if (sb1) {
     avahi_service_browser_free(sb1);
     sb1 = NULL;
@@ -5190,7 +5217,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
   case AVAHI_CLIENT_FAILURE:
 
     if (avahi_client_errno(c) == AVAHI_ERR_DISCONNECTED) {
-      debug_printf("Avahi server disappeared, shutting down service browsers, removing Bonjour-discovered print queues.\n");
+      debug_printf("Avahi server disappeared, shutting down service browsers, removing DNS-SD-discovered print queues.\n");
       avahi_browser_shutdown();
       /* Renewing client */
       avahi_client_free(client);
@@ -6465,6 +6492,8 @@ read_configuration (const char *filename)
       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
 	  !strcasecmp(value, "off") || !strcasecmp(value, "0"))
 	CreateIPPPrinterQueues = IPP_PRINTERS_NO;
+      else if (strcasestr(value, "local") || strcasestr(value, "usb"))
+	CreateIPPPrinterQueues = IPP_PRINTERS_LOCAL_ONLY;
       else if ((strcasestr(value, "driver") && strcasestr(value, "less")) ||
 	       ((strcasestr(value, "every") || strcasestr(value, "pwg")) &&
 		(strcasestr(value, "apple") || strcasestr(value, "air"))))
