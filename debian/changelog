@@ -1,3 +1,12 @@
+cups-filters (1.14.0-1) experimental; urgency=medium
+
+  * New upstream version 1.14.0
+  * Use --enable-auto-setup-driverless option; document it in debian/NEWS
+  * Make the serial backend world-readable (but not world-executable)
+    (Closes: #862732)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 16 May 2017 20:04:57 +0200
+
 cups-filters (1.13.5-1) experimental; urgency=medium
 
   * New upstream version 1.13.5
