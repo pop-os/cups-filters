@@ -31,7 +31,7 @@ override_dh_fixperms:
 	
 	# Make the serial backend run as root, since /dev/ttyS* are
 	# root:dialout and thus not accessible as user lp
-	chmod 700 debian/cups-filters/usr/lib/cups/backend/serial
+	chmod 744 debian/cups-filters/usr/lib/cups/backend/serial
 
 override_dh_makeshlibs:
 	dh_makeshlibs -- -c4
