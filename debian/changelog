@@ -1,3 +1,14 @@
+cups-filters (1.14.0-2) unstable; urgency=low
+
+  * Migrate 1.14.0 to unstable
+
+  [ Till Kamppeter ]
+  * Moved dependency on ImageMagick to Recommends: and removed the
+    version requirements, so that also graphicsmagick-imagemagick-compat
+    can be used (LP: #1562560, Closes: #823110)
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 18 Jun 2017 16:56:02 +0200
+
 cups-filters (1.14.0-1) experimental; urgency=medium
 
   * New upstream version 1.14.0
