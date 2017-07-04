@@ -1,3 +1,15 @@
+cups-filters (1.14.1-1) unstable; urgency=medium
+
+  * New upstream version 1.14.1
+    - cups-browsed: Use getline() instead of fgets() to read saved option
+      settings. This is less crash-prone (LP: #1658833)
+    - cups-browsed: Check whether a connection to the local CUPS daemon
+      actually happened before using it (LP: #1644049)
+    - cups-browsed: Added NULL check to avoid crashes in the Avahi resolver
+      callback (LP: #1696967)
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 04 Jul 2017 08:42:27 +0200
+
 cups-filters (1.14.0-2) unstable; urgency=low
 
   * Migrate 1.14.0 to unstable
