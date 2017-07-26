@@ -1,5 +1,5 @@
 Source: cups-filters
-Standards-Version: 3.9.8
+Standards-Version: 4.0.0
 Priority: optional
 Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
@@ -9,8 +9,7 @@ Uploaders:
 Build-Depends: 
  autoconf,
  autotools-dev,
- debhelper (>= 9~),
- dh-autoreconf,
+ debhelper (>= 10.2.5~),
  dh-systemd,
  dpkg-dev (>= 1.16.1~),
  dh-apparmor,
