@@ -317,7 +317,7 @@ License: LGPL-2
  under the terms of the GNU Library General Public License as published by the
  Free Software Foundation; version 2 of the License.
  .
- On Debian systems, the complete text of version 2 of the GNU Library
+ On Debian systems, the complete text of version 2 of the GNU Library General
  Public License can be found in `/usr/share/common-licenses/LGPL-2'.
 
 License: LGPL-2.1+
@@ -327,7 +327,7 @@ License: LGPL-2.1+
  your option) any later version.
  .
  On Debian systems, the complete text of version 2.1 of the GNU Lesser
- Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
+ General Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
 
 License: BSD-4-clause
  Redistribution and use in source and binary forms, with or without

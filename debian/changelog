@@ -1,3 +1,19 @@
+cups-filters (1.15.0-1) unstable; urgency=medium
+
+  * New upstream version 1.15.0
+    - libcupsfilters: Added some fallbacks for incorrect resolution IPP
+      attributes on IPP network printers (Closes: #868360)
+
+  * Bump Standards-Version to 4.0.0: use autotools_dev dh helper to replace the
+    config.{guess,sub} files
+  * Migrate to debhelper compat 10
+  * Don't install the upstart files on Ubuntu anymore
+  * Drop all postinst code managing versions before the current oldstable
+    (jessie, 1.0.61-5)
+  * Fix minor typos in debian/copyright
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 26 Jul 2017 09:32:37 +0200
+
 cups-filters (1.14.1-1) unstable; urgency=medium
 
   * New upstream version 1.14.1
