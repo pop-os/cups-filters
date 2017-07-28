@@ -71,6 +71,8 @@
 2006-2011, BBR Inc"
   License short_name="Expat"
 
+! Files:"configure"
+  License short_name="Unlimited" full_license="This configure script is free software; the Free Software Foundation gives unlimited permission to copy, distribute and modify it."
 
 # Various weird copyright formatting
 ! Files:"filter/rastertopdf.cpp"

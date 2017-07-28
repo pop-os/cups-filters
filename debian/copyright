@@ -54,7 +54,8 @@ License: GPL-2+
 
 Files: configure
 Copyright: 1992-1996, 1998-2012, Free Software Foundation, Inc.
-License: FSF or Unlimited
+License: Unlimited
+ This configure script is free software; the Free Software Foundation gives unlimited permission to copy, distribute and modify it.
 
 Files: cupsfilters/*
 Copyright: 2007-2011 Apple Inc
@@ -409,9 +410,6 @@ License: Expat
  CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 
-License: FSF
- Please fill license FSF or Unlimited from header of configure
-
 License: GPL
  Please fill license GPL from header of aclocal.m4
 
@@ -465,6 +463,3 @@ License: LGPL-2.1+
  .
  On Debian systems, the complete text of version 2.1 of the GNU Lesser
  General Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
-
-License: Unlimited
- Please fill license FSF or Unlimited from header of configure
