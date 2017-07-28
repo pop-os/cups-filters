@@ -58,11 +58,11 @@ License: Unlimited
  This configure script is free software; the Free Software Foundation gives unlimited permission to copy, distribute and modify it.
 
 Files: cupsfilters/*
-Copyright: 2007-2011 Apple Inc
+Copyright: 2007-2016 Apple Inc
   1993-2007 by Easy Software Products
   2011-2013, Richard Hughes
   2011, Tim Waugh
-  2013, Till Kamppeter
+  2013-2016, Till Kamppeter
   2014, Joseph Simon
 License: LGPL-2
 
@@ -380,6 +380,16 @@ License: GPL-2
 
 Files: utils/*
 Copyright: 2012-2016, Till Kamppeter
+License: LGPL-2.1+
+
+Files: utils/cups-browsed* org.cups.cupsd.Notifier.xml
+Copyright: 2012-2016, Till Kamppeter <till.kamppeter@gmail.com>
+  2013-2015, Tim Waugh <twaugh@redhat.com>
+License: LGPL-2.1+
+
+Files: utils/driverless*
+Copyright: 2012-2016, Till Kamppeter <till.kamppeter@gmail.com>
+  2007-2016 Apple Inc.
 License: LGPL-2.1+
 
 License: Expat
