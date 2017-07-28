@@ -11,15 +11,28 @@
 2007-2011 Apple Inc.
 2012 Canonical Ltd.
 2006-2012 BBR Inc.
-2008-2013 Till Kamppeter
+2008-2016 Till Kamppeter
 2008,2012 Tobias Hoffmann
-2003 Robert Sander
 2003-2006 Red Hat, Inc.
 2003-2006 Tim Waugh
 2012 Franz Pförtsch
 2012 Tomáš Chvátal
-2010 Neil 'Superna' Armstrong"
-  License short_name="GPL-2"
+2010 Neil 'Superna' Armstrong
+2015-2016 Samuel Thibault
+2008 Lars Übernickel"
+  License short_name="GPL-2+"
+
+! Files:"debian/*"
+  Copyright="1999-2003, Jeff Licquia <licquia@debian.org>
+2003-2007, Kenshi Muto <kmuto@debian.org>
+2007-2012, Martin Pitt <mpitt@debian.org>
+2012-2015, Till Kamppeter <till.kamppeter@gmail.com>
+2013-2017, Didier Raboud <odyx@debian.org>"
+  License short_name="GPL-2+"
+
+! Files:"debian/local/apport-hook.py"
+  Copyright="2009 Canonical Ltd."
+  License short_name="GPL-2+"
 
 ! Files:"filter/pdftops.c"
   Copyright="2011-2013 Till Kamppeter
@@ -71,9 +84,6 @@
 ! Files:"filter/urftopdf.cpp"
   Copyright="2010, Neil 'Superna' Armstrong <superna9999@gmail.com>
 2012 Tobias Hoffmann <smilingthax@gmail.com>"
-
-! Files:"ltmain.sh"
-  Copyright="1996-2001, 2003-2011 Free Software Foundation, Inc."
 
 # strcasestr.c multi-line copyright
 ! Files:"filter/strcasestr.c"
