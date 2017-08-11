@@ -1,3 +1,9 @@
+cups-filters (1.16.0-2build1) artful; urgency=medium
+
+  * No-change rebuild against latest poppler
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Thu, 10 Aug 2017 22:01:43 -0400
+
 cups-filters (1.16.0-2) unstable; urgency=medium
 
   * Update cme's debian/fix.scanned.copyright and therefore debian/copyright
