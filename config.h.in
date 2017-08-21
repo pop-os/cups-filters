@@ -57,6 +57,9 @@
 /* Define if you have Poppler's "cpp/poppler-version.h" header file. */
 #undef HAVE_CPP_POPPLER_VERSION_H
 
+/* define if the compiler supports basic C++11 syntax */
+#undef HAVE_CXX11
+
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 

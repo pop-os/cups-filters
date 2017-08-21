@@ -1,3 +1,10 @@
+cups-filters (1.16.3-1) unstable; urgency=medium
+
+  * New upstream version 1.16.3
+  * Replace Homepage & Vcs-Browser with https URLs
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 21 Aug 2017 21:54:27 +0200
+
 cups-filters (1.16.1-1) unstable; urgency=medium
 
   * New upstream version 1.16.1
