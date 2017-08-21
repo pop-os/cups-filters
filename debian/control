@@ -39,9 +39,9 @@ Build-Depends:
  liblouis-dev,
 # Needed for tests
  fonts-dejavu-core
-Homepage: http://www.openprinting.org/
+Homepage: https://wiki.linuxfoundation.org/openprinting/
 Vcs-Git: https://alioth.debian.org/anonscm/git/printing/cups-filters.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=printing/cups-filters.git
+Vcs-Browser: https://anonscm.debian.org/cgit/printing/cups-filters.git
 
 Package: libcupsfilters1
 Section: libs
