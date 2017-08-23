@@ -1,3 +1,17 @@
+cups-filters (1.17.0-0ubuntu1) artful; urgency=medium
+
+  * New upstream version 1.17.0
+    - Added PCLm print output support. With this all known driverless
+      printing standards (IPP Everywhere, Apple AirPrint, Mopria, Wi-Fi
+      Direct) are supported, making most modern printers working under
+      Linux.
+  * debian/control: Build-depend on QPDF 7.x, needed for the PCLm
+    printing support.
+  * Install new rastertopclm file into binary package
+    cups-filters-core-drivers.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 22 Aug 2017 22:25:40 -0300
+
 cups-filters (1.16.3-1) unstable; urgency=medium
 
   * New upstream version 1.16.3
