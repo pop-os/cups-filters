@@ -8,7 +8,6 @@ Uploaders:
  Didier Raboud <odyx@debian.org>
 Build-Depends: 
  autoconf,
- autotools-dev,
  debhelper (>= 10.2.5~),
  dh-systemd,
  dpkg-dev (>= 1.16.1~),
