@@ -1,3 +1,11 @@
+cups-filters (1.17.2-0ubuntu1) artful; urgency=medium
+
+  * New upstream release 1.17.2
+    - Fixed outstanding bug in PCLm with JPEG (DCT) compression. Now PCLm
+      support is completely working.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 25 Aug 2017 16:01:56 -0300
+
 cups-filters (1.17.1-0ubuntu1) artful; urgency=medium
 
   * New upstream release 1.17.1
