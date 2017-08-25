@@ -1,3 +1,17 @@
+cups-filters (1.17.1-0ubuntu1) artful; urgency=medium
+
+  * New upstream release 1.17.1
+    - Fixed resolution handling in the PPD generator for driverless
+      printing (CUPS issue #5088, CUPS issue #5091, Closes: #868360,
+      LP: #1712019).
+    - Make print quality option in the generated PPDs for driverless
+      printers actually work (CUPS issue #5090).
+    - rastertopdf: Prefer RLE compression instead of Flate as
+      there are HP printers where Flate is buggy.
+  * Updated debian/libcupsfilters1.symbols.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 25 Aug 2017 11:22:49 -0300
+
 cups-filters (1.17.0-0ubuntu1) artful; urgency=medium
 
   * New upstream version 1.17.0
