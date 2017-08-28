@@ -21,7 +21,7 @@ Build-Depends:
  libldap2-dev,
  libpoppler-private-dev (>= 0.16.0),
  libpoppler-cpp-dev,
- libqpdf-dev (>= 4.0.1),
+ libqpdf-dev (>= 7),
  libjpeg-dev,
  libpng-dev,
  libtiff-dev,
