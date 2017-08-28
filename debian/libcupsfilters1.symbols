@@ -46,6 +46,8 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  colord_get_inhibit_for_device_id@Base 1.0.42
  colord_get_profile_for_device_id@Base 1.0.42
  colord_get_qualifier_for_ppd@Base 1.0.42
+ compare_resolutions@Base 1.17.1
+ copy_resolution@Base 1.17.1
  cupsCMYKDelete@Base 1.0~b1
  cupsCMYKDoBlack@Base 1.0~b1
  cupsCMYKDoCMYK@Base 1.0~b1
@@ -109,9 +111,15 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  cupsRasterParseIPPOptions@Base 1.0.36
  cups_scmy_lut@Base 1.0~b1
  cups_srgb_lut@Base 1.0~b1
+ free_resolution@Base 1.17.1
  get_profile_inhibitors@Base 1.0.42
+ ippResolutionListToArray@Base 1.17.1
+ ippResolutionToRes@Base 1.17.1
+ joinResolutionArrays@Base 1.17.1
  ppdCreateFromIPP@Base 1.12.0
  ppdgenerator_msg@Base 1.12.0
+ resolutionArrayNew@Base 1.17.1
+ resolutionNew@Base 1.17.1
  sgiClose@Base 1.0~b1
  sgiGetRow@Base 1.0~b1
  sgiOpen@Base 1.0~b1
