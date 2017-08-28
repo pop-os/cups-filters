@@ -1,3 +1,26 @@
+cups-filters (1.17.2-1) experimental; urgency=low
+
+  * New upstream release 1.17.2
+    - Added PCLm print output support. With this all known driverless
+      printing standards (IPP Everywhere, Apple AirPrint, Mopria, Wi-Fi
+      Direct) are supported, making most modern printers working under
+      Linux.
+    - Fixed resolution handling in the PPD generator for driverless
+      printing (CUPS issue #5088, CUPS issue #5091, Closes: #868360,
+      LP: #1712019).
+    - rastertopdf: Prefer RLE compression instead of Flate as
+      there are HP printers where Flate is buggy.
+
+  [ Didier Raboud ]
+  * Drop superfluous autotools-dev B-D
+
+  [ Till Kamppeter ]
+  * Bump libqpdf-dev B-D version to >= 7.0~
+  * Install new rastertopclm in cups-filters-core-drivers
+  * Updated debian/libcupsfilters1.symbols for 1.17.1
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 28 Aug 2017 19:52:25 +0200
+
 cups-filters (1.16.4-1) unstable; urgency=medium
 
   * New upstream version 1.16.4
