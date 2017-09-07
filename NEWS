@@ -1,9 +1,21 @@
-NEWS - OpenPrinting CUPS Filters v1.17.2 - 2017-08-25
+NEWS - OpenPrinting CUPS Filters v1.17.3 - 2017-09-07
 -----------------------------------------------------
+
+CHANGES IN V1.17.3
+
+	- bannertopdf: Make it working also with Poppler 0.58.0 and newer
+	  (Bug #1408).
+	- gstoraster, pdftops, foomatic-rip: Added "-dShowAcroForm" to all
+	  Ghostscript command lines where the input data format can be PDF.
+	  With this and the fix of Ghostscript bug #698461 most filled
+	  PDF forms should be rendered correctly by Ghostscript now.
+	- libcupsfilters: Do not check maximum resolutions of raster-based
+	  PDLs, as implementation was incorrect and reliability of PDLs is
+	  more important than maximum resolution.
 
 CHANGES IN V1.17.2
 
-	- libcupsfilters: Fixed outstanding bug in PCLm with JPEG (DCT)
+	- rastertopdf: Fixed outstanding bug in PCLm with JPEG (DCT)
 	  compression. Now PCLm support is completely working.
 
 CHANGES IN V1.17.1
