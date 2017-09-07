@@ -1,3 +1,12 @@
+cups-filters (1.17.3-1) experimental; urgency=medium
+
+  * New upstream version 1.17.3
+
+  * Bump Standards-Version to 4.1.0 without changes needed
+  * Mark libcupsfilters-dev & libfontembed-dev as Multi-Arch: same
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 07 Sep 2017 20:20:51 +0200
+
 cups-filters (1.17.2-1) experimental; urgency=low
 
   * New upstream release 1.17.2
