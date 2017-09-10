@@ -1,3 +1,18 @@
+cups-filters (1.17.4-0ubuntu1) artful; urgency=medium
+
+  * New upstream release
+    - pdftopdf: If the input PDF file contains an interactive
+      form, flatten it to static PDF so that further manipulation,
+      like scaling, number-up, ... do not let the filled for
+      content getting lost. This is implemented by using the
+      pdftocairo utility of Poppler and if this fails Ghostscript
+      (9.22 or later recommended). This will probably replaced by
+      a QPDF-based solution later. Thanks to Tobias Hoffmann for
+      the QPDF-based detection of PDF forms (Upstream bug #1315,
+      LP: #1564249).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sun, 10 Sep 2017 16:14:50 -0300
+
 cups-filters (1.17.3-1) experimental; urgency=medium
 
   * New upstream version 1.17.3
