@@ -1,3 +1,15 @@
+cups-filters (1.17.4-1) experimental; urgency=medium
+
+  * New upstream version 1.17.4
+    - pdftopdf: If the input PDF file contains an interactive
+      form, flatten it to static PDF so that further manipulation do not let
+      the filled for content getting lost (Bug #1315, LP: #1564249)
+
+  * Drop the --with autotools_dev as dh_update_autotools_config is in the
+    default dh sequence in compat 10
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 11 Sep 2017 09:13:22 +0200
+
 cups-filters (1.17.3-1) experimental; urgency=medium
 
   * New upstream version 1.17.3
