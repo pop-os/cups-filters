@@ -121,20 +121,20 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/braille.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagemagick.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs.gen.in \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
 
-@ENABLE_POPPLER_TRUE@am__append_6 = \
+@ENABLE_BRAILLE_TRUE@am__append_6 = filter/braille/filters/liblouis1.defs.gen.in
+@ENABLE_POPPLER_TRUE@am__append_7 = \
 @ENABLE_POPPLER_TRUE@	mime/cupsfilters-poppler.convs
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_8 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	mime/cupsfilters-ghostscript.convs
 
-@ENABLE_MUTOOL_TRUE@am__append_8 = \
+@ENABLE_MUTOOL_TRUE@am__append_9 = \
 @ENABLE_MUTOOL_TRUE@	mime/cupsfilters-mupdf.convs
 
-@ENABLE_BRAILLE_TRUE@am__append_9 = \
+@ENABLE_BRAILLE_TRUE@am__append_10 = \
 @ENABLE_BRAILLE_TRUE@	mime/braille.convs \
 @ENABLE_BRAILLE_TRUE@	mime/braille.types
 
@@ -147,45 +147,45 @@ pkgfilter_PROGRAMS = $(am__EXEEXT_1) pdftopdf$(EXEEXT) \
 	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
 	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
 	$(am__EXEEXT_8)
-@ENABLE_POPPLER_TRUE@am__append_10 = \
+@ENABLE_POPPLER_TRUE@am__append_11 = \
 @ENABLE_POPPLER_TRUE@	pdftoopvp
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_12 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopxl \
 @ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopdf
 
-@ENABLE_URFTOPDF_TRUE@am__append_12 = \
+@ENABLE_URFTOPDF_TRUE@am__append_13 = \
 @ENABLE_URFTOPDF_TRUE@	urftopdf
 
-@ENABLE_POPPLER_TRUE@am__append_13 = \
+@ENABLE_POPPLER_TRUE@am__append_14 = \
 @ENABLE_POPPLER_TRUE@	bannertopdf \
 @ENABLE_POPPLER_TRUE@	pdftoraster
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_14 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_15 = \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_15 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_16 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_MUTOOL_TRUE@am__append_16 = \
+@ENABLE_MUTOOL_TRUE@am__append_17 = \
 @ENABLE_MUTOOL_TRUE@	mupdftoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_17 = \
+@ENABLE_FOOMATIC_TRUE@am__append_18 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_18 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_19 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_DRIVERLESS_TRUE@am__append_19 = utils/driverless.1
-@ENABLE_FOOMATIC_TRUE@am__append_20 = \
+@ENABLE_DRIVERLESS_TRUE@am__append_20 = utils/driverless.1
+@ENABLE_FOOMATIC_TRUE@am__append_21 = \
 @ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_21 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_22 = \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_22 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_23 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
 
@@ -220,6 +220,8 @@ CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
 	filter/braille/filters/cups-braille.sh \
 	filter/braille/filters/imagetobrf \
 	filter/braille/filters/texttobrf \
+	filter/braille/filters/vectortopdf \
+	filter/braille/filters/vectortobrf \
 	filter/braille/filters/liblouis1.defs.gen \
 	mime/cupsfilters.convs
 CONFIG_CLEAN_VPATH_FILES =
@@ -911,6 +913,8 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/filter/braille/filters/imagetobrf.in \
 	$(top_srcdir)/filter/braille/filters/liblouis1.defs.gen.in \
 	$(top_srcdir)/filter/braille/filters/texttobrf.in \
+	$(top_srcdir)/filter/braille/filters/vectortobrf.in \
+	$(top_srcdir)/filter/braille/filters/vectortopdf.in \
 	$(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in \
 	$(top_srcdir)/mime/cupsfilters.convs.in \
 	$(top_srcdir)/utils/cups-browsed.conf.in \
@@ -1141,10 +1145,10 @@ EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	filter/braille/filters/TODO.txt $(pkgbanner_DATA) \
 	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
 	cupsfilters/image.pgm cupsfilters/image.ppm \
-	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(pkgppdc_DATA) \
-	$(pkgmime_DATA) $(pkgfontembedinclude_DATA) fontembed/README \
-	$(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) filter/test.sh \
-	utils/cups-browsed.in $(man_MANS) \
+	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(am__append_6) \
+	$(pkgppdc_DATA) $(pkgmime_DATA) $(pkgfontembedinclude_DATA) \
+	fontembed/README $(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) \
+	filter/test.sh utils/cups-browsed.in $(man_MANS) \
 	utils/org.cups.cupsd.Notifier.xml $(ppd_DATA) scripting/perl \
 	scripting/php/README scripting/php/phpcups.php
 
@@ -1374,7 +1378,7 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_5)
 @ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
 
 @ENABLE_BRAILLE_TRUE@nodist_pkgppdc_DATA = \
-@ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
+@ENABLE_BRAILLE_TRUE@	$(GENERATED_DEFS)
 
 
 # =====
@@ -1382,8 +1386,8 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_5)
 # =====
 pkgmimedir = $(CUPS_DATADIR)/mime
 pkgmime_DATA = mime/cupsfilters.convs mime/cupsfilters.types \
-	$(am__append_6) $(am__append_7) $(am__append_8) \
-	$(am__append_9)
+	$(am__append_7) $(am__append_8) $(am__append_9) \
+	$(am__append_10)
 
 # =================
 # Braille aux files
@@ -1529,13 +1533,15 @@ pdftopdf_LDADD = \
 # Simple filter binaries
 # ======================
 pkgfilter_SCRIPTS = filter/imagetops filter/texttops \
-	filter/rastertopclm $(am__append_11)
+	filter/rastertopclm $(am__append_12)
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv4 \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/textbrftoindexv3 \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagetobrf \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/vectortopdf \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/vectortobrf \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/texttobrf
 
 bannertopdf_SOURCES = \
@@ -1889,7 +1895,7 @@ cups_browsed_LDADD = \
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
-	$(am__append_19) $(am__append_20)
+	$(am__append_20) $(am__append_21)
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1900,8 +1906,8 @@ ppddir = $(datadir)/ppd/cupsfilters
 ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_21) \
-	$(am__append_22)
+	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_22) \
+	$(am__append_23)
 
 # =========
 # Scripting
@@ -1997,6 +2003,10 @@ filter/braille/filters/cups-braille.sh: $(top_builddir)/config.status $(top_srcd
 filter/braille/filters/imagetobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/imagetobrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/braille/filters/texttobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/texttobrf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/vectortopdf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/vectortopdf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/vectortobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/vectortobrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/braille/filters/liblouis1.defs.gen: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/liblouis1.defs.gen.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -5338,6 +5348,13 @@ install-exec-hook:
 @ENABLE_DRIVERLESS_TRUE@	$(LN_S) -r -f $(DESTDIR)$(pkgppdgendir)/driverless $(DESTDIR)$(bindir)
 @ENABLE_DRIVERLESS_TRUE@	$(LN_S) -r -f $(DESTDIR)$(pkgppdgendir)/driverless $(DESTDIR)$(pkgbackenddir)
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f imagetobrf $(DESTDIR)$(pkgfilterdir)/imagetoubrl
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/svgtopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/xfigtopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/wmftopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/emftopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/cgmtopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortopdf $(DESTDIR)$(pkgfilterdir)/cmxtopdf
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f vectortobrf $(DESTDIR)$(pkgfilterdir)/vectortoubrl
 @ENABLE_BRAILLE_TRUE@	$(LN_S) -f textbrftoindexv3 $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
 install-data-hook:

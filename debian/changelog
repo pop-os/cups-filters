@@ -1,3 +1,14 @@
+cups-filters (1.17.5-0ubuntu1) artful; urgency=medium
+
+  * New upstream version 1.17.5
+    - In the PPD generator for driverless printing
+      renamed the "print-quality" option back to
+      "cupsPrintQuality" as the support for this option got fixed
+      in CUPS (CUPS issue #5090).
+    - braille: Several fixes related to graphics output.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 13 Sep 2017 13:38:24 -0300
+
 cups-filters (1.17.4-1) experimental; urgency=medium
 
   * New upstream version 1.17.4
