@@ -1,9 +1,50 @@
-NEWS - OpenPrinting CUPS Filters v1.17.2 - 2017-08-25
+NEWS - OpenPrinting CUPS Filters v1.17.5 - 2017-09-13
 -----------------------------------------------------
+
+CHANGES IN V1.17.5
+
+	- libcupsfilters: In the PPD generator for driverless printing
+	  renamed the "print-quality" option back to
+	  "cupsPrintQuality" as the support for this option got fixed
+	  in CUPS (CUPS issue #5090).
+	- braille: Improvements on the braille support for bitmap
+          images: Moves the graphical dot distance option to the image
+          conversion group, add an option to avoid image resize, and
+          make the rotation option easier by proposing to just fit
+          paper instead of fitting portrait or landscape. Thanks to
+          Samuel Thibault for this patch.
+	- braille: Support for embossing vector images as braille.
+	  Thanks to Samuel Thibault for this patch.
+	- braille: Fix liblouis1.defs installation. Thanks to Samuel
+	  Thibault for this fix.
+
+CHANGES IN V1.17.4
+
+	- pdftopdf: If the input PDF file contains an interactive
+	  form, flatten it to static PDF so that further manipulation,
+	  like scaling, number-up, ... do not let the filled for
+	  content getting lost. This is implemented by using the
+	  pdftocairo utility of Poppler and if this fails Ghostscript
+	  (9.22 or later recommended). This will probably replaced by
+	  a QPDF-based solution later. Thanks to Tobias Hoffmann for
+	  the QPDF-based detection of PDF forms (Bug #1315, Ubuntu bug
+	  #1564249).
+
+CHANGES IN V1.17.3
+
+	- bannertopdf: Make it working also with Poppler 0.58.0 and newer
+	  (Bug #1408).
+	- gstoraster, pdftops, foomatic-rip: Added "-dShowAcroForm" to all
+	  Ghostscript command lines where the input data format can be PDF.
+	  With this and the fix of Ghostscript bug #698461 most filled
+	  PDF forms should be rendered correctly by Ghostscript now.
+	- libcupsfilters: Do not check maximum resolutions of raster-based
+	  PDLs, as implementation was incorrect and reliability of PDLs is
+	  more important than maximum resolution.
 
 CHANGES IN V1.17.2
 
-	- libcupsfilters: Fixed outstanding bug in PCLm with JPEG (DCT)
+	- rastertopdf: Fixed outstanding bug in PCLm with JPEG (DCT)
 	  compression. Now PCLm support is completely working.
 
 CHANGES IN V1.17.1

@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[17])
-m4_define([cups_filters_version_micro],[2])
+m4_define([cups_filters_version_micro],[5])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -850,6 +850,8 @@ AC_CONFIG_FILES([
 	filter/braille/filters/cups-braille.sh
 	filter/braille/filters/imagetobrf
 	filter/braille/filters/texttobrf
+	filter/braille/filters/vectortopdf
+	filter/braille/filters/vectortobrf
 	filter/braille/filters/liblouis1.defs.gen
 	mime/cupsfilters.convs
 ])
