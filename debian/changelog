@@ -1,3 +1,11 @@
+cups-filters (1.17.7-0ubuntu1) artful; urgency=medium
+
+  * New upstream release
+    - braille: Tons of Braille embossing fixes.
+  * debian/cups-filters.installed: Install symlinks for Braille embossing.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 19 Sep 2017 11:43:38 -0300
+
 cups-filters (1.17.5-1) experimental; urgency=medium
 
   * New upstream version 1.17.5

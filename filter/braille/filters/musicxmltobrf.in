@@ -34,39 +34,23 @@ NB=$4
 OPTIONS=$5
 FILE=$6
 
-OUTPUT_FORMAT=brf
-
-case $0 in
-  *vectortoubrl*) OUTPUT_FORMAT=ubrl ;;
-esac
-
 . @CUPS_DATADIR@/braille/cups-braille.sh
 
-checkTool convert imagemagick "embossing images"
+checkTool FreeDots FreeDots "translating musicxml files"
+checkTool lou_translate liblouis "translating musicxml files"
 
-NEGATE=$(getOption Negate)
-case "$NEGATE" in
-  True|true)  NEGATE=-negate ;;
-  False|false) NEGATE= ;;
-  *)
-    printf "ERROR: Option Negate must either True or False, got '%s'\n" "$NEGATE" >&2
-    exit 1
-    ;;
-esac
+CONVERT="FreeDots -nw -w $TEXTWIDTH /dev/stdin"
+TRANSLATE="lou_translate $LIBLOUIS_TABLES,braille-patterns.cti"
 
-PAGE="-page ${TOTALGRAPHICWIDTH}x${TOTALGRAPHICHEIGHT}+${GRAPHICHOFFSET}+${GRAPHICVOFFSET}"
+cd $TMPDIR
+echo "INFO: Translating MusicXML" >&2
 
-GS_CALL="gs -q -dDEVICEWIDTHPOINTS=${GRAPHICWIDTH} -dDEVICEHEIGHTPOINTS=${GRAPHICHEIGHT} -noantialias -dTextAlphaBits=1 -dGraphicsAlphaBits=1 -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngmono -dFitPage -r72 -sOutputFile=-"
-RENDER_CALL="convert $NEGATE $PAGE -flatten - $OUTPUT_FORMAT:-"
-
-# Now proceeed
-echo "INFO: Converting image" 1>&2
+printf "DEBUG: Calling $CONVERT | $TRANSLATE on '%s'\n" "$FILE" >&2
 if [ -z "$FILE" ]
 then
-  printf "DEBUG: Calling %s and %s from stdin\n" "$GS_CALL" "$RENDER_CALL" 1>&2
-  $GS_CALL - | sed -e '/-noantialias/d' | $RENDER_CALL | sed -e '/^\(Width\|X\|Y\): [0-9]*$/,/^$/d'
+  $CONVERT | $TRANSLATE
 else
-  printf "DEBUG: Calling %s and %s on '%s'\n" "$GS_CALL" "$RENDER_CALL" "$FILE" 1>&2
-  $GS_CALL "$FILE" | sed -e '/-noantialias/d' | $RENDER_CALL | sed -e '/^\(Width\|X\|Y\): [0-9]*$/,/^$/d'
+  < "$FILE" $CONVERT | $TRANSLATE
 fi
+
 echo "INFO: Ready" >&2
