@@ -1,3 +1,9 @@
+cups-filters (1.17.5-1ubuntu1) artful; urgency=medium
+
+  * No change rebuild with the new qpdf
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 21 Sep 2017 01:11:01 +0200
+
 cups-filters (1.17.5-1) experimental; urgency=medium
 
   * New upstream version 1.17.5
