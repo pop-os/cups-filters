@@ -1,3 +1,10 @@
+cups-filters (1.17.8-0ubuntu1) artful; urgency=medium
+
+  * New upstream release
+    - foomatic-rip: Several failure status fixes (Upstream bug #1412).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 28 Sep 2017 16:26:03 -0400
+
 cups-filters (1.17.7-0ubuntu2) artful; urgency=medium
 
   * No-change release as autopkgtest of CUPS is fixed now so that cups-filters
