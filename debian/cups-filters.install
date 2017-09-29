@@ -1,6 +1,7 @@
 etc/fonts/conf.d/99pdftoopvp.conf
 usr/bin/ttfread
 usr/bin/foomatic-rip
+usr/lib/cups/backend/cups-brf
 usr/lib/cups/backend/beh
 usr/lib/cups/backend/parallel
 usr/lib/cups/backend/serial
@@ -10,6 +11,7 @@ usr/lib/cups/filter/pdftoijs
 usr/lib/cups/filter/texttotext
 usr/lib/cups/filter/gstoraster
 usr/lib/cups/filter/mupdftoraster
+usr/lib/cups/filter/musicxmltobrf
 usr/lib/cups/filter/texttopdf
 usr/lib/cups/filter/texttops
 usr/lib/cups/filter/imagetops
@@ -28,6 +30,16 @@ usr/lib/cups/filter/imageubrltoindexv4
 usr/lib/cups/filter/textbrftoindexv3
 usr/lib/cups/filter/textbrftoindexv4
 usr/lib/cups/filter/texttobrf
+usr/lib/cups/filter/vectortopdf
+usr/lib/cups/filter/svgtopdf
+usr/lib/cups/filter/xfigtopdf
+usr/lib/cups/filter/wmftopdf
+usr/lib/cups/filter/emftopdf
+usr/lib/cups/filter/cgmtopdf
+usr/lib/cups/filter/cmxtopdf
+usr/lib/cups/filter/cgmtopdf
+usr/lib/cups/filter/vectortobrf
+usr/lib/cups/filter/vectortoubrl
 usr/share/cups/banners/*
 usr/share/cups/braille/*
 usr/share/cups/drv/*
