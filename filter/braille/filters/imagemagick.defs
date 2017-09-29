@@ -37,9 +37,13 @@ Option "Rotate/Rotation" PickOne AnySetup 10
   Choice "270/Counter clockwise" ""
   Choice "180/Upside Down" ""
 
-Option "Resize/Resize" Boolean AnySetup 10
+Option "fitplot/Resize" Boolean AnySetup 10
   *Choice "True/Yes" ""
   Choice "False/No" ""
+
+Option "mirror/Mirror" Boolean AnySetup 10
+  Choice "True/Yes" ""
+  *Choice "False/No" ""
 
 Option "Edge/Edge detection" PickOne AnySetup 10
   Choice "None/None"   ""
@@ -79,3 +83,44 @@ Option "CannyUpper/CannyUpper" PickOne AnySetup 10
   *Choice "30/30" ""
   Choice "40/40" ""
   Choice "50/50" ""
+
+Option "page-top/Graphical top margin" PickOne AnySetup 10.0
+  Choice "0/0" ""
+  Choice "5/5" ""
+  Choice "10/10" ""
+  *Choice "15/15" ""
+  Choice "20/20" ""
+  Choice "25/25" ""
+  Attribute Custompage-top True ""
+  Attribute ParamCustompage-top Points "1 int 1 999"
+
+Option "page-bottom/Graphical bottom margin" PickOne AnySetup 10.0
+  Choice "0/0" ""
+  Choice "5/5" ""
+  Choice "10/10" ""
+  *Choice "15/15" ""
+  Choice "20/20" ""
+  Choice "25/25" ""
+  Attribute Custompage-bottom True ""
+  Attribute ParamCustompage-bottom Points "1 int 1 999"
+
+Option "page-left/Graphical left margin" PickOne AnySetup 10.0
+  Choice "0/0" ""
+  Choice "5/5" ""
+  Choice "10/10" ""
+  *Choice "15/15" ""
+  Choice "20/20" ""
+  Choice "25/25" ""
+  Attribute Custompage-left True ""
+  Attribute ParamCustompage-left Points "1 int 1 999"
+
+Option "page-right/Graphical right margin" PickOne AnySetup 10.0
+  Choice "0/0" ""
+  Choice "5/5" ""
+  Choice "10/10" ""
+  *Choice "15/15" ""
+  Choice "20/20" ""
+  Choice "25/25" ""
+  Attribute Custompage-right True ""
+  Attribute ParamCustompage-right Points "1 int 1 999"
+
