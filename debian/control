@@ -1,5 +1,5 @@
 Source: cups-filters
-Standards-Version: 4.0.1
+Standards-Version: 4.1.0
 Priority: optional
 Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
@@ -9,7 +9,6 @@ Uploaders:
 Build-Depends: 
  autoconf,
  debhelper (>= 10.2.5~),
- dh-systemd,
  dpkg-dev (>= 1.16.1~),
  dh-apparmor,
  pkg-config,
@@ -21,7 +20,7 @@ Build-Depends:
  libldap2-dev,
  libpoppler-private-dev (>= 0.16.0),
  libpoppler-cpp-dev,
- libqpdf-dev (>= 7),
+ libqpdf-dev (>= 7.0~),
  libjpeg-dev,
  libpng-dev,
  libtiff-dev,
@@ -126,6 +125,7 @@ Description: OpenPrinting CUPS Filters - Driverless printing
 Package: libcupsfilters-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends},
  ${misc:Depends},
  libcupsfilters1 (= ${binary:Version})
@@ -141,6 +141,7 @@ Description: OpenPrinting CUPS Filters - Development files for the library
 Package: libfontembed-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends},
  ${misc:Depends},
  libfontembed1 (= ${binary:Version})

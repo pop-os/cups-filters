@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[17])
-m4_define([cups_filters_version_micro],[5])
+m4_define([cups_filters_version_micro],[8])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -627,7 +627,7 @@ AS_IF([test "x$enable_ghostscript" != "xyes"], [
 	AC_DEFINE([HAVE_GHOSTSCRIPT], [], [Define that we provide ghostscript binary])
 	AS_IF([test x"$with_pdftops" = xgs], [AC_DEFINE_UNQUOTED([CUPS_PDFTOPS_RENDERER], [GS], [Define default renderer])])
 
-	AS_IF([test "xenable_gs_ps2write" = "xyes"], [
+	AS_IF([test x"$enable_gs_ps2write" = "xyes"], [
 		AC_DEFINE([HAVE_GHOSTSCRIPT_PS2WRITE], [], [gs supports ps2write])
 	])
 	AS_IF([test "x$cross_compiling" != "xyes"], [
@@ -852,6 +852,7 @@ AC_CONFIG_FILES([
 	filter/braille/filters/texttobrf
 	filter/braille/filters/vectortopdf
 	filter/braille/filters/vectortobrf
+	filter/braille/filters/musicxmltobrf
 	filter/braille/filters/liblouis1.defs.gen
 	mime/cupsfilters.convs
 ])
