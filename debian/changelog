@@ -1,3 +1,17 @@
+cups-filters (1.17.8-1) unstable; urgency=medium
+
+  * New upstream version 1.17.8
+    - Tons of fixes for Braille embossers
+    - Release to unstable, as QPDF 7 is there now (Closes: #876028)
+
+  [ Samuel Thibault ]
+  * Install the new braille-related filters
+
+  [ Didier Raboud ]
+  * Drop superfluous dh-systemd Build-Depend
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 29 Sep 2017 16:57:02 +0200
+
 cups-filters (1.17.5-1) experimental; urgency=medium
 
   * New upstream version 1.17.5
