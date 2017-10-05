@@ -1,3 +1,14 @@
+cups-filters (1.17.9-0ubuntu1) artful; urgency=medium
+
+  * New upstream release
+    - cups-browsed: Applying option defaults from the
+      DefaultOptions directive in cups-browsed.conf got
+      lost. Re-introduced it (Bug #1414).
+    - cups-browsed: Get printer-location field from remote
+      printers (Bug #1413).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 05 Oct 2017 14:03:41 -0300
+
 cups-filters (1.17.8-0ubuntu1) artful; urgency=medium
 
   * New upstream release
