@@ -93,14 +93,20 @@ setupTextRendering() {
   esac
 }
 
-# sometimes we can't filter directly from stdin because the tools need to seek
-# within the file (e.g. unzip). This can be called in such case to dump stdin to
-# a file
+# sometimes we can't filter directly from stdin or the original file because the
+# tools need to seek within the file (e.g. unzip), or spaces in the path pose
+# problem. This can be called in such case to dump the original content to a
+# fresh file
 dumptofile() {
-  [ -z "$FILE" ] || return 0 # Already a file
+  ORIGFILE="$FILE"
+  FILE=$(mktemp "${TMPDIR:-/tmp}/texttobrf.tmp.XXXXXX")
   trap -- 'rm -f "$FILE"' EXIT
-  FILE=$(mktemp "${TMPDIR:-/tmp}/texttobrf.tmp")
-  cat > "$FILE"
+  if [ -n "$ORIGFILE" ]
+  then
+    cat "$ORIGFILE" > "$FILE"
+  else
+    cat > "$FILE"
+  fi
 }
 
 #  Selected braille table
@@ -154,13 +160,13 @@ then
 	exit 1
 	;;
     esac
-    RENDER_CALL="$LIBLOUIS_TOOL -CliteraryTextTable=$LIBLOUIS_TABLES,braille-patterns.cti $LIBLOUIS_CONFIG"
+    RENDER_CALL="$LIBLOUIS_TOOL -CliteraryTextTable=en-us-brf.dis,$LIBLOUIS_TABLES,braille-patterns.cti $LIBLOUIS_CONFIG"
   elif type lou_translate > /dev/null
   then
     # Only liblouis, but better than nothing
     setupTextRendering
     printf "WARN: The liblouisutdml package is required for translating braille better\n" >&2
-    TRANSLATE="lou_translate $LIBLOUIS_TABLES,braille-patterns.cti"
+    TRANSLATE="lou_translate en-us-brf.dis,$LIBLOUIS_TABLES,braille-patterns.cti"
   else
     printf "ERROR: The liblouisutdml package is required for translating braille\n" >&2
     exit 1
