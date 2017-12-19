@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.17.9 - 2017-10-05
+README - OpenPrinting CUPS Filters v1.18.0 - 2017-12-19
 -------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -1048,6 +1048,8 @@ is "/tmp".
 PDFTOIJS
 ========
 
+(Optional, only included when building with "./configure ... --enable-ijs ...")
+
 1. INTRODUCTION
 
 "pdftoijs" is a filter for CUPS. It reads PDF files, converts it
@@ -1113,6 +1115,8 @@ is "/tmp".
 
 PDFTOOPVP
 =========
+
+(Optional, only included when building with "./configure ... --enable-opvp ...")
 
 1. INTRODUCTION
 
