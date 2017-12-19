@@ -1626,7 +1626,7 @@ cups-filters (1.0.4-1) unstable; urgency=low
   [ Martin Pitt ]
   * debian/control: Build against libpng-dev, with an alternative to the older
     libpng12-dev. (Closes: #662295)
-  * debian/control: Prefer building against libtiff5-dev if available, falling  
+  * debian/control: Prefer building against libtiff5-dev if available, falling
     back to libtiff-dev.
   * debian/control, debian/rules: Move from hardening-wrapper to using
     dpkg-buildflags. Bump dpkg-dev build dependency to (>= 1.16.1~) for this.

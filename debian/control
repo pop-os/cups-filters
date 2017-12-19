@@ -3,10 +3,10 @@ Standards-Version: 4.1.2
 Priority: optional
 Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
-Uploaders: 
+Uploaders:
  Till Kamppeter <till.kamppeter@gmail.com>,
  Didier Raboud <odyx@debian.org>
-Build-Depends: 
+Build-Depends:
  autoconf,
  debhelper (>= 10.2.5~),
  dpkg-dev (>= 1.16.1~),
@@ -45,7 +45,7 @@ Package: libcupsfilters1
 Section: libs
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
  ${misc:Depends}
 Multi-Arch: same
 Description: OpenPrinting CUPS Filters - Shared library
@@ -58,7 +58,7 @@ Package: libfontembed1
 Section: libs
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
  ${misc:Depends}
 Multi-Arch: same
 Description: OpenPrinting CUPS Filters - Font Embed Shared library
@@ -67,7 +67,7 @@ Description: OpenPrinting CUPS Filters - Font Embed Shared library
 
 Package: cups-filters
 Architecture: any
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
  ${misc:Depends},
  cups-filters-core-drivers (>= ${binary:Version}),
  bc,
@@ -82,13 +82,13 @@ Suggests: foomatic-db-compressed-ppds | foomatic-db,
 Conflicts: ghostscript-cups,
  foomatic-filters,
  foomatic-filters-beh
-Replaces: cups (<< 1.5.0-16), 
+Replaces: cups (<< 1.5.0-16),
  cups-common (<< 1.5.0-16),
  ghostscript-cups,
  foomatic-filters,
  foomatic-filters-beh,
  cups-ppdc (<< 1.6)
-Breaks: cups (<< 1.5.0-16), 
+Breaks: cups (<< 1.5.0-16),
  cups-common (<< 1.5.0-16),
  cups-ppdc (<< 1.6)
 Provides: ghostscript-cups,
@@ -104,7 +104,7 @@ Description: OpenPrinting CUPS Filters - Main Package
 
 Package: cups-filters-core-drivers
 Architecture: any
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
  ${misc:Depends},
  bc,
  poppler-utils,
@@ -154,7 +154,7 @@ Description: OpenPrinting CUPS Filters - Development files for font embed librar
 
 Package: cups-browsed
 Architecture: any
-Depends: ${shlibs:Depends}, 
+Depends: ${shlibs:Depends},
  ${misc:Depends},
  cups-daemon,
  lsb-base,
