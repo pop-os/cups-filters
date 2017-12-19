@@ -1,3 +1,19 @@
+cups-filters (1.18.0-1) unstable; urgency=medium
+
+  * New upstream version 1.18.0
+    - pdftoopvp and pdftoijs are now deprecated
+    - fixes and improvements for the Braille embosser support; thanks to Samuel
+      Thibault
+
+  * Bump S-V without changes needed
+  * In cups-filters; don't install pdftoopvp or pdftoijs CUPS filters; these
+    are deprecated upstream now
+  * Remove trailing whitespaces in d/control and d/changelog
+  * Upgrade debian/watch URL to https
+  * Refresh debian/copyright from upstream's COPYING
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 19 Dec 2017 20:34:35 +0100
+
 cups-filters (1.17.9-1) unstable; urgency=medium
 
   * New upstream version 1.17.9
@@ -1626,7 +1642,7 @@ cups-filters (1.0.4-1) unstable; urgency=low
   [ Martin Pitt ]
   * debian/control: Build against libpng-dev, with an alternative to the older
     libpng12-dev. (Closes: #662295)
-  * debian/control: Prefer building against libtiff5-dev if available, falling  
+  * debian/control: Prefer building against libtiff5-dev if available, falling
     back to libtiff-dev.
   * debian/control, debian/rules: Move from hardening-wrapper to using
     dpkg-buildflags. Bump dpkg-dev build dependency to (>= 1.16.1~) for this.

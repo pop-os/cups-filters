@@ -1,4 +1,3 @@
-etc/fonts/conf.d/99pdftoopvp.conf
 usr/bin/ttfread
 usr/bin/foomatic-rip
 usr/lib/cups/backend/cups-brf
@@ -7,7 +6,6 @@ usr/lib/cups/backend/parallel
 usr/lib/cups/backend/serial
 usr/lib/cups/filter/commandtopclx
 usr/lib/cups/filter/commandtoescpx
-usr/lib/cups/filter/pdftoijs
 usr/lib/cups/filter/texttotext
 usr/lib/cups/filter/gstoraster
 usr/lib/cups/filter/mupdftoraster
@@ -17,7 +15,6 @@ usr/lib/cups/filter/texttops
 usr/lib/cups/filter/imagetops
 usr/lib/cups/filter/rastertoescpx
 usr/lib/cups/filter/bannertopdf
-usr/lib/cups/filter/pdftoopvp
 usr/lib/cups/filter/imagetoraster
 usr/lib/cups/filter/foomatic-rip
 usr/lib/cups/filter/gstopxl
@@ -48,7 +45,12 @@ usr/share/cups/mime/cupsfilters-mupdf.convs
 usr/share/cups/mime/braille.*
 usr/share/cups/ppdc/*
 usr/share/cups/charsets/*
-usr/share/ppd/*
+usr/share/ppd/cupsfilters/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd
+usr/share/ppd/cupsfilters/Generic-PDF_Printer-PDF.ppd
+usr/share/ppd/cupsfilters/HP-Color_LaserJet_CM3530_MFP-PDF.ppd
+usr/share/ppd/cupsfilters/pxlcolor.ppd
+usr/share/ppd/cupsfilters/pxlmono.ppd
+usr/share/ppd/cupsfilters/Ricoh-PDF_Printer-PDF.ppd
 ../*.ppd-updater usr/share/cups/ppd-updaters/
 # Manpages
 usr/share/man/man1/foomatic-rip.1
