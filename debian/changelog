@@ -1,3 +1,9 @@
+cups-filters (1.18.0-3build1) bionic; urgency=medium
+
+  * No-change rebuild for poppler soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 25 Jan 2018 07:27:45 +0100
+
 cups-filters (1.18.0-3) unstable; urgency=medium
 
   * Fix .maintscript rm_conffile version (Closes: #885223)
