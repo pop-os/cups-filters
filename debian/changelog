@@ -1,3 +1,9 @@
+cups-filters (1.18.0-3build2) bionic; urgency=medium
+
+  * No-change rebuild for gnustep-gui soname change.
+
+ -- Matthias Klose <doko@ubuntu.com>  Tue, 30 Jan 2018 07:00:56 +0100
+
 cups-filters (1.18.0-3build1) bionic; urgency=medium
 
   * No-change rebuild for poppler soname change.
