@@ -1,0 +1,22 @@
+From 84f8aa11d5e48c64445f81335420e5cd1f2a70ef Mon Sep 17 00:00:00 2001
+From: Didier Raboud <odyx@debian.org>
+Date: Mon, 5 Feb 2018 08:29:33 +0100
+Subject: Fix the 'allows {,one }to' typo in foomatic-rip manpage
+
+---
+ filter/foomatic-rip/foomatic-rip.1.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/filter/foomatic-rip/foomatic-rip.1.in b/filter/foomatic-rip/foomatic-rip.1.in
+index bdcfd318f..9685a95f5 100644
+--- a/filter/foomatic-rip/foomatic-rip.1.in
++++ b/filter/foomatic-rip/foomatic-rip.1.in
+@@ -158,7 +158,7 @@ http://www.openprinting.org/
+ 
+ The file \fB@sysconfdir@/cups/foomatic-rip.conf\fR or if it is not
+ readable the file \fB@sysconfdir@/foomatic/filter.conf\fR is read
+-whenever foomatic-rip is executed. It allows to configure the behavior
++whenever foomatic-rip is executed. It allows one to configure the behavior
+ of foomatic-rip as follows (lines beginning with \fB#\fR are comments
+ and therefore get ignored):
+ 
