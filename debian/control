@@ -1,5 +1,5 @@
 Source: cups-filters
-Standards-Version: 4.1.2
+Standards-Version: 4.1.3
 Priority: optional
 Section: net
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
