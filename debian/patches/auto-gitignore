@@ -8,7 +8,7 @@ updates to users of the official Debian archive view of the package.
 ---
 diff --git a/.gitignore b/.gitignore
 new file mode 100644
-index 0000000..845ca06
+index 000000000..845ca0677
 --- /dev/null
 +++ b/.gitignore
 @@ -0,0 +1 @@

@@ -1,4 +1,4 @@
-From 84f8aa11d5e48c64445f81335420e5cd1f2a70ef Mon Sep 17 00:00:00 2001
+From 9f277c94d56c0872534b83a1906e778d4872fdea Mon Sep 17 00:00:00 2001
 From: Didier Raboud <odyx@debian.org>
 Date: Mon, 5 Feb 2018 08:29:33 +0100
 Subject: Fix the 'allows {,one }to' typo in foomatic-rip manpage

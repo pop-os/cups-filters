@@ -1,4 +1,4 @@
-From b97e7abd6bf827eb07ee3e597b20d1c662f5e4f6 Mon Sep 17 00:00:00 2001
+From 4bebfe14f48bfb5bd9f31a19d235d8b2bf42b075 Mon Sep 17 00:00:00 2001
 From: Didier Raboud <odyx@debian.org>
 Date: Mon, 5 Feb 2018 08:39:37 +0100
 Subject: Fix unnecces{,s}arily typo in cups-browsed
