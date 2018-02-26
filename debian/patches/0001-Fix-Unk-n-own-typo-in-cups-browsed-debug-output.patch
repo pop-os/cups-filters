@@ -1,4 +1,4 @@
-From 207ab5ed5876ed1b1b7ed3716253f7de57bb2919 Mon Sep 17 00:00:00 2001
+From 24ef35255ff93dfb0d28eb2e7481367e4f33c8e2 Mon Sep 17 00:00:00 2001
 From: Didier Raboud <odyx@debian.org>
 Date: Mon, 5 Feb 2018 08:28:03 +0100
 Subject: Fix Unk{,n}own typo in cups-browsed debug output
@@ -8,10 +8,10 @@ Subject: Fix Unk{,n}own typo in cups-browsed debug output
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/utils/cups-browsed.c b/utils/cups-browsed.c
-index a2a4a084f..ac3d17328 100644
+index 556e35f21..a812ac3da 100644
 --- a/utils/cups-browsed.c
 +++ b/utils/cups-browsed.c
-@@ -2567,7 +2567,7 @@ record_printer_options(const char *printer) {
+@@ -2569,7 +2569,7 @@ record_printer_options(const char *printer) {
    p = printer_record(printer);
  
    if (p == NULL) {
