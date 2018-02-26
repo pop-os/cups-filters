@@ -1,4 +1,4 @@
-From 44e00deb6e120ee2652c25f047590dd090cc5f85 Mon Sep 17 00:00:00 2001
+From c7a14fe53efd1bfdc682556bca5a4a3931372d84 Mon Sep 17 00:00:00 2001
 From: Didier Raboud <odyx@debian.org>
 Date: Mon, 5 Feb 2018 08:37:45 +0100
 Subject: Fix Ou{,t}put typo in foomatic-rip

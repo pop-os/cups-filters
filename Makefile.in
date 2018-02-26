@@ -186,6 +186,7 @@ CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
 	filter/braille/filters/cups-braille.sh \
 	filter/braille/filters/imagetobrf \
 	filter/braille/filters/texttobrf \
+	filter/braille/filters/brftopagedbrf \
 	filter/braille/filters/vectortopdf \
 	filter/braille/filters/vectortobrf \
 	filter/braille/filters/musicxmltobrf \
@@ -874,6 +875,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/filter/braille/drivers/index/indexv3.sh.in \
 	$(top_srcdir)/filter/braille/drivers/index/indexv4.sh.in \
 	$(top_srcdir)/filter/braille/drivers/index/textbrftoindexv3.in \
+	$(top_srcdir)/filter/braille/filters/brftopagedbrf.in \
 	$(top_srcdir)/filter/braille/filters/cups-braille.sh.in \
 	$(top_srcdir)/filter/braille/filters/imagetobrf.in \
 	$(top_srcdir)/filter/braille/filters/liblouis1.defs.gen.in \
@@ -1571,6 +1573,7 @@ gsfilterscripts = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/vectortopdf \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/vectortobrf \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/texttobrf \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/brftopagedbrf \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/musicxmltobrf
 
 bannertopdf_SOURCES = \
@@ -2050,6 +2053,8 @@ filter/braille/filters/cups-braille.sh: $(top_builddir)/config.status $(top_srcd
 filter/braille/filters/imagetobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/imagetobrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/braille/filters/texttobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/texttobrf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/brftopagedbrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/brftopagedbrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/braille/filters/vectortopdf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/vectortopdf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
