@@ -1,3 +1,11 @@
+cups-filters (1.20.2-0ubuntu2) bionic; urgency=medium
+
+  * gstoraster: Improved detection whether input is PostScript
+    or PDF by skipping over possible headers. Thanks to Rod
+    Schmidt (schmidtrod at q dot com) for the patch.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Sun,  1 Apr 2018 20:02:20 +0200
+
 cups-filters (1.20.2-0ubuntu1) bionic; urgency=medium
 
   * New upstream bug fix release
