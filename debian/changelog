@@ -1,3 +1,19 @@
+cups-filters (1.20.2-1) unstable; urgency=medium
+
+  * New upstream version 1.20.2
+   - cups-browsed: If the user modifies/overwrites a print queue
+     created by cups-browsed, it will now automatically released
+     from the control of cups-browsed, so the modified queue does
+     not get removed by cups-browsed on shutdown (LP: #1731417)
+
+  [ Samuel Thibault ]
+  * Do not remove read permission on cups-brf (Closes: #878867)
+  
+  [ Didier Raboud ]
+  * Add a lintian override for the specific CUPS backends permissions
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 05 Apr 2018 20:30:11 +0200
+
 cups-filters (1.20.1-1) unstable; urgency=medium
 
   * New upstream version 1.20.1
