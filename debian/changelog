@@ -1,3 +1,14 @@
+cups-filters (1.20.2-0ubuntu3) bionic; urgency=medium
+
+  * cups-browsed: The new method of identifying remote CUPS
+    queues via the "printer-type" TXT record field does not work
+    for printers discovered by legacy CUPS broadcast (CUPS 1.5.x
+    or older). Now consider also printers without TXT record
+    (not discovered via DNS-SD) as remote CUPS queues (Upstream
+    issue #34).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri,  6 Apr 2018 16:55:20 +0200
+
 cups-filters (1.20.2-0ubuntu2) bionic; urgency=medium
 
   * gstoraster: Improved detection whether input is PostScript
