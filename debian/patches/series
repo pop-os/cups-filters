@@ -1,2 +1,3 @@
 auto-gitignore
 gstoraster-ps-pdf-detection.patch
+cups-browsed-consider-printers-without-txt-record-as-remote-cups.patch
