@@ -5440,7 +5440,7 @@ install-data-hook:
 @RCLINKS_TRUE@	$(LN_S) -f ../init.d/cups-browsed $(DESTDIR)$(INITDIR)/rc0.d/K$(RCSTOP)cups-browsed;
 	$(LN_S) -f pdf.utf-8.simple \
 		$(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
-@ENABLE_BRAILLE_TRUE@	chmod g-rwx,o-rwx $(DESTDIR)/$(pkgbackenddir)/cups-brf
+@ENABLE_BRAILLE_TRUE@	chmod g-wx,o-wx $(DESTDIR)/$(pkgbackenddir)/cups-brf
 
 uninstall-hook:
 @RCLINKS_TRUE@	if test "x$(INITDIR)" != x; then \
