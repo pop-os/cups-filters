@@ -1,3 +1,14 @@
+cups-filters (1.20.3-1) unstable; urgency=medium
+
+  * New upstream version 1.20.3
+   - cups-browsed: The new method of identifying remote CUPS queues via the
+     "printer-type" TXT record field does not work for printers discovered by
+     legacy CUPS broadcast (CUPS 1.5.x or older). Now consider also printers
+     without TXT record (not discovered via DNS-SD) as remote CUPS queues
+     (Issue #34, Closes: #895549)
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 12 Apr 2018 18:47:40 +0200
+
 cups-filters (1.20.2-1) unstable; urgency=medium
 
   * New upstream version 1.20.2
