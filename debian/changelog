@@ -1,3 +1,10 @@
+cups-filters (1.8.3-2ubuntu3.4) xenial-security; urgency=medium
+
+  * Rebuild against new qpdf security update.
+    - debian/control: Bump libqpdf-dev Build-Depends to 8.0~
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 01 May 2018 14:16:12 -0400
+
 cups-filters (1.8.3-2ubuntu3.1) xenial-proposed; urgency=medium
 
   * Added "Requires=cups-service" to the cups-browsed.service file to make
