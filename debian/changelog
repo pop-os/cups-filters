@@ -1,3 +1,10 @@
+cups-filters (1.0.52-0ubuntu1.8) trusty-security; urgency=medium
+
+  * Rebuild against new qpdf security update.
+    - debian/control: Bump libqpdf-dev Build-Depends to 8.0~
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 01 May 2018 14:26:06 -0400
+
 cups-filters (1.0.52-0ubuntu1.7) trusty-security; urgency=medium
 
   * SECURITY UPDATE: code execution via improper escaping in foomatic-rip
