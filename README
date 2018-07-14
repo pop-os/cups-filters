@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.20.3 - 2018-04-12
+README - OpenPrinting CUPS Filters v1.20.4 - 2018-07-12
 -------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -22,7 +22,7 @@ INTRODUCTION
     printers and IPP printers to make them available locally.
 
     From CUPS 1.6.0 on, this package is required for using printer
-    drivers (und also driverless printing) with CUPS under Linux. With
+    drivers (and also driverless printing) with CUPS under Linux. With
     CUPS 1.5.x and 1.4.x this package can be used optionally to switch
     over to PDF-based printing. In that case some filters are provided
     by both CUPS and this package. Then the filters of this package
@@ -41,8 +41,8 @@ INTRODUCTION
     (if in the actually used Poppler version such options are
     available). This is the case for most modern Linux distributions.
 
-    For PCLm output (used by Mopria and Wi-Fi Direct printers) QPDF of
-    at least version 7.0.0 is required.
+    For PCLm output (used by Wi-Fi Direct and other driverless
+    printing standards) QPDF of at least version 7.0.0 is required.
 
     For Apple Raster output (used by AirPrint printers) at least CUPS
     2.2.2 is required.
@@ -56,9 +56,10 @@ INTRODUCTION
     CUPS, this package, and Ghostscript contain some rudimentary
     printer drivers and especially the filters needed for driverless
     printing (currently PWG Raster, Apple Raster, PCLm, and PDF output
-    formats, for IPP Everywhere, AirPrint, Mopria, and Wi-Fi Direct
-    printers), see http://www.openprinting.org/drivers/ for a more
-    comprehensive set of printer drivers for Linux.
+    formats, for printers supporting IPP Everywhere, AirPrint, Wi-Fi
+    Direct, and other standards), see
+    http://www.openprinting.org/drivers/ for a more comprehensive set
+    of printer drivers for Linux.
 
     See
     
@@ -67,6 +68,10 @@ INTRODUCTION
     for information about the PDF-based printing workflow.
 
     Report bugs to
+
+    https://github.com/OpenPrinting/cups-filters/issues
+
+    or alternatively to
 
     https://bugs.linuxfoundation.org/
 
@@ -974,8 +979,15 @@ Further Infos
 Font embedding is handled by libfontembed in the filter/fontembed
 subdirectory.
 
-Please report all bugs to https://bugs.linuxfoundation.org/, product
-"OpenPrinting", component "cups-filters".
+Please report all bugs to
+
+https://github.com/OpenPrinting/cups-filters/issues
+
+or to
+
+https://bugs.linuxfoundation.org/
+
+(product "OpenPrinting", component "cups-filters").
 
 
 PDFTORASTER
