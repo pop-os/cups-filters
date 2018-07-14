@@ -19,7 +19,7 @@ cups-filters (1.20.2-1) unstable; urgency=medium
 
   [ Samuel Thibault ]
   * Do not remove read permission on cups-brf (Closes: #878867)
-  
+
   [ Didier Raboud ]
   * Add a lintian override for the specific CUPS backends permissions
 
