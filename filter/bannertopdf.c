@@ -1,6 +1,7 @@
 /*
  * Copyright 2012 Canonical Ltd.
  * Copyright 2013 ALT Linux, Andrew V. Stepanov <stanv@altlinux.com>
+ * Copyright 2018 Sahil Arora <sahilarora.535@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -369,7 +370,7 @@ static int generate_banner_pdf(banner_t *banner,
     float media_limits[4];
     float page_scale;
     ppd_attr_t *attr;
-    int copies;
+    unsigned copies;
 #ifndef HAVE_OPEN_MEMSTREAM
     struct stat st;
 #endif
@@ -513,6 +514,15 @@ static int generate_banner_pdf(banner_t *banner,
         pdf_duplicate_page(doc, 1, copies);
 
     pdf_write(doc, stdout);
+
+    opt_t * opt_current = known_opts;
+    opt_t * opt_next = NULL;
+    while (opt_current != NULL)
+    {
+      opt_next = opt_current->next;
+      free(opt_current);
+      opt_current = opt_next;
+    }
     free(buf);
     pdf_free(doc);
     return 0;
