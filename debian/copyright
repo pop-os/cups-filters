@@ -67,7 +67,7 @@ Copyright: 1999-2003, Jeff Licquia <licquia@debian.org>
   2003-2007, Kenshi Muto <kmuto@debian.org>
   2007-2012, Martin Pitt <mpitt@debian.org>
   2012-2015, Till Kamppeter <till.kamppeter@gmail.com>
-  2013-2017, Didier Raboud <odyx@debian.org>
+  2013-2018, Didier Raboud <odyx@debian.org>
 License: GPL-2+
 
 Files: debian/local/*
@@ -85,15 +85,20 @@ License: Expat
 
 Files: filter/banner.c
   filter/banner.h
-  filter/pdf.h
   banners/*
   data/*
 Copyright: 2012, Canonical Ltd
 License: GPL-3
 
+Files: filter/pdf.h
+Copyright: 2018, Sahil Arora <sahilarora.535@gmail.com>
+  2012, Canonical Ltd
+License: GPL-3
+
 Files: filter/bannertopdf.c
   filter/pdf.cxx
-Copyright: 2013, ALT Linux, Andrew V. Stepanov <stanv@altlinux.com>
+Copyright: 2018, Sahil Arora <sahilarora.535@gmail.com>
+  2013, ALT Linux, Andrew V. Stepanov <stanv@altlinux.com>
   2012, Canonical Ltd
 License: GPL-3
 
@@ -256,6 +261,7 @@ Copyright: 1996-2001, 2003-2011 Free Software Foundation, Inc.
 License: GPL-2+
 
 Files: utils/cups-browsed*
+ org.cups.cupsd.Notifier.xml
 Copyright: 2012-2016 Till Kamppeter
  2013-2015 Tim Waugh
 License: LGPL-2.1+
@@ -339,7 +345,7 @@ License: LGPL-2
  Free Software Foundation; version 2 of the License.
  .
  On Debian systems, the complete text of version 2 of the GNU Library
- General Public License can be found in `/usr/share/common-licenses/LGPL-2'.
+ Public License can be found in `/usr/share/common-licenses/LGPL-2'.
 
 License: LGPL-2.1+
  This program is free software; you can redistribute it and/or modify it
@@ -348,7 +354,7 @@ License: LGPL-2.1+
  your option) any later version.
  .
  On Debian systems, the complete text of version 2.1 of the GNU Lesser
- General Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
+ Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
 
 License: BSD-4-clause
  Redistribution and use in source and binary forms, with or without
