@@ -81,8 +81,8 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
   char		*ptr,			/* Pointer into string */
 		s[255];			/* Temporary string */
   const char	*val,			/* Pointer into value */
-		*media,			/* media option */
-		*page_size,		/* PageSize option */
+                *media;			/* media option */
+  char		*page_size,		/* PageSize option */
                 *media_source,          /* Media source */
                 *media_type;		/* Media type */
   pwg_media_t   *size_found;            /* page size found for given name */
@@ -151,11 +151,14 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
 		strcasestr(s, "right") ||
 		strcasestr(s, "side") ||
 		strcasestr(s, "main"))
-	      media_source = strdup(s);
+            { 
+              if (media_source == NULL)
+	        media_source = strdup(s);
+            }
 	    else
 	      media_type = strdup(s);
 	  }
-      if (size_found)
+      if (page_size == NULL && size_found)
 	page_size = strdup(size_found->pwg);
     }
   }
@@ -1078,6 +1081,13 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
   else if (set_defaults)
     h->cupsRenderingIntent[0] = '\0';
 #endif /* HAVE_CUPS_1_7 */
+
+  if (media_source != NULL)
+    free(media_source);
+  if (media_type != NULL)
+    free(media_type);
+  if (page_size != NULL)
+    free(page_size);
 
   return (0);
 }
