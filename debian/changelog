@@ -1,3 +1,10 @@
+cups-filters (1.21.0-1) unstable; urgency=medium
+
+  * New upstream 1.21.0
+  * Refresh debian/copyright from upstream's COPYING
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 22 Aug 2018 08:30:36 +0200
+
 cups-filters (1.20.4-1) unstable; urgency=medium
 
   * New upstream version 1.20.4
