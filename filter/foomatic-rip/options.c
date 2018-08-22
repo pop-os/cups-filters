@@ -84,7 +84,7 @@ int optionset_alloc, optionset_count;
 char **optionsets;
 
 
-const char * get_icc_profile_for_qualifier(const char **qualifier)
+char * get_icc_profile_for_qualifier(const char **qualifier)
 {
     char tmp[1024];
     char *profile = NULL;
@@ -1044,6 +1044,7 @@ int option_set_value(option_t *opt, int optionset, const char *value)
         if (choice && !isempty(choice->command))
             composite_set_values(opt, optionset, choice->command);
     }
+    free(newvalue);
     return 1;
 }
 
@@ -1151,7 +1152,7 @@ static void unhtmlify(char *dest, size_t size, const char *src)
     const char *psrc = src, *p = NULL;
     const char *repl;
     struct tm *t = localtime(&job->time);
-    char tmpstr[10];
+    char tmpstr[16];
     size_t s, l, n;
 
     while (*psrc && pdest - dest < size - 1) {
@@ -1205,7 +1206,7 @@ static void unhtmlify(char *dest, size_t size, const char *src)
                 p = psrc + 6;
             } else if (!prefixcmp(psrc, "rbinumcopies")) {
                 if (job->rbinumcopies > 0) {
-                    snprintf(tmpstr, 10, "%d", job->rbinumcopies);
+                    snprintf(tmpstr, 16, "%d", job->rbinumcopies);
                     repl = tmpstr;
                 }
                 else
@@ -1333,11 +1334,11 @@ void option_set_choice(option_t *opt, const char *name, const char *text,
 
 int param_set_allowed_chars(param_t *param, const char *value)
 {
-    char rxstr[128], tmp[128];
+    char rxstr[256], tmp[128];
 
     param->allowedchars = malloc(sizeof(regex_t));
     unhtmlify(tmp, 128, value);
-    snprintf(rxstr, 128, "^[%s]*$", tmp);
+    snprintf(rxstr, 256, "^[%s]*$", tmp);
     if (regcomp(param->allowedchars, rxstr, 0) != 0) {
         regfree(param->allowedchars);
         param->allowedchars = NULL;
@@ -1914,6 +1915,8 @@ int ppd_supports_pdf()
     if (startswith(cmd, "gs"))
     {
         strncpy(cmd_pdf, cmd, 4096);
+        if (strlen(cmd) > 4095)
+          cmd_pdf[4095] = '\0';
         return 1;
     }
 
