@@ -1,3 +1,13 @@
+cups-filters (1.21.1-1) unstable; urgency=medium
+
+  * New upstream version 1.21.1
+   - foomatic-rip: Fixed segmentation fault caused by wrong
+     Coverity Scan issue fix (Closes: #907026)
+   - Build system: Require QPDF 8.1.0 or later as it is needed by
+     bannertopdf
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 27 Aug 2018 08:05:21 +0200
+
 cups-filters (1.21.0-1) unstable; urgency=medium
 
   * New upstream 1.21.0
