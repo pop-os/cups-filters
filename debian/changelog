@@ -1,3 +1,11 @@
+cups-filters (1.21.2-1) unstable; urgency=medium
+
+  * New upstream version 1.21.2
+    - cups-browsed: Fixed freeing of literal string caused by
+      Coverity Scan issue fix (Closes: #907399)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 03 Sep 2018 11:11:02 +0200
+
 cups-filters (1.21.1-1) unstable; urgency=medium
 
   * New upstream version 1.21.1
