@@ -2162,10 +2162,6 @@ err1:
     cmsDeleteTransform(colorTransform);
   }
 
-  // Check for memory leaks
-  Object::memCheck(stderr);
-  gMemReport(stderr);
-
   return exitCode;
 }
 
