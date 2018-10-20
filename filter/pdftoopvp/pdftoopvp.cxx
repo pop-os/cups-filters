@@ -765,8 +765,6 @@ err2:
 
   // check for memory leaks
   Object::memCheck(stderr);
-  gMemReport(stderr);
-
 }
 /* muntrace(); */
   return exitCode;
