@@ -1,3 +1,10 @@
+cups-filters (1.21.3-2) unstable; urgency=high
+
+  * Fix FTBFS against poppler 0.69 by patching out usage of two functions
+    removed in 0.69 (Closes: #910871)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 20 Oct 2018 18:51:39 +0200
+
 cups-filters (1.21.3-1) unstable; urgency=medium
 
   * New upstream version 1.21.3
