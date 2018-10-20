@@ -1,0 +1,54 @@
+From 2b1d2abe4aa7e03963f30f9dd707173dda075fea Mon Sep 17 00:00:00 2001
+From: Didier Raboud <odyx@debian.org>
+Date: Sat, 20 Oct 2018 18:43:05 +0200
+Subject: =?UTF-8?q?Poppler=200.69:=20Object::memCheck=20removed=20from=20A?=
+ =?UTF-8?q?PI=C2=A0in=20c362ab1b97f20c5b73b3bad8d52015f679178748?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ filter/pdftoijs.cxx            | 2 --
+ filter/pdftoopvp/pdftoopvp.cxx | 2 --
+ filter/pdftoraster.cxx         | 2 --
+ 3 files changed, 6 deletions(-)
+
+diff --git a/filter/pdftoijs.cxx b/filter/pdftoijs.cxx
+index edc5743f7..57fef77ef 100644
+--- a/filter/pdftoijs.cxx
++++ b/filter/pdftoijs.cxx
+@@ -503,8 +503,6 @@ err1:
+   ppdClose(ppd);
+   free(outputfile);
+ 
+-  // Check for memory leaks
+-  Object::memCheck(stderr);
+   return exitCode;
+ }
+ 
+diff --git a/filter/pdftoopvp/pdftoopvp.cxx b/filter/pdftoopvp/pdftoopvp.cxx
+index c5ded6f24..f7fe18cc7 100644
+--- a/filter/pdftoopvp/pdftoopvp.cxx
++++ b/filter/pdftoopvp/pdftoopvp.cxx
+@@ -763,8 +763,6 @@ err2:
+  err0:
+   delete globalParams;
+ 
+-  // check for memory leaks
+-  Object::memCheck(stderr);
+ }
+ /* muntrace(); */
+   return exitCode;
+diff --git a/filter/pdftoraster.cxx b/filter/pdftoraster.cxx
+index 757d4c752..eae8f54ee 100644
+--- a/filter/pdftoraster.cxx
++++ b/filter/pdftoraster.cxx
+@@ -2162,8 +2162,6 @@ err1:
+     cmsDeleteTransform(colorTransform);
+   }
+ 
+-  // Check for memory leaks
+-  Object::memCheck(stderr);
+   return exitCode;
+ }
+ 
