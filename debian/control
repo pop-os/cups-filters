@@ -73,11 +73,11 @@ Depends: ${shlibs:Depends},
          ghostscript (>= 9.02~),
          poppler-utils
 Recommends: colord,
-            imagemagick,
             liblouisutdml-bin | liblouis-bin
 Suggests: foomatic-db-compressed-ppds | foomatic-db,
           antiword,
-          docx2txt
+          docx2txt,
+          imagemagick,
 Breaks: cups (<< 1.5.0-16),
         cups-common (<< 1.5.0-16),
         cups-ppdc (<< 1.6)
