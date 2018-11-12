@@ -503,8 +503,6 @@ err1:
   ppdClose(ppd);
   free(outputfile);
 
-  // Check for memory leaks
-  Object::memCheck(stderr);
   return exitCode;
 }
 
