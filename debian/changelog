@@ -1,3 +1,9 @@
+cups-filters (1.21.3-3) unstable; urgency=medium
+
+  * Demote imagemagick from Recommends to Suggests (Closes: #913120)
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 12 Nov 2018 08:18:04 +0100
+
 cups-filters (1.21.3-2) unstable; urgency=high
 
   * Fix FTBFS against poppler 0.69 by patching out usage of two functions
