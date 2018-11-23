@@ -1,3 +1,9 @@
+cups-filters (1.21.3-3build1) disco; urgency=medium
+
+  * No-change rebuild against latest poppler
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Fri, 23 Nov 2018 12:55:54 -0500
+
 cups-filters (1.21.3-3) unstable; urgency=medium
 
   * Demote imagemagick from Recommends to Suggests (Closes: #913120)
