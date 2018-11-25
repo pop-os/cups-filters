@@ -72,7 +72,11 @@ namespace {
 #if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 19
 #if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 23
 void CDECL myErrorFun(void *data, ErrorCategory category,
+#if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 70
+    Goffset pos, const char *msg)
+#else
     Goffset pos, char *msg)
+#endif /* MAJOR > 0 || MINOR >= 70 */
 #else
 void CDECL myErrorFun(void *data, ErrorCategory category,
     int pos, char *msg)
@@ -502,6 +506,12 @@ err1:
   delete doc;
   ppdClose(ppd);
   free(outputfile);
+
+#if POPPLER_VERSION_MAJOR == 0 && POPPLER_VERSION_MINOR < 69
+  // Check for memory leaks
+  Object::memCheck(stderr);
+  gMemReport(stderr);
+#endif
 
   return exitCode;
 }
