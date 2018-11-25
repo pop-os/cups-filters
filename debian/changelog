@@ -1,3 +1,9 @@
+cups-filters (1.21.4-1) unstable; urgency=medium
+
+  * New upstream version 1.21.4
+
+ -- Didier Raboud <odyx@debian.org>  Sun, 25 Nov 2018 12:19:33 +0100
+
 cups-filters (1.21.3-3) unstable; urgency=medium
 
   * Demote imagemagick from Recommends to Suggests (Closes: #913120)
