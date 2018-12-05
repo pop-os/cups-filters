@@ -1,0 +1,72 @@
+From b696fbc139822581e4546ef3b55e84f920950977 Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Wed, 5 Dec 2018 22:14:15 +0100
+Subject: cups-browsed: On shutdown queues got removed even if they still had
+ jobs
+
+---
+ NEWS                 |  5 +++++
+ utils/cups-browsed.c | 12 +++++++++---
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index e5a6c391a..efab6fccd 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,6 +1,11 @@
+ NEWS - OpenPrinting CUPS Filters v1.21.5 - 2018-12-05
+ -----------------------------------------------------
+ 
++CHANGES IN V1.21.6
++
++	- cups-browsed: On shutdown queues got removed even if they
++	  still had jobs (Debian bug #908147).
++
+ CHANGES IN V1.21.5
+ 
+ 	- cups-browsed: We cannot reliably determine whether a CUPS
+diff --git a/utils/cups-browsed.c b/utils/cups-browsed.c
+index b07a2d171..ee361d9a8 100644
+--- a/utils/cups-browsed.c
++++ b/utils/cups-browsed.c
+@@ -4567,7 +4567,9 @@ gboolean update_cups_queues(gpointer unused) {
+ 	      p->timeout = current_time + TIMEOUT_RETRY;
+ 	      p->no_autosave = 0;
+ 	      break;
+-	    }
++	    } else
++	      /* Make sure queue's list entry gets freed */
++	      goto keep_queue;
+ 	  }
+ 
+ 	  /* If this queue was the default printer, note that fact so that
+@@ -4587,7 +4589,9 @@ gboolean update_cups_queues(gpointer unused) {
+ 	      p->timeout = current_time + TIMEOUT_RETRY;
+ 	      p->no_autosave = 0;
+ 	      break;
+-	    }
++	    } else
++	      /* Make sure queue's list entry gets freed */
++	      goto keep_queue;
+ 	  }
+ 
+ 	  /* No jobs, remove the CUPS queue */
+@@ -4616,6 +4620,8 @@ gboolean update_cups_queues(gpointer unused) {
+ 	}
+       }
+ 
++    keep_queue:
++
+       /* CUPS queue removed or released from cups-browsed, remove the list
+ 	 entry */
+       /* Note that we do not need to break out of the loop passing through
+@@ -4818,8 +4824,8 @@ gboolean update_cups_queues(gpointer unused) {
+                 current_time = time(NULL);
+ 		p->timeout = current_time + TIMEOUT_RETRY;
+ 		p->no_autosave = 0;
+-		break;
+ 	      }
++	      break;
+ 	    }
+ 	    /* No jobs, remove the CUPS queue */
+ 	    request = ippNewRequest(CUPS_DELETE_PRINTER);
