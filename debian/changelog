@@ -1,3 +1,16 @@
+cups-filters (1.21.5-1) unstable; urgency=medium
+
+  * New upstream version 1.21.5
+    - cups-browsed: We cannot reliably determine whether a CUPS queue is
+      temporary, so we apply the procedure to make a temporary queue
+      permanent to any unshared queue (Closes: #910882, #905850, #908604)
+
+  * Backport upstream patch:
+    - cups-browsed: On shutdown queues got removed even if they still
+      had jobs (Closes: #908147)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 05 Dec 2018 23:03:42 +0100
+
 cups-filters (1.21.4-1) unstable; urgency=medium
 
   * New upstream version 1.21.4
