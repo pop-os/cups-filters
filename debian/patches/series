@@ -1,2 +1,3 @@
 0001-cups-browsed-On-shutdown-queues-got-removed-even-if-.patch
+0002-cups-browsed-Fixed-crashes-caused-by-checking-HTTP-t.patch
 auto-gitignore
