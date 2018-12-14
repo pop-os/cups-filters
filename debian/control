@@ -6,23 +6,22 @@ Section: net
 Priority: optional
 Build-Depends: autoconf,
                debhelper (>= 11~),
-               dpkg-dev (>= 1.16.1~),
                dh-apparmor,
                pkg-config,
                sharutils,
-               ghostscript (>= 9.02~),
+               ghostscript,
                poppler-utils,
                libglib2.0-dev,
                liblcms2-dev,
                libldap2-dev,
-               libpoppler-private-dev (>= 0.16.0),
+               libpoppler-private-dev,
                libpoppler-cpp-dev,
                libqpdf-dev (>= 8.1~),
                libjpeg-dev,
                libpng-dev,
                libtiff-dev,
                libcups2-dev (>= 2.2.2),
-               libcupsimage2-dev (>= 1.5.2-6~),
+               libcupsimage2-dev,
                libijs-dev,
                zlib1g-dev,
                libfontconfig1-dev,
@@ -34,11 +33,11 @@ Build-Depends: autoconf,
                liblouis-dev,
 # Needed for tests
                fonts-dejavu-core
-Rules-Requires-Root: no
-Standards-Version: 4.1.5
+Standards-Version: 4.2.1
 Vcs-Browser: https://salsa.debian.org/printing-team/cups-filters
 Vcs-Git: https://salsa.debian.org/printing-team/cups-filters.git
 Homepage: https://wiki.linuxfoundation.org/openprinting/
+Rules-Requires-Root: no
 
 Package: libcupsfilters1
 Architecture: any
@@ -70,26 +69,22 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          cups-filters-core-drivers (>= ${binary:Version}),
          bc,
-         ghostscript (>= 9.02~),
+         ghostscript,
          poppler-utils
 Recommends: colord,
             liblouisutdml-bin | liblouis-bin
 Suggests: foomatic-db-compressed-ppds | foomatic-db,
           antiword,
           docx2txt,
-          imagemagick,
-Breaks: cups (<< 1.5.0-16),
-        cups-common (<< 1.5.0-16),
-        cups-ppdc (<< 1.6)
+          imagemagick
+Breaks: cups-ppdc (<< 1.6)
 Conflicts: ghostscript-cups,
            foomatic-filters,
            foomatic-filters-beh
 Provides: ghostscript-cups,
           foomatic-filters,
           foomatic-filters-beh
-Replaces: cups (<< 1.5.0-16),
-          cups-common (<< 1.5.0-16),
-          ghostscript-cups,
+Replaces: ghostscript-cups,
           foomatic-filters,
           foomatic-filters-beh,
           cups-ppdc (<< 1.6)
@@ -108,10 +103,8 @@ Depends: ${shlibs:Depends},
          bc,
          poppler-utils,
          cups-ipp-utils
-Breaks: cups (<< 1.5.0-16),
-        cups-filters (<< 1.13.0)
-Replaces: cups (<< 1.5.0-16),
-          cups-filters (<< 1.13.0)
+Breaks: cups-filters (<< 1.13.0)
+Replaces: cups-filters (<< 1.13.0)
 Description: OpenPrinting CUPS Filters - Driverless printing
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
@@ -159,8 +152,7 @@ Depends: ${shlibs:Depends},
          lsb-base
 Recommends: avahi-daemon (>= 0.6.31-3~)
 Enhances: cups
-Breaks: cups-daemon (<< 1.6.4),
-        cups-filters (<< 1.4.0~)
+Breaks: cups-filters (<< 1.4.0~)
 Replaces: cups-filters (<< 1.4.0~)
 Description: OpenPrinting CUPS Filters - cups-browsed
  This package provides cups-browsed, a daemon which browses the Bonjour
