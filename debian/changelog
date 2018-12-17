@@ -1,3 +1,10 @@
+cups-filters (1.21.6-1) unstable; urgency=medium
+
+  * New upstream version 1.21.6
+  * Rework the Debian-specific SVG test-page, with the Ubuntu color wheels
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 17 Dec 2018 18:33:53 +0100
+
 cups-filters (1.21.5-2) unstable; urgency=medium
 
   * Backport upstream patch:
