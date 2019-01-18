@@ -1,4 +1,4 @@
-From 67c89a99ebc68cd5a1d7d149dc55dfecf9036c54 Mon Sep 17 00:00:00 2001
+From fbcc0d626982b354d1ae1a95f3552c29d3468e17 Mon Sep 17 00:00:00 2001
 From: Didier Raboud <odyx@debian.org>
 Date: Mon, 17 Dec 2018 21:55:31 +0100
 Subject: In liblouis1.defs.gen.in; launch sort with LC_ALL=C for
