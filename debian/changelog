@@ -1,3 +1,13 @@
+cups-filters (1.21.6-3) unstable; urgency=medium
+
+  * Backport upstream patches:
+    - cups-browsed: Fixed crash in applying the BrowseFilter
+      cups-browsed.conf directives (Closes: #916765)
+    - pdftopdf: Fixed bug of closing temporary file prematurely when
+      external PDF form flattening utilities fail
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 18 Jan 2019 11:40:15 +0100
+
 cups-filters (1.21.6-2) unstable; urgency=medium
 
   * Patch liblouis1.defs.gen.in to launch sort with LC_ALL=C for
