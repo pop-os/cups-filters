@@ -1,3 +1,11 @@
+cups-filters (1.21.6-4) unstable; urgency=medium
+
+  * Backport upstream patch:
+    - cups-browsed, driverless: Correct attributes of get-printer-attributes
+      IPP request
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 16 Feb 2019 14:31:17 +0100
+
 cups-filters (1.21.6-3) unstable; urgency=medium
 
   * Backport upstream patches:
