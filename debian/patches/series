@@ -1,4 +1,5 @@
 0001-In-liblouis1.defs.gen.in-launch-sort-with-LC_ALL-C-f.patch
 0002-cups-browsed-Fixed-crash-in-applying-the-BrowseFilte.patch
 0003-pdftopdf-Fixed-bug-of-closing-temporary-file-prematu.patch
+0004-cups-browsed-driverless-Correct-attributes-of-get-pr.patch
 auto-gitignore
