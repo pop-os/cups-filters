@@ -78,6 +78,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  cupsImageCMYKToRGB@Base 1.0~b1
  cupsImageCMYKToWhite@Base 1.0~b1
  cupsImageClose@Base 1.0~b1
+ cupsImageCrop@Base 1.22.2
  cupsImageGetCol@Base 1.0~b1
  cupsImageGetColorSpace@Base 1.0~b1
  cupsImageGetDepth@Base 1.0~b1
