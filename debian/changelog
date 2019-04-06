@@ -1,3 +1,9 @@
+cups-filters (1.22.4-1) experimental; urgency=medium
+
+  * New upstream version 1.22.4
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 06 Apr 2019 14:08:13 +0200
+
 cups-filters (1.22.3-1) experimental; urgency=medium
 
   * New upstream version 1.22.3
