@@ -1,1 +1,2 @@
 cups-browsed-fix-shutdown-with-systemd.patch
+lp1828401.patch
