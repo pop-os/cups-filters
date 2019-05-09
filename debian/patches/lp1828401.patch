@@ -1,0 +1,46 @@
+From 297cc2decc53e0b08eb03049fce375db33df2131 Mon Sep 17 00:00:00 2001
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Date: Sun, 7 Apr 2019 16:34:16 +0200
+Subject: [PATCH] foomatic-rip: Changed Ghostscript call to count pages in a
+ PDF file so that it works with GS 9.27.
+
+---
+ NEWS                      | 8 ++++++++
+ filter/foomatic-rip/pdf.c | 5 ++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+#diff --git a/NEWS b/NEWS
+#index da6154fb..e7eb579e 100644
+#--- a/NEWS
+#+++ b/NEWS
+#@@ -1,6 +1,14 @@
+# NEWS - OpenPrinting CUPS Filters v1.22.4 - 2019-04-05
+# -----------------------------------------------------
+# 
+#+CHANGES IN V1.22.5
+#+
+#+	- foomatic-rip: Changed Ghostscript call to count pages in a
+#+	  PDF file to use "runpdfbegin" and not the undocumented
+#+	  Ghostscript internal "pdfdict", so that it works with
+#+	  Ghostscript 9.27 and later (Debian bug #926576, Arch Linux
+#+	  bug #62251).
+#+
+# CHANGES IN V1.22.4
+# 
+# 	- cups-browsed: Fix broken trailing space removal on
+diff --git a/filter/foomatic-rip/pdf.c b/filter/foomatic-rip/pdf.c
+index 9c3979bb..bc739bd8 100644
+--- a/filter/foomatic-rip/pdf.c
++++ b/filter/foomatic-rip/pdf.c
+@@ -47,9 +47,8 @@ static int pdf_count_pages(const char *filename)
+     size_t bytes;
+ 
+     snprintf(gscommand, CMDLINE_MAX, "%s -dNODISPLAY -q -c "
+-	     "'/pdffile (%s) (r) file def pdfdict begin pdffile pdfopen begin "
+-	     "(PageCount: ) print pdfpagecount == flush currentdict pdfclose "
+-	     "end end quit'",
++	     "'/pdffile (%s) (r) file runpdfbegin (PageCount: ) print "
++	     "pdfpagecount = quit'",
+ 	     gspath, filename);
+ 
+     FILE *pd = popen(gscommand, "r");
