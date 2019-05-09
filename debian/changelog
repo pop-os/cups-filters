@@ -1,3 +1,12 @@
+cups-filters (1.21.3-1ubuntu0.1) cosmic-security; urgency=medium
+
+  * Fix PDF printing regression caused by latest Ghostscript security
+    updates (LP: #1828401)
+    - debian/patches/lp1828401.patch: don't use undocumented Ghostscript
+      function in filter/foomatic-rip/pdf.c.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 09 May 2019 10:45:25 -0400
+
 cups-filters (1.21.3-1) unstable; urgency=medium
 
   * New upstream version 1.21.3
