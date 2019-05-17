@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[22])
-m4_define([cups_filters_version_micro],[5])
+m4_define([cups_filters_version_minor],[23])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -88,7 +88,7 @@ AS_IF([test "x$with_cups_config" != "xsystem"], [
 		AC_MSG_ERROR([Required cups-config is missing. Please install CUPS developer packages.])
 	])
 ])
-CUPS_CFLAGS=`$CUPSCONFIG --cflags`
+CUPS_CFLAGS=`$CUPSCONFIG --cflags`' -D_PPD_DEPRECATED=""'
 CUPS_LIBS=`$CUPSCONFIG --image --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 AC_SUBST(CUPS_CFLAGS)
@@ -118,10 +118,11 @@ AC_ARG_ENABLE([driverless], [AS_HELP_STRING([--enable-driverless], [enable PPD g
         [enable_driverless="$enableval"],
         [enable_driverless=yes]
 )
-AX_COMPARE_VERSION([$CUPS_VERSION],[ge],[1.6], [
-	AM_CONDITIONAL([ENABLE_DRIVERLESS],
-	[test "x$enable_driverless" != "xno"])
+AX_COMPARE_VERSION([$CUPS_VERSION],[lt],[1.6], [
+	enable_driverless=no
 ])
+AM_CONDITIONAL([ENABLE_DRIVERLESS],
+[test "x$enable_driverless" != "xno"])
 
 APPLE_RASTER_FILTER=rastertopdf
 AX_COMPARE_VERSION([$CUPS_VERSION],[lt],[2.2.2], [
