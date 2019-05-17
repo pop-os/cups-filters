@@ -1,5 +1,43 @@
-NEWS - OpenPrinting CUPS Filters v1.22.5 - 2019-04-07
+NEWS - OpenPrinting CUPS Filters v1.23.0 - 2019-05-16
 -----------------------------------------------------
+
+CHANGES IN V1.23.0
+
+	- pdftops, mupdftoraster: Let pdftops call mutool directly and
+	  so that it directly outputs PostScript, eliminating the need
+	  to call the mupdftoraster and rastertops filters.
+	- mupdftoraster: Reduced the use of temporary files from 3 to
+	  just one.
+	- imagetopdf, imagetoraster, pdftopdf: Add support for
+	  print-scaling option (Issue #108, Pull request #118).
+
+CHANGES IN V1.22.6
+
+	- rastertops: Fixed PageSize settings in the PostScript output
+	  (Must be in points not in pixels).
+	- pdftops, mupdftoraster: Produce actual grayscale/monochrome
+	  PostScript (and not only instructions to print grayscale/
+	  monochrome) for jobs to be printed in grayscale/monochrome
+	  (Issue #96, Pull request #115).
+	- mupdftoraster: Fixed filter not producing output at all.
+	- Build system: ENABLE_DRIVERLESS got only defined with CUPS
+	  1.6 and newer, not with older CUPS versions (Issue #111).
+	- pdftopdf, imagetopdf, imagetoraster: Silenced compiler
+          warnings.
+	- cups-browsed, driverless: Replaced httpConnect() calls by
+	  httpConnect2() calls as the former CUPS library function is
+	  deprecated.
+	- Build system: Compile everything using the CUPS libraries
+	  with '-D_PPD_DEPRECATED=""' for the time being until the
+	  deprecated PPD API calls get replaced, to stop the flooding
+	  with PPD API deprecation warnings making more important
+	  warnings being overlooked.
+	- cups-browsed: When removing a local queue on shutdown or
+	  when DNS-SD reports the printer as disappeared check whether
+	  the local queue got overwritten by an external process as
+	  sometimes the shutdown or disappearing event comes too close
+	  for cups-browsed receiving a printer-modified notification
+	  from CUPS before (Ubuntu bug #1731417).
 
 CHANGES IN V1.22.5
 
