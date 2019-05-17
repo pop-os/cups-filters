@@ -1,3 +1,15 @@
+cups-filters (1.23.0-1) experimental; urgency=medium
+
+  * New upstream version 1.23.0
+    - cups-browsed: When removing a local queue on shutdown or
+      when DNS-SD reports the printer as disappeared check whether
+      the local queue got overwritten by an external process as
+      sometimes the shutdown or disappearing event comes too close
+      for cups-browsed receiving a printer-modified notification
+      from CUPS before (LP: #1731417)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 17 May 2019 10:01:20 +0200
+
 cups-filters (1.22.5-1) experimental; urgency=medium
 
   * New upstream version 1.22.5
