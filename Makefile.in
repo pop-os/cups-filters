@@ -260,6 +260,7 @@ am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-check.lo libcupsfilters_la-cmyk.lo \
 	libcupsfilters_la-colord.lo libcupsfilters_la-colormanager.lo \
 	libcupsfilters_la-dither.lo libcupsfilters_la-image.lo \
+	libcupsfilters_la-pdftoippprinter.lo \
 	libcupsfilters_la-image-bmp.lo \
 	libcupsfilters_la-image-colorspace.lo \
 	libcupsfilters_la-image-gif.lo libcupsfilters_la-image-jpeg.lo \
@@ -376,7 +377,7 @@ imagetoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_implicitclass_OBJECTS = implicitclass-implicitclass.$(OBJEXT)
 implicitclass_OBJECTS = $(am_implicitclass_OBJECTS)
-implicitclass_DEPENDENCIES = $(am__DEPENDENCIES_1)
+implicitclass_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 implicitclass_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(implicitclass_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -619,6 +620,7 @@ am__depfiles_remade = ./$(DEPDIR)/aglfn13.Plo \
 	./$(DEPDIR)/libcupsfilters_la-image.Plo \
 	./$(DEPDIR)/libcupsfilters_la-lut.Plo \
 	./$(DEPDIR)/libcupsfilters_la-pack.Plo \
+	./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo \
 	./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo \
 	./$(DEPDIR)/libcupsfilters_la-raster.Plo \
 	./$(DEPDIR)/libcupsfilters_la-rgb.Plo \
@@ -1262,8 +1264,12 @@ implicitclass_SOURCES = \
 	backend/backend-private.h \
 	backend/implicitclass.c
 
-implicitclass_LDADD = $(CUPS_LIBS)
-implicitclass_CFLAGS = $(CUPS_CFLAGS)
+implicitclass_LDADD = $(CUPS_LIBS)\
+	libcupsfilters.la
+
+implicitclass_CFLAGS = $(CUPS_CFLAGS)\
+	 -I$(srcdir)/cupsfilters/
+
 test1284_SOURCES = \
 	backend/backend-private.h \
 	backend/ieee1284.c \
@@ -1326,7 +1332,8 @@ pkgfiltersinclude_DATA = \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
 	cupsfilters/raster.h \
-	cupsfilters/ppdgenerator.h
+	cupsfilters/ppdgenerator.h \
+	cupsfilters/pdftoippprinter.h
 
 lib_LTLIBRARIES = libcupsfilters.la libfontembed.la
 #	testcmyk # fails as it opens some image.ppm which is nowerhe to be found.
@@ -1349,6 +1356,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/colormanager.c \
 	cupsfilters/dither.c \
 	cupsfilters/image.c \
+	cupsfilters/pdftoippprinter.c \
 	cupsfilters/image-bmp.c \
 	cupsfilters/image-colorspace.c \
 	cupsfilters/image-gif.c \
@@ -2859,6 +2867,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-lut.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pack.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-raster.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-rgb.Plo@am__quote@ # am--include-marker
@@ -3001,6 +3010,13 @@ libcupsfilters_la-image.lo: cupsfilters/image.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/image.c' object='libcupsfilters_la-image.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-image.lo `test -f 'cupsfilters/image.c' || echo '$(srcdir)/'`cupsfilters/image.c
+
+libcupsfilters_la-pdftoippprinter.lo: cupsfilters/pdftoippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-pdftoippprinter.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Tpo -c -o libcupsfilters_la-pdftoippprinter.lo `test -f 'cupsfilters/pdftoippprinter.c' || echo '$(srcdir)/'`cupsfilters/pdftoippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Tpo $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/pdftoippprinter.c' object='libcupsfilters_la-pdftoippprinter.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-pdftoippprinter.lo `test -f 'cupsfilters/pdftoippprinter.c' || echo '$(srcdir)/'`cupsfilters/pdftoippprinter.c
 
 libcupsfilters_la-image-bmp.lo: cupsfilters/image-bmp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-image-bmp.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-image-bmp.Tpo -c -o libcupsfilters_la-image-bmp.lo `test -f 'cupsfilters/image-bmp.c' || echo '$(srcdir)/'`cupsfilters/image-bmp.c
@@ -5410,6 +5426,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-image.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-pack.Plo
+	-rm -f ./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-raster.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-rgb.Plo
@@ -5590,6 +5607,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-image.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-pack.Plo
+	-rm -f ./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-raster.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-rgb.Plo
