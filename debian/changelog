@@ -1,3 +1,10 @@
+cups-filters (1.24.0-1) experimental; urgency=medium
+
+  * New upstream version 1.24.0
+    - Add 4 new symbols to libcupsfilters1
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 05 Jun 2019 08:10:31 +0200
+
 cups-filters (1.23.0-1) experimental; urgency=medium
 
   * New upstream version 1.23.0
