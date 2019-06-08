@@ -1,3 +1,11 @@
+cups-filters (1.25.0-1) experimental; urgency=medium
+
+  * New upstream version 1.25.0
+    - Refresh d/copyright with CF1.0-compatible upstream COPYING
+    - Remove now-unneeded libpoppler-private-dev from B-D
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 08 Jun 2019 08:57:32 +0200
+
 cups-filters (1.24.0-1) experimental; urgency=medium
 
   * New upstream version 1.24.0
