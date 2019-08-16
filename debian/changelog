@@ -1,3 +1,16 @@
+cups-filters (1.25.2-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release
+    - Improved cups-browsed's handling of the DNS-SD records of advertised
+      local and remote IPP print services. Especially made sure that local
+      queues do not get already removed when the service on a single network
+      interface disappears (for example Wi-Fi turned off) while still present
+      on other interfaces. Also let local services preferably be accessed
+      through the loopback ("localhost") interface to avoid data leaks into
+      the network.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 16 Aug 2019 17:19:14 +0200
+
 cups-filters (1.25.0-1) experimental; urgency=medium
 
   * New upstream version 1.25.0
