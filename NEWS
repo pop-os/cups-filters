@@ -1,5 +1,46 @@
-NEWS - OpenPrinting CUPS Filters v1.25.0 - 2019-06-06
+NEWS - OpenPrinting CUPS Filters v1.25.2 - 2019-08-16
 -----------------------------------------------------
+
+CHANGES IN V1.25.2
+
+	- foomatic-rip: Fixed segmentation fault when running
+	  foomatic-rip by hand and the PRINTER environment variable is
+	  not set (Pull request #139).
+	- cups-browsed: Added note to cups-browsed.conf and man page
+	  about IP-based URIs depending on the network interface used.
+	- cups-browsed: For each DNS-SD-discovered printer register
+	  each DNS-SD discovery instance with network interface,
+	  family, and IPP type. When DNS-SD messages of instances
+	  disappearing show up, only unregister this instance and
+	  remove the printer only if no instance is left. This
+	  prevents a local queue of a still available printer being
+	  removed when Wi-Fi (= one interface) is turned off (Issue
+	  #136).
+	- cups-browsed: If a remote printer is served from the local
+	  machine, prefer the "localhost"/loopback interface URI.
+	- cups-browsed: If a remote printer is discovered more than
+	  once, use the new instance only if it has no downgrades and
+	  at least one upgrade compared to the old one. Features
+	  currently compared are IPP/IPPS, loopback interface or not,
+	  and discovery via CUPS legacy/LDAP/DNS-SD.
+	- cups-browsed: If an Avahi-discovered entry comes through the
+	  "lo" interface, always use the host name "localhost". Use
+	  IP addresses instead of host names only if explicitly
+	  requested.
+	- cups-browsed: Consider remote printer entries also as from
+	  the same printer if one has the local machine's network name
+	  and the other "localhost" as host name (Issue #136).
+
+CHANGES IN V1.25.1
+
+	- imagetopdf: Fixed crash when no PPD file was supplied (Pull
+	  request #133).
+	- pdftoraster: Fixed offset issues leading to segmentation
+	  faults (Issue #131, Pull request #132).
+	- pdftoraster: Added anti-aliasing for better raster image
+	  quality (Pull request #129).
+	- pdftoraster: Added graceful handling of zero-page input
+	  (Issue #117, Pull request #127).
 
 CHANGES IN V1.25.0
 
