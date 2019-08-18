@@ -1547,7 +1547,7 @@ static unsigned char *removeAlpha(unsigned char *src, unsigned char *dst, unsign
   return temp;
 }
 
-static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
+static void writePageImage(cups_raster_t *raster, poppler::document *doc,
   int pageNo)
 {
   ConvertLineFunc convertLine;
@@ -1555,9 +1555,10 @@ static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
   unsigned char *dp;
   unsigned int rowsize;
 
-  poppler::page *current_page =doc1->create_page(pageNo-1);
+  poppler::page *current_page =doc->create_page(pageNo-1);
   poppler::page_renderer pr;
-  pr.set_render_hint(poppler::page_renderer::text_antialiasing);
+  pr.set_render_hint(poppler::page_renderer::antialiasing, true);
+  pr.set_render_hint(poppler::page_renderer::text_antialiasing, true);
 
   unsigned char *colordata,*newdata,*graydata,*onebitdata;
   unsigned int pixel_count;
@@ -1596,7 +1597,7 @@ static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
    case CUPS_CSPACE_CMY:
    case CUPS_CSPACE_RGBW:
    default:
-   im = pr.render_page(current_page,header.HWResolution[0],header.HWResolution[1],0,0,header.cupsWidth,header.cupsHeight);
+   im = pr.render_page(current_page,header.HWResolution[0],header.HWResolution[1],bitmapoffset[0],bitmapoffset[1],header.cupsWidth,header.cupsHeight);
    newdata = (unsigned char *)malloc(sizeof(char)*3*im.width()*im.height());
    newdata = removeAlpha((unsigned char *)im.const_data(),newdata,im.width(),im.height());
    pixel_count=im.width()*im.height();
@@ -1616,8 +1617,6 @@ static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
     for (unsigned int plane = 0;plane < nplanes;plane++) {
       unsigned char *bp = colordata;
 
-      bp += rowsize * (bitmapoffset[1] + header.cupsHeight - 1) +
-        popplerBitsPerPixel * bitmapoffset[0] / 8;
       for (unsigned int h = header.cupsHeight;h > 0;h--) {
         for (unsigned int band = 0;band < nbands;band++) {
           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
@@ -1631,8 +1630,6 @@ static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
     for (unsigned int plane = 0;plane < nplanes;plane++) {
       unsigned char *bp = colordata;
 
-      bp += rowsize * bitmapoffset[1] +
-        popplerBitsPerPixel * bitmapoffset[0] / 8;
       for (unsigned int h = 0;h < header.cupsHeight;h++) {
         for (unsigned int band = 0;band < nbands;band++) {
           dp = convertLine(bp,lineBuf,h,plane+band,header.cupsWidth,
@@ -1646,11 +1643,9 @@ static void writePageImage(cups_raster_t *raster, poppler::document *doc1,
   if (allocLineBuf) delete[] lineBuf;
 }
 
-static void outPage(poppler::document *doc1, int pageNo,
+static void outPage(poppler::document *doc, int pageNo,
   cups_raster_t *raster)
 {
-  // Page *page = catalog->getPage(pageNo);
-  // PDFRectangle mediaBox = *page->getMediaBox();
   int rotate = 0;
   double paperdimensions[2], /* Physical size of the paper */
     margins[4];	/* Physical margins of print */
@@ -1658,7 +1653,7 @@ static void outPage(poppler::document *doc1, int pageNo,
   double l, swap;
   int i;
 
-  poppler::page *current_page =doc1->create_page(pageNo-1);
+  poppler::page *current_page =doc->create_page(pageNo-1);
   poppler::page_box_enum box = poppler::page_box_enum::media_box;
   poppler::rectf mediaBox = current_page->page_rect(box);
   poppler::page::orientation_enum orient = current_page->orientation();
@@ -1834,7 +1829,7 @@ static void outPage(poppler::document *doc1, int pageNo,
   }
 
   /* write page image */
-  writePageImage(raster,doc1,pageNo);
+  writePageImage(raster,doc,pageNo);
 }
 
 static void setPopplerColorProfile()
@@ -1923,9 +1918,9 @@ static void setPopplerColorProfile()
 }
 
 int main(int argc, char *argv[]) {
-  poppler::document *doc1;
+  poppler::document *doc;
   int i;
-  int npages;
+  int npages=0;
   cups_raster_t *raster;
 
   cmsSetLogErrorHandler(lcmsErrorHandler);
@@ -1953,7 +1948,7 @@ int main(int argc, char *argv[]) {
       }
     }
     close(fd);
-    doc1=poppler::document::load_from_file(name,"","");
+    doc=poppler::document::load_from_file(name,"","");
     /* remove name */
     unlink(name);
   } else {
@@ -1966,15 +1961,11 @@ int main(int argc, char *argv[]) {
     }
     parsePDFTOPDFComment(fp);
     fclose(fp);
-    doc1=poppler::document::load_from_file(argv[6],"","");
+    doc=poppler::document::load_from_file(argv[6],"","");
   }
 
-  if (doc1==NULL) {
-    exitCode = 1;
-    goto err1;
-  }
-
-  npages = doc1->pages();
+  if(doc != NULL)
+    npages = doc->pages();
 
   /* fix NumCopies, Collate ccording to PDFTOPDFComments */
   header.NumCopies = deviceCopies;
@@ -2073,13 +2064,20 @@ int main(int argc, char *argv[]) {
 	exit(1);
   }
   selectConvertFunc(raster);
-  for (i = 1;i <= npages;i++) {
-    outPage(doc1,i,raster);
+  if(doc != NULL){
+    for (i = 1;i <= npages;i++) {
+      outPage(doc,i,raster);
+    }
   }
+  else{
+    exitCode = 1;
+    goto err1;
+  }
+
   cupsRasterClose(raster);
 
 err1:
-  delete doc1;
+  delete doc;
   if (ppd != NULL) {
     ppdClose(ppd);
   }
