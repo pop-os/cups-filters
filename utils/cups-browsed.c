@@ -162,6 +162,14 @@ typedef enum printer_status_e {
   STATUS_TO_BE_RELEASED   /* Scheduled for release from cups-browsed */
 } printer_status_t;
 
+/* Data structure for taking note of each time the remote printer
+   appears as a discovered IPP service */
+typedef struct ipp_discovery_s {
+  char *interface;
+  char *type;
+  int family;
+} ipp_discovery_t;
+
 /* Data structure for remote printers */
 typedef struct remote_printer_s {
   char *queue_name;
@@ -186,6 +194,7 @@ typedef struct remote_printer_s {
   char *service_name;
   char *type;
   char *domain;
+  cups_array_t *ipp_discoveries;
   int no_autosave;
   int overwritten;
   int netprinter;
@@ -504,6 +513,8 @@ static remote_printer_t
 				   const char *info,
 				   const char *type,
 				   const char *domain,
+				   const char *interface,
+				   int family,
 				   void *txt);
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
@@ -4439,7 +4450,7 @@ cupsdUpdateLDAPBrowse(void)
 
     examine_discovered_printer_record(host, NULL, port, local_resource,
 				      service_name, location, info, "", "",
-				      NULL);
+				      "", 0, NULL);
 
   }
 
@@ -6649,6 +6660,101 @@ get_printer_attributes(const char* uri)
 }
 #endif /* HAVE_CUPS_1_6 */
 
+
+/* This compare function makes the "lo" (looback) interface always
+   sorted to the beginning of the array, this way one only needs to
+   check the first element of the error to find out whether a remote
+   printer is already available through the loopback interface (preferred
+   interface) or not.
+   All other interfaces are sorted alphabetically, the types let IPPS
+   appear before IPP, and the families numerically (makes IPv4 appear
+   before IPv6). */
+
+int
+ipp_discovery_cmp(void *va, void *vb, void *data) {
+  ipp_discovery_t *a = (ipp_discovery_t *)va;
+  ipp_discovery_t *b = (ipp_discovery_t *)vb;
+  int cmp;
+
+  if (!a && !b)
+    return 0;
+  if (a && !b)
+    return -1;
+  if (!a && b)
+    return  1;
+
+  if (!strcasecmp(a->interface, "lo") && strcasecmp(b->interface, "lo"))
+    return -1;
+  if (strcasecmp(a->interface, "lo") && !strcasecmp(b->interface, "lo"))
+    return  1;
+
+  cmp = strcasecmp(a->interface, b->interface);
+  if (cmp)
+    return cmp;
+
+  if (strcasestr(a->type, "ipps") && !strcasestr(b->type, "ipps"))
+    return -1;
+  if (!strcasestr(a->type, "ipps") && strcasestr(b->type, "ipps"))
+    return  1;
+
+  cmp = strcasecmp(a->type, b->type);
+  if (cmp)
+    return cmp;
+
+  if (a->family < b->family)
+    return -1;
+  else if (a->family > b->family)
+    return  1;
+  else
+    return 0;
+}
+
+void
+ipp_discovery_free(void *ve, void *data) {
+  ipp_discovery_t *e = (ipp_discovery_t *)ve;
+
+  if (e) {
+    if (e->interface)
+      free(e->interface);
+    if (e->type)
+      free(e->type);
+    free(e);
+  }
+}
+
+void
+ipp_discoveries_list(cups_array_t *a) {
+  ipp_discovery_t *e;
+
+  debug_printf("Printer discovered %d times:\n", cupsArrayCount(a));
+  for (e = cupsArrayFirst(a); e; e = cupsArrayNext(a))
+    debug_printf("    %s, %s, %s\n", e->interface, e->type,
+		 (e->family == AF_INET ? "IPv4" :
+		  (e->family == AF_INET6 ? "IPv6" : "???")));
+}
+
+int
+ipp_discoveries_add(cups_array_t *a,
+		    const char *interface,
+		    const char *type,
+		    int family) {
+  ipp_discovery_t *e;
+
+  if (!interface || !type)
+    return 0;
+  if ((e = (ipp_discovery_t *)calloc(1, sizeof(ipp_discovery_t))) ==
+      NULL) {
+    debug_printf("ERROR: Unable to allocate memory.\n");
+    return 0;
+  }
+  e->interface = strdup(interface);
+  e->type = strdup(type);
+  e->family = family;
+  cupsArrayAdd(a, e);
+  ipp_discoveries_list(a);
+  return 1;
+}
+
 static remote_printer_t *
 create_remote_printer_entry (const char *queue_name,
 			     const char *location,
@@ -6660,6 +6766,8 @@ create_remote_printer_entry (const char *queue_name,
 			     const char *service_name,
 			     const char *type,
 			     const char *domain,
+			     const char *interface,
+			     int family,
 			     const char *pdl,
 			     int color,
 			     int duplex,
@@ -6753,6 +6861,16 @@ create_remote_printer_entry (const char *queue_name,
   p->domain = strdup (domain);
   if (!p->domain)
     goto fail;
+
+  p->ipp_discoveries =
+    cupsArrayNew3(ipp_discovery_cmp, NULL, NULL, 0, NULL, ipp_discovery_free);
+  if (p->ipp_discoveries == NULL) {
+    debug_printf("ERROR: Unable to allocate memory.\n");
+    return NULL;
+  }
+  if (domain != NULL && domain[0] != '\0' &&
+      type != NULL && type[0] != '\0')
+    ipp_discoveries_add(p->ipp_discoveries, interface, type, family);
 
   /* Schedule for immediate creation of the CUPS queue */
   p->status = STATUS_TO_BE_CREATED;
@@ -7114,6 +7232,7 @@ create_remote_printer_entry (const char *queue_name,
   if (p->service_name) free (p->service_name);
   if (p->host) free (p->host);
   if (p->domain) free (p->domain);
+  cupsArrayDelete(p->ipp_discoveries);
   if (p->ip) free (p->ip);
   cupsFreeOptions(p->num_options, p->options);
   if (p->uri) free (p->uri);
@@ -7421,6 +7540,7 @@ gboolean update_cups_queues(gpointer unused) {
       if (p->service_name) free (p->service_name);
       if (p->type) free (p->type);
       if (p->domain) free (p->domain);
+      cupsArrayDelete(p->ipp_discoveries);
       if (p->prattrs) ippDelete (p->prattrs);
       if (p->nickname) free (p->nickname);
       free(p);
@@ -8573,6 +8693,181 @@ matched_filters (const char *queue_name,
   return FALSE;
 }
 
+static gboolean
+update_netifs (gpointer data)
+{
+  struct ifaddrs *ifaddr, *ifa;
+  netif_t *iface, *iface2;
+  int i, add_to_netifs, addr_size, dupe;
+  char *host, buf[HTTP_MAX_HOST], *p;
+
+  debug_printf("update_netifs() in THREAD %ld\n", pthread_self());
+
+  update_netifs_sourceid = 0;
+  if (getifaddrs (&ifaddr) == -1) {
+    debug_printf("unable to get interface addresses: %s\n",
+		 strerror (errno));
+    return FALSE;
+  }
+
+  while ((iface = cupsArrayFirst (netifs)) != NULL) {
+    cupsArrayRemove (netifs, iface);
+    free (iface->address);
+    free (iface);
+  }
+  while ((host = cupsArrayFirst (local_hostnames)) != NULL) {
+    cupsArrayRemove (local_hostnames, host);
+    free (host);
+  }
+
+  for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+    netif_t *iface;
+
+    add_to_netifs = 1;
+
+    if (ifa->ifa_addr == NULL)
+      continue;
+
+    if (ifa->ifa_broadaddr == NULL)
+      add_to_netifs = 0;
+
+    if (ifa->ifa_flags & IFF_LOOPBACK)
+      add_to_netifs = 0;
+
+    if (!(ifa->ifa_flags & IFF_BROADCAST))
+      add_to_netifs = 0;
+
+    if (ifa->ifa_addr->sa_family == AF_INET)
+      addr_size = sizeof (struct sockaddr_in);
+    else if (ifa->ifa_addr->sa_family == AF_INET6)
+      addr_size = sizeof (struct sockaddr_in6);
+    else
+      addr_size = 0;
+    if (addr_size)
+      for (i = 0; i <= 1; i ++)
+        if (getnameinfo (ifa->ifa_addr, addr_size,
+			 buf, HTTP_MAX_HOST, NULL, 0,
+			 i == 0 ? NI_NUMERICHOST : NI_NAMEREQD) == 0)
+	  if (buf[0]) {
+	    /* Cut off "%..." from IPv6 IP addresses */
+	    if (ifa->ifa_addr->sa_family == AF_INET6 && i == 0 &&
+		(p = strchr(buf, '%')) != NULL)
+	      *p = '\0';
+	    /* discard if we already have this name or address */
+	    dupe = 0;
+	    for (host = (char *)cupsArrayFirst (local_hostnames);
+		 host != NULL;
+		 host = (char *)cupsArrayNext (local_hostnames))
+	      if (strcasecmp(buf, host) == 0) {
+		dupe = 1;
+		break;
+	      }
+	    if (dupe == 0) {
+	      cupsArrayAdd (local_hostnames, strdup(buf));
+	      debug_printf("network interface %s: Local host name/address: %s\n",
+			   ifa->ifa_name, buf);
+	    }
+	  }
+
+    if (add_to_netifs == 0)
+      continue;
+
+    iface = malloc (sizeof (netif_t));
+    if (iface == NULL) {
+      debug_printf ("malloc failure\n");
+      exit (1);
+    }
+
+    iface->address = malloc (HTTP_MAX_HOST);
+    if (iface->address == NULL) {
+      free (iface);
+      debug_printf ("malloc failure\n");
+      exit (1);
+    }
+
+    iface->address[0] = '\0';
+    switch (ifa->ifa_addr->sa_family) {
+    case AF_INET:
+      /* copy broadcast addr/fill in port first to faciliate dupe compares */
+      memcpy (&iface->broadcast, ifa->ifa_broadaddr,
+	      sizeof (struct sockaddr_in));
+      iface->broadcast.ipv4.sin_port = htons (BrowsePort);
+      /* discard if we already have an interface sharing the broadcast
+	 address */
+      dupe = 0;
+      for (iface2 = (netif_t *)cupsArrayFirst (netifs);
+           iface2 != NULL;
+           iface2 = (netif_t *)cupsArrayNext (netifs)) {
+	if (memcmp(&iface2->broadcast, &iface->broadcast,
+		   sizeof(struct sockaddr_in)) == 0) {
+	  dupe = 1;
+	  break;
+	}
+      }
+      if (dupe) break;
+      getnameinfo (ifa->ifa_addr, sizeof (struct sockaddr_in),
+		   iface->address, HTTP_MAX_HOST,
+		   NULL, 0, NI_NUMERICHOST);
+      break;
+
+    case AF_INET6:
+      if (IN6_IS_ADDR_LINKLOCAL (&((struct sockaddr_in6 *)(ifa->ifa_addr))
+				 ->sin6_addr))
+	break;
+
+      /* see above for order */
+      memcpy (&iface->broadcast, ifa->ifa_broadaddr,
+	      sizeof (struct sockaddr_in6));
+      iface->broadcast.ipv6.sin6_port = htons (BrowsePort);
+      /* discard alias addresses (identical broadcast) */
+      dupe = 0;
+      for (iface2 = (netif_t *)cupsArrayFirst (netifs);
+           iface2 != NULL;
+           iface2 = (netif_t *)cupsArrayNext (netifs)) {
+	if (memcmp(&iface2->broadcast, ifa->ifa_broadaddr,
+		   sizeof(struct sockaddr_in6)) == 0) {
+	  dupe = 1;
+	  break;
+	}
+      }
+      if (dupe) break;
+      getnameinfo (ifa->ifa_addr, sizeof (struct sockaddr_in6),
+		   iface->address, HTTP_MAX_HOST, NULL, 0, NI_NUMERICHOST);
+      break;
+    }
+
+    if (iface->address[0]) {
+      cupsArrayAdd (netifs, iface);
+      debug_printf("Network interface %s at %s for legacy CUPS browsing/broadcasting\n",
+		   ifa->ifa_name, iface->address);
+    } else {
+      free (iface->address);
+      free (iface);
+    }
+  }
+
+  freeifaddrs (ifaddr);
+
+  /* If run as a timeout, don't run it again. */
+  return FALSE;
+}
+
+int
+is_local_hostname(const char *host_name) {
+  char *host;
+
+  for (host = (char *)cupsArrayFirst (local_hostnames);
+       host != NULL;
+       host = (char *)cupsArrayNext (local_hostnames))
+    if (strncasecmp(host_name, host, strlen(host)) == 0 &&
+	(strlen(host_name) == strlen(host) ||
+	 strcasecmp(host_name + strlen(host), ".local") == 0 ||
+	 strcasecmp(host_name + strlen(host), ".local.") == 0))
+      return 1;
+
+  return 0;
+}
+
 static remote_printer_t *
 examine_discovered_printer_record(const char *host,
 				  const char *ip,
@@ -8583,6 +8878,8 @@ examine_discovered_printer_record(const char *host,
 				  const char *info,
 				  const char *type,
 				  const char *domain,
+				  const char *interface,
+				  int family,
 				  void *txt) {
 
   char uri[HTTP_MAX_URI];
@@ -8599,7 +8896,8 @@ examine_discovered_printer_record(const char *host,
   char *local_queue_name = NULL;
   int is_cups_queue;
   int raw_queue = 0;
-  
+  char *ptr;
+
   if (!host || !resource || !service_name || !location || !info || !type ||
       !domain) {
     debug_printf("ERROR: examine_discovered_printer_record(): Input value missing!\n");
@@ -8782,6 +9080,14 @@ examine_discovered_printer_record(const char *host,
     goto fail;
   }
 
+
+  /* Update network interface info if we were discovered by LDAP
+     or legacy CUPS, needed for the is_local_hostname() function calls.
+     During DNS-SD discovery the update is already done by the Avahi
+     event handler function. */
+  if (type == NULL || type[0] == '\0')
+    update_netifs(NULL);
+
   /* Check if we have already created a queue for the discovered
      printer */
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
@@ -8790,7 +9096,8 @@ examine_discovered_printer_record(const char *host,
 	(p->host[0] == '\0' ||
 	 p->status == STATUS_UNCONFIRMED ||
 	 p->status == STATUS_DISAPPEARED ||
-	 (!strcasecmp(p->host, remote_host) &&
+	 ((!strcasecmp(p->host, remote_host) ||
+	   (is_local_hostname(p->host) && is_local_hostname(remote_host))) &&
 	  (p->port == port ||
 	   (p->port == 631 && port == 443) ||
 	   (p->port == 443 && port == 631)) &&
@@ -8818,33 +9125,71 @@ examine_discovered_printer_record(const char *host,
        whether the discovered queue is discovered via DNS-SD
        having more info in contrary to the existing being
        discovered by legacy CUPS or LDAP */
-    if ((strcasestr(type, "_ipps") &&
-	 !strncasecmp(p->uri, "ipp:", 4)) ||
-	strcasecmp(strchr(p->uri, ':'), strchr(uri, ':')) ||
-	((p->domain == NULL || p->domain[0] == '\0') &&
-	 domain != NULL && domain[0] != '\0' &&
-	 (p->type == NULL || p->type[0] == '\0') &&
-	 type != NULL && type[0] != '\0')) {
 
-      /* Schedule local queue for upgrade to ipps: or for URI change */
+    int downgrade = 0, upgrade = 0;
+
+    /* Get first element of array of interfaces on which this printer
+       got already discovered, as this one is "lo" when it already got
+       discovered through the loopback interface (preferred interface) */
+    ipp_discovery_t *ippdis = cupsArrayFirst(p->ipp_discoveries);
+
+    /* Check if there is a downgrade */
+    /* IPPS -> IPP */
+    if ((ptr = strcasestr(type, "_ipp")) != NULL &&
+	*(ptr + 4) != 's' &&
+	!strncasecmp(p->uri, "ipps:", 5)) {
+      downgrade = 1;
+      debug_printf("Printer %s: New discovered service from host %s, port %d, URI %s is only IPP, we have already IPPS, skipping\n",
+		   p->queue_name, remote_host, port, uri);
+    /* "lo" -> Any non-"lo" interface */
+    } else if (strcasecmp(interface, "lo") &&
+	       ippdis && !strcasecmp(ippdis->interface, "lo")) {
+      downgrade = 1;
+      debug_printf("Printer %s: New discovered service from host %s, port %d, URI %s is from a non-loopback interface, we have already one from the loopback interface, skipping\n",
+		   p->queue_name, remote_host, port, uri);
+    /* DNS-SD -> CUPS Legacy/LDAP */
+    } else if (p->domain != NULL && p->domain[0] != '\0' &&
+	       (domain == NULL || domain[0] == '\0') &&
+	       p->type != NULL && p->type[0] != '\0' &&
+	       (type == NULL || type[0] == '\0')) {
+      downgrade = 1;
+      debug_printf("Printer %s: New discovered service from host %s, port %d, URI %s is only discovered via legacy CUPS or LDAP, we have already a DNS-SD-discovered one, skipping\n",
+		   p->queue_name, remote_host, port, uri);
+    }
+
+    if (downgrade == 0) {
+      /* Check if there is an upgrade */
+      /* IPP -> IPPS */
       if (strcasestr(type, "_ipps") &&
-	  !strncasecmp(p->uri, "ipp:", 4))
+	  !strncasecmp(p->uri, "ipp:", 4)) {
+	upgrade = 1;
 	debug_printf("Upgrading printer %s (Host: %s, Port: %d) to IPPS. New URI: %s\n",
 		     p->queue_name, remote_host, port, uri);
-      if (strcasecmp(strchr(p->uri, ':'), strchr(uri, ':')))
-	debug_printf("Changing URI of printer %s (Host: %s, Port: %d) to %s.\n",
+      /* Any non-"lo" interface -> "lo" */
+      } else if (!strcasecmp(interface, "lo")) {
+	upgrade = 1;
+	debug_printf("Upgrading printer %s (Host: %s, Port: %d) to use loopback interface \"lo\". New URI: %s\n",
 		     p->queue_name, remote_host, port, uri);
-      if ((p->domain == NULL || p->domain[0] == '\0') &&
-	  domain != NULL && domain[0] != '\0' &&
-	  (p->type == NULL || p->type[0] == '\0') &&
-	  type != NULL && type[0] != '\0') {
+      /* CUPS Legacy/LDAP -> DNS-SD */
+      } else if ((p->domain == NULL || p->domain[0] == '\0') &&
+		 domain != NULL && domain[0] != '\0' &&
+		 (p->type == NULL || p->type[0] == '\0') &&
+		 type != NULL && type[0] != '\0') {
+	upgrade = 1;
 	debug_printf("Discovered printer %s (Host: %s, Port: %d, URI: %s) by DNS-SD now.\n",
 		     p->queue_name, remote_host, port, uri);
-	if (p->is_legacy) {
+      }
+    }
+
+    /* Switch local queue over to this newly discovered service */
+    if (upgrade == 1) {
+      /* Remove tiemout of legacy CUPS broadcasting */
+      if (domain != NULL && domain[0] != '\0' &&
+	  type != NULL && type[0] != '\0' &&
+	  p->is_legacy) {
 	  p->is_legacy = 0;
 	  if (p->status == STATUS_CONFIRMED)
 	    p->timeout = (time_t) -1;
-	}
       }
       free(p->location);
       free(p->info);
@@ -8871,8 +9216,9 @@ examine_discovered_printer_record(const char *host,
       p->service_name = strdup(service_name);
       p->type = strdup(type);
       p->domain = strdup(domain);
-
-    }
+      debug_printf("Switched over to newly discovered entry for this printer.\n");
+    } else
+      debug_printf("Staying with previously discovered entry for this printer.\n");
 
     /* Mark queue entry as confirmed if the entry
        is unconfirmed */
@@ -8897,6 +9243,7 @@ examine_discovered_printer_record(const char *host,
       record_printer_options(p->queue_name);
     }
 
+    /* Gather extra info from our new discovery */
     if (p->uri[0] == '\0') {
       free (p->uri);
       p->uri = strdup(uri);
@@ -8941,6 +9288,9 @@ examine_discovered_printer_record(const char *host,
       free (p->domain);
       p->domain = strdup(domain);
     }
+    if (domain != NULL && domain[0] != '\0' &&
+	type != NULL && type[0] != '\0')
+      ipp_discoveries_add(p->ipp_discoveries, interface, type, family);
     p->netprinter = is_cups_queue ? 0 : 1;
   } else {
 
@@ -8949,8 +9299,8 @@ examine_discovered_printer_record(const char *host,
     p = create_remote_printer_entry (local_queue_name, location, info, uri,
 				     remote_host, ip, port,
 				     service_name ? service_name : "", type,
-				     domain, pdl, color, duplex, make_model,
-				     is_cups_queue);
+				     domain, interface, family, pdl, color,
+				     duplex, make_model, is_cups_queue);
   }
 
  fail:
@@ -9079,165 +9429,6 @@ allowed (struct sockaddr *srcaddr)
   return server_allowed;
 }
 
-static gboolean
-update_netifs (gpointer data)
-{
-  struct ifaddrs *ifaddr, *ifa;
-  netif_t *iface, *iface2;
-  int i, add_to_netifs, addr_size, dupe;
-  char *host, buf[HTTP_MAX_HOST], *p;
-
-  debug_printf("update_netifs() in THREAD %ld\n", pthread_self());
-
-  update_netifs_sourceid = 0;
-  if (getifaddrs (&ifaddr) == -1) {
-    debug_printf("unable to get interface addresses: %s\n",
-		 strerror (errno));
-    return FALSE;
-  }
-
-  while ((iface = cupsArrayFirst (netifs)) != NULL) {
-    cupsArrayRemove (netifs, iface);
-    free (iface->address);
-    free (iface);
-  }
-  while ((host = cupsArrayFirst (local_hostnames)) != NULL) {
-    cupsArrayRemove (local_hostnames, host);
-    free (host);
-  }
-
-  for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
-    netif_t *iface;
-
-    add_to_netifs = 1;
-
-    if (ifa->ifa_addr == NULL)
-      continue;
-
-    if (ifa->ifa_broadaddr == NULL)
-      add_to_netifs = 0;
-
-    if (ifa->ifa_flags & IFF_LOOPBACK)
-      add_to_netifs = 0;
-
-    if (!(ifa->ifa_flags & IFF_BROADCAST))
-      add_to_netifs = 0;
-
-    if (ifa->ifa_addr->sa_family == AF_INET)
-      addr_size = sizeof (struct sockaddr_in);
-    else if (ifa->ifa_addr->sa_family == AF_INET6)
-      addr_size = sizeof (struct sockaddr_in6);
-    else
-      addr_size = 0;
-    if (addr_size)
-      for (i = 0; i <= 1; i ++)
-        if (getnameinfo (ifa->ifa_addr, addr_size,
-			 buf, HTTP_MAX_HOST, NULL, 0,
-			 i == 0 ? NI_NUMERICHOST : NI_NAMEREQD) == 0)
-	  if (buf[0]) {
-	    /* Cut off "%..." from IPv6 IP addresses */
-	    if (ifa->ifa_addr->sa_family == AF_INET6 && i == 0 &&
-		(p = strchr(buf, '%')) != NULL)
-	      *p = '\0';
-	    /* discard if we already have this name or address */
-	    dupe = 0;
-	    for (host = (char *)cupsArrayFirst (local_hostnames);
-		 host != NULL;
-		 host = (char *)cupsArrayNext (local_hostnames))
-	      if (strcasecmp(buf, host) == 0) {
-		dupe = 1;
-		break;
-	      }
-	    if (dupe == 0) {
-	      cupsArrayAdd (local_hostnames, strdup(buf));
-	      debug_printf("network interface %s: Local host name/address: %s\n",
-			   ifa->ifa_name, buf);
-	    }
-	  }
-
-    if (add_to_netifs == 0)
-      continue;
-
-    iface = malloc (sizeof (netif_t));
-    if (iface == NULL) {
-      debug_printf ("malloc failure\n");
-      exit (1);
-    }
-
-    iface->address = malloc (HTTP_MAX_HOST);
-    if (iface->address == NULL) {
-      free (iface);
-      debug_printf ("malloc failure\n");
-      exit (1);
-    }
-
-    iface->address[0] = '\0';
-    switch (ifa->ifa_addr->sa_family) {
-    case AF_INET:
-      /* copy broadcast addr/fill in port first to faciliate dupe compares */
-      memcpy (&iface->broadcast, ifa->ifa_broadaddr,
-	      sizeof (struct sockaddr_in));
-      iface->broadcast.ipv4.sin_port = htons (BrowsePort);
-      /* discard if we already have an interface sharing the broadcast
-	 address */
-      dupe = 0;
-      for (iface2 = (netif_t *)cupsArrayFirst (netifs);
-           iface2 != NULL;
-           iface2 = (netif_t *)cupsArrayNext (netifs)) {
-	if (memcmp(&iface2->broadcast, &iface->broadcast,
-		   sizeof(struct sockaddr_in)) == 0) {
-	  dupe = 1;
-	  break;
-	}
-      }
-      if (dupe) break;
-      getnameinfo (ifa->ifa_addr, sizeof (struct sockaddr_in),
-		   iface->address, HTTP_MAX_HOST,
-		   NULL, 0, NI_NUMERICHOST);
-      break;
-
-    case AF_INET6:
-      if (IN6_IS_ADDR_LINKLOCAL (&((struct sockaddr_in6 *)(ifa->ifa_addr))
-				 ->sin6_addr))
-	break;
-
-      /* see above for order */
-      memcpy (&iface->broadcast, ifa->ifa_broadaddr,
-	      sizeof (struct sockaddr_in6));
-      iface->broadcast.ipv6.sin6_port = htons (BrowsePort);
-      /* discard alias addresses (identical broadcast) */
-      dupe = 0;
-      for (iface2 = (netif_t *)cupsArrayFirst (netifs);
-           iface2 != NULL;
-           iface2 = (netif_t *)cupsArrayNext (netifs)) {
-	if (memcmp(&iface2->broadcast, ifa->ifa_broadaddr,
-		   sizeof(struct sockaddr_in6)) == 0) {
-	  dupe = 1;
-	  break;
-	}
-      }
-      if (dupe) break;
-      getnameinfo (ifa->ifa_addr, sizeof (struct sockaddr_in6),
-		   iface->address, HTTP_MAX_HOST, NULL, 0, NI_NUMERICHOST);
-      break;
-    }
-
-    if (iface->address[0]) {
-      cupsArrayAdd (netifs, iface);
-      debug_printf("Network interface %s at %s for legacy CUPS browsing/broadcasting\n",
-		   ifa->ifa_name, iface->address);
-    } else {
-      free (iface->address);
-      free (iface);
-    }
-  }
-
-  freeifaddrs (ifaddr);
-
-  /* If run as a timeout, don't run it again. */
-  return FALSE;
-}
-
 #ifdef HAVE_AVAHI
 static void resolve_callback(AvahiServiceResolver *r,
 			     AvahiIfIndex interface,
@@ -9267,8 +9458,11 @@ static void resolve_callback(AvahiServiceResolver *r,
   }
 
   /* Ignore local queues on the port of the cupsd we are serving for */
-  if (flags & AVAHI_LOOKUP_RESULT_LOCAL && port == ippPort()) {
-    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with host name '%s' and port %d on interface '%s' (%s) is from local CUPS, ignored (Avahi lookup result of local machine).\n",
+  update_netifs(NULL);
+  if (port == ippPort() &&
+      ((flags & AVAHI_LOOKUP_RESULT_LOCAL) || !strcasecmp(ifname, "lo") ||
+       is_local_hostname(host_name))) {
+    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with host name '%s' and port %d on interface '%s' (%s) is from local CUPS, ignored (Avahi lookup result or host name of local machine).\n",
 		 name, type, domain, host_name, port, ifname,
 		 (address ?
 		  (address->proto == AVAHI_PROTO_INET ? "IPv4" :
@@ -9276,26 +9470,6 @@ static void resolve_callback(AvahiServiceResolver *r,
 		   "IPv4/IPv6 Unknown") :
 		  "IPv4/IPv6 Unknown"));
     goto ignore;
-  }
-  if (port == ippPort()) {
-    char *host;
-    update_netifs(NULL);
-    for (host = (char *)cupsArrayFirst (local_hostnames);
-	 host != NULL;
-	 host = (char *)cupsArrayNext (local_hostnames))
-      if (strncasecmp(host_name, host, strlen(host)) == 0 &&
-	  (strlen(host_name) == strlen(host) ||
-	   strcasecmp(host_name + strlen(host), ".local") == 0 ||
-	   strcasecmp(host_name + strlen(host), ".local.") == 0)) {
-	debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with host name '%s' and port %d on interface '%s' (%s) is from local CUPS, ignored (Host name of local machine).\n",
-		     name, type, domain, host_name, port, ifname,
-		     (address ?
-		      (address->proto == AVAHI_PROTO_INET ? "IPv4" :
-		       address->proto == AVAHI_PROTO_INET6 ? "IPv6" :
-		       "IPv4/IPv6 Unknown") :
-		      "IPv4/IPv6 Unknown"));
-	goto ignore;
-      }
   }
 
   /* Called whenever a service has been resolved successfully or timed out */
@@ -9379,7 +9553,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 	instance[0] = '\0';
       }
       /* Determine the remote printer's IP */
-      if (IPBasedDeviceURIs != IP_BASED_URIS_NO || !strcasecmp(ifname, "lo") ||
+      if (IPBasedDeviceURIs != IP_BASED_URIS_NO ||
 	  (!browseallow_all && cupsArrayCount(browseallow) > 0)) {
 	struct sockaddr saddr;
 	struct sockaddr *addr = &saddr;
@@ -9432,19 +9606,21 @@ static void resolve_callback(AvahiServiceResolver *r,
 	  /* Check remote printer type and create appropriate local queue to
 	     point to it */
 	  if (IPBasedDeviceURIs != IP_BASED_URIS_NO ||
-	      !strcasecmp(ifname, "lo") ||
 	      !host_name) {
 	    debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with IP address %s.\n",
 			 name, type, domain, addrstr);
-	    examine_discovered_printer_record((strcasecmp(ifname, "lo") &&
-					       host_name ? host_name : addrstr),
+	    examine_discovered_printer_record((strcasecmp(ifname, "lo") ?
+					       host_name : "localhost"),
 					      addrstr, port, rp_value, name,
 					      "", instance, type, domain,
-					      txt);
+					      ifname, addr->sa_family, txt);
 	  } else
-	    examine_discovered_printer_record(host_name, NULL, port, rp_value,
+	    examine_discovered_printer_record((strcasecmp(ifname, "lo") ?
+					       host_name : "localhost"),
+					      NULL, port, rp_value,
 					      name, "", instance, type,
-					      domain, txt);
+					      domain, ifname, addr->sa_family,
+					      txt);
 	} else
 	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, could not determine IP address.\n",
 		       name, type, domain);
@@ -9453,8 +9629,16 @@ static void resolve_callback(AvahiServiceResolver *r,
 	/* Check remote printer type and create appropriate local queue to
 	   point to it */
 	if (host_name)
-	  examine_discovered_printer_record(host_name, NULL, port, rp_value,
+	  examine_discovered_printer_record((strcasecmp(ifname, "lo") ?
+					     host_name : "localhost"),
+					    NULL, port, rp_value,
 					    name, "", instance, type, domain,
+					    ifname,
+					    (address->proto ==
+					     AVAHI_PROTO_INET ? AF_INET :
+					     (address->proto ==
+					      AVAHI_PROTO_INET6 ? AF_INET6 :
+					      0)),
 					    txt);
 	else
 	  debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' skipped, host name not supplied.\n",
@@ -9536,8 +9720,10 @@ static void browse_callback(AvahiServiceBrowser *b,
     if (c == NULL || name == NULL || type == NULL || domain == NULL)
       return;
 
-    debug_printf("Avahi Browser: NEW: service '%s' of type '%s' in domain '%s' on interface '%s'\n",
-		 name, type, domain, ifname);
+    debug_printf("Avahi Browser: NEW: service '%s' of type '%s' in domain '%s' on interface '%s' (%s)\n",
+		 name, type, domain, ifname,
+		 protocol != AVAHI_PROTO_UNSPEC ?
+		 avahi_proto_to_string(protocol) : "Unknown");
 
     /* Ignore if terminated (by SIGTERM) */
     if (terminating) {
@@ -9562,8 +9748,10 @@ static void browse_callback(AvahiServiceBrowser *b,
     if (name == NULL || type == NULL || domain == NULL)
       return;
 
-    debug_printf("Avahi Browser: REMOVE: service '%s' of type '%s' in domain '%s' on interface '%s'\n",
-		 name, type, domain, ifname);
+    debug_printf("Avahi Browser: REMOVE: service '%s' of type '%s' in domain '%s' on interface '%s' (%s)\n",
+		 name, type, domain, ifname,
+		 protocol != AVAHI_PROTO_UNSPEC ?
+		 avahi_proto_to_string(protocol) : "Unknown");
 
     /* Ignore if terminated (by SIGTERM) */
     if (terminating) {
@@ -9577,13 +9765,35 @@ static void browse_callback(AvahiServiceBrowser *b,
       if (p->status != STATUS_DISAPPEARED &&
 	  p->status != STATUS_TO_BE_RELEASED &&
 	  !strcasecmp(p->service_name, name) &&
-	  !strcasecmp(p->type, type) &&
 	  !strcasecmp(p->domain, domain))
 	break;
     if (p) {
-      remove_printer_entry(p);
-      debug_printf("DNS-SD IDs: Service name: \"%s\", Service type: \"%s\", Domain: \"%s\"\n",
-		   p->service_name, p->type, p->domain);
+      int family =
+	(protocol == AVAHI_PROTO_INET ? AF_INET :
+	 (protocol == AVAHI_PROTO_INET6 ? AF_INET6 : 0));
+      if (p->ipp_discoveries) {
+	ipp_discovery_t *ippdis;
+	for (ippdis = cupsArrayFirst(p->ipp_discoveries); ippdis;
+	     ippdis = cupsArrayNext(p->ipp_discoveries))
+	  if (!strcasecmp(ippdis->interface, ifname) &&
+	      !strcasecmp(ippdis->type, type) &&
+	      ippdis->family == family) {
+	    debug_printf("Discovered instance for printer with Service name \"%s\", Domain \"%s\" unregistered: Interface \"%s\", Service type: \"%s\", Protocol: \"%s\"\n",
+			 p->service_name, p->domain,
+			 ippdis->interface, ippdis->type,
+			 (ippdis->family == AF_INET ? "IPv4" :
+			  (ippdis->family == AF_INET6 ? "IPv6" : "Unknown")));
+	    cupsArrayRemove(p->ipp_discoveries, (void *)ippdis);
+	    ipp_discoveries_list(p->ipp_discoveries);
+	    break;
+	  }
+	/* Remove the entry if no discovered instances are left */
+	if (cupsArrayCount(p->ipp_discoveries) == 0) {
+	  debug_printf("Removing printer with Service name \"%s\", Domain \"%s\", all discovered instances disappeared.\n",
+		       p->service_name, p->domain);
+	  remove_printer_entry(p);
+	}
+      }
 
       if (in_shutdown == 0)
 	recheck_timer ();
@@ -9849,7 +10059,8 @@ found_cups_printer (const char *remote_host, const char *uri,
   printer = examine_discovered_printer_record(host, NULL, port, local_resource,
 					      service_name,
 					      location ? location : "",
-					      info ? info : "", "", "", NULL);
+					      info ? info : "", "", "", "", 0,
+					      NULL);
 
   if (printer &&
       (printer->domain == NULL || printer->domain[0] == '\0' ||
@@ -11258,7 +11469,8 @@ find_previous_queue (gpointer key,
   if (printer->cups_browsed_controlled) {
     /* Queue found, add to our list */
     p = create_remote_printer_entry (name, "", "", printer->device_uri, "", "",
-				     0, "", "", "", NULL, 0, 0, NULL, -1);
+				     0, "", "", "", "", 0, NULL, 0, 0, NULL,
+				     -1);
     if (p) {
       /* Mark as unconfirmed, if no Avahi report of this queue appears
 	 in a certain time frame, we will remove the queue */

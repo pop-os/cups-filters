@@ -5,7 +5,7 @@ Uploaders: Till Kamppeter <till.kamppeter@gmail.com>,
 Section: net
 Priority: optional
 Build-Depends: autoconf,
-               debhelper (>= 11~),
+               debhelper-compat (= 12),
                dh-apparmor,
                pkg-config,
                sharutils,
