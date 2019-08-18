@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <qpdf/QPDFWriter.hh>
 #include <qpdf/QUtil.hh>
+#include <qpdf/QPDFPageDocumentHelper.hh>
+#include <qpdf/QPDFAcroFormDocumentHelper.hh>
 #include "qpdf_tools.h"
 #include "qpdf_xobject.h"
 #include "qpdf_pdftopdf.h"
@@ -169,6 +171,89 @@ void QPDF_PDFTOPDF_PageHandle::add_border_rect(const PageRect &_rect,BorderType 
 #endif
 }
 // }}}
+/*
+ *  This crop function is written for print-scaling=fill option.
+ *  Trim Box is used for trimming the page in required size.
+ *  scale tells if we need to scale input file.
+ */
+Rotation QPDF_PDFTOPDF_PageHandle::crop(const PageRect &cropRect,Rotation orientation,Position xpos,Position ypos,bool scale)
+{
+  page.assertInitialized();
+  if(orientation==ROT_0||orientation==ROT_180)
+    page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_90));
+  else
+    page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_0));
+
+  PageRect currpage= getBoxAsRect(getTrimBox(page));
+  double width = currpage.right-currpage.left;
+  double height = currpage.top-currpage.bottom;
+  double pageWidth = cropRect.right-cropRect.left;
+  double pageHeight = cropRect.top-cropRect.bottom;
+  double final_w,final_h;   //Width and height of cropped image.
+
+  Rotation pageRot = getRotate(page);
+  if(pageRot==ROT_0||pageRot==ROT_180)
+  {
+    std::swap(pageHeight,pageWidth);
+  }
+  if(scale)
+  {
+    if(width*pageHeight/pageWidth<=height)
+    {
+      final_w = width;
+      final_h = width*pageHeight/pageWidth;
+    }
+    else{
+      final_w = height*pageWidth/pageHeight;
+      final_h = height;
+    }
+  }
+  else{
+    final_w = std::min(width,pageWidth);
+    final_h = std::min(height,pageHeight);
+  }
+  fprintf(stderr,"After Cropping: %lf %lf %lf %lf\n",width,height,final_w,final_h);
+  double posw = (width-final_w)/2,
+        posh = (height-final_h)/2;
+  // posw, posh : Position along width and height respectively.
+  // Calculating required position.  
+  if(xpos==Position::LEFT)        
+    posw =0;
+  else if(xpos==Position::RIGHT)
+    posw*=2;
+  
+  if(ypos==Position::TOP)
+    posh*=2;
+  else if(ypos==Position::BOTTOM)
+    posh=0;
+
+  // making PageRect for cropping.
+  currpage.left += posw;
+  currpage.bottom += posh;
+  currpage.top =currpage.bottom+final_h;
+  currpage.right=currpage.left+final_w;
+  //Cropping.
+  // TODO: Borders are covered by the image. buffer space?
+  page.replaceKey("/TrimBox",makeBox(currpage.left,currpage.bottom,currpage.right,currpage.top));
+  page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_0));
+  return getRotate(page);
+}
+
+bool QPDF_PDFTOPDF_PageHandle::is_landscape(Rotation orientation)
+{
+  page.assertInitialized();
+  if(orientation==ROT_0||orientation==ROT_180)
+    page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_90));
+  else
+    page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_0));
+
+  PageRect currpage= getBoxAsRect(getTrimBox(page));
+  double width = currpage.right-currpage.left;
+  double height = currpage.top-currpage.bottom;
+  if(width>height)
+    return true;
+  return false;
+}
 
 // TODO: better cropping
 // TODO: test/fix with qsub rotation
@@ -379,7 +464,7 @@ void QPDF_PDFTOPDF_Processor::error(const char *fmt,...) // {{{
 
 // TODO?  try/catch for PDF parsing errors?
 
-bool QPDF_PDFTOPDF_Processor::loadFile(FILE *f,ArgOwnership take) // {{{
+bool QPDF_PDFTOPDF_Processor::loadFile(FILE *f,ArgOwnership take,int flatten_forms) // {{{
 {
   closeFile();
   if (!f) {
@@ -414,12 +499,12 @@ bool QPDF_PDFTOPDF_Processor::loadFile(FILE *f,ArgOwnership take) // {{{
     error("loadFile with MustDuplicate is not supported");
     return false;
   }
-  start();
+  start(flatten_forms);
   return true;
 }
 // }}}
 
-bool QPDF_PDFTOPDF_Processor::loadFilename(const char *name) // {{{
+bool QPDF_PDFTOPDF_Processor::loadFilename(const char *name,int flatten_forms) // {{{
 {
   closeFile();
   try {
@@ -429,14 +514,22 @@ bool QPDF_PDFTOPDF_Processor::loadFilename(const char *name) // {{{
     error("loadFilename failed: %s",e.what());
     return false;
   }
-  start();
+  start(flatten_forms);
   return true;
 }
 // }}}
 
-void QPDF_PDFTOPDF_Processor::start() // {{{
+void QPDF_PDFTOPDF_Processor::start(int flatten_forms) // {{{
 {
   assert(pdf);
+
+  if (flatten_forms) {
+    QPDFAcroFormDocumentHelper afdh(*pdf);
+    afdh.generateAppearancesIfNeeded();
+
+    QPDFPageDocumentHelper dh(*pdf);
+    dh.flattenAnnotations(an_print);
+  }
 
   pdf->pushInheritedAttributesToPage();
   orig_pages=pdf->getAllPages();

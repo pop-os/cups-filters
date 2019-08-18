@@ -175,6 +175,62 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
   }
   const int numPages=std::max(shuffle.size(),pages.size());
 
+  if(param.autoprint||param.autofit){
+    bool margin_defined = true;
+    bool document_large = false;
+    int pw = param.page.right-param.page.left;
+    int ph = param.page.top-param.page.bottom;
+    int w=0,h=0;
+    Rotation tempRot=param.orientation;
+    PageRect r= pages[0]->getRect();
+    w = r.width;
+    h = r.height;
+
+    if(tempRot==ROT_90||tempRot==ROT_270)
+    {
+      std::swap(w,h);
+    }
+    if(w>=pw||h>=ph)
+    {
+      document_large = true;
+    }
+    if((param.page.width==pw)&&
+        (param.page.height==ph))
+        margin_defined = false;
+    if(param.autoprint){
+      if(param.fidelity||document_large) {
+        if(margin_defined)
+          param.fitplot = true;
+        else
+          param.fillprint = true;
+      }
+      else
+        param.cropfit = true;
+    }
+    else{
+      if(param.fidelity||document_large)
+        param.fitplot = true;
+      else
+        param.cropfit = true;
+    }
+  }
+
+  if(param.fillprint||param.cropfit){
+    fprintf(stderr,"[DEBUG]: Cropping input pdf and Enabling fitplot.\n");
+    if(param.noOrientation&&pages.size())
+    {
+      bool land = pages[0]->is_landscape(param.orientation);
+      if(land)
+        param.orientation = param.normal_landscape;
+    }
+    for(int i=0;i<(int)pages.size();i++)
+    {
+      std::shared_ptr<PDFTOPDF_PageHandle> page = pages[i];
+      page->crop(param.page,param.orientation,param.xpos,param.ypos,!param.cropfit);
+    }
+    param.fitplot = 1;
+  }
+
   std::shared_ptr<PDFTOPDF_PageHandle> curpage;
   int outputpage=0;
   int outputno=0;
@@ -322,7 +378,20 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
       if (!param.fitplot) {
         curpage->add_subpage(page,pgedit.xpos+xpos,pgedit.ypos+ypos,pgedit.scale,&rect);
       } else {
-        curpage->add_subpage(page,pgedit.xpos+xpos,pgedit.ypos+ypos,pgedit.scale);
+        if(param.cropfit){
+          double xpos2 = (param.page.right-param.page.left-(page->getRect().width))/2;
+          double ypos2 = (param.page.top-param.page.bottom-(page->getRect().height))/2;
+          if(param.orientation==ROT_270||param.orientation==ROT_90)
+          {
+            xpos2 = (param.page.right-param.page.left-(page->getRect().height))/2;
+            ypos2 = (param.page.top-param.page.bottom-(page->getRect().width))/2;
+            curpage->add_subpage(page,ypos2+param.page.bottom,xpos2+param.page.left,1);
+          }else{
+          curpage->add_subpage(page,xpos2+param.page.left,ypos2+param.page.bottom,1);
+          }
+        }
+        else
+          curpage->add_subpage(page,pgedit.xpos+xpos,pgedit.ypos+ypos,pgedit.scale);
       }
 
 #ifdef DEBUG

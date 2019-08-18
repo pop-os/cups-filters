@@ -12,7 +12,8 @@ class QPDF_PDFTOPDF_PageHandle : public PDFTOPDF_PageHandle {
   virtual void mirror();
   virtual void rotate(Rotation rot);
   virtual void add_label(const PageRect &rect, const std::string label);
-
+  virtual Rotation crop(const PageRect &cropRect,Rotation orientation,Position xpos,Position ypos,bool scale);
+  virtual bool is_landscape(Rotation orientation);
   void debug(const PageRect &rect,float xpos,float ypos);
  private:
   bool isExisting() const;
@@ -34,8 +35,8 @@ class QPDF_PDFTOPDF_PageHandle : public PDFTOPDF_PageHandle {
 
 class QPDF_PDFTOPDF_Processor : public PDFTOPDF_Processor {
  public:
-  virtual bool loadFile(FILE *f,ArgOwnership take=WillStayAlive);
-  virtual bool loadFilename(const char *name);
+  virtual bool loadFile(FILE *f,ArgOwnership take=WillStayAlive,int flatten_forms=1);
+  virtual bool loadFilename(const char *name,int flatten_forms=1);
 
   // TODO: virtual bool may_modify/may_print/?
   virtual bool check_print_permissions();
@@ -61,7 +62,7 @@ class QPDF_PDFTOPDF_Processor : public PDFTOPDF_Processor {
  private:
   void closeFile();
   void error(const char *fmt,...);
-  void start();
+  void start(int flatten_forms);
  private:
   std::unique_ptr<QPDF> pdf;
   std::vector<QPDFObjectHandle> orig_pages;

@@ -149,13 +149,13 @@ void emitJCLOptions(FILE *fp, int copies)
   int i;
   char buf[1024];
   ppd_attr_t *attr;
-  int pdftoopvp = 0;
+  int pdftopdfjcl = 0;
   int datawritten = 0;
 
   if (ppd == 0) return;
   if ((attr = ppdFindAttr(ppd,"pdftopdfJCLBegin",NULL)) != NULL) {
     int n = strlen(attr->value);
-    pdftoopvp = 1;
+    pdftopdfjcl = 1;
     for (i = 0;i < n;i++) {
 	if (attr->value[i] == '\r' || attr->value[i] == '\n') {
 	    /* skip new line */
@@ -173,7 +173,7 @@ void emitJCLOptions(FILE *fp, int copies)
     if ((attr = ppdFindAttr(ppd,"pdftopdfJCLCopies",buf)) != NULL) {
       fputs(attr->value,fp);
       datawritten = 1;
-    } else if (pdftoopvp) {
+    } else if (pdftopdfjcl) {
       fprintf(fp,"Copies=%d;",copies);
       datawritten = 1;
     }
@@ -189,7 +189,7 @@ void emitJCLOptions(FILE *fp, int copies)
       if ((attr = ppdFindAttr(ppd,buf,choices[i]->choice)) != NULL) {
         fputs(attr->value,fp);
 	datawritten = 1;
-      } else if (pdftoopvp) {
+      } else if (pdftopdfjcl) {
         fprintf(fp,"%s=%s;",
           ((ppd_option_t *)(choices[i]->option))->keyword,
           choices[i]->choice);
@@ -693,7 +693,8 @@ main(int  argc,				/* I - Number of command-line arguments */
   int deviceReverse = 0;
   ppd_attr_t *attr;
   int pl,pr;
-
+  int fillprint = 0;  /* print-scaling = fill */
+  int cropfit = 0;  /* -o crop-to-fit = true */
  /*
   * Make sure status messages are not buffered...
   */
@@ -810,7 +811,6 @@ main(int  argc,				/* I - Number of command-line arguments */
       }
   }
 
-
   if ((val = cupsGetOption("OutputOrder",num_options,options)) != 0) {
     if (!strcasecmp(val, "Reverse")) {
       Reverse = 1;
@@ -875,21 +875,6 @@ main(int  argc,				/* I - Number of command-line arguments */
 
   if ((val = cupsGetOption("brightness", num_options, options)) != NULL)
       brightness = atoi(val) * 0.01f;
-
-  if ((val = cupsGetOption("scaling", num_options, options)) != NULL)
-    zoom = atoi(val) * 0.01;
-  else if (((val =
-	     cupsGetOption("fit-to-page", num_options, options)) != NULL) ||
-	   ((val = cupsGetOption("fitplot", num_options, options)) != NULL))
-  {
-    if (!strcasecmp(val, "yes") || !strcasecmp(val, "on") ||
-	!strcasecmp(val, "true"))
-      zoom = 1.0;
-    else
-      zoom = 0.0;
-  }
-  else if ((val = cupsGetOption("natural-scaling", num_options, options)) != NULL)
-    zoom = 0.0;
 
   if ((val = cupsGetOption("ppi", num_options, options)) != NULL)
   {
@@ -973,6 +958,218 @@ main(int  argc,				/* I - Number of command-line arguments */
   colorspace = ColorDevice ? CUPS_IMAGE_RGB_CMYK : CUPS_IMAGE_WHITE;
 
   img = cupsImageOpen(filename, colorspace, CUPS_IMAGE_WHITE, sat, hue, NULL);
+  if(img!=NULL){
+
+  int margin_defined = 0;
+  int fidelity = 0;
+  int document_large = 0;
+
+  if(ppd->custom_margins[0]||ppd->custom_margins[1]||
+      ppd->custom_margins[2]||ppd->custom_margins[3])   // In case of custom margins
+    margin_defined = 1;
+  if(PageLength!=PageTop-PageBottom||PageWidth!=PageRight-PageLeft)
+    margin_defined = 1;
+
+  if((val = cupsGetOption("ipp-attribute-fidelity",num_options,options)) != NULL) {
+    if(!strcasecmp(val,"true")||!strcasecmp(val,"yes")||
+        !strcasecmp(val,"on")) {
+      fidelity = 1;
+    }
+  }
+
+  float w = (float)cupsImageGetWidth(img);
+  float h = (float)cupsImageGetHeight(img);
+  float pw = PageRight-PageLeft;
+  float ph = PageTop-PageBottom;
+  int tempOrientation = Orientation;
+  if((val = cupsGetOption("orientation-requested",num_options,options))!=NULL) {
+    tempOrientation = atoi(val);
+  }
+  else if((val = cupsGetOption("landscape",num_options,options))!=NULL) {
+    if(!strcasecmp(val,"true")||!strcasecmp(val,"yes")) {
+      tempOrientation = 4;
+    }
+  }
+  if(tempOrientation==0) {
+    int temp1 = pw,
+          temp2 = ph,
+          temp3 = pw,
+          temp4 = ph;
+      if(temp1>w) temp1 = w;
+      if(temp2>h) temp2 = h;
+      if(temp3>h) temp3 = h;
+      if(temp4>w) temp4 = w;
+      if(temp1*temp2<temp3*temp4) {
+        tempOrientation = 4;
+      }
+  }
+  if(tempOrientation==4||tempOrientation==5) {
+    int tmp = pw;
+    pw = ph;
+    ph = tmp;
+  }
+  if(w>pw||h>ph) {
+    document_large = 1;
+  }
+
+  if((val = cupsGetOption("print-scaling",num_options,options)) != NULL) {
+    if(!strcasecmp(val,"auto")) {
+      if(fidelity||document_large) {
+        if(margin_defined)
+          zoom = 1.0;       // fit method
+        else
+          fillprint = 1;    // fill method
+      }
+      else
+        cropfit = 1;        // none method
+    }
+    else if(!strcasecmp(val,"auto-fit")) {
+      if(fidelity||document_large)
+        zoom = 1.0;         // fit method
+      else
+        cropfit = 1;        // none method
+    }
+    else if(!strcasecmp(val,"fill"))
+      fillprint = 1;        // fill method
+    else if(!strcasecmp(val,"fit"))
+      zoom = 1.0;           // fitplot = 1 or fit method
+    else
+      cropfit=1;            // none or crop-to-fit
+  }
+  else{       // print-scaling is not defined, look for alternate options.
+
+  if ((val = cupsGetOption("scaling", num_options, options)) != NULL)
+    zoom = atoi(val) * 0.01;
+  else if (((val =
+	     cupsGetOption("fit-to-page", num_options, options)) != NULL) ||
+	   ((val = cupsGetOption("fitplot", num_options, options)) != NULL))
+  {
+    if (!strcasecmp(val, "yes") || !strcasecmp(val, "on") ||
+	      !strcasecmp(val, "true"))
+      zoom = 1.0;
+    else
+      zoom = 0.0;
+  }
+  else if ((val = cupsGetOption("natural-scaling", num_options, options)) != NULL)
+    zoom = 0.0;
+
+  if((val = cupsGetOption("fill",num_options,options))!=0) {
+    if(!strcasecmp(val,"true")||!strcasecmp(val,"yes")) {
+      fillprint = 1;
+    }
+  }
+
+  if((val = cupsGetOption("crop-to-fit",num_options,options))!= NULL){
+    if(!strcasecmp(val,"true")||!strcasecmp(val,"yes")) {
+      cropfit=1;
+    }
+  } }
+  }
+  if(fillprint||cropfit)
+  {
+    float w = (float)cupsImageGetWidth(img);
+    float h = (float)cupsImageGetHeight(img);
+    float pw = PageRight-PageLeft;
+    float ph = PageTop-PageBottom;
+    int tempOrientation = Orientation;
+    const char *val;
+    int flag = 3;
+    if((val = cupsGetOption("orientation-requested",num_options,options))!=NULL)
+    {
+      tempOrientation = atoi(val);
+    }
+    else if((val = cupsGetOption("landscape",num_options,options))!=NULL)
+    {
+      if(!strcasecmp(val,"true")||!strcasecmp(val,"yes"))
+      {
+        tempOrientation = 4;
+      }
+    }
+    if(tempOrientation>0)
+    {
+      if(tempOrientation==4||tempOrientation==5)
+      {
+        float temp = pw;
+        pw = ph;
+        ph = temp;
+        flag = 4;
+      }
+    }
+    if(tempOrientation==0)
+    {
+      int temp1 = pw,
+          temp2 = ph,
+          temp3 = pw,
+          temp4 = ph;
+      if(temp1>w) temp1 = w;
+      if(temp2>h) temp2 = h;
+      if(temp3>h) temp3 = h;
+      if(temp4>w) temp4 = w; 
+      if(temp1*temp2<temp3*temp4)
+      {
+        int temp = pw;
+        pw = ph;
+        ph = temp;
+        flag = 4;
+      }
+    }
+    if(fillprint){
+      float final_w,final_h;
+      if(w*ph/pw <=h){
+        final_w =w;
+        final_h =w*ph/pw; 
+      }
+      else{
+        final_w = h*pw/ph;
+        final_h = h;
+      }
+      float posw=(w-final_w)/2,posh=(h-final_h)/2;
+      posw = (1+XPosition)*posw;
+      posh = (1-YPosition)*posh;
+      cups_image_t *img2 = cupsImageCrop(img,posw,posh,final_w,final_h);
+      cupsImageClose(img);
+      img = img2;
+    }
+    else {
+      float final_w=w,final_h=h;
+      if(final_w>pw)
+      {
+        final_w = pw;
+      }
+      if(final_h>ph)
+      {
+        final_h = ph;
+      }
+      if((fabs(final_w-w)>0.5*w)||(fabs(final_h-h)>0.5*h))
+      {
+        fprintf(stderr,"[DEBUG]: Ignoring crop-to-fit option!\n");
+        cropfit=0;
+      }
+      else{
+        float posw=(w-final_w)/2,posh=(h-final_h)/2;
+        posw = (1+XPosition)*posw;
+        posh = (1-YPosition)*posh;
+        cups_image_t *img2 = cupsImageCrop(img,posw,posh,final_w,final_h);
+        cupsImageClose(img);
+        img = img2;
+        if(flag==4)
+        {
+          PageBottom+=(PageTop-PageBottom-final_w)/2;
+          PageTop = PageBottom+final_w;
+          PageLeft +=(PageRight-PageLeft-final_h)/2;
+          PageRight = PageLeft+final_h;
+        }
+        else{
+          PageBottom+=(PageTop-PageBottom-final_h)/2;
+          PageTop = PageBottom+final_h;
+          PageLeft +=(PageRight-PageLeft-final_w)/2;
+          PageRight = PageLeft+final_w;
+        }
+        if(PageBottom<0) PageBottom = 0;
+        if(PageLeft<0) PageLeft = 0;
+     }
+    }
+  }
 
 #if defined(USE_CONVERT_CMD) && defined(CONVERT_CMD)
   if (img == NULL) {

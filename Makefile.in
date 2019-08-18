@@ -110,49 +110,37 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_MUTOOL_TRUE@am__append_8 = $(mutoolmimefiles)
 @ENABLE_BRAILLE_TRUE@am__append_9 = $(brlmimefiles)
 bin_PROGRAMS = ttfread$(EXEEXT)
-pkgfilter_PROGRAMS = $(am__EXEEXT_2) pdftopdf$(EXEEXT) \
-	commandtoescpx$(EXEEXT) commandtopclx$(EXEEXT) \
-	sys5ippprinter$(EXEEXT) texttotext$(EXEEXT) pdftops$(EXEEXT) \
-	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
-	texttopdf$(EXEEXT) rastertopdf$(EXEEXT) bannertopdf$(EXEEXT) \
-	rastertops$(EXEEXT) $(am__EXEEXT_3) $(am__EXEEXT_4) \
-	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
-	$(am__EXEEXT_8) $(am__EXEEXT_9)
-
-# ===========
-# PDF to OPVP
-# ===========
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__append_10 = \
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp
-
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = $(gsfilterscripts)
-@ENABLE_URFTOPDF_TRUE@am__append_12 = \
+pkgfilter_PROGRAMS = pdftopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
+	commandtopclx$(EXEEXT) sys5ippprinter$(EXEEXT) \
+	texttotext$(EXEEXT) pdftops$(EXEEXT) rastertoescpx$(EXEEXT) \
+	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) rastertopdf$(EXEEXT) \
+	bannertopdf$(EXEEXT) rastertops$(EXEEXT) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
+	$(am__EXEEXT_6) $(am__EXEEXT_7)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_10 = $(gsfilterscripts)
+@ENABLE_URFTOPDF_TRUE@am__append_11 = \
 @ENABLE_URFTOPDF_TRUE@	urftopdf
 
-@ENABLE_POPPLER_TRUE@am__append_13 = \
+@ENABLE_POPPLER_TRUE@am__append_12 = \
 @ENABLE_POPPLER_TRUE@	pdftoraster
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_14 = \
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs
-
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_15 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_13 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_MUTOOL_TRUE@am__append_16 = \
+@ENABLE_MUTOOL_TRUE@am__append_14 = \
 @ENABLE_MUTOOL_TRUE@	mupdftoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_17 = \
+@ENABLE_FOOMATIC_TRUE@am__append_15 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_18 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_16 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_DRIVERLESS_TRUE@am__append_19 = $(driverlessmanpages)
-@ENABLE_FOOMATIC_TRUE@am__append_20 = $(foomaticmanpages)
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_21 = $(ijsppdfiles)
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_22 = $(gsppdfiles)
+@ENABLE_DRIVERLESS_TRUE@am__append_17 = $(driverlessmanpages)
+@ENABLE_FOOMATIC_TRUE@am__append_18 = $(foomaticmanpages)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_19 = $(gsppdfiles)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx.m4 \
@@ -204,21 +192,16 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgcupsserverrootdir)" \
 	"$(DESTDIR)$(pkgdriverdir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
-	"$(DESTDIR)$(pkgfontconfigdir)" \
 	"$(DESTDIR)$(pkgfontembedincludedir)" \
 	"$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" \
 	"$(DESTDIR)$(ppddir)"
 @ENABLE_BRAILLE_TRUE@am__EXEEXT_1 = cups-brf$(EXEEXT)
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_2 =  \
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp$(EXEEXT)
-@ENABLE_URFTOPDF_TRUE@am__EXEEXT_3 = urftopdf$(EXEEXT)
-@ENABLE_POPPLER_TRUE@am__EXEEXT_4 = pdftoraster$(EXEEXT)
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_5 =  \
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs$(EXEEXT)
-@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_6 = gstoraster$(EXEEXT)
-@ENABLE_MUTOOL_TRUE@am__EXEEXT_7 = mupdftoraster$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__EXEEXT_8 = foomatic-rip$(EXEEXT)
-@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_9 = imagetopdf$(EXEEXT) \
+@ENABLE_URFTOPDF_TRUE@am__EXEEXT_2 = urftopdf$(EXEEXT)
+@ENABLE_POPPLER_TRUE@am__EXEEXT_3 = pdftoraster$(EXEEXT)
+@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_4 = gstoraster$(EXEEXT)
+@ENABLE_MUTOOL_TRUE@am__EXEEXT_5 = mupdftoraster$(EXEEXT)
+@ENABLE_FOOMATIC_TRUE@am__EXEEXT_6 = foomatic-rip$(EXEEXT)
+@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_7 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(pkgppdgen_PROGRAMS) $(sbin_PROGRAMS)
@@ -260,6 +243,7 @@ am_libcupsfilters_la_OBJECTS = libcupsfilters_la-attr.lo \
 	libcupsfilters_la-check.lo libcupsfilters_la-cmyk.lo \
 	libcupsfilters_la-colord.lo libcupsfilters_la-colormanager.lo \
 	libcupsfilters_la-dither.lo libcupsfilters_la-image.lo \
+	libcupsfilters_la-pdftoippprinter.lo \
 	libcupsfilters_la-image-bmp.lo \
 	libcupsfilters_la-image-colorspace.lo \
 	libcupsfilters_la-image-gif.lo libcupsfilters_la-image-jpeg.lo \
@@ -376,7 +360,7 @@ imagetoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_implicitclass_OBJECTS = implicitclass-implicitclass.$(OBJEXT)
 implicitclass_OBJECTS = $(am_implicitclass_OBJECTS)
-implicitclass_DEPENDENCIES = $(am__DEPENDENCIES_1)
+implicitclass_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 implicitclass_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(implicitclass_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -393,30 +377,6 @@ parallel_DEPENDENCIES = $(am__DEPENDENCIES_1)
 parallel_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(parallel_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_pdftoijs_OBJECTS = pdftoijs-pdftoijs.$(OBJEXT)
-pdftoijs_OBJECTS = $(am_pdftoijs_OBJECTS)
-pdftoijs_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
-pdftoijs_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftoijs_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_pdftoopvp_OBJECTS = pdftoopvp-OPRS.$(OBJEXT) \
-	pdftoopvp-OPVPSplashClip.$(OBJEXT) \
-	pdftoopvp-OPVPSplash.$(OBJEXT) \
-	pdftoopvp-OPVPSplashPath.$(OBJEXT) \
-	pdftoopvp-OPVPSplashState.$(OBJEXT) \
-	pdftoopvp-OPVPSplashXPath.$(OBJEXT) \
-	pdftoopvp-OPVPWrapper.$(OBJEXT) \
-	pdftoopvp-OPVPWrapper_0_2.$(OBJEXT) \
-	pdftoopvp-OPVPOutputDev.$(OBJEXT) \
-	pdftoopvp-pdftoopvp.$(OBJEXT)
-pdftoopvp_OBJECTS = $(am_pdftoopvp_OBJECTS)
-pdftoopvp_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-pdftoopvp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftoopvp_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_pdftopdf_OBJECTS = pdftopdf-pdftopdf.$(OBJEXT) \
 	pdftopdf-pdftopdf_jcl.$(OBJEXT) \
 	pdftopdf-pdftopdf_processor.$(OBJEXT) \
@@ -619,6 +579,7 @@ am__depfiles_remade = ./$(DEPDIR)/aglfn13.Plo \
 	./$(DEPDIR)/libcupsfilters_la-image.Plo \
 	./$(DEPDIR)/libcupsfilters_la-lut.Plo \
 	./$(DEPDIR)/libcupsfilters_la-pack.Plo \
+	./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo \
 	./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo \
 	./$(DEPDIR)/libcupsfilters_la-raster.Plo \
 	./$(DEPDIR)/libcupsfilters_la-rgb.Plo \
@@ -627,16 +588,6 @@ am__depfiles_remade = ./$(DEPDIR)/aglfn13.Plo \
 	./$(DEPDIR)/mupdftoraster-mupdftoraster.Po \
 	./$(DEPDIR)/parallel-ieee1284.Po \
 	./$(DEPDIR)/parallel-parallel.Po \
-	./$(DEPDIR)/pdftoijs-pdftoijs.Po ./$(DEPDIR)/pdftoopvp-OPRS.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPOutputDev.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPSplash.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPSplashClip.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPSplashPath.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPSplashState.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPWrapper.Po \
-	./$(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po \
-	./$(DEPDIR)/pdftoopvp-pdftoopvp.Po \
 	./$(DEPDIR)/pdftopdf-intervalset.Po \
 	./$(DEPDIR)/pdftopdf-nup.Po ./$(DEPDIR)/pdftopdf-pdftopdf.Po \
 	./$(DEPDIR)/pdftopdf-pdftopdf_jcl.Po \
@@ -721,8 +672,7 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
 	$(implicitclass_SOURCES) $(mupdftoraster_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(parallel_SOURCES) $(pdftopdf_SOURCES) $(pdftops_SOURCES) \
 	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
 	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
 	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
@@ -742,11 +692,10 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
 	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
 	$(mupdftoraster_SOURCES) $(parallel_SOURCES) \
-	$(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) $(pdftopdf_SOURCES) \
-	$(pdftops_SOURCES) $(EXTRA_pdftops_SOURCES) \
-	$(pdftoraster_SOURCES) $(rastertoescpx_SOURCES) \
-	$(rastertopclx_SOURCES) $(rastertopdf_SOURCES) \
-	$(rastertops_SOURCES) $(serial_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
+	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
+	$(rastertopdf_SOURCES) $(rastertops_SOURCES) $(serial_SOURCES) \
 	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
 	$(test1284_SOURCES) $(test_analyze_SOURCES) \
 	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
@@ -767,9 +716,8 @@ MANS = $(man_MANS)
 DATA = $(doc_DATA) $(nodist_pkgppdc_DATA) $(pkgbanner_DATA) \
 	$(pkgcharset_DATA) $(pkgconf_DATA) $(pkgcupsdata_DATA) \
 	$(pkgcupsserverroot_DATA) $(pkgdriver_DATA) \
-	$(pkgfiltersinclude_DATA) $(pkgfontconfig_DATA) \
-	$(pkgfontembedinclude_DATA) $(pkgmime_DATA) $(pkgppdc_DATA) \
-	$(ppd_DATA)
+	$(pkgfiltersinclude_DATA) $(pkgfontembedinclude_DATA) \
+	$(pkgmime_DATA) $(pkgppdc_DATA) $(ppd_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
 	$(LISP)config.h.in
 # Read a list of newline-separated strings from the standard input,
@@ -1073,8 +1021,6 @@ GLIB_CFLAGS = @GLIB_CFLAGS@
 GLIB_LIBS = @GLIB_LIBS@
 GREP = @GREP@
 HAVE_CXX11 = @HAVE_CXX11@
-IJS_CFLAGS = @IJS_CFLAGS@
-IJS_LIBS = @IJS_LIBS@
 INITDDIR = @INITDDIR@
 INITDIR = @INITDIR@
 INSTALL = @INSTALL@
@@ -1224,13 +1170,11 @@ EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	$(brlppdcfiles) $(genmimefiles) $(popplermimefiles) \
 	$(gsmimefiles) $(mutoolmimefiles) $(brlmimefiles) \
 	mime/cupsfilters.convs.in $(pkgfontembedinclude_DATA) \
-	fontembed/README filter/pdftoopvp/99pdftoopvp.conf \
-	$(genfilterscripts) $(gsfilterscripts) filter/test.sh \
-	utils/cups-browsed.in $(cupsbrowsedmanpages) \
+	fontembed/README $(genfilterscripts) $(gsfilterscripts) \
+	filter/test.sh utils/cups-browsed.in $(cupsbrowsedmanpages) \
 	$(driverlessmanpages) filter/foomatic-rip/foomatic-rip.1.in \
-	utils/org.cups.cupsd.Notifier.xml $(genppdfiles) \
-	$(ijsppdfiles) $(gsppdfiles) scripting/perl \
-	scripting/php/README scripting/php/phpcups.php
+	utils/org.cups.cupsd.Notifier.xml $(genppdfiles) $(gsppdfiles) \
+	scripting/perl scripting/php/README scripting/php/phpcups.php
 
 # ========
 # Backends
@@ -1262,8 +1206,12 @@ implicitclass_SOURCES = \
 	backend/backend-private.h \
 	backend/implicitclass.c
 
-implicitclass_LDADD = $(CUPS_LIBS)
-implicitclass_CFLAGS = $(CUPS_CFLAGS)
+implicitclass_LDADD = $(CUPS_LIBS)\
+	libcupsfilters.la
+
+implicitclass_CFLAGS = $(CUPS_CFLAGS)\
+	 -I$(srcdir)/cupsfilters/
+
 test1284_SOURCES = \
 	backend/backend-private.h \
 	backend/ieee1284.c \
@@ -1326,7 +1274,8 @@ pkgfiltersinclude_DATA = \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
 	cupsfilters/raster.h \
-	cupsfilters/ppdgenerator.h
+	cupsfilters/ppdgenerator.h \
+	cupsfilters/pdftoippprinter.h
 
 lib_LTLIBRARIES = libcupsfilters.la libfontembed.la
 #	testcmyk # fails as it opens some image.ppm which is nowerhe to be found.
@@ -1349,6 +1298,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/colormanager.c \
 	cupsfilters/dither.c \
 	cupsfilters/image.c \
+	cupsfilters/pdftoippprinter.c \
 	cupsfilters/image-bmp.c \
 	cupsfilters/image-colorspace.c \
 	cupsfilters/image-gif.c \
@@ -1575,51 +1525,6 @@ test_pdf_LDADD = libfontembed.la
 test_ps_SOURCES = fontembed/test_ps.c
 test_ps_LDADD = libfontembed.la
 pkgfilterdir = $(CUPS_SERVERBIN)/filter
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@pkgfontconfigdir = $(sysconfdir)/$(FONTDIR)
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@pkgfontconfig_DATA = filter/pdftoopvp/99pdftoopvp.conf
-pdftoopvp_SOURCES = \
-	filter/pdftoopvp/oprs/OPRS.cxx \
-	filter/pdftoopvp/oprs/OPRS.h \
-	filter/pdftoopvp/oprs/OPVPSplashClip.cxx \
-	filter/pdftoopvp/oprs/OPVPSplashClip.h \
-	filter/pdftoopvp/oprs/OPVPSplash.cxx \
-	filter/pdftoopvp/oprs/OPVPSplash.h \
-	filter/pdftoopvp/oprs/OPVPSplashPath.cxx \
-	filter/pdftoopvp/oprs/OPVPSplashPath.h \
-	filter/pdftoopvp/oprs/OPVPSplashState.cxx \
-	filter/pdftoopvp/oprs/OPVPSplashState.h \
-	filter/pdftoopvp/oprs/OPVPSplashXPath.cxx \
-	filter/pdftoopvp/oprs/OPVPSplashXPath.h \
-	filter/pdftoopvp/oprs/OPVPWrapper.cxx \
-	filter/pdftoopvp/oprs/OPVPWrapper.h \
-	filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx \
-	filter/pdftoopvp/oprs/OPVPWrapper_0_2.h \
-	filter/pdftoopvp/OPVPError.h \
-	filter/pdftoopvp/opvp/opvp_common.h \
-	filter/pdftoopvp/opvp/opvp.h \
-	filter/pdftoopvp/opvp/opvp_0_2_0.h \
-	filter/pdftoopvp/OPVPOutputDev.cxx \
-	filter/pdftoopvp/OPVPOutputDev.h \
-	filter/pdftoopvp/pdftoopvp.cxx
-
-pdftoopvp_CFLAGS = \
-	$(CUPS_CFLAGS) \
-	$(FREETYPE_CFLAGS) \
-	$(FONTCONFIG_CFLAGS) \
-	$(LIBPNG_CFLAGS) \
-	$(POPPLER_CFLAGS) \
-	-I$(srcdir)/filter/pdftoopvp/oprs \
-	-I$(srcdir)/filter/pdftoopvp/opvp
-
-pdftoopvp_CXXFLAGS = $(pdftoopvp_CFLAGS)
-pdftoopvp_LDADD = \
-	$(CUPS_LIBS) \
-	$(FREETYPE_LIBS) \
-	$(FONTCONFIG_LIBS) \
-	$(LIBPNG_LIBS) \
-	$(POPPLER_LIBS) \
-	$(DLOPEN_LIBS)
-
 pdftopdf_SOURCES = \
 	filter/pdftopdf/pdftopdf.cc \
 	filter/pdftopdf/pdftopdf_jcl.cc \
@@ -1661,7 +1566,7 @@ genfilterscripts = \
 	filter/texttops  \
 	filter/rastertopclm
 
-pkgfilter_SCRIPTS = $(genfilterscripts) $(am__append_11)
+pkgfilter_SCRIPTS = $(genfilterscripts) $(am__append_10)
 gsfilterscripts = \
 	filter/gstopxl \
 	filter/gstopdf
@@ -1753,6 +1658,7 @@ foomatic_rip_SOURCES = \
 
 foomatic_rip_CFLAGS = \
 	-DCONFIG_PATH='"$(sysconfdir)/foomatic"' \
+	$(CUPS_CFLAGS) \
 	-I$(srcdir)/cupsfilters/
 
 foomatic_rip_LDADD = \
@@ -1858,21 +1764,6 @@ rastertops_LDADD = \
 	-lz \
 	libcupsfilters.la
 
-pdftoijs_SOURCES = \
-	filter/pdftoijs.cxx \
-	filter/PDFError.h
-
-pdftoijs_CFLAGS = \
-	$(CUPS_CFLAGS) \
-	$(IJS_CFLAGS) \
-	$(POPPLER_CFLAGS)
-
-pdftoijs_CXXFLAGS = $(pdftoijs_CFLAGS)
-pdftoijs_LDADD = \
-	$(CUPS_LIBS) \
-	$(IJS_LIBS) \
-	$(POPPLER_LIBS)
-
 sys5ippprinter_SOURCES = \
 	filter/common.c \
 	filter/common.h \
@@ -1899,8 +1790,7 @@ pdftops_CFLAGS = $(CUPS_CFLAGS)
 pdftops_LDADD = $(STRCASESTR) $(CUPS_LIBS)
 pdftops_DEPENDENCIES = $(STRCASESTR)
 pdftoraster_SOURCES = \
-	filter/pdftoraster.cxx \
-	filter/PDFError.h
+	filter/pdftoraster.cxx
 
 pdftoraster_CFLAGS = \
 	$(CUPS_CFLAGS) \
@@ -2032,7 +1922,7 @@ cupsbrowsedmanpages = \
 	utils/cups-browsed.8 \
 	utils/cups-browsed.conf.5
 
-man_MANS = $(cupsbrowsedmanpages) $(am__append_19) $(am__append_20)
+man_MANS = $(cupsbrowsedmanpages) $(am__append_17) $(am__append_18)
 driverlessmanpages = \
 	utils/driverless.1
 
@@ -2052,10 +1942,7 @@ genppdfiles = \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/Ricoh-PDF_Printer-PDF.ppd
 
-ppd_DATA = $(genppdfiles) $(am__append_21) $(am__append_22)
-ijsppdfiles = \
-	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
-
+ppd_DATA = $(genppdfiles) $(am__append_19)
 gsppdfiles = \
 	ppd/pxlcolor.ppd \
 	ppd/pxlmono.ppd
@@ -2558,14 +2445,6 @@ parallel$(EXEEXT): $(parallel_OBJECTS) $(parallel_DEPENDENCIES) $(EXTRA_parallel
 	@rm -f parallel$(EXEEXT)
 	$(AM_V_CCLD)$(parallel_LINK) $(parallel_OBJECTS) $(parallel_LDADD) $(LIBS)
 
-pdftoijs$(EXEEXT): $(pdftoijs_OBJECTS) $(pdftoijs_DEPENDENCIES) $(EXTRA_pdftoijs_DEPENDENCIES) 
-	@rm -f pdftoijs$(EXEEXT)
-	$(AM_V_CXXLD)$(pdftoijs_LINK) $(pdftoijs_OBJECTS) $(pdftoijs_LDADD) $(LIBS)
-
-pdftoopvp$(EXEEXT): $(pdftoopvp_OBJECTS) $(pdftoopvp_DEPENDENCIES) $(EXTRA_pdftoopvp_DEPENDENCIES) 
-	@rm -f pdftoopvp$(EXEEXT)
-	$(AM_V_CXXLD)$(pdftoopvp_LINK) $(pdftoopvp_OBJECTS) $(pdftoopvp_LDADD) $(LIBS)
-
 pdftopdf$(EXEEXT): $(pdftopdf_OBJECTS) $(pdftopdf_DEPENDENCIES) $(EXTRA_pdftopdf_DEPENDENCIES) 
 	@rm -f pdftopdf$(EXEEXT)
 	$(AM_V_CXXLD)$(pdftopdf_LINK) $(pdftopdf_OBJECTS) $(pdftopdf_LDADD) $(LIBS)
@@ -2858,6 +2737,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-image.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-lut.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pack.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-raster.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcupsfilters_la-rgb.Plo@am__quote@ # am--include-marker
@@ -2867,17 +2747,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mupdftoraster-mupdftoraster.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-ieee1284.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parallel-parallel.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoijs-pdftoijs.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPRS.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPOutputDev.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplash.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplashClip.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplashPath.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplashState.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPWrapper.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftoopvp-pdftoopvp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-intervalset.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-nup.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdftopdf-pdftopdf.Po@am__quote@ # am--include-marker
@@ -3000,6 +2869,13 @@ libcupsfilters_la-image.lo: cupsfilters/image.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/image.c' object='libcupsfilters_la-image.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-image.lo `test -f 'cupsfilters/image.c' || echo '$(srcdir)/'`cupsfilters/image.c
+
+libcupsfilters_la-pdftoippprinter.lo: cupsfilters/pdftoippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-pdftoippprinter.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Tpo -c -o libcupsfilters_la-pdftoippprinter.lo `test -f 'cupsfilters/pdftoippprinter.c' || echo '$(srcdir)/'`cupsfilters/pdftoippprinter.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Tpo $(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/pdftoippprinter.c' object='libcupsfilters_la-pdftoippprinter.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o libcupsfilters_la-pdftoippprinter.lo `test -f 'cupsfilters/pdftoippprinter.c' || echo '$(srcdir)/'`cupsfilters/pdftoippprinter.c
 
 libcupsfilters_la-image-bmp.lo: cupsfilters/image-bmp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT libcupsfilters_la-image-bmp.lo -MD -MP -MF $(DEPDIR)/libcupsfilters_la-image-bmp.Tpo -c -o libcupsfilters_la-image-bmp.lo `test -f 'cupsfilters/image-bmp.c' || echo '$(srcdir)/'`cupsfilters/image-bmp.c
@@ -4051,160 +3927,6 @@ bannertopdf-pdf.obj: filter/pdf.cxx
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CXXFLAGS) $(CXXFLAGS) -c -o bannertopdf-pdf.obj `if test -f 'filter/pdf.cxx'; then $(CYGPATH_W) 'filter/pdf.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdf.cxx'; fi`
 
-pdftoijs-pdftoijs.o: filter/pdftoijs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoijs_CXXFLAGS) $(CXXFLAGS) -MT pdftoijs-pdftoijs.o -MD -MP -MF $(DEPDIR)/pdftoijs-pdftoijs.Tpo -c -o pdftoijs-pdftoijs.o `test -f 'filter/pdftoijs.cxx' || echo '$(srcdir)/'`filter/pdftoijs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoijs-pdftoijs.Tpo $(DEPDIR)/pdftoijs-pdftoijs.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoijs.cxx' object='pdftoijs-pdftoijs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoijs_CXXFLAGS) $(CXXFLAGS) -c -o pdftoijs-pdftoijs.o `test -f 'filter/pdftoijs.cxx' || echo '$(srcdir)/'`filter/pdftoijs.cxx
-
-pdftoijs-pdftoijs.obj: filter/pdftoijs.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoijs_CXXFLAGS) $(CXXFLAGS) -MT pdftoijs-pdftoijs.obj -MD -MP -MF $(DEPDIR)/pdftoijs-pdftoijs.Tpo -c -o pdftoijs-pdftoijs.obj `if test -f 'filter/pdftoijs.cxx'; then $(CYGPATH_W) 'filter/pdftoijs.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoijs.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoijs-pdftoijs.Tpo $(DEPDIR)/pdftoijs-pdftoijs.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoijs.cxx' object='pdftoijs-pdftoijs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoijs_CXXFLAGS) $(CXXFLAGS) -c -o pdftoijs-pdftoijs.obj `if test -f 'filter/pdftoijs.cxx'; then $(CYGPATH_W) 'filter/pdftoijs.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoijs.cxx'; fi`
-
-pdftoopvp-OPRS.o: filter/pdftoopvp/oprs/OPRS.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPRS.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPRS.Tpo -c -o pdftoopvp-OPRS.o `test -f 'filter/pdftoopvp/oprs/OPRS.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPRS.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPRS.Tpo $(DEPDIR)/pdftoopvp-OPRS.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPRS.cxx' object='pdftoopvp-OPRS.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPRS.o `test -f 'filter/pdftoopvp/oprs/OPRS.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPRS.cxx
-
-pdftoopvp-OPRS.obj: filter/pdftoopvp/oprs/OPRS.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPRS.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPRS.Tpo -c -o pdftoopvp-OPRS.obj `if test -f 'filter/pdftoopvp/oprs/OPRS.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPRS.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPRS.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPRS.Tpo $(DEPDIR)/pdftoopvp-OPRS.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPRS.cxx' object='pdftoopvp-OPRS.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPRS.obj `if test -f 'filter/pdftoopvp/oprs/OPRS.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPRS.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPRS.cxx'; fi`
-
-pdftoopvp-OPVPSplashClip.o: filter/pdftoopvp/oprs/OPVPSplashClip.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashClip.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashClip.Tpo -c -o pdftoopvp-OPVPSplashClip.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashClip.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashClip.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashClip.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashClip.cxx' object='pdftoopvp-OPVPSplashClip.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashClip.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashClip.cxx
-
-pdftoopvp-OPVPSplashClip.obj: filter/pdftoopvp/oprs/OPVPSplashClip.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashClip.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashClip.Tpo -c -o pdftoopvp-OPVPSplashClip.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashClip.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashClip.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashClip.cxx' object='pdftoopvp-OPVPSplashClip.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashClip.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashClip.cxx'; fi`
-
-pdftoopvp-OPVPSplash.o: filter/pdftoopvp/oprs/OPVPSplash.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplash.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplash.Tpo -c -o pdftoopvp-OPVPSplash.o `test -f 'filter/pdftoopvp/oprs/OPVPSplash.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplash.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplash.Tpo $(DEPDIR)/pdftoopvp-OPVPSplash.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplash.cxx' object='pdftoopvp-OPVPSplash.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplash.o `test -f 'filter/pdftoopvp/oprs/OPVPSplash.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplash.cxx
-
-pdftoopvp-OPVPSplash.obj: filter/pdftoopvp/oprs/OPVPSplash.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplash.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplash.Tpo -c -o pdftoopvp-OPVPSplash.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplash.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplash.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplash.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplash.Tpo $(DEPDIR)/pdftoopvp-OPVPSplash.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplash.cxx' object='pdftoopvp-OPVPSplash.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplash.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplash.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplash.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplash.cxx'; fi`
-
-pdftoopvp-OPVPSplashPath.o: filter/pdftoopvp/oprs/OPVPSplashPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashPath.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashPath.Tpo -c -o pdftoopvp-OPVPSplashPath.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashPath.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashPath.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashPath.cxx' object='pdftoopvp-OPVPSplashPath.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashPath.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashPath.cxx
-
-pdftoopvp-OPVPSplashPath.obj: filter/pdftoopvp/oprs/OPVPSplashPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashPath.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashPath.Tpo -c -o pdftoopvp-OPVPSplashPath.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashPath.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashPath.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashPath.cxx' object='pdftoopvp-OPVPSplashPath.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashPath.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashPath.cxx'; fi`
-
-pdftoopvp-OPVPSplashState.o: filter/pdftoopvp/oprs/OPVPSplashState.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashState.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashState.Tpo -c -o pdftoopvp-OPVPSplashState.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashState.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashState.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashState.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashState.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashState.cxx' object='pdftoopvp-OPVPSplashState.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashState.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashState.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashState.cxx
-
-pdftoopvp-OPVPSplashState.obj: filter/pdftoopvp/oprs/OPVPSplashState.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashState.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashState.Tpo -c -o pdftoopvp-OPVPSplashState.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashState.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashState.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashState.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashState.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashState.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashState.cxx' object='pdftoopvp-OPVPSplashState.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashState.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashState.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashState.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashState.cxx'; fi`
-
-pdftoopvp-OPVPSplashXPath.o: filter/pdftoopvp/oprs/OPVPSplashXPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashXPath.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Tpo -c -o pdftoopvp-OPVPSplashXPath.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashXPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashXPath.cxx' object='pdftoopvp-OPVPSplashXPath.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashXPath.o `test -f 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPSplashXPath.cxx
-
-pdftoopvp-OPVPSplashXPath.obj: filter/pdftoopvp/oprs/OPVPSplashXPath.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPSplashXPath.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Tpo -c -o pdftoopvp-OPVPSplashXPath.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Tpo $(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPSplashXPath.cxx' object='pdftoopvp-OPVPSplashXPath.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPSplashXPath.obj `if test -f 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPSplashXPath.cxx'; fi`
-
-pdftoopvp-OPVPWrapper.o: filter/pdftoopvp/oprs/OPVPWrapper.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPWrapper.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPWrapper.Tpo -c -o pdftoopvp-OPVPWrapper.o `test -f 'filter/pdftoopvp/oprs/OPVPWrapper.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPWrapper.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPWrapper.Tpo $(DEPDIR)/pdftoopvp-OPVPWrapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPWrapper.cxx' object='pdftoopvp-OPVPWrapper.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPWrapper.o `test -f 'filter/pdftoopvp/oprs/OPVPWrapper.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPWrapper.cxx
-
-pdftoopvp-OPVPWrapper.obj: filter/pdftoopvp/oprs/OPVPWrapper.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPWrapper.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPWrapper.Tpo -c -o pdftoopvp-OPVPWrapper.obj `if test -f 'filter/pdftoopvp/oprs/OPVPWrapper.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPWrapper.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPWrapper.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPWrapper.Tpo $(DEPDIR)/pdftoopvp-OPVPWrapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPWrapper.cxx' object='pdftoopvp-OPVPWrapper.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPWrapper.obj `if test -f 'filter/pdftoopvp/oprs/OPVPWrapper.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPWrapper.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPWrapper.cxx'; fi`
-
-pdftoopvp-OPVPWrapper_0_2.o: filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPWrapper_0_2.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Tpo -c -o pdftoopvp-OPVPWrapper_0_2.o `test -f 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Tpo $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx' object='pdftoopvp-OPVPWrapper_0_2.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPWrapper_0_2.o `test -f 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx
-
-pdftoopvp-OPVPWrapper_0_2.obj: filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPWrapper_0_2.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Tpo -c -o pdftoopvp-OPVPWrapper_0_2.obj `if test -f 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Tpo $(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx' object='pdftoopvp-OPVPWrapper_0_2.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPWrapper_0_2.obj `if test -f 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/oprs/OPVPWrapper_0_2.cxx'; fi`
-
-pdftoopvp-OPVPOutputDev.o: filter/pdftoopvp/OPVPOutputDev.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPOutputDev.o -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPOutputDev.Tpo -c -o pdftoopvp-OPVPOutputDev.o `test -f 'filter/pdftoopvp/OPVPOutputDev.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/OPVPOutputDev.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPOutputDev.Tpo $(DEPDIR)/pdftoopvp-OPVPOutputDev.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/OPVPOutputDev.cxx' object='pdftoopvp-OPVPOutputDev.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPOutputDev.o `test -f 'filter/pdftoopvp/OPVPOutputDev.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/OPVPOutputDev.cxx
-
-pdftoopvp-OPVPOutputDev.obj: filter/pdftoopvp/OPVPOutputDev.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-OPVPOutputDev.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-OPVPOutputDev.Tpo -c -o pdftoopvp-OPVPOutputDev.obj `if test -f 'filter/pdftoopvp/OPVPOutputDev.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/OPVPOutputDev.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/OPVPOutputDev.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-OPVPOutputDev.Tpo $(DEPDIR)/pdftoopvp-OPVPOutputDev.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/OPVPOutputDev.cxx' object='pdftoopvp-OPVPOutputDev.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-OPVPOutputDev.obj `if test -f 'filter/pdftoopvp/OPVPOutputDev.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/OPVPOutputDev.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/OPVPOutputDev.cxx'; fi`
-
-pdftoopvp-pdftoopvp.o: filter/pdftoopvp/pdftoopvp.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-pdftoopvp.o -MD -MP -MF $(DEPDIR)/pdftoopvp-pdftoopvp.Tpo -c -o pdftoopvp-pdftoopvp.o `test -f 'filter/pdftoopvp/pdftoopvp.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/pdftoopvp.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-pdftoopvp.Tpo $(DEPDIR)/pdftoopvp-pdftoopvp.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/pdftoopvp.cxx' object='pdftoopvp-pdftoopvp.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-pdftoopvp.o `test -f 'filter/pdftoopvp/pdftoopvp.cxx' || echo '$(srcdir)/'`filter/pdftoopvp/pdftoopvp.cxx
-
-pdftoopvp-pdftoopvp.obj: filter/pdftoopvp/pdftoopvp.cxx
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -MT pdftoopvp-pdftoopvp.obj -MD -MP -MF $(DEPDIR)/pdftoopvp-pdftoopvp.Tpo -c -o pdftoopvp-pdftoopvp.obj `if test -f 'filter/pdftoopvp/pdftoopvp.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/pdftoopvp.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/pdftoopvp.cxx'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftoopvp-pdftoopvp.Tpo $(DEPDIR)/pdftoopvp-pdftoopvp.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='filter/pdftoopvp/pdftoopvp.cxx' object='pdftoopvp-pdftoopvp.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftoopvp_CXXFLAGS) $(CXXFLAGS) -c -o pdftoopvp-pdftoopvp.obj `if test -f 'filter/pdftoopvp/pdftoopvp.cxx'; then $(CYGPATH_W) 'filter/pdftoopvp/pdftoopvp.cxx'; else $(CYGPATH_W) '$(srcdir)/filter/pdftoopvp/pdftoopvp.cxx'; fi`
-
 pdftopdf-pdftopdf.o: filter/pdftopdf/pdftopdf.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pdftopdf_CXXFLAGS) $(CXXFLAGS) -MT pdftopdf-pdftopdf.o -MD -MP -MF $(DEPDIR)/pdftopdf-pdftopdf.Tpo -c -o pdftopdf-pdftopdf.o `test -f 'filter/pdftopdf/pdftopdf.cc' || echo '$(srcdir)/'`filter/pdftopdf/pdftopdf.cc
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pdftopdf-pdftopdf.Tpo $(DEPDIR)/pdftopdf-pdftopdf.Po
@@ -4769,27 +4491,6 @@ uninstall-pkgfiltersincludeDATA:
 	@list='$(pkgfiltersinclude_DATA)'; test -n "$(pkgfiltersincludedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(pkgfiltersincludedir)'; $(am__uninstall_files_from_dir)
-install-pkgfontconfigDATA: $(pkgfontconfig_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(pkgfontconfig_DATA)'; test -n "$(pkgfontconfigdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgfontconfigdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(pkgfontconfigdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgfontconfigdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgfontconfigdir)" || exit $$?; \
-	done
-
-uninstall-pkgfontconfigDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(pkgfontconfig_DATA)'; test -n "$(pkgfontconfigdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(pkgfontconfigdir)'; $(am__uninstall_files_from_dir)
 install-pkgfontembedincludeDATA: $(pkgfontembedinclude_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgfontembedinclude_DATA)'; test -n "$(pkgfontembedincludedir)" || list=; \
@@ -5306,7 +5007,7 @@ all-am: Makefile $(PROGRAMS) $(LTLIBRARIES) $(SCRIPTS) $(MANS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -5409,6 +5110,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-image.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-pack.Plo
+	-rm -f ./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-raster.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-rgb.Plo
@@ -5418,17 +5120,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/mupdftoraster-mupdftoraster.Po
 	-rm -f ./$(DEPDIR)/parallel-ieee1284.Po
 	-rm -f ./$(DEPDIR)/parallel-parallel.Po
-	-rm -f ./$(DEPDIR)/pdftoijs-pdftoijs.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPRS.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPOutputDev.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplash.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashClip.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashPath.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashState.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPWrapper.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-pdftoopvp.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-intervalset.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-nup.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-pdftopdf.Po
@@ -5499,9 +5190,9 @@ install-data-am: install-docDATA install-initrcSCRIPTS install-man \
 	install-pkgconfDATA install-pkgcupsdataDATA \
 	install-pkgcupsserverrootDATA install-pkgdriverDATA \
 	install-pkgfilterPROGRAMS install-pkgfilterSCRIPTS \
-	install-pkgfiltersincludeDATA install-pkgfontconfigDATA \
-	install-pkgfontembedincludeDATA install-pkgmimeDATA \
-	install-pkgppdcDATA install-pkgppdgenPROGRAMS install-ppdDATA
+	install-pkgfiltersincludeDATA install-pkgfontembedincludeDATA \
+	install-pkgmimeDATA install-pkgppdcDATA \
+	install-pkgppdgenPROGRAMS install-ppdDATA
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
@@ -5589,6 +5280,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-image.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-pack.Plo
+	-rm -f ./$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-ppdgenerator.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-raster.Plo
 	-rm -f ./$(DEPDIR)/libcupsfilters_la-rgb.Plo
@@ -5598,17 +5290,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/mupdftoraster-mupdftoraster.Po
 	-rm -f ./$(DEPDIR)/parallel-ieee1284.Po
 	-rm -f ./$(DEPDIR)/parallel-parallel.Po
-	-rm -f ./$(DEPDIR)/pdftoijs-pdftoijs.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPRS.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPOutputDev.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplash.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashClip.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashPath.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashState.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPSplashXPath.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPWrapper.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-OPVPWrapper_0_2.Po
-	-rm -f ./$(DEPDIR)/pdftoopvp-pdftoopvp.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-intervalset.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-nup.Po
 	-rm -f ./$(DEPDIR)/pdftopdf-pdftopdf.Po
@@ -5680,7 +5361,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
 	uninstall-pkgcupsserverrootDATA uninstall-pkgdriverDATA \
 	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
-	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
+	uninstall-pkgfiltersincludeDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
 	uninstall-pkgppdcDATA uninstall-pkgppdgenPROGRAMS \
 	uninstall-ppdDATA uninstall-sbinPROGRAMS
@@ -5717,11 +5398,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	install-pkgcupsdataDATA install-pkgcupsserverrootDATA \
 	install-pkgdriverDATA install-pkgfilterPROGRAMS \
 	install-pkgfilterSCRIPTS install-pkgfiltersincludeDATA \
-	install-pkgfontconfigDATA install-pkgfontembedincludeDATA \
-	install-pkgmimeDATA install-pkgppdcDATA \
-	install-pkgppdgenPROGRAMS install-ppdDATA install-ps \
-	install-ps-am install-sbinPROGRAMS install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-pkgfontembedincludeDATA install-pkgmimeDATA \
+	install-pkgppdcDATA install-pkgppdgenPROGRAMS install-ppdDATA \
+	install-ps install-ps-am install-sbinPROGRAMS install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am \
@@ -5735,7 +5415,7 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
 	uninstall-pkgcupsserverrootDATA uninstall-pkgdriverDATA \
 	uninstall-pkgfilterPROGRAMS uninstall-pkgfilterSCRIPTS \
-	uninstall-pkgfiltersincludeDATA uninstall-pkgfontconfigDATA \
+	uninstall-pkgfiltersincludeDATA \
 	uninstall-pkgfontembedincludeDATA uninstall-pkgmimeDATA \
 	uninstall-pkgppdcDATA uninstall-pkgppdgenPROGRAMS \
 	uninstall-ppdDATA uninstall-sbinPROGRAMS

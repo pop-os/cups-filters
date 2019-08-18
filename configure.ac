@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[21])
-m4_define([cups_filters_version_micro],[6])
+m4_define([cups_filters_version_minor],[25])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -88,7 +88,7 @@ AS_IF([test "x$with_cups_config" != "xsystem"], [
 		AC_MSG_ERROR([Required cups-config is missing. Please install CUPS developer packages.])
 	])
 ])
-CUPS_CFLAGS=`$CUPSCONFIG --cflags`
+CUPS_CFLAGS=`$CUPSCONFIG --cflags`' -D_PPD_DEPRECATED=""'
 CUPS_LIBS=`$CUPSCONFIG --image --libs`
 CUPS_VERSION=`$CUPSCONFIG --version`
 AC_SUBST(CUPS_CFLAGS)
@@ -118,10 +118,11 @@ AC_ARG_ENABLE([driverless], [AS_HELP_STRING([--enable-driverless], [enable PPD g
         [enable_driverless="$enableval"],
         [enable_driverless=yes]
 )
-AX_COMPARE_VERSION([$CUPS_VERSION],[ge],[1.6], [
-	AM_CONDITIONAL([ENABLE_DRIVERLESS],
-	[test "x$enable_driverless" != "xno"])
+AX_COMPARE_VERSION([$CUPS_VERSION],[lt],[1.6], [
+	enable_driverless=no
 ])
+AM_CONDITIONAL([ENABLE_DRIVERLESS],
+[test "x$enable_driverless" != "xno"])
 
 APPLE_RASTER_FILTER=rastertopdf
 AX_COMPARE_VERSION([$CUPS_VERSION],[lt],[2.2.2], [
@@ -459,10 +460,9 @@ AS_IF([test x"$lcms2" = "xno"], [
 ])
 PKG_CHECK_MODULES([FREETYPE], [freetype2], [AC_DEFINE([HAVE_FREETYPE_H], [1], [Have FreeType2 include files])])
 PKG_CHECK_MODULES([FONTCONFIG], [fontconfig >= 2.0.0])
-PKG_CHECK_MODULES([IJS], [ijs], [have_ijs=yes], [have_ijs=no])
 PKG_CHECK_MODULES([ZLIB], [zlib])
 AC_DEFINE([HAVE_LIBZ], [], [Define that we use zlib])
-PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 8.1.0])
+PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 8.3.0])
 
 # ===============================
 # Check for PCLm printing support
@@ -471,13 +471,6 @@ AC_ARG_ENABLE([pclm], [AS_HELP_STRING([--enable-pclm], [enable PCLm printing.])]
 	[enable_pclm="$enableval"],
 	[enable_pclm=yes]
 )
-if test "x$enable_pclm" != "xno"; then
-	# Do we have QPDF 7.0.0 or newer?
-	AC_CHECK_HEADERS([qpdf/Pl_RunLength.hh],
-		[],
-		[enable_pclm=no]
-	)
-fi
 if test "x$enable_pclm" != "xno"; then
 	AC_DEFINE([QPDF_HAVE_PCLM], [1], [QPDF has PCLm support?])
 	QPDF_NO_PCLM=
@@ -495,7 +488,7 @@ AC_ARG_ENABLE(poppler, AS_HELP_STRING([--enable-poppler],[enable Poppler-based f
 	      enable_poppler=$enableval,enable_poppler=yes)
 AM_CONDITIONAL(ENABLE_POPPLER, test x$enable_poppler = xyes)
 if test x$enable_poppler = xyes; then
-	PKG_CHECK_MODULES([POPPLER], [poppler >= 0.18])
+	PKG_CHECK_MODULES([POPPLER], [poppler-cpp >= 0.19])
 	AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
 fi
 
@@ -549,21 +542,6 @@ AC_ARG_ENABLE([ghostscript],
 	[enable_ghostscript="$enableval"],
 	[enable_ghostscript=yes]
 )
-AC_ARG_ENABLE([ijs],
-	[AS_HELP_STRING([--enable-ijs], [Enable filters using IJS.])],
-	[enable_ijs="$enableval"],
-	[enable_ijs=no]
-)
-AS_IF([test "x$enable_ijs" = "xyes" -a "x$have_ijs" != "xyes"], [
-       AC_MSG_ERROR([IJS not found, but requested.])
-])
-AM_CONDITIONAL(ENABLE_IJS, test "x$enable_ijs" = "xyes")
-AC_ARG_ENABLE([opvp],
-	[AS_HELP_STRING([--enable-opvp], [Enable filters using OpenPrinting Vector (OPVP).])],
-	[enable_opvp="$enableval"],
-	[enable_opvp=no]
-)
-AM_CONDITIONAL(ENABLE_OPVP, test "x$enable_opvp" = "xyes")
 AC_ARG_WITH([pdftops],
 	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread,mupdf,hybrid).])],
 	[with_pdftops="$withval"],
@@ -910,7 +888,5 @@ Build configuration:
 	apple-raster:    ${APPLE_RASTER_FILTER}
 	pclm:            ${enable_pclm}
 	driverless auto-setup: ${enable_auto_setup_driverless}
-	ijs:             ${enable_ijs}
-	opvp:            ${enable_opvp}
 ==============================================================================
 ])
