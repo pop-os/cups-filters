@@ -1,5 +1,30 @@
-NEWS - OpenPrinting CUPS Filters v1.25.3 - 2019-08-21
+NEWS - OpenPrinting CUPS Filters v1.25.4 - 2019-08-30
 -----------------------------------------------------
+
+CHANGES IN V1.25.4
+
+	- imagetoraster: Do not call imagetops and pstoraster for
+	  classifications and page labels as these filters are not
+	  included any more with cups-filters.  Classifications and
+	  page labels are currently not supported for direct image
+	  printing, only for PDF or PostScript input (which goes
+	  through pdftopdf).
+	- imagetoraster, imagetopdf: Fixed auto-rotation of images to
+	  fit output page best (Issue #145).
+	- pdftoraster: If the PPD contains several equally-sized page
+	  size entries which match the size of the input page and one
+	  is the size selected by the user via the "PageSize" or
+	  "media" option (or the default selection in the PPD) then
+	  prefer this one instead of simply the first matching one.
+	- pdftoraster: If the input page size cannot be matched with
+	  one of the PPD's page sizes it is considered a custom size,
+	  fill the page size name field of the CUPS Raster header with
+	  "Custom.XXXxYYY" then.
+	- pdftoraster: Match the input page size with a page size in
+	  the PPD only if the differences of the dimensions are less
+	  than 1%, also match the input page size against the
+	  imageable area of the PPD's page sizes if no match with the
+	  full page size is found (Issue #138).
 
 CHANGES IN V1.25.3
 
