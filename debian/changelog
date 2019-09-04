@@ -1,3 +1,11 @@
+cups-filters (1.25.4-2) unstable; urgency=medium
+
+  * Backport upstream patch:
+    - cups-browsed: Do not cause fatal error on left over queues of a previous
+      session (Closes: #939316)
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 04 Sep 2019 08:24:36 +0200
+
 cups-filters (1.25.4-1) unstable; urgency=medium
 
   * New upstream version 1.25.4
