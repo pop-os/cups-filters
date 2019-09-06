@@ -58,11 +58,8 @@ endif
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
 
 get-orig-source:
-	set -e;\
-	quilt pop -af || true ;\
-	rm -Rf .pc ;\
+	set -ex;\
 	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
 	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
 	ucommit=`git rev-parse --verify upstream/latest`;\
-	git dpm record-new-upstream --rebase-patched --allow-changes-in-debian-branch ../cups-filters_$$utag.orig.tar.xz $$ucommit ;\
-	git dpm update-patches -m "Merge upstream $$utag version and refresh git-dpm patches"
+	git debrebase new-upstream $$utag
