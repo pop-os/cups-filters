@@ -1,3 +1,9 @@
+cups-filters (1.25.5-1) UNRELEASED; urgency=medium
+
+  * Update to new upstream version 1.25.5.
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 06 Sep 2019 17:53:42 +0200
+
 cups-filters (1.25.4-2) unstable; urgency=medium
 
   * Backport upstream patch:
