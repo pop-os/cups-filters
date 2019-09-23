@@ -1,3 +1,11 @@
+cups-filters (1.25.6-0ubuntu1) eoan; urgency=medium
+
+  * New upstream bug fix release
+    - Fix printing into clusters (Upstream issue #152).
+    - Other minor bug fixes.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 23 Sep 2019 18:23:11 +0200
+
 cups-filters (1.25.5-1) unstable; urgency=medium
 
   * New upstream version 1.25.5
