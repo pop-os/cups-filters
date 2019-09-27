@@ -1,5 +1,18 @@
-NEWS - OpenPrinting CUPS Filters v1.25.5 - 2019-09-06
+NEWS - OpenPrinting CUPS Filters v1.25.6 - 2019-09-23
 -----------------------------------------------------
+
+CHANGES IN V1.25.6
+
+	- implicitclass: Make sure the destination printer gets always
+	  set and do not pass on the cups-browsed-dest-printer when
+	  sending the job to the final destination (Issue #152, Pull
+	  request #159).
+	- Build system: Support old ln versions without the -r option
+	  (Pull request #154, #157).
+	- texttotext: Link with libiconv if needed (Pull request
+	  #155, #158).
+	- foomatic-rip: Fix argument representation for raw queue
+	  debug mesaage (Pull request #153).
 
 CHANGES IN V1.25.5
 
