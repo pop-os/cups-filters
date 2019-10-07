@@ -1,5 +1,23 @@
-NEWS - OpenPrinting CUPS Filters v1.25.6 - 2019-09-23
+NEWS - OpenPrinting CUPS Filters v1.25.7 - 2019-10-07
 -----------------------------------------------------
+
+CHANGES IN V1.25.7
+
+	- implicitclass, libcupsfilters: Fixes to solve an assertion
+	  error and printing to an Apple Raster printer (Issue #162,
+	  Ubuntu bug #1845286, Ubuntu bug #1845548).
+	- cups-browsed: Do not try to resolve the network interface
+	  name on Avahi messages which are not interface-related (like
+	  "All for now"or "Cache exhausted", Issue #163).
+	- Build system: The helper script ln-srf to build on systems
+	  with old ln was not included in the release tarballs (Issue
+	  #161).
+	- pdftoraster: Fixed some bugs in output bitmap generation (
+	  writePageImage() function): Segfault on output of
+	  up-side-down pages (back side when printing duplex on some
+	  printers), margin offsets not taken into account on
+	  monochrome jobs, CUPS_CSPACE_W color space not recognized as
+	  monochrome (Ubuntu bug #1845286).
 
 CHANGES IN V1.25.6
 
