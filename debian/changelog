@@ -1,3 +1,29 @@
+cups-filters (1.25.10-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release
+    - libcupsfilters: Added NULL checks when handling page size
+      names as some of the page sizes in CUPS' PWG media list have
+      a NULL PPD name (LP: #1847488).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 09 Oct 2019 23:09:35 +0200
+
+cups-filters (1.25.9-0ubuntu1) eoan; urgency=medium
+
+  * New upstream bug fix release
+    - cups-browsed: Fix leaks in get_printer_attributes() function.
+    - cups-browsed: Avoid infinite recursion on IPP 1.1 fallback.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 09 Oct 2019 19:08:38 +0200
+
+cups-filters (1.25.8-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release
+    - Fixes for cups-browsed to work with old (IPP 1.1) remote printers
+      (Upstream issue #124, #163).
+    - Fix for compatibility with Ghostscript 9.27+ (Upstream issue #164).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 09 Oct 2019 15:25:47 +0200
+
 cups-filters (1.25.7-0ubuntu1) eoan; urgency=medium
 
   * New upstream bug fix release
