@@ -1,3 +1,12 @@
+cups-filters (1.25.8-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release
+    - Fixes for cups-browsed to work with old (IPP 1.1) remote printers
+      (Upstream issue #124, #163).
+    - Fix for compatibility with Ghostscript 9.27+ (Upstream issue #164).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 09 Oct 2019 15:25:47 +0200
+
 cups-filters (1.25.7-0ubuntu1) eoan; urgency=medium
 
   * New upstream bug fix release
