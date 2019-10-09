@@ -140,6 +140,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  ppdgenerator_msg@Base 1.12.0
  resolutionArrayNew@Base 1.17.1
  resolutionNew@Base 1.17.1
+ set_option_in_str@Base 1.25.7
  sgiClose@Base 1.0~b1
  sgiGetRow@Base 1.0~b1
  sgiOpen@Base 1.0~b1
