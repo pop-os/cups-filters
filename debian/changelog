@@ -1,3 +1,11 @@
+cups-filters (1.25.11-0ubuntu1) eoan; urgency=medium
+
+* New upstream release
+  - cups-browsed: Fixed printing on remote printers which only
+    support IPP 1.1 (Upstream issue #124, #163).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Thu, 10 Oct 2019 12:48:32 +0200
+
 cups-filters (1.25.10-0ubuntu1) eoan; urgency=medium
 
   * New upstream release
