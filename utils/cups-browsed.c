@@ -990,6 +990,26 @@ copy_default_str(void *data, void *user_data)
   return copy;
 }
 
+char *strstrip(char *s)
+{
+  size_t size;
+  char *end;
+
+  size = strlen(s);
+
+  if (!size)
+    return s;
+
+  end = s + size - 1;
+  while (end >= s && isspace(*end))
+    end--;
+  *(end + 1) = '\0';
+
+  while (*s && isspace(*s))
+    s++;
+
+  return s;
+}
 
 int
 compare_default_str(void *defstr_a, void *defstr_b,
@@ -5790,6 +5810,7 @@ get_printer_attributes(const char* uri, int fallback_request,
       attr = ippFirstAttribute(response);
       while (attr) {
         ippAttributeString(attr, valuebuffer, sizeof(valuebuffer));
+        strstrip(valuebuffer);
         if(!job_state_attributes){
           debug_printf("  Attr: %s\n",ippGetName(attr));
           debug_printf("  Value: %s\n", valuebuffer);
@@ -6041,21 +6062,21 @@ on_job_state (CupsNotifier *object,
 	pname = NULL;
 	pstate = IPP_PRINTER_IDLE;
 	paccept = 0;
-  got_printer_info = 0;
+	got_printer_info = 0;
 	while (attr != NULL && ippGetGroupTag(attr) ==
 	       IPP_TAG_PRINTER) {
 	  if (!strcmp(ippGetName(attr), "printer-name") &&
 	      ippGetValueTag(attr) == IPP_TAG_NAME){
 	    pname = ippGetString(attr, 0, NULL);
-      got_printer_info = 1;
-    }
-	  else if (!strcmp(ippGetName(attr), "printer-state") &&
+	  } else if (!strcmp(ippGetName(attr), "printer-state") &&
 		   ippGetValueTag(attr) == IPP_TAG_ENUM)
 	    pstate = (ipp_pstate_t)ippGetInteger(attr, 0);
 	  else if (!strcmp(ippGetName(attr),
 			   "printer-is-accepting-jobs") &&
-		   ippGetValueTag(attr) == IPP_TAG_BOOLEAN)
+		   ippGetValueTag(attr) == IPP_TAG_BOOLEAN) {
 	    paccept = ippGetBoolean(attr, 0);
+	    got_printer_info = 1;
+	  }
 	  attr = ippNextAttribute(response);
 	}
 	if (got_printer_info == 0) {
@@ -6064,8 +6085,8 @@ on_job_state (CupsNotifier *object,
 	  else
 	    continue;
 	}
-  debug_printf("IPP Response contains attributes values printer-name %s, accepting-job %d",
-    pname, paccept);
+	debug_printf("IPP Response contains attributes values printer-name %s, accepting-job %d",
+		     (pname ? pname : "(Not reported)"), paccept);
 	if (paccept) {
 	  debug_printf("Printer %s on host %s, port %d is accepting jobs.\n",
 		       remote_cups_queue, p->host, p->port);
