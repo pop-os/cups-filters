@@ -32,7 +32,7 @@ Build-Depends: autoconf,
                liblouis-dev,
 # Needed for tests
                fonts-dejavu-core
-Standards-Version: 4.2.1
+Standards-Version: 4.4.1
 Vcs-Browser: https://salsa.debian.org/printing-team/cups-filters
 Vcs-Git: https://salsa.debian.org/printing-team/cups-filters.git
 Homepage: https://wiki.linuxfoundation.org/openprinting/
