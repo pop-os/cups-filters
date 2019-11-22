@@ -1868,21 +1868,6 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
     formatfound = 1;
     is_pdf = 1;
   }
-  if (cupsArrayFind(pdl_list, "image/pwg-raster")) {
-    if ((attr = ippFindAttribute(response,
-				 "pwg-raster-document-resolution-supported",
-				 IPP_TAG_RESOLUTION)) != NULL) {
-      current_def = NULL;
-      if ((current_res = ippResolutionListToArray(attr)) != NULL &&
-	  joinResolutionArrays(&common_res, &current_res, &common_def,
-			       &current_def)) {
-	cupsFilePuts(fp, "*cupsFilter2: \"image/pwg-raster image/pwg-raster 0 -\"\n");
-	if (formatfound == 0) manual_copies = 1;
-	formatfound = 1;
-	is_pwg = 1;
-      }
-    }
-  }
 #ifdef CUPS_RASTER_HAVE_APPLERASTER
   if (cupsArrayFind(pdl_list, "image/urf")) {
     if ((attr = ippFindAttribute(response, "urf-supported",
@@ -1923,6 +1908,21 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
     }
   }
 #endif
+  if (is_apple == 0 && cupsArrayFind(pdl_list, "image/pwg-raster")) {
+    if ((attr = ippFindAttribute(response,
+				 "pwg-raster-document-resolution-supported",
+				 IPP_TAG_RESOLUTION)) != NULL) {
+      current_def = NULL;
+      if ((current_res = ippResolutionListToArray(attr)) != NULL &&
+	  joinResolutionArrays(&common_res, &current_res, &common_def,
+			       &current_def)) {
+	cupsFilePuts(fp, "*cupsFilter2: \"image/pwg-raster image/pwg-raster 0 -\"\n");
+	if (formatfound == 0) manual_copies = 1;
+	formatfound = 1;
+	is_pwg = 1;
+      }
+    }
+  }
 #ifdef QPDF_HAVE_PCLM
   if (cupsArrayFind(pdl_list, "application/PCLm")) {
     if ((attr = ippFindAttribute(response, "pclm-source-resolution-supported",
@@ -3461,31 +3461,27 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 				   printer_opt_strings_catalog);
     cupsFilePrintf(fp, "*OpenUI *cupsPrintQuality/%s: PickOne\n"
 		   "*OrderDependency: 10 AnySetup *cupsPrintQuality\n"
-		   "*DefaultcupsPrintQuality: %d\n",
+		   "*DefaultcupsPrintQuality: Normal\n",
 		   (human_readable ? human_readable :
-		    _cupsLangString(lang, _("Print Quality"))),
-		   IPP_QUALITY_NORMAL);
+		    _cupsLangString(lang, _("Print Quality"))));
     if (ippContainsInteger(quality, IPP_QUALITY_DRAFT)) {
       human_readable = lookup_choice("3", "print-quality", opt_strings_catalog,
 				     printer_opt_strings_catalog);
-      cupsFilePrintf(fp, "*cupsPrintQuality %d/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
-		     IPP_QUALITY_DRAFT,
+      cupsFilePrintf(fp, "*cupsPrintQuality Draft/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
 		     (human_readable ? human_readable :
 		      _cupsLangString(lang, _("Draft"))),
 		     min_res->x, min_res->y);
     }
     human_readable = lookup_choice("4", "print-quality", opt_strings_catalog,
 				   printer_opt_strings_catalog);
-    cupsFilePrintf(fp, "*cupsPrintQuality %d/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
-		   IPP_QUALITY_NORMAL,
+    cupsFilePrintf(fp, "*cupsPrintQuality Normal/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
 		   (human_readable ? human_readable :
 		    _cupsLangString(lang, _("Normal"))),
 		   common_def->x, common_def->y);
     if (ippContainsInteger(quality, IPP_QUALITY_HIGH)) {
       human_readable = lookup_choice("5", "print-quality", opt_strings_catalog,
 				     printer_opt_strings_catalog);
-      cupsFilePrintf(fp, "*cupsPrintQuality %d/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
-		     IPP_QUALITY_HIGH,
+      cupsFilePrintf(fp, "*cupsPrintQuality High/%s: \"<</HWResolution[%d %d]>>setpagedevice\"\n",
 		     (human_readable ? human_readable :
 		      _cupsLangString(lang, _("High"))),
 		     max_res->x, max_res->y);
