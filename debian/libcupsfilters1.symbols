@@ -125,12 +125,15 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  free_opt_strings@Base 1.20.0
  free_resolution@Base 1.17.1
  generate_sizes@Base 1.24.0
+ get_printer_attributes@Base 1.26.0
+ get_printer_attributes_log@Base 1.26.0
  get_profile_inhibitors@Base 1.0.42
  ippResolutionListToArray@Base 1.17.1
  ippResolutionToRes@Base 1.17.1
  is_colordevice@Base 1.24.0
  joinResolutionArrays@Base 1.17.1
  load_opt_strings_catalog@Base 1.20.0
+ log_printf@Base 1.26.0
  lookup_choice@Base 1.20.0
  lookup_option@Base 1.20.0
  optArrayNew@Base 1.20.0
@@ -140,6 +143,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  ppdgenerator_msg@Base 1.12.0
  resolutionArrayNew@Base 1.17.1
  resolutionNew@Base 1.17.1
+ resolve_uri@Base 1.26.0
  set_option_in_str@Base 1.25.7
  sgiClose@Base 1.0~b1
  sgiGetRow@Base 1.0~b1

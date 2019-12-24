@@ -1,3 +1,10 @@
+cups-filters (1.26.0-1) unstable; urgency=medium
+
+  * New upstream version 1.26.0
+    - Add 4 new symbols to libcupsfilters1
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Dec 2019 13:05:22 +0100
+
 cups-filters (1.25.13-1) unstable; urgency=medium
 
   * New upstream version 1.25.13
