@@ -125,6 +125,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  free_opt_strings@Base 1.20.0
  free_resolution@Base 1.17.1
  generate_sizes@Base 1.24.0
+ get_printer_attributes2@Base 1.27.0
  get_printer_attributes@Base 1.26.0
  get_printer_attributes_log@Base 1.26.0
  get_profile_inhibitors@Base 1.0.42
