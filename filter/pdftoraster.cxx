@@ -2121,15 +2121,11 @@ int main(int argc, char *argv[]) {
     for (i = 1;i <= npages;i++) {
       outPage(doc,i,raster);
     }
-  }
-  else{
-    exitCode = 1;
-    goto err1;
-  }
+  } else
+    fprintf(stderr, "DEBUG: Input is empty, outputting empty file.\n");
 
   cupsRasterClose(raster);
 
-err1:
   delete doc;
   if (ppd != NULL) {
     ppdClose(ppd);
