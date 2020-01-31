@@ -1,3 +1,12 @@
+cups-filters (1.27.0-2) unstable; urgency=medium
+
+  * Backport upstream change:
+    [ Till Kamppeter ]
+    - cups-browsed: Switched default for "CreateIPPPrinterQueues" to "All"
+      (Closes: #921252)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 31 Jan 2020 17:17:53 +0100
+
 cups-filters (1.27.0-1) unstable; urgency=medium
 
   * New 1.27.0 upstream release
