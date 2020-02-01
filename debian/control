@@ -76,7 +76,6 @@ Suggests: foomatic-db-compressed-ppds | foomatic-db,
           antiword,
           docx2txt,
           imagemagick
-Breaks: cups-ppdc (<< 1.6)
 Conflicts: ghostscript-cups,
            foomatic-filters,
            foomatic-filters-beh
@@ -85,8 +84,7 @@ Provides: ghostscript-cups,
           foomatic-filters-beh
 Replaces: ghostscript-cups,
           foomatic-filters,
-          foomatic-filters-beh,
-          cups-ppdc (<< 1.6)
+          foomatic-filters-beh
 Description: OpenPrinting CUPS Filters - Main Package
  This package provides additional CUPS filters which are not provided
  by the CUPS project itself. This includes filters for a PDF based
@@ -149,7 +147,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          cups-daemon,
          lsb-base
-Recommends: avahi-daemon (>= 0.6.31-3~)
+Recommends: avahi-daemon
 Enhances: cups
 Breaks: cups-filters (<< 1.4.0~)
 Replaces: cups-filters (<< 1.4.0~)
