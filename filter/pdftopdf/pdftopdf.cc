@@ -907,6 +907,21 @@ FILE *copy_stdin_to_temp() // {{{
 }
 // }}}
 
+// check whether a given file is empty
+bool is_empty(FILE *f) // {{{
+{
+  char buf[1];
+
+  // Try to read a single byte of data
+  if (fread(buf, 1, 1, f) == 0)
+    return true;
+
+  rewind(f);
+
+  return false;
+}
+// }}}
+
 static int
 sub_process_spawn (const char *filename,
           cups_array_t *sub_process_args,
@@ -1107,6 +1122,7 @@ int main(int argc,char **argv)
        external utilities pdftocairo or Ghostscript, but these make
        the processing slower, especially due to extra piping of the
        data between processes. */
+    int empty = 0;
     int qpdf_flatten = 1;
     int pdftocairo_flatten = 0;
     int gs_flatten = 0;
@@ -1136,17 +1152,37 @@ int main(int argc,char **argv)
 
     FILE *tmpfile = NULL;
     if (argc==7) {
-      if (!proc->loadFilename(argv[6],qpdf_flatten)) {
+      FILE *f = NULL;
+      if ((f = fopen(argv[6], "rb")) == NULL) {
         ppdClose(ppd);
         return 1;
-      }
+      } else if (is_empty(f)) {
+	fclose(f);
+	ppdClose(ppd);
+	empty = 1;
+      } else if (!proc->loadFilename(argv[6],qpdf_flatten)) {
+	fclose(f);
+        ppdClose(ppd);
+        return 1;
+      } else
+	fclose(f);
     } else {
       tmpfile = copy_stdin_to_temp();
-      if ((!tmpfile)||
-	  (!proc->loadFile(tmpfile,WillStayAlive,qpdf_flatten))) {
+      if (tmpfile && is_empty(tmpfile)) {
+	fclose(tmpfile);
+	ppdClose(ppd);
+	empty = 1;
+      } else if ((!tmpfile)||
+		 (!proc->loadFile(tmpfile,WillStayAlive,qpdf_flatten))) {
         ppdClose(ppd);
-        return 1;
+	return 1;
       }
+    }
+
+    if(empty)
+    {
+      fprintf(stderr, "DEBUG: Input is empty, outputting empty file.\n");
+      return 0;
     }
 
     /* If the input file contains a PDF form and we opted for not

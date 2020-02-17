@@ -23,6 +23,7 @@
  * Include necessary headers...
  */
 
+#include "pdf.h"
 #include <config.h>
 #include <cups/cups.h>
 #include <cups/ppd.h>
@@ -70,6 +71,8 @@ char                    make_model[128] = "";
  */
 
 const char *pstops_exclude_general[] = {
+  "crop-to-fit",
+  "fill",
   "fitplot",
   "fit-to-page",
   "landscape",
@@ -220,6 +223,42 @@ void remove_options(char *options_str, const char **option_list)
         option_start += 1;
       }
     }
+  }
+}
+
+
+/*
+ * Check whether given file is empty
+ */
+
+int is_empty(char *filename)
+{
+  FILE *fp = NULL;
+  fp = fopen(filename, "rb");
+  if (fp == NULL)
+  {
+    fprintf(stderr, "ERROR: pdftops - cannot open print file \"%s\"\n",
+            filename);
+    exit(1);
+  }
+  else
+  {
+    char buf[1];
+    rewind(fp);
+    if (fread(buf, 1, 1, fp) == 0) {
+      fclose(fp);
+      fprintf(stderr, "DEBUG: Input is empty, outputting empty file.\n");
+      return 1;
+    }
+    fclose(fp);
+    int pages = pdf_pages(filename);
+    if (pages == 0) {
+      fprintf(stderr, "DEBUG: No pages left, outputting empty file.\n");
+      return 1;
+    }
+    if (pages > 0)
+      return 0;
+    exit(1);
   }
 }
 
@@ -380,6 +419,9 @@ main(int  argc,				/* I - Number of command-line args */
     filename    = argv[6];
     tempfile[0] = '\0';
   }
+
+  if (is_empty(filename))
+    return 0;
 
  /*
   * Read out copy counts and collate setting passed over by pdftopdf
@@ -592,22 +634,23 @@ main(int  argc,				/* I - Number of command-line args */
     pdf_argv[3] = (char *)"-dBATCH";
     pdf_argv[4] = (char *)"-dSAFER";
     pdf_argv[5] = (char *)"-dNOMEDIAATTRS";
+    pdf_argv[6] = (char *)"-sstdout=%stderr";
 #    ifdef HAVE_GHOSTSCRIPT_PS2WRITE
-    pdf_argv[6] = (char *)"-sDEVICE=ps2write";
+    pdf_argv[7] = (char *)"-sDEVICE=ps2write";
 #    else
-    pdf_argv[6] = (char *)"-sDEVICE=pswrite";
+    pdf_argv[7] = (char *)"-sDEVICE=pswrite";
 #    endif /* HAVE_GHOSTSCRIPT_PS2WRITE */
-    pdf_argv[7] = (char *)"-dShowAcroForm";
-    pdf_argv[8] = (char *)"-sOUTPUTFILE=%stdout";
+    pdf_argv[8] = (char *)"-dShowAcroForm";
+    pdf_argv[9] = (char *)"-sOUTPUTFILE=%stdout";
     if (gray_output == 1) /* Checking for monochrome/grayscale PostScript
 			     output */
     {
-      pdf_argv[9] = (char *)"-sProcessColorModel=DeviceGray";
-      pdf_argv[10] = (char *)"-sColorConversionStrategy=Gray";
-      pdf_argc = 11;
+      pdf_argv[10] = (char *)"-sProcessColorModel=DeviceGray";
+      pdf_argv[11] = (char *)"-sColorConversionStrategy=Gray";
+      pdf_argc = 12;
     }
     else
-      pdf_argc = 9;
+      pdf_argc = 10;
   }
   else if (renderer == MUPDF)
   {
