@@ -542,7 +542,7 @@ int guess_file_type(const char *begin, size_t len, int *startpos)
 	if (!p)
 	    return UNKNOWN_FILE;
 	*startpos = p - begin;
-	if ((end - p) > 2 && !memcmp(p, "%!", 2))
+	if ((end - p) >= 2 && !memcmp(p, "%!", 2))
 	    return PS_FILE;
 	else if ((end - p) > 7 && !memcmp(p, "%PDF-1.", 7))
 	    return PDF_FILE;
@@ -576,9 +576,13 @@ int print_file(const char *filename, int convert)
     }
 
     n = fread_or_die(buf, 1, sizeof(buf) - 1, file);
+    if (!n){
+        _log("Input is empty, outputting empty file.\n");
+        return 1;
+    }
     buf[n] = '\0';
     type = guess_file_type(buf, n, &startpos);
-    /* We do not use any JCL preceeded to the inputr data, as it is simply
+    /* We do not use any JCL preceeded to the input data, as it is simply
        the PJL commands from the PPD file, and these commands we can also
        generate, end we even merge them with PJl from the driver */
     /*if (startpos > 0) {
