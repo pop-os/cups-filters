@@ -48,9 +48,6 @@
 /* Transient run-time state dir of CUPS */
 #undef CUPS_STATEDIR
 
-/* Auto-setup driverless IPP network printers? */
-#undef DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
-
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -213,6 +210,12 @@
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
+
+/* Auto-setup only driverless IPP network printers? */
+#undef ONLY_DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
+
+/* Auto-setup only local IPP network printers? */
+#undef ONLY_LOCAL_IPP_PRINTERS_AUTO_SETUP
 
 /* Name of package */
 #undef PACKAGE

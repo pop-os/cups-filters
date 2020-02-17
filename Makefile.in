@@ -363,12 +363,11 @@ foomatic_rip_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 foomatic_rip_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(foomatic_rip_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_gstoraster_OBJECTS = filter/gstoraster-gstoraster.$(OBJEXT)
+am_gstoraster_OBJECTS = filter/gstoraster-gstoraster.$(OBJEXT) \
+	filter/pdf.$(OBJEXT)
 gstoraster_OBJECTS = $(am_gstoraster_OBJECTS)
-gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
-gstoraster_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gstoraster_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+gstoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	libcupsfilters.la
 am_imagetopdf_OBJECTS = filter/imagetopdf-common.$(OBJEXT) \
 	filter/imagetopdf-imagetopdf.$(OBJEXT)
 imagetopdf_OBJECTS = $(am_imagetopdf_OBJECTS)
@@ -422,11 +421,8 @@ pdftopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_pdftops_OBJECTS = filter/pdftops-common.$(OBJEXT) \
-	filter/pdftops-pdftops.$(OBJEXT)
+	filter/pdftops-pdftops.$(OBJEXT) filter/pdf.$(OBJEXT)
 pdftops_OBJECTS = $(am_pdftops_OBJECTS)
-pdftops_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pdftops_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_pdftoraster_OBJECTS = filter/pdftoraster-pdftoraster.$(OBJEXT)
 pdftoraster_OBJECTS = $(am_pdftoraster_OBJECTS)
 pdftoraster_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -617,7 +613,7 @@ am__depfiles_remade = ./$(DEPDIR)/cups_browsed-cups-notifier.Po \
 	filter/$(DEPDIR)/imagetoraster-common.Po \
 	filter/$(DEPDIR)/imagetoraster-imagetoraster.Po \
 	filter/$(DEPDIR)/mupdftoraster-mupdftoraster.Po \
-	filter/$(DEPDIR)/pdftops-common.Po \
+	filter/$(DEPDIR)/pdf.Po filter/$(DEPDIR)/pdftops-common.Po \
 	filter/$(DEPDIR)/pdftops-pdftops.Po \
 	filter/$(DEPDIR)/pdftops-strcasestr.Po \
 	filter/$(DEPDIR)/pdftoraster-pdftoraster.Po \
@@ -1780,14 +1776,18 @@ foomatic_rip_LDADD = \
 gstoraster_SOURCES = \
 	filter/gstoraster.c \
 	cupsfilters/colord.h \
-	cupsfilters/raster.h
+	cupsfilters/raster.h \
+	filter/pdf.cxx \
+	filter/pdf.h
 
 gstoraster_CFLAGS = \
 	$(CUPS_CFLAGS) \
+	$(LIBQPDF_CFLAGS) \
 	-I$(srcdir)/cupsfilters/
 
 gstoraster_LDADD = \
 	$(CUPS_LIBS) \
+	$(LIBQPDF_LIBS) \
 	libcupsfilters.la
 
 imagetopdf_SOURCES = \
@@ -1894,11 +1894,20 @@ texttotext_DEPENDENCIES = $(STRCASESTR)
 pdftops_SOURCES = \
 	filter/common.c \
 	filter/common.h \
-	filter/pdftops.c
+	filter/pdftops.c \
+	filter/pdf.cxx \
+	filter/pdf.h
 
 EXTRA_pdftops_SOURCES = filter/strcasestr.c
-pdftops_CFLAGS = $(CUPS_CFLAGS)
-pdftops_LDADD = $(STRCASESTR) $(CUPS_LIBS)
+pdftops_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	$(LIBQPDF_CFLAGS)
+
+pdftops_LDADD = \
+	$(STRCASESTR) \
+	$(CUPS_LIBS) \
+	$(LIBQPDF_LIBS)
+
 pdftops_DEPENDENCIES = $(STRCASESTR)
 pdftoraster_SOURCES = \
 	filter/pdftoraster.cxx
@@ -2712,10 +2721,12 @@ foomatic-rip$(EXEEXT): $(foomatic_rip_OBJECTS) $(foomatic_rip_DEPENDENCIES) $(EX
 	$(AM_V_CCLD)$(foomatic_rip_LINK) $(foomatic_rip_OBJECTS) $(foomatic_rip_LDADD) $(LIBS)
 filter/gstoraster-gstoraster.$(OBJEXT): filter/$(am__dirstamp) \
 	filter/$(DEPDIR)/$(am__dirstamp)
+filter/pdf.$(OBJEXT): filter/$(am__dirstamp) \
+	filter/$(DEPDIR)/$(am__dirstamp)
 
 gstoraster$(EXEEXT): $(gstoraster_OBJECTS) $(gstoraster_DEPENDENCIES) $(EXTRA_gstoraster_DEPENDENCIES) 
 	@rm -f gstoraster$(EXEEXT)
-	$(AM_V_CCLD)$(gstoraster_LINK) $(gstoraster_OBJECTS) $(gstoraster_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) $(gstoraster_OBJECTS) $(gstoraster_LDADD) $(LIBS)
 filter/imagetopdf-common.$(OBJEXT): filter/$(am__dirstamp) \
 	filter/$(DEPDIR)/$(am__dirstamp)
 filter/imagetopdf-imagetopdf.$(OBJEXT): filter/$(am__dirstamp) \
@@ -2804,7 +2815,7 @@ filter/pdftops-strcasestr.$(OBJEXT): filter/$(am__dirstamp) \
 
 pdftops$(EXEEXT): $(pdftops_OBJECTS) $(pdftops_DEPENDENCIES) $(EXTRA_pdftops_DEPENDENCIES) 
 	@rm -f pdftops$(EXEEXT)
-	$(AM_V_CCLD)$(pdftops_LINK) $(pdftops_OBJECTS) $(pdftops_LDADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) $(pdftops_OBJECTS) $(pdftops_LDADD) $(LIBS)
 filter/pdftoraster-pdftoraster.$(OBJEXT): filter/$(am__dirstamp) \
 	filter/$(DEPDIR)/$(am__dirstamp)
 
@@ -3163,6 +3174,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/imagetoraster-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/imagetoraster-imagetoraster.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/mupdftoraster-mupdftoraster.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/pdf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/pdftops-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/pdftops-pdftops.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@filter/$(DEPDIR)/pdftops-strcasestr.Po@am__quote@ # am--include-marker
@@ -5473,6 +5485,7 @@ distclean: distclean-recursive
 	-rm -f filter/$(DEPDIR)/imagetoraster-common.Po
 	-rm -f filter/$(DEPDIR)/imagetoraster-imagetoraster.Po
 	-rm -f filter/$(DEPDIR)/mupdftoraster-mupdftoraster.Po
+	-rm -f filter/$(DEPDIR)/pdf.Po
 	-rm -f filter/$(DEPDIR)/pdftops-common.Po
 	-rm -f filter/$(DEPDIR)/pdftops-pdftops.Po
 	-rm -f filter/$(DEPDIR)/pdftops-strcasestr.Po
@@ -5644,6 +5657,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f filter/$(DEPDIR)/imagetoraster-common.Po
 	-rm -f filter/$(DEPDIR)/imagetoraster-imagetoraster.Po
 	-rm -f filter/$(DEPDIR)/mupdftoraster-mupdftoraster.Po
+	-rm -f filter/$(DEPDIR)/pdf.Po
 	-rm -f filter/$(DEPDIR)/pdftops-common.Po
 	-rm -f filter/$(DEPDIR)/pdftops-pdftops.Po
 	-rm -f filter/$(DEPDIR)/pdftops-strcasestr.Po
