@@ -1,3 +1,11 @@
+cups-filters (1.27.1-2) unstable; urgency=medium
+
+  * Add patch proposal from Andrey Jr. Melnikov:
+    - Fix foomatic-rip postscript preprocessing; fixes empty print jobs on
+      foo2zjs (at least) (upstream issue #206)
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 22 Feb 2020 17:26:46 +0100
+
 cups-filters (1.27.1-1) unstable; urgency=medium
 
   * New 1.27.1 upstream release
