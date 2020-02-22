@@ -1,0 +1,21 @@
+From: "Andrey Jr. Melnikov" <temnota.am@gmail.com>
+Date: Sat, 22 Feb 2020 17:17:31 +0100
+Subject: Fix foomatic-rip postscript preprocessing
+
+Bug: https://github.com/OpenPrinting/cups-filters/issues/206
+---
+ filter/foomatic-rip/postscript.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/filter/foomatic-rip/postscript.c b/filter/foomatic-rip/postscript.c
+index 8b6f0ad..6353abc 100644
+--- a/filter/foomatic-rip/postscript.c
++++ b/filter/foomatic-rip/postscript.c
+@@ -1078,7 +1078,6 @@ void _print_ps(stream_t *stream)
+     if (empty)
+     {
+         _log("No pages left, outputting empty file.\n");
+-        return;
+     }
+ 
+     /* Some buffer still containing data? Send it out to the renderer */
