@@ -168,17 +168,44 @@ int stream_next_line(dstr_t *line, stream_t *s)
     return cnt;
 }
 
+int ps_pages(const char *filename)
+{
+    char gscommand[65536];
+    char output[31] = "";
+    int pagecount;
+    size_t bytes;
+    snprintf(gscommand, 65536, "%s -q -dNOPAUSE -dBATCH -sDEVICE=bbox %s 2>&1 | grep -c HiResBoundingBox",
+              CUPS_GHOSTSCRIPT, filename);
+    FILE *pd = popen(gscommand, "r");
+    bytes = fread(output, 1, 31, pd);
+    pclose(pd);
+
+    if (bytes <= 0 || sscanf(output, "%d", &pagecount) < 1)
+        pagecount = -1;
+
+    return pagecount;
+}
+
 int print_ps(FILE *file, const char *alreadyread, size_t len, const char *filename)
 {
     stream_t stream;
 
-    if (file != stdin && (dup2(fileno(file), fileno(stdin)) < 0)) {
-        _log("Could not dup %s to stdin.\n", filename);
-        return 0;
+    if (file != stdin)
+    {
+        int pagecount = ps_pages(filename);
+        if (pagecount < 0) {
+            _log("Unexpected page count\n");
+            return 0;
+        }
+        if (pagecount == 0) {
+            _log("No pages left, outputting empty file.\n");
+            return 1;
+        }
+        _log("File contains %d pages.\n", pagecount);
     }
 
     stream.pos = 0;
-    stream.file = stdin;
+    stream.file = file;
     stream.alreadyread = alreadyread;
     stream.len = len;
     _print_ps(&stream);
@@ -322,7 +349,6 @@ void _print_ps(stream_t *stream)
     pid_t rendererpid = 0;
     FILE *rendererhandle = NULL;
 
-    int empty = 1;
     int retval;
 
     dstr_t *tmp = create_dstr();
@@ -924,11 +950,11 @@ void _print_ps(stream_t *stream)
                                 the beginning of the job or after the last valid
                                 section */
                                 dstrclear(tmp);
-                                if (prologfound)
+                                if (!prologfound)
                                     append_prolog_section(tmp, optset, 1);
-                                if (setupfound)
+                                if (!setupfound)
                                     append_setup_section(tmp, optset, 1);
-                                if (pagesetupfound)
+                                if (!pagesetupfound)
                                     append_page_setup_section(tmp, optset, 1);
                                 dstrinsert(psheader, line_start(psheader->data, insertoptions), tmp->data);
 
@@ -1010,7 +1036,6 @@ void _print_ps(stream_t *stream)
                         /* No renderer running, start it */
                         dstrcpy(tmp, psheader->data);
                         dstrcat(tmp, psfifo->data);
-                        empty = 0;
                         get_renderer_handle(tmp, &rendererhandle, &rendererpid);
                         /* psfifo is sent out, flush it */
                         dstrclear(psfifo);
@@ -1075,12 +1100,6 @@ void _print_ps(stream_t *stream)
 
     } while ((maxlines == 0 || linect < maxlines) && more_stuff != 0);
 
-    if (empty)
-    {
-        _log("No pages left, outputting empty file.\n");
-        return;
-    }
-
     /* Some buffer still containing data? Send it out to the renderer */
     if (more_stuff || inheader || !isempty(psfifo->data)) {
         /* Flush psfifo and send the remaining data to the renderer, this
@@ -1102,11 +1121,11 @@ void _print_ps(stream_t *stream)
             /* If not done yet, insert defaults and command line settings
             in the beginning of the job or after the last valid section */
             dstrclear(tmp);
-            if (prologfound)
+            if (!prologfound)
                 append_prolog_section(tmp, optset, 1);
-            if (setupfound)
+            if (!setupfound)
                 append_setup_section(tmp, optset, 1);
-            if (pagesetupfound)
+            if (!pagesetupfound)
                 append_page_setup_section(tmp, optset, 1);
             dstrinsert(psheader, line_start(psheader->data, insertoptions), tmp->data);
 
