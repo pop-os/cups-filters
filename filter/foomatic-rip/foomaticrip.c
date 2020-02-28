@@ -560,8 +560,10 @@ int print_file(const char *filename, int convert)
 {
     FILE *file;
     char buf[8192];
+    char tmpfilename[PATH_MAX];
     int type;
     int startpos;
+    int pagecount;
     size_t n;
     int ret;
 
@@ -603,7 +605,6 @@ int print_file(const char *filename, int convert)
                 char pdf2ps_cmd[CMDLINE_MAX];
                 FILE *out, *in;
                 int renderer_pid;
-		char tmpfilename[PATH_MAX] = "";
 
                 _log("Driver does not understand PDF input, "
                      "converting to PostScript\n");
@@ -615,7 +616,7 @@ int print_file(const char *filename, int convert)
                 {
 		    int fd;
 		    FILE *tmpfile;
-		    
+
 		    snprintf(tmpfilename, PATH_MAX, "%s/foomatic-XXXXXX", temp_dir());
 		    fd = mkstemp(tmpfilename);
 		    if (fd < 0) {
@@ -625,9 +626,20 @@ int print_file(const char *filename, int convert)
 		    tmpfile = fdopen(fd, "r+");
 		    copy_file(tmpfile, stdin, buf, n);
 		    fclose(tmpfile);
-		    
+
 		    filename = tmpfilename;
 		}
+
+                pagecount = pdf_count_pages(filename);
+                _log("File contains %d pages.\n", pagecount);
+                if (pagecount < 0) {
+                    _log("Unexpected page_count\n");
+                    return 0;
+                }
+                if (pagecount == 0) {
+                  _log("No pages left, outputting empty file.\n");
+                  return 1;
+                }
 
 		/* If the spooler is CUPS we use the pdftops filter of CUPS,
 		   to have always the same PDF->PostScript conversion method
@@ -668,16 +680,7 @@ int print_file(const char *filename, int convert)
                             "Couldn't dup stdout of pdf-to-ps\n");
 
                 clearerr(stdin);
-                int pagecount = pdf_count_pages(filename);
-                _log("File contains %d pages.\n", pagecount);
-                if (pagecount < 0) {
-                    _log("Unexpected page_count\n");
-                    return 0;
-                }
-                if (pagecount == 0) {
-                  _log("No pages left, outputting empty file.\n");
-                  return 1;
-                }
+
                 ret = print_file("<STDIN>", 0);
 
                 wait_for_process(renderer_pid);
@@ -702,7 +705,6 @@ int print_file(const char *filename, int convert)
                 {
                     int fd;
                     FILE *tmpfile;
-                    char tmpfilename[4096];
 
                     snprintf(tmpfilename, PATH_MAX, "%s/foomatic-XXXXXX", temp_dir());
                     fd = mkstemp(tmpfilename);
@@ -711,50 +713,22 @@ int print_file(const char *filename, int convert)
                         return EXIT_PRNERR_NORETRY_BAD_SETTINGS;
                     }
 
-                    if (write(fd,buf,n) != n) {
-                        _log("ERROR: Can't copy stdin to temporary file\n");
-                        close(fd);
-                    }
-                    /* copy stdin to the tmp file */
-                    while ((n = read(0,buf,BUFSIZ)) > 0) {
-                        if (write(fd,buf,n) != n) {
-                            _log("ERROR: Can't copy stdin to temporary file\n");
-                            close(fd);
-                        }
-                    }
-                    if (lseek(fd,0,SEEK_SET) < 0) {
-                        _log("ERROR: Can't rewind temporary file\n");
-                        close(fd);
-                    }
-                    FILE *fp;
-
-                    if ((fp = fdopen(fd,"rb")) == 0) {
+                    if ((tmpfile = fdopen(fd,"r+")) == 0) {
                         _log("ERROR: Can't fdopen temporary file\n");
                         close(fd);
-                    }
-                    char gscommand[65536];
-                    char output[31] = "";
-                    int pagecount;
-                    size_t bytes;
-                    filename = strdup(tmpfilename);
-                    snprintf(gscommand, 65536, "%s -q -dNOPAUSE -dBATCH -sDEVICE=bbox %s 2>&1 | grep -c HiResBoundingBox",
-                            CUPS_GHOSTSCRIPT, filename);
-                    FILE *pd = popen(gscommand, "r");
-                    bytes = fread(output, 1, 31, pd);
-                    pclose(pd);
-
-                    if (bytes <= 0 || sscanf(output, "%d", &pagecount) < 1)
-                    pagecount = -1;
-                    _log("File contains %d pages.\n", pagecount);
-                    if (pagecount < 0) {
-                        _log("Unexpected page_count\n");
                         return 0;
                     }
-                    if (pagecount == 0) {
-                        _log("No pages left, outputting empty file.\n");
-                        return 1;
-                    }
-                    return print_ps(fp, NULL, 0, filename);
+
+                    /* Copy stdin to the tmp file */
+                    copy_file(tmpfile, stdin, buf, n);
+                    if (fflush(tmpfile) == EOF)
+                      _log("ERROR: Cannot flush buffer: %s\n", strerror(errno));
+                    rewind(tmpfile);
+
+                    ret = print_ps(tmpfile, NULL, 0, tmpfilename);
+                    fclose(tmpfile);
+                    unlink(tmpfilename);
+                    return ret;
                 }
                 else
                     return print_ps(stdin, buf, n, filename);
