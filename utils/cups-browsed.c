@@ -430,6 +430,8 @@ static unsigned int BrowseInterval = 60;
 static unsigned int BrowseTimeout = 300;
 static uint16_t BrowsePort = 631;
 static browsepoll_t **BrowsePoll = NULL;
+static unsigned int NewBrowsePollQueuesShared = 0;
+static unsigned int AllowResharingRemoteCUPSPrinters = 0;
 static size_t NumBrowsePoll = 0;
 static guint update_netifs_sourceid = 0;
 static char local_server_str[1024];
@@ -6278,6 +6280,7 @@ on_job_state (CupsNotifier *object,
 	    }
 
 	    ippDelete(response);
+            response = NULL;
 	  } else
 	    debug_printf("IPP request to %s:%d failed.\n", p->host,
 			 p->port);
@@ -7896,7 +7899,7 @@ gboolean update_cups_queues(gpointer unused) {
 	     * only if we have CUPS older than 2.2.
 	     * When you have remote queue, clean up and break from the loop.
 	     */
-	    if (p->netprinter != 0 || !HAVE_CUPS_2_2)
+	    if (p->netprinter != 0 || !HAVE_CUPS_2_2 || AllowResharingRemoteCUPSPrinters)
 	      ippDelete(cupsDoRequest(http, request, "/admin/"));
 	    else {
 	      ippDelete(request);
@@ -8070,7 +8073,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    debug_printf("Default page size: %s\n",
 			 default_page_size);
 	    p->num_options = cupsAddOption("media-default",
-					   strdup(default_page_size),
+					   default_page_size,
 					   p->num_options, &(p->options));
 	  } else {
 	    attr = ippFindAttribute(p->prattrs,
@@ -8081,7 +8084,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      debug_printf("Default page size: %s\n",
 			   default_page_size);
 	      p->num_options = cupsAddOption("media-default",
-					     strdup(default_page_size),
+					     default_page_size,
 					     p->num_options, &(p->options));
 	    } else
 	      debug_printf("No default page size found!\n");
@@ -8101,7 +8104,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    bottom = 1270;
 	  snprintf(buffer, sizeof(buffer), "%d", bottom);
 	  p->num_options = cupsAddOption("media-bottom-margin-default",
-					 strdup(buffer),
+					 buffer,
 					 p->num_options, &(p->options));
 
 	  if ((attr = ippFindAttribute(p->prattrs,
@@ -8117,7 +8120,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    left = 635;
 	  snprintf(buffer, sizeof(buffer), "%d", left);
 	  p->num_options = cupsAddOption("media-left-margin-default",
-					 strdup(buffer),
+					 buffer,
 					 p->num_options, &(p->options));
 
 	  if ((attr = ippFindAttribute(p->prattrs,
@@ -8133,7 +8136,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    right = 635;
 	  snprintf(buffer, sizeof(buffer), "%d", right);
 	  p->num_options = cupsAddOption("media-right-margin-default",
-					 strdup(buffer),
+					 buffer,
 					 p->num_options, &(p->options));
 
 	  if ((attr = ippFindAttribute(p->prattrs,
@@ -8149,7 +8152,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    top = 1270;
 	  snprintf(buffer, sizeof(buffer), "%d", top);
 	  p->num_options = cupsAddOption("media-top-margin-default",
-					 strdup(buffer),
+					 buffer,
 					 p->num_options, &(p->options));
 
 	  debug_printf("Margins: Left: %d, Right: %d, Top: %d, Bottom: %d\n",
@@ -8170,7 +8173,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    debug_printf("Best color space: %s\n",
 			 best_color_space);
 	    p->num_options = cupsAddOption("print-color-mode-default",
-					   strdup(best_color_space),
+					   best_color_space,
 					   p->num_options, &(p->options));
 	  } else {
 	    debug_printf("No info about supported color spaces found!\n");
@@ -8185,7 +8188,7 @@ gboolean update_cups_queues(gpointer unused) {
 					   p->num_options, &(p->options));
 
 	  p->num_options = cupsAddOption("output-format-default",
-					 strdup(p->pdl),
+					 p->pdl,
 					 p->num_options, &(p->options));
 	  p->num_options = cupsAddOption("make-and-model-default",
 					 remove_bad_chars(p->make_model, 0),
@@ -8464,7 +8467,8 @@ gboolean update_cups_queues(gpointer unused) {
 	    if (p->netprinter == 0 &&
 		strncmp(line, "*%", 2) &&
 		strncmp(line, "*PPD-Adobe:", 11) &&
-		ap_remote_queue_id_line_inserted == 0) {
+		ap_remote_queue_id_line_inserted == 0 &&
+              !AllowResharingRemoteCUPSPrinters) {
 	      ap_remote_queue_id_line_inserted = 1;
 	      cupsFilePrintf(out, "*APRemoteQueueID: \"\"\n");
 	    }
@@ -8527,8 +8531,8 @@ gboolean update_cups_queues(gpointer unused) {
       /* Default option settings from printer entry */
       for (i = 0; i < p->num_options; i ++)
 	if (strcasecmp(p->options[i].name, "printer-is-shared"))
-	  num_options = cupsAddOption(strdup(p->options[i].name),
-				      strdup(p->options[i].value),
+	  num_options = cupsAddOption(p->options[i].name,
+				      p->options[i].value,
 				      num_options, &options);
       /* Encode option list into IPP attributes */
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
@@ -8604,6 +8608,12 @@ gboolean update_cups_queues(gpointer unused) {
 	num_options = cupsAddOption("printer-is-shared", "true",
 				    num_options, &options);
 	debug_printf("Setting printer-is-shared bit.\n");
+      } else if (NewBrowsePollQueuesShared &&
+      (val = cupsGetOption("printer-to-be-shared", p->num_options,
+               p->options)) != NULL) {
+	num_options = cupsAddOption("printer-is-shared", "true",
+				    num_options, &options);
+	debug_printf("Setting printer-is-shared bit.\n");
       } else {
 	num_options = cupsAddOption("printer-is-shared", "false",
 				    num_options, &options);
@@ -8616,7 +8626,7 @@ gboolean update_cups_queues(gpointer unused) {
        * network printer or if we have remote CUPS queue, do IPP request
        * only if we have CUPS older than 2.2.
        */
-      if (p->netprinter != 0 || !HAVE_CUPS_2_2)
+      if (p->netprinter != 0 || !HAVE_CUPS_2_2 || AllowResharingRemoteCUPSPrinters)
         ippDelete(cupsDoRequest(http, request, "/admin/"));
       else
         ippDelete(request);
@@ -10416,12 +10426,18 @@ found_cups_printer (const char *remote_host, const char *uri,
       (printer->domain == NULL || printer->domain[0] == '\0' ||
        printer->type == NULL || printer->type[0] == '\0')) {
     printer->is_legacy = 1;
+
     if (printer->status != STATUS_TO_BE_CREATED) {
       printer->timeout = time(NULL) + BrowseTimeout;
       debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
 		   printer->queue_name, BrowseTimeout);
     }
   }
+
+  if (printer && NewBrowsePollQueuesShared &&
+      (HAVE_CUPS_1_6 || (!HAVE_CUPS_1_6 && !printer->is_legacy)))
+    printer->num_options = cupsAddOption("printer-to-be-shared", "true", printer->num_options, &(printer->options));
+
 }
 
 gboolean
@@ -11587,6 +11603,20 @@ read_configuration (const char *filename)
       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
 	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
 	NewIPPPrinterQueuesShared = 0;
+    } else if (!strcasecmp(line, "AllowResharingRemoteCUPSPrinters") && value) {
+      if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
+	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
+	AllowResharingRemoteCUPSPrinters = 1;
+      else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
+	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
+	AllowResharingRemoteCUPSPrinters = 0;
+    } else if (!strcasecmp(line, "NewBrowsePollQueuesShared") && value) {
+      if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
+	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
+	NewBrowsePollQueuesShared = 1;
+      else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
+	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
+	NewBrowsePollQueuesShared = 0;
     } else if (!strcasecmp(line, "AutoClustering") && value) {
       if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
 	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
