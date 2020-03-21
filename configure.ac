@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[27])
-m4_define([cups_filters_version_micro],[2])
+m4_define([cups_filters_version_micro],[3])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -786,8 +786,11 @@ AS_IF([test x"$with_php" = "xyes"], [
 AC_ARG_WITH([test-font-path],
 	[AS_HELP_STRING([--with-test-font-path=value], [Set path to font used for tests (default: /usr/share/fonts/dejavu/DejaVuSans.ttf).])],
 	[with_test_font_path="$withval"],
-	[with_test_font_path="/usr/share/fonts/dejavu/DejaVuSans.ttf"]
+	[with_test_font_path=`find /usr/share/fonts -name DejaVuSans.ttf || echo /usr/share/fonts/dejavu/DejaVuSans.ttf`]
 )
+AC_CHECK_FILE("$with_test_font_path", [], [
+	AC_MSG_ERROR([Requested font file is missing. Please install a package providing it.])
+])
 AC_DEFINE_UNQUOTED([TESTFONT], ["$with_test_font_path"], [Path to font used in tests])
 
 # ================
