@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[27])
-m4_define([cups_filters_version_micro],[3])
+m4_define([cups_filters_version_micro],[4])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -144,7 +144,7 @@ AS_CASE([x$with_apple_raster_filter],
 	[AC_MSG_ERROR([Unknown value of with-apple-raster-filter provided: $with_apple_raster_filter])]
 )
 AM_CONDITIONAL([ENABLE_URFTOPDF],
-	       [test "x$APPLE_RASTER_FILTER" == "xurftopdf"])
+	       [test "x$APPLE_RASTER_FILTER" = "xurftopdf"])
 AC_SUBST(APPLE_RASTER_FILTER)
 
 AC_DEFINE(PDFTOPDF, [], [Needed for pdftopdf filter compilation])
