@@ -1,3 +1,9 @@
+cups-filters (1.27.4-1build1) groovy; urgency=medium
+
+  * No-change rebuild against latest qpdf
+
+ -- Jeremy Bicha <jbicha@ubuntu.com>  Sat, 02 May 2020 11:29:33 -0400
+
 cups-filters (1.27.4-1) unstable; urgency=medium
 
   * New upstream version 1.27.4
