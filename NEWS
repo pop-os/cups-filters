@@ -1,5 +1,48 @@
-NEWS - OpenPrinting CUPS Filters v1.14.0 - 2017-05-15
+NEWS - OpenPrinting CUPS Filters v1.14.1 - 2017-06-29
 -----------------------------------------------------
+
+CHANGES IN V1.14.1
+
+	- cups-browsed: Do correct removal of printer entry handling
+	  duplicates correctly also when a legacy CUPS-broadcasted
+	  printer disappears or a printer remaining from the last
+	  session does not appear again.
+	- cups-browsed: Use getline() instead of fgets() to read saved
+	  option settings. This is less crash-prone (Ubuntu bug
+	  #1658833).
+	- cups-browsed: Improved error logging when saving option
+          settings.
+	- cups-browsed: Added NULL checks for generate_local_queue()
+	  and create_local_queue() functions.
+	- cups-browsed: When accessing local CUPS queues use always
+	  the correct port of the CUPS daemon we are attached to.
+	- cups-browsed: Check whether a connection to the local CUPS
+	  daemon actually happened before using it (Ubuntu bug
+	  #1644049).
+	- cups-browsed: Set unused fields of printer record to NULL
+	  when tranfering data from the record of a duplicate printer
+	  to the record of a disappeared one.
+	- cups-browsed: Simplify removal of all queues on shutdown or
+	  stop of Avahi.
+	- cups-browsed: When creating a record for a discovered
+	  printer set it all zero before filling it in, to assure
+	  that no field is in an undefined state.
+	- cups-browsed: All functions which are called via Glib
+	  functions or otherwise event-triggered log now in which
+	  thread they are running. This way one can see whether
+	  problems can be caused by concurrent access to global
+	  resources.
+	- cups-browsed: Do not check whether the DNS-SD event is from
+	  the local machine in the browse_callback() function. We
+	  cannot check the port here.
+	- cups-browsed: Added more NULL checks to Avahi callback
+          functions.
+	- cups-browsed: Added NULL check to avoid crashes in the Avahi
+	  resolver callback (Ubuntu bug #1696967).
+	- libcupsfilters: Let PPD generator do case-insensitive
+	  comparisons for PWG Raster color spaces, as some printers
+	  (Epson) do not use the standard-conforming all-lowercase
+	  form for them (CUPS Issue #4998).
 
 CHANGES IN V1.14.0
 
