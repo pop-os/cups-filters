@@ -1261,9 +1261,9 @@ doc_DATA = \
 
 # Not reliable bash script
 #TESTS += filter/test.sh
-EXTRA_DIST = $(doc_DATA) autogen.sh config.rpath libcupsfilters.pc.in \
-	libfontembed.pc.in utils/cups-browsed.service \
-	utils/cups-browsed-upstart.conf \
+EXTRA_DIST = $(doc_DATA) autogen.sh config.rpath ln-srf \
+	libcupsfilters.pc.in libfontembed.pc.in \
+	utils/cups-browsed.service utils/cups-browsed-upstart.conf \
 	filter/braille/drivers/index/ubrlto4dot.c \
 	filter/braille/filters/TODO.txt cupsfilters/kmdevices.cpp \
 	cupsfilters/kmdevices.h cupsfilters/testdriver.c \
