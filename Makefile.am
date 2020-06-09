@@ -65,6 +65,13 @@ test1284_SOURCES = \
 test1284_LDADD = $(CUPS_LIBS)
 test1284_CFLAGS = $(CUPS_CFLAGS)
 
+if ENABLE_BRAILLE
+pkgbackend_PROGRAMS += cups-brf
+
+cups_brf_SOURCES = \
+	backend/cups-brf.c
+endif
+
 # ==============
 # PPD Generators
 # ==============
@@ -271,6 +278,7 @@ pkgdriver_DATA = \
 if ENABLE_BRAILLE
 pkgdriver_DATA += \
 	drv/generic-brf.drv \
+	drv/generic-ubrl.drv \
 	drv/indexv3.drv \
 	drv/indexv4.drv
 endif
@@ -536,7 +544,8 @@ nodist_pkgfilter_SCRIPTS = \
 	filter/braille/filters/imagetobrf \
 	filter/braille/filters/vectortopdf \
 	filter/braille/filters/vectortobrf \
-	filter/braille/filters/texttobrf
+	filter/braille/filters/texttobrf \
+	filter/braille/filters/musicxmltobrf
 endif
 pkgfilter_PROGRAMS += \
 	commandtoescpx \
@@ -1019,6 +1028,9 @@ if RCLINKS
 endif
 	$(LN_S) -f pdf.utf-8.simple \
 		$(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
+if ENABLE_BRAILLE
+	chmod g-rwx,o-rwx $(DESTDIR)/$(pkgbackenddir)/cups-brf
+endif
 
 
 uninstall-hook:
@@ -1038,5 +1050,12 @@ if ENABLE_DRIVERLESS
 endif
 if ENABLE_BRAILLE
 	$(RM) $(DESTDIR)$(pkgfilterdir)/imagetoubrl
+	$(RM) $(DESTDIR)$(pkgfilterdir)/svgtopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/xfigtopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/wmftopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/emftopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/cgmtopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/cmxtopdf
+	$(RM) $(DESTDIR)$(pkgfilterdir)/vectortoubrl
 	$(RM) $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 endif
