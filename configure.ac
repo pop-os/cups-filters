@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[16])
-m4_define([cups_filters_version_micro],[3])
+m4_define([cups_filters_version_minor],[17])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -464,6 +464,30 @@ PKG_CHECK_MODULES([ZLIB], [zlib])
 AC_DEFINE([HAVE_LIBZ], [], [Define that we use zlib])
 PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 3.0.2])
 
+# ===============================
+# Check for PCLm printing support
+# ===============================
+AC_ARG_ENABLE([pclm], [AS_HELP_STRING([--enable-pclm], [enable PCLm printing.])],
+	[enable_pclm="$enableval"],
+	[enable_pclm=yes]
+)
+if test "x$enable_pclm" != "xno"; then
+	# Do we have QPDF 7.0.0 or newer?
+	AC_CHECK_HEADERS([qpdf/Pl_RunLength.hh],
+		[],
+		[enable_pclm=no]
+	)
+fi
+if test "x$enable_pclm" != "xno"; then
+	AC_DEFINE([QPDF_HAVE_PCLM], [1], [QPDF has PCLm support?])
+	QPDF_NO_PCLM=
+else
+	QPDF_NO_PCLM=\#
+fi
+AC_SUBST(QPDF_NO_PCLM)
+
+
+
 # =================
 # Check for Poppler
 # =================
@@ -770,8 +794,8 @@ AS_IF([test x"$enable_werror" = "xyes"], [
 ])
 AS_IF([test x"$GCC" = "xyes"], [
 	# Be tough with warnings and produce less careless code
-	CFLAGS="$CFLAGS -Wall -pedantic -std=gnu99"
-	CXXFLAGS="$CXXFLAGS -Wall -pedantic" # -Weffc++" # TODO: enable when it does not print 1MB of warnings
+	CFLAGS="$CFLAGS -Wall -std=gnu11"
+	CXXFLAGS="$CXXFLAGS -Wall " # -Weffc++" # TODO: enable when it does not print 1MB of warnings
 ])
 CFLAGS="$CFLAGS -D_GNU_SOURCE"
 CXXFLAGS="$CXXFLAGS -D_GNU_SOURCE"
@@ -874,6 +898,7 @@ Build configuration:
 	braille tables:  ${TABLESDIR}
 	driverless:      ${enable_driverless}
 	apple-raster:    ${APPLE_RASTER_FILTER}
+	pclm:            ${enable_pclm}
 	driverless auto-setup: ${enable_auto_setup_driverless}
 ==============================================================================
 ])

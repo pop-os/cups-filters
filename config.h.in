@@ -135,6 +135,9 @@
 /* pdftops supports -r argument. */
 #undef HAVE_POPPLER_PDFTOPS_WITH_RESOLUTION
 
+/* Define to 1 if you have the <qpdf/Pl_RunLength.hh> header file. */
+#undef HAVE_QPDF_PL_RUNLENGTH_HH
+
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
 
@@ -212,6 +215,9 @@
 
 /* Needed for pdftopdf filter compilation */
 #undef PDFTOPDF
+
+/* QPDF has PCLm support? */
+#undef QPDF_HAVE_PCLM
 
 /* Path for a modern shell */
 #undef SHELL
