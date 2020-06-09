@@ -4864,6 +4864,8 @@ log_cluster(remote_printer_t *p) {
     q = p->slave_of;
   else
     q = p;
+  if (q->queue_name == NULL)
+    return;
   debug_printf("Remote CUPS printers clustered as queue %s:\n", q->queue_name);
   for (r = (remote_printer_t *)cupsArrayFirst(remote_printers), i = 0;
        r; r = (remote_printer_t *)cupsArrayNext(remote_printers), i ++)
@@ -4887,7 +4889,8 @@ log_all_printers() {
 		 p->uri,
 		 p->host, (p->ip ? p->ip : "IP not determined"), p->queue_name,
 		 (p->netprinter ? "IPP Printer" : "Remote CUPS Printer"),
-		 ((q = p->slave_of) != NULL ? q->uri : "None"),
+		 ((q = p->slave_of) != NULL ?
+		  (q->uri ? q->uri : "Deleted Printer") : "None"),
 		 (p->status == STATUS_UNCONFIRMED ? " (Unconfirmed)" :
 		  (p->status == STATUS_DISAPPEARED ? " (Disappeared)" :
 		   (p->status == STATUS_TO_BE_RELEASED ?
@@ -5237,6 +5240,40 @@ invalidate_printer_options(const char *printer) {
   return 0;
 }
 
+char*
+loadPPD(http_t *http,
+	const char *name)
+{
+  /* This function replaces cupsGetPPD2(), but is much simplified
+     (does not support classes) and works with non-standard (!= 631)
+     ports */
+
+  char uri[HTTP_MAX_URI];
+  char *resource;
+  int fd, status;
+  char tempfile[1024] = "";
+
+  /* Download URI and resource for the PPD file */
+  httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "http", NULL,
+		   "localhost", ippPort(), "/printers/%s.ppd", name);
+  resource = strstr(uri, "/printers/");
+
+  /* Download the file */
+  fd = cupsTempFd(tempfile, sizeof(tempfile));
+  status = cupsGetFd(http, resource, fd);
+  close(fd);
+
+  /* Check for errors */
+  if (status == HTTP_STATUS_OK)
+  {
+    if (tempfile[0])
+      return(strdup(tempfile));
+  }
+  else if (tempfile[0])
+    unlink(tempfile);
+  return NULL;
+}
+
 int
 record_printer_options(const char *printer) {
   remote_printer_t *p;
@@ -5247,7 +5284,7 @@ record_printer_options(const char *printer) {
   ipp_attribute_t *attr;
   const char *key;
   char buf[65536], *c;
-  const char *ppdname = NULL;
+  char *ppdname = NULL;
   ppd_file_t *ppd;
   ppd_option_t *ppd_opt;
   cups_option_t *option;
@@ -5305,31 +5342,36 @@ record_printer_options(const char *printer) {
   debug_printf("Recording printer options for %s to %s\n",
 	       printer, filename);
 
-  /* If there is a PPD file for this printer, we save the local
-     settings for the PPD options. */
-  if (cups_notifier != NULL || (p && p->netprinter)) {
-    if ((ppdname = cupsGetPPD(printer)) == NULL) {
-      debug_printf("Unable to get PPD file for %s: %s\n",
-		   printer, cupsLastErrorString());
-    } else if ((ppd = ppdOpenFile(ppdname)) == NULL) {
-      unlink(ppdname);
-      debug_printf("Unable to open PPD file for %s.\n",
-		   printer);
-    } else {
-      ppdMarkDefaults(ppd);
-      for (ppd_opt = ppdFirstOption(ppd); ppd_opt; ppd_opt = ppdNextOption(ppd))
-	if (strcasecmp(ppd_opt->keyword, "PageRegion") != 0) {
-	  strncpy(buf, ppd_opt->keyword, sizeof(buf));
-	  p->num_options = cupsAddOption(buf, ppd_opt->defchoice,
-					 p->num_options, &(p->options));
-	}
-      ppdClose(ppd);
-      unlink(ppdname);
-    }
-  }
-
   conn = http_connect_local ();
   if (conn) {
+    /* If there is a PPD file for this printer, we save the local
+       settings for the PPD options. */
+    if (cups_notifier != NULL || (p && p->netprinter)) {
+      if ((ppdname = loadPPD(conn, printer)) == NULL) {
+	debug_printf("Unable to get PPD file for %s: %s\n",
+		     printer, cupsLastErrorString());
+      } else if ((ppd = ppdOpenFile(ppdname)) == NULL) {
+	unlink(ppdname);
+	debug_printf("Unable to open PPD file for %s.\n",
+		     printer);
+      } else {
+	debug_printf("Recording option settings of the PPD file for %s (%s):\n",
+		     printer, ppd->nickname);
+	ppdMarkDefaults(ppd);
+	for (ppd_opt = ppdFirstOption(ppd); ppd_opt;
+	     ppd_opt = ppdNextOption(ppd))
+	  if (strcasecmp(ppd_opt->keyword, "PageRegion") != 0) {
+	    debug_printf("   %s=%s\n",
+			 ppd_opt->keyword, ppd_opt->defchoice);
+	    strncpy(buf, ppd_opt->keyword, sizeof(buf));
+	    p->num_options = cupsAddOption(buf, ppd_opt->defchoice,
+					   p->num_options, &(p->options));
+	  }
+	ppdClose(ppd);
+	unlink(ppdname);
+      }
+    }
+
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
 		     "localhost", ippPort(), "/printers/%s", printer);
     resource = uri + (strlen(uri) - strlen(printer) - 10);
@@ -5340,6 +5382,8 @@ record_printer_options(const char *printer) {
 
     /* Write all supported printer attributes */
     if (response) {
+      debug_printf("Recording option settings from the IPP attributes for %s:\n",
+		   printer);
       attr = ippFirstAttribute(response);
       while (attr) {
 	key = ippGetName(attr);
@@ -5360,6 +5404,7 @@ record_printer_options(const char *printer) {
 		memmove(c, c + 1, strlen(c));
 	      if (*c) c ++;
 	    }
+	    debug_printf("   %s=%s\n", key, buf);
 	    p->num_options = cupsAddOption(key, buf, p->num_options,
 					   &(p->options));
 	  }
@@ -5369,9 +5414,12 @@ record_printer_options(const char *printer) {
       ippDelete(response);
     }
   } else {
-    debug_printf("Cannot connect to local CUPS to read out the IPP attributes for printer %s.\n",
+    debug_printf("Cannot connect to local CUPS to read out the IPP and PPD attributes for printer %s.\n",
 		 printer);
   }
+
+  if (ppdname)
+    free(ppdname);
 
   if (p->num_options > 0) {
     fp = fopen(filename, "w+");
@@ -5970,7 +6018,7 @@ on_job_state (CupsNotifier *object,
     /* If we hit a slave and not the master, switch to the master */
     if (q && q->slave_of)
       q = q->slave_of;
-    if (q) {
+    if (q && q->queue_name) {
       /* We have remote CUPS queue(s) and so are using the implicitclass 
 	 backend */
       debug_printf("[CUPS Notification] %s is using the \"implicitclass\" CUPS backend, so let us search for a destination for this job.\n", printer);
@@ -6383,21 +6431,21 @@ on_printer_deleted (CupsNotifier *object,
 static int
 queue_overwritten (remote_printer_t *p)
 {
-  http_t        *conn = NULL;
-  ipp_t         *request,               /* IPP Request */
-                *response = NULL;       /* IPP Response */
+  ipp_t         *response = NULL;       /* IPP Response */
   ipp_attribute_t *attr;                /* Current attribute */
   const char    *printername,           /* Print queue name */
                 *uri,                   /* Printer URI */
-                *device;                /* Printer device URI */
-  static const char *pattrs[] =         /* Attributes we need for printers... */
+                *device,                /* Printer device URI */
+                *makemodel;             /* Printer make and model
+                                           (equals PPD NickName) */
+  char          local_queue_uri[1024];
+  static const char *pattrs[] =        /* Attributes we need for printers... */
                 {
                   "printer-name",
                   "printer-uri-supported",
-                  "device-uri"
+                  "device-uri",
+                  "printer-make-and-model"
                 };
-  const char    *loadedppd = NULL;
-  ppd_file_t    *ppd;
   int           overwritten = 0;
 
   if (p->overwritten)
@@ -6405,104 +6453,79 @@ queue_overwritten (remote_printer_t *p)
        so we do not repeat the tests and exit positively */
     return 1;
 
-  /* Get the URI which our CUPS queue actually has now, a change of the
-     URI means a modification or replacement of the print queue by
-     something user-defined. So we schedule this queue for release from
-     handling by cups-browsed */
-  conn = http_connect_local ();
-  if (conn == NULL) {
-    debug_printf("Cannot connect to local CUPS to find the actual device URI and other properties of the printer %s.\n",
-		 p->queue_name);
-    return 0;
-  } else {
-    request = ippNewRequest(CUPS_GET_PRINTERS);
-    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-		  "requested-attributes", sizeof(pattrs) / sizeof(pattrs[0]),
-		  NULL, pattrs);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
-		 NULL, cupsUser());
-    response = cupsDoRequest(conn, request, "/");
-  }
+  /* Get the device URI which our CUPS queue actually has now, a
+     change of the URI means a modification or replacement of the
+     print queue by something user-defined. So we schedule this queue
+     for release from handling by cups-browsed.
+
+     In a second step get the NickName of the PPD which our CUPS queue
+     actually uses now, a change of the NickName means a replacement
+     of the PPD of the print queue by a user-selected one. So we
+     schedule this queue for release from handling by cups-browsed
+     also in this case.
+
+     We only need the NickName from the PPD and due to the fact that
+     the cupsGetPPD2() function does not work when CUPS is on a
+     non-standard port (!= 631, Bug!) and the NickName is also in the
+     get-printer-attributes IPP response as "printer-make-and-model",
+     we go the IPP way here and do not download the printer's PPD. */
+
+  /* URI of the local CUPS queue (not the device URI */
+  httpAssembleURIf(HTTP_URI_CODING_ALL, local_queue_uri,
+		   sizeof(local_queue_uri),
+		   "ipp", NULL, "localhost", ippPort(),
+		   "/printers/%s", p->queue_name);
+  response = get_printer_attributes(local_queue_uri,
+				    pattrs, sizeof(pattrs) / sizeof(pattrs[0]),
+				    pattrs, sizeof(pattrs) / sizeof(pattrs[0]),
+				    1);
+  debug_log_out(get_printer_attributes_log);
   if (!response || cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
     debug_printf("lpstat: %s\n", cupsLastErrorString());
   } else {
+    printername = NULL;
+    device      = NULL;
+    uri         = NULL;
+    makemodel   = NULL;
     for (attr = ippFirstAttribute(response); attr != NULL;
 	 attr = ippNextAttribute(response)) {
-      while (attr != NULL && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
-	attr = ippNextAttribute(response);
-      if (attr == NULL)
-	break;
-      printername = NULL;
-      device      = NULL;
-      uri         = NULL;
-      while (attr != NULL && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
-	if (!strcmp(ippGetName(attr), "printer-name") &&
-	    ippGetValueTag(attr) == IPP_TAG_NAME)
-	  printername = ippGetString(attr, 0, NULL);
-	if (!strcmp(ippGetName(attr), "printer-uri-supported") &&
-	    ippGetValueTag(attr) == IPP_TAG_URI)
-	  uri = ippGetString(attr, 0, NULL);
-	if (!strcmp(ippGetName(attr), "device-uri") &&
-	    ippGetValueTag(attr) == IPP_TAG_URI)
-	  device = ippGetString(attr, 0, NULL);
-	attr = ippNextAttribute(response);
-      }
-      if (printername == NULL) {
-	if (attr == NULL)
-	  break;
-	else
-	  continue;
-      }
-      if (strcasecmp(p->queue_name, printername) == 0) {
-	/* Found our printer in the response */
-	if (device == NULL)
-	  device = uri;
-	if (device != NULL &&
-	    (p->uri == NULL ||
-	     (strlen(device) < 16 ||
-	      strncmp(device, "implicitclass://", 16)))) {
-	  /* The printer's device URI is different to what we have
-	     assigned, so we got notified because the queue was
-	     externally modified and so we will release this printer
-	     from the control of cups-browsed */
-	  debug_printf("Printer %s got modified externally, discovered by a change of its device URI from %s to %s.\n",
-		       p->queue_name,
-		       (p->uri ? (p->netprinter ? p->uri :
-				  "implicitclass://...") :
-			"(not yet determined)"),
-		       device);
-	  overwritten = 1;
-	}
-	break;
-      }
+      if (!strcmp(ippGetName(attr), "printer-name") &&
+	  ippGetValueTag(attr) == IPP_TAG_NAME)
+	printername = ippGetString(attr, 0, NULL);
+      if (!strcmp(ippGetName(attr), "printer-uri-supported") &&
+	  ippGetValueTag(attr) == IPP_TAG_URI)
+	uri = ippGetString(attr, 0, NULL);
+      if (!strcmp(ippGetName(attr), "device-uri") &&
+	  ippGetValueTag(attr) == IPP_TAG_URI)
+	device = ippGetString(attr, 0, NULL);
+      if (!strcmp(ippGetName(attr), "printer-make-and-model") &&
+	  ippGetValueTag(attr) == IPP_TAG_TEXT)
+	makemodel = ippGetString(attr, 0, NULL);
     }
-  }
-  if (response) ippDelete(response);
-
-  /* Get the NickName of the PPD which our CUPS queue actually uses
-     now, a change of the NickName means a replacement of the PPD of
-     the print queue by a user-selected one. So we schedule this
-     queue for release from handling by cups-browsed */
-  if ((loadedppd = cupsGetPPD2(conn, p->queue_name))
-      == NULL) {
-    debug_printf("Unable to load PPD from local queue %s, queue seems to be raw.\n",
-		 p->queue_name);
-    if (p->nickname && p->nickname[0] != '\0') {
-      /* We have set up this printer with a PPD file but the queue
-	 does not have a PPD file any more, so we were notified
-	 because the queue was externally modified and so we will
-	 release this printer from the control of cups-browsed */
-      debug_printf("Printer %s got modified externally, discovered by the removal of its PPD file.\n",
-		   p->queue_name);
-      overwritten = 1;
-    }
-  } else {
-    if ((ppd = ppdOpenFile(loadedppd)) == NULL)
-      debug_printf("Unable to open downloaded PPD from local queue %s.\n",
-		   p->queue_name);
-    else {
-      if (p->nickname == NULL || ppd->nickname == NULL ||
-	  strcasecmp(p->nickname, ppd->nickname)) {
+    if (printername != NULL &&
+	strcasecmp(p->queue_name, printername) == 0) {
+      if (device == NULL)
+	device = uri;
+      /* Check device URI */
+      if (device != NULL &&
+	  (p->uri == NULL ||
+	   (strlen(device) < 16 ||
+	    strncmp(device, "implicitclass://", 16)))) {
+	/* The printer's device URI is different to what we have
+	   assigned, so we got notified because the queue was
+	   externally modified and so we will release this printer
+	   from the control of cups-browsed */
+	debug_printf("Printer %s got modified externally, discovered by a change of its device URI from %s to %s.\n",
+		     p->queue_name,
+		     (p->uri ? (p->netprinter ? p->uri :
+				"implicitclass://...") :
+		      "(not yet determined)"),
+		     device);
+	overwritten = 1;
+      }
+      /* Check NickName */
+      if (p->nickname == NULL || makemodel == NULL ||
+	  strcasecmp(p->nickname, makemodel)) {
 	/* The PPD file of the queue got replaced which we
 	   discovered by comparing the NickName of the PPD with the
 	   NickName which the PPD we have used has. So we were
@@ -6511,13 +6534,13 @@ queue_overwritten (remote_printer_t *p)
 	   cups-browsed */
 	debug_printf("Printer %s got modified externally, discovered by the NickName of its PPD file having changed from \"%s\" to \"%s\".\n",
 		     p->queue_name, (p->nickname ? p->nickname : "(no PPD)"),
-		     (ppd->nickname ? ppd->nickname :
+		     (makemodel ? makemodel :
 		      "(NickName not readable)"));
 	overwritten = 1;
       }
     }
-    unlink(loadedppd);
   }
+  if (response) ippDelete(response);
 
   return overwritten;
 }
@@ -7370,23 +7393,25 @@ gboolean update_cups_queues(gpointer unused) {
      get removed now (if we point them to NULL, we would try to remove
      the already removed CUPS queue again when it comes to the removal
      of the slave. */
-  if (deleted_master == NULL &&
-      (deleted_master =
-       (remote_printer_t *)calloc(1, sizeof(remote_printer_t))) == NULL) {
-    debug_printf("ERROR: Unable to allocate memory.\n");
-    if (in_shutdown == 0)
-      recheck_timer ();
-    return FALSE;
+  if (deleted_master == NULL) {
+    if ((deleted_master =
+	 (remote_printer_t *)calloc(1, sizeof(remote_printer_t))) == NULL) {
+      debug_printf("ERROR: Unable to allocate memory.\n");
+      if (in_shutdown == 0)
+	recheck_timer ();
+      return FALSE;
+    }
+    memset(deleted_master, 0, sizeof(remote_printer_t));
+    deleted_master->uri = "<DELETED>";
   }
-  memset(deleted_master, 0, sizeof(remote_printer_t));
-  deleted_master->uri = "<DELETED>";
+
   /* Now redirect the slave_of pointers of the masters which get deleted now
      to this dummy entry */
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
        p; p = (remote_printer_t *)cupsArrayNext(remote_printers))
     if ((p->status == STATUS_DISAPPEARED ||
 	 p->status == STATUS_TO_BE_RELEASED) &&
-	(q = p->slave_of) != NULL &&
+	(q = p->slave_of) != NULL && q->queue_name &&
 	(q->status == STATUS_DISAPPEARED || q->status == STATUS_TO_BE_RELEASED))
       p->slave_of = deleted_master;
 
@@ -7611,16 +7636,23 @@ gboolean update_cups_queues(gpointer unused) {
 
       /* Do not create a queue for slaves */
       if (p->slave_of) {
-	p->status = STATUS_CONFIRMED;
 	master = p->slave_of;
-	master->status = STATUS_TO_BE_CREATED;
-	master->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
-	if (p->is_legacy) {
-	  p->timeout = time(NULL) + BrowseTimeout;
-	  debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
-		       p->queue_name, BrowseTimeout);
-	} else
-	  p->timeout = (time_t) -1;
+	if (master->queue_name) {
+	  p->status = STATUS_CONFIRMED;
+	  master->status = STATUS_TO_BE_CREATED;
+	  master->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+	  if (p->is_legacy) {
+	    p->timeout = time(NULL) + BrowseTimeout;
+	    debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
+			 p->queue_name, BrowseTimeout);
+	  } else
+	    p->timeout = (time_t) -1;
+	} else {
+	  debug_printf("Master for slave %s is invalid (deleted?)\n",
+		       p->queue_name);
+	  p->status = STATUS_DISAPPEARED;
+	  p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+	}
 	break;
       }
 
@@ -7686,7 +7718,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      debug_printf("Temporary queue created, grabbing the PPD.\n");
 	      cupsFreeDestInfo(dinfo);
 	      loadedppd = NULL;
-	      if ((loadedppd = cupsGetPPD2(http, p->queue_name)) == NULL)
+	      if ((loadedppd = loadPPD(http, p->queue_name)) == NULL)
 		debug_printf("Unable to load PPD from local temporary queue %s!\n",
 			     p->queue_name);
 	      else {
@@ -11911,6 +11943,16 @@ int main(int argc, char*argv[]) {
     start_debug_logging();
 
   debug_printf("main() in THREAD %ld\n", pthread_self());
+
+  /* If a port is selected via the IPP_PORT environment variable,
+     set this first */
+  if (getenv("IPP_PORT") != NULL) {
+    snprintf(local_server_str, sizeof(local_server_str) - 1,
+	     "localhost:%s", getenv("IPP_PORT"));
+    if (strlen(getenv("CUPS_SERVER")) > 1023)
+      local_server_str[1023] = '\0';
+    cupsSetServer(local_server_str);
+  }
 
   /* Point to selected CUPS server or domain socket via the CUPS_SERVER
      environment variable or DomainSocket configuration file option.
