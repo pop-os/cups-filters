@@ -851,7 +851,8 @@ create_local_queue (const char *name,
   if (autoshutdown && autoshutdown_exec_id &&
       cupsArrayCount(remote_printers) > 0) {
     debug_printf ("cups-browsed: New printers there to make available, killing auto shutdown timer.\n");
-    g_source_remove(autoshutdown_exec_id);
+    g_source_destroy(g_main_context_find_source_by_id(NULL,
+						      autoshutdown_exec_id));
     autoshutdown_exec_id = 0;
   }
 
@@ -1819,7 +1820,8 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
       /* If there is still an active auto shutdown timer, kill it */
       if (autoshutdown_exec_id > 0) {
 	debug_printf ("cups-browsed: We have left auto shutdown mode, killing auto shutdown timer.\n");
-	g_source_remove(autoshutdown_exec_id);
+	g_source_destroy(g_main_context_find_source_by_id(NULL,
+							  autoshutdown_exec_id));
 	autoshutdown_exec_id = 0;
       }
     }
@@ -2681,7 +2683,8 @@ sigusr1_handler(int sig) {
   /* If there is still an active auto shutdown timer, kill it */
   if (autoshutdown_exec_id > 0) {
     debug_printf ("cups-browsed: We have left auto shutdown mode, killing auto shutdown timer.\n");
-    g_source_remove(autoshutdown_exec_id);
+    g_source_destroy(g_main_context_find_source_by_id(NULL,
+						      autoshutdown_exec_id));
     autoshutdown_exec_id = 0;
   }
 }
