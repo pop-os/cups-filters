@@ -190,9 +190,6 @@ main(int  argc,				/* I - Number of command-line arguments */
   char			filename[1024];	/* Name of file to print */
   cm_calibration_t      cm_calibrate;   /* Are we color calibrating the device? */
   int                   cm_disabled;    /* Color management disabled? */
-#ifdef HAVE_CUPS_1_7
-  int                   pwgraster;
-#endif /* HAVE_CUPS_1_7 */
 
 
  /*
@@ -308,7 +305,7 @@ main(int  argc,				/* I - Number of command-line arguments */
             filename);
 
     while ((bytes = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
-      write(fd, buffer, bytes);
+      bytes = write(fd, buffer, bytes);
 
     close(fd);
   }
@@ -479,21 +476,6 @@ main(int  argc,				/* I - Number of command-line arguments */
     fprintf(stderr, "DEBUG: %s\n", cupsRasterErrorString());
     return (1);
   }
-
-#ifdef HAVE_CUPS_1_7
- /*
-  * Check whether we need PWG Raster output
-  */
-  pwgraster = 0;
-  if ((attr = ppdFindAttr(ppd,"PWGRaster",0)) != 0 &&
-      (!strcasecmp(attr->value, "true")
-       || !strcasecmp(attr->value, "on") ||
-       !strcasecmp(attr->value, "yes")))
-  {
-    pwgraster = 1;
-    cupsRasterParseIPPOptions(&header, num_options, options, pwgraster, 0);
-  }
-#endif /* HAVE_CUPS_1_7 */
 
  /*
   * Get the media type and resolution that have been chosen...
@@ -840,7 +822,7 @@ main(int  argc,				/* I - Number of command-line arguments */
 
       fputs("DEBUG: Auto orientation...\n", stderr);
 
-      if ((xsize * ysize) < (xsize2 * xsize2))
+      if ((xsize * ysize) < (xsize2 * ysize2))
       {
        /*
 	* Do landscape orientation...
@@ -982,19 +964,29 @@ main(int  argc,				/* I - Number of command-line arguments */
 
     header.cupsWidth  = width * header.HWResolution[0] / 72.0;
     header.cupsHeight = length * header.HWResolution[1] / 72.0;
+  } else {
+   /*
+    * Set the bitmap size...
+    */
 
-    header.cupsBytesPerLine = (header.cupsBitsPerPixel *
-                               header.cupsWidth + 7) / 8;
-
-    if (header.cupsColorOrder == CUPS_ORDER_BANDED)
-      header.cupsBytesPerLine *= header.cupsNumColors;
+    header.cupsWidth  = (Orientation & 1 ? yprint : xprint) *
+      header.HWResolution[0];
+    header.cupsHeight = (Orientation & 1 ? xprint : yprint) *
+      header.HWResolution[1];
   }
+  header.cupsBytesPerLine = (header.cupsBitsPerPixel *
+			     header.cupsWidth + 7) / 8;
+
+  if (header.cupsColorOrder == CUPS_ORDER_BANDED)
+    header.cupsBytesPerLine *= header.cupsNumColors;
 
   header.Margins[0] = PageLeft;
   header.Margins[1] = PageBottom;
 
   fprintf(stderr, "DEBUG: PageSize = [%d %d]\n", header.PageSize[0],
           header.PageSize[1]);
+  fprintf(stderr, "DEBUG: PageLeft = %f, PageRight = %f, PageBottom = %f, PageTop = %f\n",
+	  PageLeft, PageRight, PageBottom, PageTop);
 
   switch (Orientation)
   {
@@ -1036,32 +1028,32 @@ main(int  argc,				/* I - Number of command-line arguments */
 	switch (XPosition)
 	{
 	  case -1 :
-              header.cupsImagingBBox[0] = PageBottom;
-	      header.cupsImagingBBox[2] = PageBottom + yprint * 72;
+              header.cupsImagingBBox[0] = PageLeft;
+	      header.cupsImagingBBox[2] = PageLeft + yprint * 72;
 	      break;
 	  default :
-              header.cupsImagingBBox[0] = (PageTop + PageBottom - yprint * 72) / 2;
-	      header.cupsImagingBBox[2] = (PageTop + PageBottom + yprint * 72) / 2;
+              header.cupsImagingBBox[0] = (PageRight + PageLeft - yprint * 72) / 2;
+	      header.cupsImagingBBox[2] = (PageRight + PageLeft + yprint * 72) / 2;
 	      break;
 	  case 1 :
-              header.cupsImagingBBox[0] = PageTop - yprint * 72;
-	      header.cupsImagingBBox[2] = PageTop;
+              header.cupsImagingBBox[0] = PageRight - yprint * 72;
+	      header.cupsImagingBBox[2] = PageRight;
 	      break;
 	}
 
 	switch (YPosition)
 	{
 	  case -1 :
-              header.cupsImagingBBox[1] = PageLeft;
-	      header.cupsImagingBBox[3] = PageLeft + xprint * 72;
+              header.cupsImagingBBox[1] = PageBottom;
+	      header.cupsImagingBBox[3] = PageBottom + xprint * 72;
 	      break;
 	  default :
-              header.cupsImagingBBox[1] = (PageRight + PageLeft - xprint * 72) / 2;
-	      header.cupsImagingBBox[3] = (PageRight + PageLeft + xprint * 72) / 2;
+              header.cupsImagingBBox[1] = (PageTop + PageBottom - xprint * 72) / 2;
+	      header.cupsImagingBBox[3] = (PageTop + PageBottom + xprint * 72) / 2;
 	      break;
 	  case 1 :
-              header.cupsImagingBBox[1] = PageRight - xprint * 72;
-	      header.cupsImagingBBox[3] = PageRight;
+              header.cupsImagingBBox[1] = PageTop - xprint * 72;
+	      header.cupsImagingBBox[3] = PageTop;
 	      break;
 	}
 	break;
@@ -1104,32 +1096,32 @@ main(int  argc,				/* I - Number of command-line arguments */
 	switch (XPosition)
 	{
 	  case 1 :
-              header.cupsImagingBBox[0] = PageBottom;
-	      header.cupsImagingBBox[2] = PageBottom + yprint * 72;
+              header.cupsImagingBBox[0] = PageLeft;
+	      header.cupsImagingBBox[2] = PageLeft + yprint * 72;
 	      break;
 	  default :
-              header.cupsImagingBBox[0] = (PageTop + PageBottom - yprint * 72) / 2;
-	      header.cupsImagingBBox[2] = (PageTop + PageBottom + yprint * 72) / 2;
+              header.cupsImagingBBox[0] = (PageRight + PageLeft - yprint * 72) / 2;
+	      header.cupsImagingBBox[2] = (PageRight + PageLeft + yprint * 72) / 2;
 	      break;
 	  case -1 :
-              header.cupsImagingBBox[0] = PageTop - yprint * 72;
-	      header.cupsImagingBBox[2] = PageTop;
+              header.cupsImagingBBox[0] = PageRight - yprint * 72;
+	      header.cupsImagingBBox[2] = PageRight;
 	      break;
 	}
 
 	switch (YPosition)
 	{
 	  case 1 :
-              header.cupsImagingBBox[1] = PageLeft;
-	      header.cupsImagingBBox[3] = PageLeft + xprint * 72;
+              header.cupsImagingBBox[1] = PageBottom;
+	      header.cupsImagingBBox[3] = PageBottom + xprint * 72;
 	      break;
 	  default :
-              header.cupsImagingBBox[1] = (PageRight + PageLeft - xprint * 72) / 2;
-	      header.cupsImagingBBox[3] = (PageRight + PageLeft + xprint * 72) / 2;
+              header.cupsImagingBBox[1] = (PageTop + PageBottom - xprint * 72) / 2;
+	      header.cupsImagingBBox[3] = (PageTop + PageBottom + xprint * 72) / 2;
 	      break;
 	  case -1 :
-              header.cupsImagingBBox[1] = PageRight - xprint * 72;
-	      header.cupsImagingBBox[3] = PageRight;
+              header.cupsImagingBBox[1] = PageTop - xprint * 72;
+	      header.cupsImagingBBox[3] = PageTop;
 	      break;
 	}
 	break;
@@ -1139,6 +1131,11 @@ main(int  argc,				/* I - Number of command-line arguments */
   header.ImagingBoundingBox[1] = header.cupsImagingBBox[1];
   header.ImagingBoundingBox[2] = header.cupsImagingBBox[2];
   header.ImagingBoundingBox[3] = header.cupsImagingBBox[3];
+
+  fprintf(stderr, "DEBUG: Orientation: %d, XPosition: %d, YPosition: %d, ImagingBoundingBox = [%d %d %d %d]\n",
+	  Orientation, XPosition, YPosition,
+	  header.ImagingBoundingBox[0], header.ImagingBoundingBox[1],
+	  header.ImagingBoundingBox[2], header.ImagingBoundingBox[3]);
 
   if (header.cupsColorOrder == CUPS_ORDER_PLANAR)
     num_planes = header.cupsNumColors;

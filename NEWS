@@ -1,5 +1,36 @@
-NEWS - OpenPrinting CUPS Filters v1.13.1 - 2016-12-17
+NEWS - OpenPrinting CUPS Filters v1.13.2 - 2016-12-28
 -----------------------------------------------------
+
+CHANGES IN V1.13.2
+
+	- cupsfilters.drv: Corrected cupsFilter entry for the "Generic
+	  IPP Everywhere Printer".
+	- driverless: Fixes on the man page (Debian bug #849075).
+	- driverless: Do not error-exit (non-zero status) when run by
+	  CUPS as backend or PPD generator when no driverless printer
+	  is found or Avahi not running. When run from thr command
+	  line, exit status is the same as of ippfind.
+	- imagetoraster: Removed (incomplete) PWG Raster support. For
+	  PWG Raster output we let the rastertopwg filter from CUPS do
+	  the finalization (mainly adding white pixels at the borders
+	  to get a full-page bitmap).
+	- imagetoraster: Fixed several bugs in the calculation of the
+          page geometry (Debian bug #849380).
+	- libcupsfilters: If the IPP-polled printer has the
+	  "sides-supported" attribute, determine the need of a
+	  "Duplex" option solely whether the attribute has a
+	  "two-sided-long-edge" choice and ignore the "duplex"
+	  parameter of the ppdCreateFromIPP() function call. This lets
+	  the more precise information coming from the IPP query
+	  always be preferred against information from the Bonjour
+	  record.
+	- driverless: When listing printers let the device ID contain
+	  "AppleRaster" (for Apple Raster printers) and "PWGRaster"
+	  (for IPP Everywhere printers) in the "CMD" field.
+	- driverless: Added "-T 3" to the ippfind command line. This
+	  makes ippfind search the Bonjour broadcasts for up to 3
+	  seconds when searching for IPP printers, raising the
+	  reliability in finding all of them (Debian bug #848712).
 
 CHANGES IN V1.13.1
 
