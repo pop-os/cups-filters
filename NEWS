@@ -1,5 +1,61 @@
-NEWS - OpenPrinting CUPS Filters v1.0.42 - 2013-11-29
+NEWS - OpenPrinting CUPS Filters v1.0.43 - 2013-12-19
 -----------------------------------------------------
+
+CHANGES IN V1.0.43
+
+	- cups-browsed: When automatically setting up a PPD-less print
+	  queue for an IPP network printer add make/model info as an
+	  additional "make-and-model" command line option to the call
+	  of the pdftoippprinter filter, this way filters can do
+	  make/model-specific exceptions (quirk rules).
+	- pdftopdf: Take page size from the command line if not
+	  already given by the PPD file, this way
+	  "fitplot"/"fit-to-page" also works with PPD-less printing.
+	- libcupsfilters: cupsRasterParseIPPOptions() did not set
+	  sRGB color space.
+	- libcupsfilters: cupsRasterParseIPPOptions() did not set
+	  Tumble with "Duplex=DuplexTumble".
+	- pdftopdf: Fixed software copy generation logic for printers
+	  with hardware copy generation, but without collate support
+	  (Ubuntu bug #1259240).
+	- pdftops: Let Ghostscript output PostScript level 3 also for
+	  PPD-less printing, but not for HP lasers or when make/model
+	  info is not supplied.
+	- cups-browsed: removed duplicate definition of ippSetVersion.
+	- foomatic-rip: Take PATH_MAX constant from limits.h if
+	  available instead defining it's own version conflicting with
+	  kfreebsd. Thanks to Peter Green for the patch (Debian bug
+	  #731658).
+	- pdftops: Ignore "landscape", "orientation-requested",
+	  "fit-to-page", and any page geometry options. The first two
+	  do not make sense on PDF input and therefore should only be
+	  used in ...topdf filters used before pdftopdf, the others
+	  are already taken care of by pdftopdf so that pdftops gets
+	  pages with print-ready page geometry.
+	- pdftops: Added "-nocenter" to the call of "pdftops
+	  -origpagesizes" (Poppler/freedesktop.org bug #72312,
+	  comments #6 and #7).
+	- pdftopdf: If there is no PPD file or no
+	  "*LandscapeOrientation:" keyword in the PPD file, rotate
+	  counterclockwise, not clockwise to fit a landscape-oriented
+	  page on a portrait-oriented sheet (See
+	  Poppler/freedesktop.org bug #72312, comment #6).
+	- pstopdf: Support for the "landscape" and
+	  "orientation-requested" options (Ubuntu bug #1243484).
+	- pdftops: Support for PPD-less printing on PostScript
+	  printers: duplex, resolution, input tray, color mode, and
+	  make/model (for quirk rules) can now be supplied by the
+	  command line, pdftopdf takes care of the page geometry.
+	- libcupsfilters: cupsRasterParseIPPOptions() allows
+	  specifying resolutions without unit now, assuming dpi then
+	  (example: "600x600").
+	- Fixed "--with-cups-rundir" and "--with-cups-domainsocket" 
+	  options in configure (Bug #1174).
+	- pdftops: After fixing the output of rotated PDF pages
+	  (usually landscape-oriented pages rotated by pdftopdf) in
+	  Poppler (Poppler/freedesktop.org bug #72312) corrected the
+	  use of "pdftops -origpagesizes" in pdftops appropriately
+	  (Red Hat bug #768811).
 
 CHANGES IN V1.0.42
 

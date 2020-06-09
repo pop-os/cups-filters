@@ -112,13 +112,13 @@ PDFTOPDF_Processor *PDFTOPDF_Factory::processor()
 
 // (1-based)
 //   9: [*] [1] [2] [*]  [*] [3] [4] [9]  [8] [5] [6] [7]   -> signature = 12 = 3*4 = ((9+3)/4)*4
-//       1   2   3   4    5   6   7   8    9   10  11  12 
+//       1   2   3   4    5   6   7   8    9   10  11  12
 // NOTE: psbook always fills the sig completely (results in completely white pages (4-set), depending on the input)
 
 // empty pages must be added for output values >=numPages
 std::vector<int> bookletShuffle(int numPages,int signature) // {{{
 {
-  if (signature<0) { 
+  if (signature<0) {
     signature=(numPages+3)&~0x3;
   }
   assert(signature%4==0);
@@ -164,11 +164,11 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
   if (param.booklet!=BOOKLET_OFF) {
     shuffle=bookletShuffle(numOrigPages,param.bookSignature);
     if (param.booklet==BOOKLET_ON) { // override options
-  // TODO? specifically "sides=two-sided-short-edge" / DuplexTumble 
+  // TODO? specifically "sides=two-sided-short-edge" / DuplexTumble
 //      param.duplex=true;   // param.setDuplex=true;  ?    currently done in setFinalPPD()
       NupParameters::preset(2,param.nup); // TODO?! better
     }
-  } else { // 0 1 2 3 ... 
+  } else { // 0 1 2 3 ...
     shuffle.resize(numOrigPages);
     std::iota(shuffle.begin(),shuffle.end(),0);
   }
@@ -203,7 +203,7 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
       }
 
       if (!param.pageLabel.empty()) {
-	page->add_label(param.page, param.pageLabel);
+        page->add_label(param.page, param.pageLabel);
       }
 
       // place border
@@ -217,9 +217,9 @@ bool processPDFTOPDF(PDFTOPDF_Processor &proc,ProcessingParameters &param) // {{
         rect.right-=param.page.right;
         // width,height not needed for add_border_rect (FIXME?)
 
-        page->add_border_rect(rect,param.border,1.0); 
+        page->add_border_rect(rect,param.border,1.0);
 #else // this is what pstops does
-        page->add_border_rect(param.page,param.border,1.0); 
+        page->add_border_rect(param.page,param.border,1.0);
 #endif
       }
 
@@ -265,30 +265,21 @@ const bool origls=param.nup.landscape;
         rect.width=param.page.width;
         rect.height=param.page.height;
 
-        // TODO: better
-        if (!origls) {
-          if ( (param.orientation==ROT_90)||(param.orientation==ROT_270) ) {
-            std::swap(rect.width,rect.height);
-          }
-        } else {
-          if ( (param.orientation==ROT_0)||(param.orientation==ROT_180) ) {
-            std::swap(rect.width,rect.height);
-          }
+// TODO? better
+        if (origls) {
+          std::swap(rect.width,rect.height);
         }
 
-// TODO?
         rect.left=0;
         rect.bottom=0;
         rect.right=rect.width;
         rect.top=rect.height;
-
-        rect.rotate_move(param.orientation,rect.width,rect.height);
       }
 //      rect.dump();
 
       bool newPage=nupstate.nextPage(rect.width,rect.height,pgedit);
       if (newPage) {
-        if ( (param.withPage(outputno))&&(curpage) ) {
+        if ( (curpage)&&(param.withPage(outputno)) ) {
           curpage->rotate(param.orientation);
           if (param.mirror) {
             curpage->mirror();
@@ -296,8 +287,8 @@ const bool origls=param.nup.landscape;
           }
           proc.add_page(curpage,param.reverse); // reverse -> insert at beginning
         }
-        outputno++;
         curpage=proc.new_page(param.page.width,param.page.height);
+        outputno++;
       }
       if (shuffle[iA]>=numOrigPages) {
         continue;
@@ -311,7 +302,7 @@ const bool origls=param.nup.landscape;
       }
 
       if (!param.pageLabel.empty()) {
-	page->add_label(param.page, param.pageLabel);
+        page->add_label(param.page, param.pageLabel);
       }
 
       if (!param.fitplot) {
@@ -328,7 +319,7 @@ const bool origls=param.nup.landscape;
 
 //      pgedit.dump();
     }
-    if ( (param.withPage(outputno))&&(curpage) ) {
+    if ( (curpage)&&(param.withPage(outputno)) ) {
       curpage->rotate(param.orientation);
       if (param.mirror) {
         curpage->mirror();

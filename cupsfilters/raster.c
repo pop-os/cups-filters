@@ -237,6 +237,8 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
   if (set_defaults)
     h->CutMedia = CUPS_CUT_NONE;
 
+  if (set_defaults)
+    h->Tumble = CUPS_FALSE;
   if ((val = cupsGetOption("sides", num_options, options)) != NULL ||
       (val = cupsGetOption("Duplex", num_options, options)) != NULL)
   {
@@ -249,7 +251,13 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
 	     !strncasecmp(val, "two-sided", 9) ||
 	     !strncasecmp(val, "TwoSided", 8) ||
 	     !strncasecmp(val, "Duplex", 6))
+    {
       h->Duplex = CUPS_TRUE;
+      if (!strncasecmp(val, "DuplexTumble", 12))
+	h->Tumble = CUPS_TRUE;
+      if (!strncasecmp(val, "DuplexNoTumble", 12))
+	h->Tumble = CUPS_FALSE;
+    }
     else if (set_defaults)
       h->Duplex = CUPS_FALSE;
   }
@@ -272,7 +280,8 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
     }
 
     if (ptr <= val || xres <= 0 || yres <= 0 || !ptr ||
-	(strcasecmp(ptr, "dpi") &&
+	(*ptr != '\0' &&
+	 strcasecmp(ptr, "dpi") &&
 	 strcasecmp(ptr, "dpc") &&
 	 strcasecmp(ptr, "dpcm")))
     {
@@ -720,11 +729,7 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
 	     !strcasecmp(val, "TwoSidedShortEdge") ||
 	     !strcasecmp(val, "DuplexTumble"))
       h->Tumble = CUPS_TRUE;
-    else if (set_defaults)
-      h->Tumble = CUPS_FALSE;
   }
-  else if (set_defaults)
-    h->Tumble = CUPS_FALSE;
 
   h->cupsWidth = h->HWResolution[0] * h->PageSize[0] / 72;
   h->cupsHeight = h->HWResolution[1] * h->PageSize[1] / 72;
@@ -793,13 +798,6 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
 	ptr = NULL;
       }
     }
-    else if (!strncasecmp(val, "Rgb", 3))
-    {
-      if (*(val + 3) == '_') 
-	ptr = val + 4;
-      colorspace = 1;
-      numcolors = 3;
-    }
     else if (!strncasecmp(val, "Sgray", 5))
     {
       if (*(val + 5) == '_') 
@@ -812,6 +810,13 @@ cupsRasterParseIPPOptions(cups_page_header2_t *h, /* I - Raster header */
       if (*(val + 4) == '_') 
 	ptr = val + 5;
       colorspace = 19;
+      numcolors = 3;
+    }
+    else if (!strncasecmp(val, "Rgb", 3))
+    {
+      if (*(val + 3) == '_') 
+	ptr = val + 4;
+      colorspace = 1;
       numcolors = 3;
     }
     if (numcolors > 0)
