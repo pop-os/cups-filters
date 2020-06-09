@@ -2415,7 +2415,7 @@ esac
 ac_config_headers="$ac_config_headers config.h"
 
 
-CUPSFILTERS_VERSION="1.0.6"
+CUPSFILTERS_VERSION="1.0.7"
 
 cat >>confdefs.h <<_ACEOF
 #define CUPSFILTERS_SVERSION "cups-filters v$CUPSFILTERS_VERSION"
