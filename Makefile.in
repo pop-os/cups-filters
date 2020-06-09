@@ -101,6 +101,24 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 @BUILD_DBUS_TRUE@am__append_1 = $(DBUS_CFLAGS) -DHAVE_DBUS
 @BUILD_DBUS_TRUE@am__append_2 = $(DBUS_LIBS)
+@ENABLE_BRAILLE_TRUE@am__append_3 = \
+@ENABLE_BRAILLE_TRUE@	drv/generic-brf.drv \
+@ENABLE_BRAILLE_TRUE@	drv/indexv3.drv \
+@ENABLE_BRAILLE_TRUE@	drv/indexv4.drv
+
+@ENABLE_BRAILLE_TRUE@am__append_4 = \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/media-braille.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/braille.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagemagick.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
+
+@ENABLE_BRAILLE_TRUE@am__append_5 = \
+@ENABLE_BRAILLE_TRUE@	mime/braille.convs \
+@ENABLE_BRAILLE_TRUE@	mime/braille.types
+
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
@@ -109,7 +127,7 @@ pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
 	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
 	rastertopdf$(EXEEXT) $(am__EXEEXT_1)
-@ENABLE_IMAGEFILTERS_TRUE@am__append_3 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_6 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
@@ -132,7 +150,17 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc filter/gstopxl \
 	utils/cups-browsed utils/cups-browsed.conf \
-	filter/foomatic-rip/foomatic-rip.1
+	filter/foomatic-rip/foomatic-rip.1 \
+	filter/braille/drivers/index/indexv4.sh \
+	filter/braille/drivers/index/indexv3.sh \
+	filter/braille/drivers/index/index.sh \
+	filter/braille/drivers/index/textbrftoindexv3 \
+	filter/braille/drivers/index/imageubrltoindexv3 \
+	filter/braille/drivers/index/imageubrltoindexv4 \
+	filter/braille/drivers/generic/brftoembosser \
+	filter/braille/filters/cups-braille.sh \
+	filter/braille/filters/imagetobrf \
+	filter/braille/filters/texttobrf
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -164,11 +192,13 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" \
 	"$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" \
-	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" \
+	"$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" \
+	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" \
 	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" \
 	"$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" \
-	"$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" \
+	"$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" \
+	"$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" \
+	"$(DESTDIR)$(pkgcupsdatadir)" \
 	"$(DESTDIR)$(pkgcupsserverrootdir)" \
 	"$(DESTDIR)$(pkgdriverdir)" \
 	"$(DESTDIR)$(pkgfiltersincludedir)" \
@@ -454,7 +484,8 @@ urftopdf_DEPENDENCIES = $(am__DEPENDENCIES_1)
 urftopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(urftopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SCRIPTS = $(initrc_SCRIPTS) $(pkgfilter_SCRIPTS)
+SCRIPTS = $(initrc_SCRIPTS) $(nodist_pkgbraille_SCRIPTS) \
+	$(nodist_pkgfilter_SCRIPTS) $(pkgfilter_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -553,11 +584,12 @@ man5dir = $(mandir)/man5
 man8dir = $(mandir)/man8
 NROFF = nroff
 MANS = $(man_MANS)
-DATA = $(doc_DATA) $(pkgbanner_DATA) $(pkgcharset_DATA) \
-	$(pkgconf_DATA) $(pkgcupsdata_DATA) $(pkgcupsserverroot_DATA) \
-	$(pkgdriver_DATA) $(pkgfiltersinclude_DATA) \
-	$(pkgfontconfig_DATA) $(pkgfontembedinclude_DATA) \
-	$(pkgmime_DATA) $(pkgppdc_DATA) $(ppd_DATA)
+DATA = $(doc_DATA) $(nodist_pkgppdc_DATA) $(pkgbanner_DATA) \
+	$(pkgcharset_DATA) $(pkgconf_DATA) $(pkgcupsdata_DATA) \
+	$(pkgcupsserverroot_DATA) $(pkgdriver_DATA) \
+	$(pkgfiltersinclude_DATA) $(pkgfontconfig_DATA) \
+	$(pkgfontembedinclude_DATA) $(pkgmime_DATA) $(pkgppdc_DATA) \
+	$(ppd_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
 	$(LISP)config.h.in
 # Read a list of newline-separated strings from the standard input,
@@ -758,6 +790,16 @@ TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
 	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/libcupsfilters.pc.in $(srcdir)/libfontembed.pc.in \
+	$(top_srcdir)/filter/braille/drivers/generic/brftoembosser.in \
+	$(top_srcdir)/filter/braille/drivers/index/imageubrltoindexv3.in \
+	$(top_srcdir)/filter/braille/drivers/index/imageubrltoindexv4.in \
+	$(top_srcdir)/filter/braille/drivers/index/index.sh.in \
+	$(top_srcdir)/filter/braille/drivers/index/indexv3.sh.in \
+	$(top_srcdir)/filter/braille/drivers/index/indexv4.sh.in \
+	$(top_srcdir)/filter/braille/drivers/index/textbrftoindexv3.in \
+	$(top_srcdir)/filter/braille/filters/cups-braille.sh.in \
+	$(top_srcdir)/filter/braille/filters/imagetobrf.in \
+	$(top_srcdir)/filter/braille/filters/texttobrf.in \
 	$(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in \
 	$(top_srcdir)/filter/gstopxl.in \
 	$(top_srcdir)/utils/cups-browsed.conf.in \
@@ -906,6 +948,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRCASESTR = @STRCASESTR@
 STRIP = @STRIP@
+TABLESDIR = @TABLESDIR@
 VERSION = @VERSION@
 ZLIB_CFLAGS = @ZLIB_CFLAGS@
 ZLIB_LIBS = @ZLIB_LIBS@
@@ -980,7 +1023,8 @@ doc_DATA = \
 #TESTS += filter/test.sh
 EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	libfontembed.pc.in utils/cups-browsed.service \
-	utils/cups-browsed-upstart.conf $(pkgbanner_DATA) \
+	utils/cups-browsed-upstart.conf \
+	filter/braille/drivers/index/ubrlto4dot.c $(pkgbanner_DATA) \
 	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
 	cupsfilters/image.pgm cupsfilters/image.ppm \
 	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(pkgppdc_DATA) \
@@ -1182,26 +1226,39 @@ pkgcupsserverroot_DATA = \
 # Drivers
 # =======
 pkgdriverdir = $(CUPS_DATADIR)/drv
-pkgdriver_DATA = \
-	drv/cupsfilters.drv
-
+pkgdriver_DATA = drv/cupsfilters.drv $(am__append_3)
 
 # =======
 # Definitions for drivers
 # =======
 pkgppdcdir = $(CUPS_DATADIR)/ppdc
-pkgppdc_DATA = \
-	filter/pcl.h \
-	filter/escp.h
+pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_4)
+@ENABLE_BRAILLE_TRUE@GENERATED_LIBLOUIS = \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis2.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis3.defs \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis4.defs
+
+@ENABLE_BRAILLE_TRUE@GENERATED_DEFS = $(GENERATED_LIBLOUIS)
+@ENABLE_BRAILLE_TRUE@nodist_pkgppdc_DATA = \
+@ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
 
 
 # =====
 # MIMEs
 # =====
 pkgmimedir = $(CUPS_DATADIR)/mime
-pkgmime_DATA = \
-	mime/cupsfilters.convs \
-	mime/cupsfilters.types
+pkgmime_DATA = mime/cupsfilters.convs mime/cupsfilters.types \
+	$(am__append_5)
+
+# =================
+# Braille aux files
+# =================
+@ENABLE_BRAILLE_TRUE@pkgbrailledir = $(CUPS_DATADIR)/braille
+@ENABLE_BRAILLE_TRUE@nodist_pkgbraille_SCRIPTS = \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/indexv4.sh \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/indexv3.sh \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.sh \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/cups-braille.sh
 
 
 # =================
@@ -1342,6 +1399,14 @@ pkgfilter_SCRIPTS = \
 	filter/pstopdf \
 	filter/textonly \
 	filter/texttops
+
+@ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv4 \
+@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/textbrftoindexv3 \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagetobrf \
+@ENABLE_BRAILLE_TRUE@	filter/braille/filters/texttobrf
 
 bannertopdf_SOURCES = \
 	filter/banner.c \
@@ -1759,6 +1824,26 @@ utils/cups-browsed: $(top_builddir)/config.status $(top_srcdir)/utils/cups-brows
 utils/cups-browsed.conf: $(top_builddir)/config.status $(top_srcdir)/utils/cups-browsed.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 filter/foomatic-rip/foomatic-rip.1: $(top_builddir)/config.status $(top_srcdir)/filter/foomatic-rip/foomatic-rip.1.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/indexv4.sh: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/indexv4.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/indexv3.sh: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/indexv3.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/index.sh: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/index.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/textbrftoindexv3: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/textbrftoindexv3.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/imageubrltoindexv3: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/imageubrltoindexv3.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/index/imageubrltoindexv4: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/index/imageubrltoindexv4.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/drivers/generic/brftoembosser: $(top_builddir)/config.status $(top_srcdir)/filter/braille/drivers/generic/brftoembosser.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/cups-braille.sh: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/cups-braille.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/imagetobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/imagetobrf.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+filter/braille/filters/texttobrf: $(top_builddir)/config.status $(top_srcdir)/filter/braille/filters/texttobrf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
@@ -2211,6 +2296,76 @@ uninstall-initrcSCRIPTS:
 	files=`for p in $$list; do echo "$$p"; done | \
 	       sed -e 's,.*/,,;$(transform)'`; \
 	dir='$(DESTDIR)$(initrcdir)'; $(am__uninstall_files_from_dir)
+install-nodist_pkgbrailleSCRIPTS: $(nodist_pkgbraille_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(nodist_pkgbraille_SCRIPTS)'; test -n "$(pkgbrailledir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgbrailledir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgbrailledir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(pkgbrailledir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(pkgbrailledir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-nodist_pkgbrailleSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_pkgbraille_SCRIPTS)'; test -n "$(pkgbrailledir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(pkgbrailledir)'; $(am__uninstall_files_from_dir)
+install-nodist_pkgfilterSCRIPTS: $(nodist_pkgfilter_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	@list='$(nodist_pkgfilter_SCRIPTS)'; test -n "$(pkgfilterdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgfilterdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgfilterdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n' \
+	    -e 'h;s|.*|.|' \
+	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
+	      if (++n[d] == $(am__install_max)) { \
+		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
+	    else { print "f", d "/" $$4, $$1 } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	     test -z "$$files" || { \
+	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(pkgfilterdir)$$dir'"; \
+	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(pkgfilterdir)$$dir" || exit $$?; \
+	     } \
+	; done
+
+uninstall-nodist_pkgfilterSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_pkgfilter_SCRIPTS)'; test -n "$(pkgfilterdir)" || exit 0; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	       sed -e 's,.*/,,;$(transform)'`; \
+	dir='$(DESTDIR)$(pkgfilterdir)'; $(am__uninstall_files_from_dir)
 install-pkgfilterSCRIPTS: $(pkgfilter_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgfilter_SCRIPTS)'; test -n "$(pkgfilterdir)" || list=; \
@@ -3931,6 +4086,27 @@ uninstall-docDATA:
 	@list='$(doc_DATA)'; test -n "$(docdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
+install-nodist_pkgppdcDATA: $(nodist_pkgppdc_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(nodist_pkgppdc_DATA)'; test -n "$(pkgppdcdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgppdcdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgppdcdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgppdcdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgppdcdir)" || exit $$?; \
+	done
+
+uninstall-nodist_pkgppdcDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_pkgppdc_DATA)'; test -n "$(pkgppdcdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgppdcdir)'; $(am__uninstall_files_from_dir)
 install-pkgbannerDATA: $(pkgbanner_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgbanner_DATA)'; test -n "$(pkgbannerdir)" || list=; \
@@ -4612,7 +4788,7 @@ all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(MANS) $(DATA) \
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontconfigdir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -4678,6 +4854,8 @@ info: info-am
 info-am:
 
 install-data-am: install-docDATA install-initrcSCRIPTS install-man \
+	install-nodist_pkgbrailleSCRIPTS \
+	install-nodist_pkgfilterSCRIPTS install-nodist_pkgppdcDATA \
 	install-phpextensionLTLIBRARIES install-pkgbackendPROGRAMS \
 	install-pkgbannerDATA install-pkgcharsetDATA \
 	install-pkgconfDATA install-pkgcupsdataDATA \
@@ -4738,6 +4916,8 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
 	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
+	uninstall-nodist_pkgbrailleSCRIPTS \
+	uninstall-nodist_pkgfilterSCRIPTS uninstall-nodist_pkgppdcDATA \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
 	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
@@ -4768,8 +4948,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	install-dvi install-dvi-am install-exec install-exec-am \
 	install-exec-hook install-html install-html-am install-info \
 	install-info-am install-initrcSCRIPTS install-libLTLIBRARIES \
-	install-man install-man1 install-man5 install-man8 install-pdf \
-	install-pdf-am install-phpextensionLTLIBRARIES \
+	install-man install-man1 install-man5 install-man8 \
+	install-nodist_pkgbrailleSCRIPTS \
+	install-nodist_pkgfilterSCRIPTS install-nodist_pkgppdcDATA \
+	install-pdf install-pdf-am install-phpextensionLTLIBRARIES \
 	install-pkgbackendPROGRAMS install-pkgbannerDATA \
 	install-pkgcharsetDATA install-pkgconfDATA \
 	install-pkgcupsdataDATA install-pkgcupsserverrootDATA \
@@ -4785,6 +4967,8 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	uninstall-binPROGRAMS uninstall-docDATA uninstall-hook \
 	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
 	uninstall-man1 uninstall-man5 uninstall-man8 \
+	uninstall-nodist_pkgbrailleSCRIPTS \
+	uninstall-nodist_pkgfilterSCRIPTS uninstall-nodist_pkgppdcDATA \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
 	uninstall-pkgbannerDATA uninstall-pkgcharsetDATA \
 	uninstall-pkgconfDATA uninstall-pkgcupsdataDATA \
@@ -4796,6 +4980,9 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
 .PRECIOUS: Makefile
 
+
+@ENABLE_BRAILLE_TRUE@$(GENERATED_LIBLOUIS): filter/braille/filters/liblouis%.defs: filter/braille/filters/liblouis1.defs
+@ENABLE_BRAILLE_TRUE@	sed -e "s/Braille transcription/Additional Braille transcription ($*)/" -e s/LibLouis/LibLouis$*/ < $< > $@
 
 $(cups_notifier_sources): utils/org.cups.cupsd.Notifier.xml
 	gdbus-codegen \
@@ -4809,7 +4996,10 @@ distclean-local:
 
 install-exec-hook:
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
+	$(INSTALL) -d -m 755 $(DESTDIR)$(pkgfilterdir)
 	$(LN_S) -f $(pkgfilterdir)/foomatic-rip $(DESTDIR)$(bindir)
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f imagetobrf $(DESTDIR)$(pkgfilterdir)/imagetoubrl
+@ENABLE_BRAILLE_TRUE@	$(LN_S) -f textbrftoindexv3 $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
 install-data-hook:
 @RCLINKS_TRUE@	for level in $(RCLEVELS); do \
@@ -4829,6 +5019,8 @@ uninstall-hook:
 @RCLINKS_TRUE@	fi
 	$(RM) $(DESTDIR)$(pkgcharsetdir)/pdf.utf-8
 	$(RM) $(DESTDIR)$(bindir)/foomatic-rip
+@ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/imagetoubrl
+@ENABLE_BRAILLE_TRUE@	$(RM) $(DESTDIR)$(pkgfilterdir)/textbrftoindexv4
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
