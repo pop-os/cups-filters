@@ -76,7 +76,17 @@ TARGETS	=	\
 		pdftoraster
 
 SCRIPTS	=	\
-		pstopdf
+		pstopdf \
+		texttops \
+		imagetops \
+		textonly
+
+PPDFILES =	\
+		HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
+		textonly.ppd
+
+DRVFILES =	\
+		cupsfilters.drv
 
 
 #
@@ -137,6 +147,16 @@ install-data:
 	for file in $(MIMEFILES); do \
 		$(INSTALL_DATA) $$file $(DATADIR)/mime; \
 	done
+	echo Installing DRV files to $(DATADIR)/drv...
+	$(INSTALL_DIR) -m 755 $(DATADIR)/drv
+	for file in $(DRVFILES); do \
+		$(INSTALL_DATA) $$file $(DATADIR)/drv; \
+	done
+	echo Installing PPD files to $(BUILDROOT)${datadir}/ppd/cupsfilters...
+	$(INSTALL_DIR) -m 755 $(BUILDROOT)${datadir}/ppd/cupsfilters
+	for file in $(PPDFILES); do \
+		$(INSTALL_DATA) $$file $(BUILDROOT)${datadir}/ppd/cupsfilters; \
+	done
 
 
 #
@@ -174,6 +194,7 @@ install-libs:
 
 uninstall:
 	echo Uninstalling charsets from $(DATADIR)/charsets
+	$(RM) $(DATADIR)/charsets/pdf.utf-8
 	for file in $(CHARSETS); do \
 		$(RM) $(DATADIR)/charsets/$$file; \
 	done
@@ -192,8 +213,19 @@ uninstall:
 	for file in $(MIMEFILES); do \
 		$(RM) $(DATADIR)/mime/$$file; \
 	done
-	-$(RMDIR) -m 755 $(DATADIR)/mime
-	-$(RMDIR) -m 755 $(DATADIR)
+	-$(RMDIR) $(DATADIR)/mime
+	echo Uninstalling DRV files from $(DATADIR)/drv
+	for file in $(DRVFILES); do \
+		$(RM) $(DATADIR)/drv/$$file; \
+	done
+	-$(RMDIR) $(DATADIR)/drv
+	-$(RMDIR) $(DATADIR)
+	echo Uninstalling PPD files from $(BUILDROOT)${datadir}/ppd/cupsfilters
+	for file in $(PPDFILES); do \
+		$(RM) $(BUILDROOT)${datadir}/ppd/cupsfilters/$$file; \
+	done
+	-$(RMDIR) $(BUILDROOT)${datadir}/ppd/cupsfilters
+	-$(RMDIR) $(BUILDROOT)${datadir}/ppd
 	echo Uninstalling filters from $(SERVERBIN)/filter
 	for file in $(TARGETS) $(SCRIPTS); do \
 		$(RM) $(SERVERBIN)/filter/$$file; \
@@ -208,7 +240,7 @@ uninstall:
 
 bannertopdf:	bannertopdf.o banner.o pdf.o
 	echo Linking $@...
-	$(CC) $(LDFLAGS) -o $@ bannertopdf.o banner.o pdf.o \
+	$(CXX) $(LDFLAGS) -o $@ bannertopdf.o banner.o pdf.o \
 		$(LINKCUPSFILTERS) $(LIBS) $(POPPLER_LIBS)
 
 

@@ -21,11 +21,13 @@ include ../Makedefs
 LIBTARGETS =	\
 		$(LIBCUPSFILTERS) \
 		libcupsfilters.a
+
 UNITTARGETS =	\
 		testcmyk \
 		testdither \
 		testimage \
 		testrgb
+
 TARGETS	=	\
 		$(LIBTARGETS) \
 		$(UNITTARGETS)
@@ -53,11 +55,17 @@ LIBOBJS =	\
 		pack.o \
 		rgb.o \
 		srgb.o
-OBJS	=	$(LIBOBJS) \
+
+OBJS	=	\
+		$(LIBOBJS) \
 		testcmyk.o \
 		testdither.o \
 		testimage.o \
 		testrgb.o
+
+HEADERS	=	\
+		driver.h \
+		image.h
 
 
 #
@@ -111,6 +119,11 @@ install-exec:
 #
 
 install-headers:
+	echo Installing header files into $(INCLUDEDIR)/cupsfilters...
+	$(INSTALL_DIR) -m 755 $(INCLUDEDIR)/cupsfilters
+	for file in $(HEADERS); do \
+		$(INSTALL_DATA) $$file $(INCLUDEDIR)/cupsfilters; \
+	done
 
 
 #
@@ -118,8 +131,18 @@ install-headers:
 #
 
 install-libs:
+	echo Installing libraries in $(LIBDIR)...
 	$(INSTALL_DIR) -m 755 $(LIBDIR)
 	$(INSTALL_LIB) $(LIBCUPSFILTERS) $(LIBDIR)
+	$(INSTALL_DATA) libcupsfilters.a $(LIBDIR)
+	if test $(LIBCUPSFILTERS) = "libcupsfilters.so.1" -o $(LIBCUPSFILTERS) = "libcupsfilters.sl.1"; then \
+		$(RM) $(LIBDIR)/`basename $(LIBCUPSFILTERS) .1`; \
+		$(LN) $(LIBCUPSFILTERS) $(LIBDIR)/`basename $(LIBCUPSFILTERS) .1`; \
+	fi
+	if test $(LIBCUPSFILTERS) = "libcupsfilters.1.dylib"; then \
+		$(RM) $(LIBDIR)/libcups.dylib; \
+		$(LN) $(LIBCUPSFILTERS) $(LIBDIR)/libcups.dylib; \
+	fi
 
 
 #
@@ -127,10 +150,19 @@ install-libs:
 #
 
 uninstall:
+	$(RM) $(LIBDIR)/libcupsfilters.dylib
 	$(RM) $(LIBDIR)/libcupsfilters.1.dylib
-	$(RM) $(LIBDIR)/libcupsfilters.a
+	$(RM) $(LIBDIR)/libcupsfilters.so
 	$(RM) $(LIBDIR)/libcupsfilters.so.1
+	$(RM) $(LIBDIR)/libcupsfilters.sl
+	$(RM) $(LIBDIR)/libcupsfilters.sl.1
+	$(RM) $(LIBDIR)/libcupsfilters.a
 	-$(RMDIR) $(LIBDIR)
+	for file in $(HEADERS); do \
+		$(RM) $(INCLUDEDIR)/cupsfilters/$$file; \
+	done
+	-$(RMDIR) $(INCLUDEDIR)/cupsfilters
+	-$(RMDIR) $(INCLUDEDIR)
 
 
 #

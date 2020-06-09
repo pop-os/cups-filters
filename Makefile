@@ -55,7 +55,8 @@ clean:
 #
 
 distclean:	clean
-	$(RM) Makedefs filter/pstopdf config.h config.log config.status
+	$(RM) Makedefs filter/pstopdf filter/texttops filter/imagetops
+	$(RM) config.h config.log config.status
 	$(RM) -f */*.bak
 	-$(RM) -rf autom4te*.cache clang cupsfilters/test
 
@@ -123,6 +124,10 @@ install-data:
 #
 
 install-headers:
+	for dir in $(DIRS); do\
+		echo Installing header files in $$dir... ;\
+		(cd $$dir; $(MAKE) $(MFLAGS) install-headers) || exit 1;\
+	done
 
 
 #
