@@ -51,6 +51,7 @@ EMB_PARAMS *font_load(const char *font)
   FcPattern *pattern;
   FcFontSet *candidates;
   FcChar8   *fontname = NULL;
+  FcResult   result;
   int i;
 
   if ( (font[0]=='/')||(font[0]=='.') ) {
@@ -64,7 +65,7 @@ EMB_PARAMS *font_load(const char *font)
     FcDefaultSubstitute (pattern);
 
     /* Receive a sorted list of fonts matching our pattern */
-    candidates = FcFontSort (0, pattern, FcTrue, 0, 0);
+    candidates = FcFontSort (0, pattern, FcFalse, 0, &result);
     FcPatternDestroy (pattern);
 
     /* In the list of fonts returned by FcFontSort()
@@ -364,7 +365,7 @@ WriteProlog(const char *title,		/* I - Title of job */
   pdfOut_begin_pdf(pdf);
   pdfOut_printf(pdf,"%%cupsRotation: %d\n", (Orientation & 3) * 90); // TODO?
 
-  pdfOut_add_kv(pdf,"Creator","texttopdf/" CUPSFILTERS_SVERSION);
+  pdfOut_add_kv(pdf,"Creator","texttopdf/" PACKAGE_VERSION);
 
   curtime = time(NULL);
   curtm   = localtime(&curtime);
@@ -1147,8 +1148,7 @@ static void write_font_str(float x,float y,int fontid, lchar_t *str, int len)
       }
 
       font = Codes[ch];
-      if (lastfont != font) {
-        assert(0); // should never happen; TODO
+      if (lastfont != font) { // only possible, when not used via write_string (e.g. utf-8filename.txt in prettyprint)
         break;
       }
       if (otf) { // TODO 

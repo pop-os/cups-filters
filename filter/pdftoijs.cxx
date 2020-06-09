@@ -30,6 +30,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_CPP_POPPLER_VERSION_H
+#include "cpp/poppler-version.h"
+#endif
 #include <goo/GooString.h>
 #include <goo/gmem.h>
 #include <Object.h>
@@ -46,7 +49,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern "C" {
 #include <ijs/ijs.h>
 #include <ijs/ijs_client.h>
-};
+}
 #include <vector>
 #include <string>
 
@@ -59,12 +62,12 @@ namespace {
 //  bool deviceCollate = false;
   const char *ijsserver = NULL;
   int resolution[2] = {0,0};
-  enum { NONE=-1, COL_RGB, COL_CMYK, COL_BLACK1, COL_WHITE1, COL_BLACK8, COL_WHITE8 } colspace=NONE;
+  enum ColEnum { NONE=-1, COL_RGB, COL_CMYK, COL_BLACK1, COL_WHITE1, COL_BLACK8, COL_WHITE8 } colspace=NONE;
   const char *devManu=NULL, *devModel=NULL;
   std::vector<std::pair<std::string,std::string> > params;
 
   ppd_file_t *ppd = 0; // holds the memory for the strings
-};
+}
 
 #if POPPLER_VERSION_MAJOR > 0 || POPPLER_VERSION_MINOR >= 19
 void CDECL myErrorFun(void *data, ErrorCategory category,
@@ -288,11 +291,7 @@ int main(int argc, char *argv[]) {
 #else
   setErrorFunction(::myErrorFun);
 #endif
-#ifdef GLOBALPARAMS_HAS_A_ARG
-  globalParams = new GlobalParams(0);
-#else
   globalParams = new GlobalParams();
-#endif
   parseOpts(argc, argv);
 
   if (argc == 6) {
@@ -517,22 +516,22 @@ err1:
 
 /* replace memory allocation methods for memory check */
 
-void * operator new(size_t size)
+void * operator new(size_t size) throw (std::bad_alloc)
 {
   return gmalloc(size);
 }
 
-void operator delete(void *p)
+void operator delete(void *p) throw ()
 {
   gfree(p);
 }
 
-void * operator new[](size_t size)
+void * operator new[](size_t size) throw (std::bad_alloc)
 {
   return gmalloc(size);
 }
 
-void operator delete[](void *p)
+void operator delete[](void *p) throw ()
 {
   gfree(p);
 }
