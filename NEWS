@@ -1,5 +1,33 @@
-NEWS - OpenPrinting CUPS Filters v1.0.62 - 2015-01-14
+NEWS - OpenPrinting CUPS Filters v1.0.64 - 2015-02-13
 -----------------------------------------------------
+
+CHANGES IN V1.0.64
+
+	- cups-browsed: Added PPD file generator for IPP Everywhere
+	  printers.  If auto-setup of discovered IPP printers is
+	  activated ("CreateIPPPrinterQueues Yes" in
+	  cups-browsed.conf), the printer provides suitable capability
+	  information via a Get-Printer-Attributes IPP call, and
+	  prints PWG or PostScript input, a PPD is auto-generated
+	  based on the Get-Printer-Attributes IPP response. Otherwise
+	  a System-V interface script is used as befreo. Advantage of
+	  the PPD file is that current print dialogs aloow access to
+	  the options, no IPP request done by the dialog is
+	  required. The PPD generator code is borrowed from the CUPS
+	  2.1.x development code repository. It will perhaps be
+	  removed in the future when CUPS provides proper API function
+	  for its PPD generator.
+
+CHANGES IN V1.0.63
+
+	- foomatic-rip: Added hint to man page that direct, spooler-less mode
+	  is mainly for testing and debugging (Bug #1253).
+	- foomatic-rip: Added a symlink of the filter to the binary executable
+	  directory (usually /usr/bin), so that LSB compliance test scripts
+	  work (Bug #1255).
+	- cups-browsed: Fixed CUPS Browsing timeouts. Thanks to Tim
+          Waugh from Red Hat for the patch (Bug #1252, Red Hat bug
+          #1189254).
 
 CHANGES IN V1.0.62
 
