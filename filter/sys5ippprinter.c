@@ -1,8 +1,9 @@
 /*
- *   pdftoippprinter
+ *   sys5ippprinter
  *
- *   System-V-interface-style CUPS filter for PPD-less printing of PDF input
- *   data on IPP printers which advertise themselves via Bonjour/DNS-SD.
+ *   System-V-interface-style CUPS filter for PPD-less printing of PDF and
+ *   PWG Raster input data on IPP printers which advertise themselves via
+ *   Bonjour/DNS-SD.
  *
  *   Copyright 2007-2011 by Apple Inc.
  *   Copyright 1997-2006 by Easy Software Products.
@@ -174,7 +175,7 @@ main(int  argc,				/* I - Number of command-line args */
       return (1);
     }
 
-    fprintf(stderr, "DEBUG: pdftoippprinter - copying to temp print file \"%s\"\n",
+    fprintf(stderr, "DEBUG: sys5ippprinter - copying to temp print file \"%s\"\n",
             tempfile);
 
     while ((bytes = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
@@ -226,6 +227,23 @@ main(int  argc,				/* I - Number of command-line args */
 
   if (filter_present("gziptoany"))
     cupsArrayAdd(filter_chain, "gziptoany");
+
+ /*
+  * If the rastertopdf filter is present and the input is in PWG Raster format
+  * add the rastertopdf filter to the filter chain to support the PWG Raster
+  * input. Same for JPEG input if imagetopdf is present. This way the PPD-less
+  * auto-generated print queue emulates an IPP Everywhere printer, as PPDed
+  * CUPS queues do.
+  */
+  
+  if (filter_present("rastertopdf") && (val = getenv("CONTENT_TYPE")) != NULL &&
+      strcasestr(val, "pwg-raster") != NULL) {
+    cupsArrayAdd(filter_chain, "rastertopdf");
+  } else if (filter_present("imagetopdf") &&
+	     (val = getenv("CONTENT_TYPE")) != NULL &&
+	     strcasestr(val, "jpeg") != NULL) {
+    cupsArrayAdd(filter_chain, "imagetopdf");
+  }
 
  /*
   * Check the presence of the pdftopdf filter and add it to the filter

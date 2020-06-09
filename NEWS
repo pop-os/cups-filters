@@ -1,5 +1,52 @@
-NEWS - OpenPrinting CUPS Filters v1.0.68 - 2015-04-13
+NEWS - OpenPrinting CUPS Filters v1.0.69 - 2015-06-10
 -----------------------------------------------------
+
+CHANGES IN V1.0.69
+
+	- cups-browsed: When generating a PPD for an auto-discovered IPP
+	  network printer, create a "ColorModel" option only if valid
+	  choices are reported for it by the IPP printer.
+	- cups-browsed: Updated PPD file generator for auto-generated queues
+	  for IPP network printers from the CUPS 2.1.x upstream code, so that
+	  floating-point numbers are written in a locale-neutral way
+	  (CUPS STR #4579).
+	- cups-browsed: When checking whether a queue name already exists
+	  as a locally defined queue, do case-insensitive comparing as for
+	  CUPS printer names are case-insensitive. This assures that
+	  already existing queues do never get overwritten.
+	- cups-browsed: Added "IPPPrinterQueueType Auto/PPD/NoPPD" directive
+	  to cups-browsed.conf to allow controlling how cups-browsed
+	  creates queues fr native IPP network printers: with PPD, with
+	  System V interface script, or selecting automatically.
+	- pdftopdf: Center Landscape-oriented jobs correctly on the page
+	  if the "fitplot" or "number-up" options are used (Bug #1284).
+	- pstopdf: Removed "-dUseCIEColor" from the Ghostscript command line.
+	  In modern Ghostscript versions (9.11 and newer) it is recommended to
+	  not use it with the pdfwrite and ps2write output devices any more.
+	- imagetopdf: Corrections in PDF output: Let evince display the PDF
+	  with the correct size including margins and let ghostscript not
+	  complain about an invalid xref entry.
+	- cups-browsed: Do not add options to the System V interface script
+	  which calls sys5ippprinter but set the options as defaults for the
+	  CUPS queue in printers.conf.
+	- cups-browsed: When auto-generating a PPD-less print queue for an
+	  IPP network printer, determine default page size, unprintable margins,
+	  and color space from the printer via an IPP request.
+	- imagetopdf: Debug logging should be only controlled by the LogLevel
+	  of CUPS, not by an awkward build time switch.
+	- cups-browsed: Determine from the TXT records of the Bonjour broadcast
+	  of an IPP network printer whether it has color and duplex
+	  capabilities and if yes, let auto-generated PPD-less print queues
+	  use appropriate command line options to make use of these
+	  capabilities.
+	- imagetopdf: Make this filter also work with auto-generated PPD-less
+	  print queues for IPP network printers.
+	- sys5ippprinter: Renamed pdftoippprinter to reflect that it is
+	  once a System 5 interface script and second does not accept only
+	  PDF as input.
+	- pdftoippprinter: Support also PWG Raster and JPEG as input formats
+	  so that an auto-generated, PPD-less queue for an IPP printer emulates
+	  an IPP Everywhere printer.
 
 CHANGES IN V1.0.68
 
