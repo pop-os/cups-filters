@@ -1,5 +1,41 @@
-NEWS - OpenPrinting CUPS Filters v1.0.44 - 2014-01-17
+NEWS - OpenPrinting CUPS Filters v1.0.45 - 2014-02-13
 -----------------------------------------------------
+
+CHANGES IN V1.0.45
+
+	- cups-browsed: Under Upstart load the AppArmor profile
+	  (Ubuntu bug #1276630).
+	- cups-browsed: Added auto-shutdown feature for on-demand use
+	  of cups-browsed (for example on mobile devices). With auto
+	  shutdown active, cups-browsed terminates after a certain
+	  time interval (30 sec by default) without having any remote
+	  printer to make available locally. The mode can be turned
+	  on, turned off (default) or set to automatically be off
+	  while avahi-daemon is running an on otherwise (controlled by
+	  avahi-daemon running on-demand). The mode and the timeout
+	  interval can be selected by command line options, the
+	  configuration file, and sending signals to cups-browsed
+	  (on/off only).
+	- cups-browsed: To make Bonjour-discovered printers locally
+	  available avahi-daemon does not need to be started before
+	  cups-browsed and does not need to stay continuously running
+	  while cups-browsed is running. Bonjour-discovered printers
+	  are now added whenever avahi-daemon starts and removed
+	  whenever avahi-daemon stops and cups-browsed keeps
+	  running. This makes it easier to use cups-browsed in
+	  different system-configurations and also on systems with
+	  daemons running on-demand (like mobile systems).
+	- foomatic-rip: Fixed pid_t/int function prototype mismatch
+	  (Bug #1182).
+	- Fixed --with-pdftops-path and --with-pdftocairo-path options
+	  in ./configure (Bug #1181).
+	- foomatic-rip: Do not use PATH_MAX for the length of static
+	  strings which are supposed to hold a command line. Use our
+	  own CMDLINE_MAX constant to set them to a length of 65535
+	  bytes (Ubuntu bug #1019662, Debian bug #738440).
+	- pdftops: Log command lines of renderer (Ghostscript, pdftops,
+	  pdftocairo, acroread) and of pstops in CUPS' error_log (in
+	  debug mode).
 
 CHANGES IN V1.0.44
 
