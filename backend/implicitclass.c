@@ -98,8 +98,10 @@ main(int  argc,				/* I - Number of command-line args */
   ipp_attribute_t *attr;
   int     bytes;      /* Bytes copied */
   char uri[HTTP_MAX_URI];
-  char    *argv_nt[7];
-  int     outbuflen,filefd,exit_status,dup_status;
+  char    *argv_nt[8];
+  int     outbuflen, filefd, savestdout, exit_status, dup_status;
+  char buf[1024];
+  const char *serverbin;
   static const char *pattrs[] =
                 {
                   "printer-defaults"
@@ -241,7 +243,7 @@ main(int  argc,				/* I - Number of command-line args */
       cups_option_t *options = NULL;
       int fd;
       char buffer[8192];
-      
+
       fprintf(stderr, "DEBUG: Received destination host name from cups-browsed: printer-uri %s\n",
 	      ptr1);
 
@@ -249,8 +251,7 @@ main(int  argc,				/* I - Number of command-line args */
 	 job */
       cupsSetUser(argv[2]);
       title = argv[3];
-      if (title == NULL)
-      {
+      if (title == NULL) {
 	if (argc == 7) {
 	  if ((title = strrchr(argv[6], '/')) != NULL)
 	    title ++;
@@ -299,16 +300,16 @@ main(int  argc,				/* I - Number of command-line args */
 	  bytes = write(fd, buffer, bytes);
 	close(fd);
 	filename = tempfile;
-      } else{
-	/** Use the filename on the command-line...*/
+      } else {
+	/* Use the filename on the command-line... */
 	filename    = argv[6];
 	tempfile[0] = '\0';
       }
 
       /* Copying the argument to a new char** which will be sent to the filter
-	 and the ipp backend*/
-    argv_nt[0] = calloc(strlen(printer_uri) + 8, sizeof(char));
-    strcpy(argv_nt[0], printer_uri);
+	 and the ipp backend */
+      argv_nt[0] = calloc(strlen(printer_uri) + 8, sizeof(char));
+      strcpy(argv_nt[0], printer_uri);
       for (i = 1; i < 5; i++)
 	argv_nt[i] = argv[i];
 
@@ -319,6 +320,7 @@ main(int  argc,				/* I - Number of command-line args */
 
       /* Filter pdftoippprinter.c will read the input from this file*/
       argv_nt[6] = filename;
+      argv_nt[7] = NULL;
       set_option_in_str(argv_nt[5], outbuflen, "output-format",
 			document_format);
       set_option_in_str(argv_nt[5], outbuflen, "Resolution",resolution);
@@ -335,17 +337,20 @@ main(int  argc,				/* I - Number of command-line args */
          to the backend, but having this temperory file will help us
          find whether the filter worked correctly and what was the
          document-format of the filtered output.*/
-      close(1);
-      dup_status = dup(filefd);
+      savestdout = dup(1);
+      dup_status = dup2(filefd, 1);
       if(dup_status < 0) {
         fprintf(stderr, "Could not write the output of pdftoippprinter printer to tmp file\n");
         return CUPS_BACKEND_FAILED;
       }
+      close(filefd);
 
       /* Calling pdftoippprinter.c filter*/
       apply_filters(7,argv_nt);
 
-      close(filefd);
+      /* Reset stdout to standard */
+      dup2(savestdout, 1);
+      close(savestdout);
 
       /* We will send the filtered output of the pdftoippprinter.c to
 	 the IPP Backend*/
@@ -372,18 +377,26 @@ main(int  argc,				/* I - Number of command-line args */
 
       ippDelete(response);
       fprintf(stderr, "Passing the following arguments to the ipp backend\n");
-       /*Arguments sent to the ipp backend*/
-      for( i = 0; i < 7; i++){
-         fprintf(stderr, "argv[%d]: %s\n",i,argv_nt[i]);
-       }
+      /* Arguments sent to the ipp backend */
+      for (i = 0; i < 7; i ++) {
+	fprintf(stderr, "argv[%d]: %s\n", i, argv_nt[i]);
+      }
 
       /* The implicitclass backend will send the job directly to the
 	 ipp backend*/
 
       pid_t pid = fork();
-      if ( pid == 0 ) {
-	fprintf(stderr, "DEBUG: Started IPP Backend with pid: %d\n",getpid());
-	execv("/usr/lib/cups/backend/ipp",argv_nt);
+      if (pid == 0) {
+	serverbin = getenv("CUPS_SERVERBIN");
+	if (serverbin == NULL)
+	  serverbin = CUPS_SERVERBIN;
+	snprintf(buf, sizeof(buf) - 1, "%s/backend/ipp", serverbin);
+	fprintf(stderr, "DEBUG: Started IPP Backend (%s) with pid: %d\n",
+		buf, getpid());
+	execv(buf, argv_nt);
+	fprintf(stderr, "ERROR: Could not start IPP Backend (%s): %d %s\n",
+		buf, errno, strerror(errno));
+	return CUPS_BACKEND_FAILED;
       } else {
 	int status;
 	waitpid(pid, &status, 0);

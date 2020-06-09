@@ -266,6 +266,7 @@ am_libcupsfilters_la_OBJECTS = cupsfilters/libcupsfilters_la-attr.lo \
 	cupsfilters/libcupsfilters_la-image-sun.lo \
 	cupsfilters/libcupsfilters_la-image-tiff.lo \
 	cupsfilters/libcupsfilters_la-image-zoom.lo \
+	cupsfilters/libcupsfilters_la-ipp.lo \
 	cupsfilters/libcupsfilters_la-lut.lo \
 	cupsfilters/libcupsfilters_la-pack.lo \
 	cupsfilters/libcupsfilters_la-ppdgenerator.lo \
@@ -592,6 +593,7 @@ am__depfiles_remade = ./$(DEPDIR)/cups_browsed-cups-notifier.Po \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-image-tiff.Plo \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-image-zoom.Plo \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-image.Plo \
+	cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Plo \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-lut.Plo \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-pack.Plo \
 	cupsfilters/$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo \
@@ -1380,6 +1382,7 @@ pkgfiltersinclude_DATA = \
 	cupsfilters/colormanager.h \
 	cupsfilters/driver.h \
 	cupsfilters/image.h \
+	cupsfilters/ipp.h \
 	cupsfilters/raster.h \
 	cupsfilters/ppdgenerator.h \
 	cupsfilters/pdftoippprinter.h
@@ -1421,6 +1424,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/image-sun.c \
 	cupsfilters/image-tiff.c \
 	cupsfilters/image-zoom.c \
+	cupsfilters/ipp.c \
 	cupsfilters/lut.c \
 	cupsfilters/pack.c \
 	cupsfilters/ppdgenerator.c \
@@ -2550,6 +2554,8 @@ cupsfilters/libcupsfilters_la-image-tiff.lo:  \
 cupsfilters/libcupsfilters_la-image-zoom.lo:  \
 	cupsfilters/$(am__dirstamp) \
 	cupsfilters/$(DEPDIR)/$(am__dirstamp)
+cupsfilters/libcupsfilters_la-ipp.lo: cupsfilters/$(am__dirstamp) \
+	cupsfilters/$(DEPDIR)/$(am__dirstamp)
 cupsfilters/libcupsfilters_la-lut.lo: cupsfilters/$(am__dirstamp) \
 	cupsfilters/$(DEPDIR)/$(am__dirstamp)
 cupsfilters/libcupsfilters_la-pack.lo: cupsfilters/$(am__dirstamp) \
@@ -3133,6 +3139,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-image-tiff.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-image-zoom.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-image.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-lut.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-pack.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@cupsfilters/$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo@am__quote@ # am--include-marker
@@ -3391,6 +3398,13 @@ cupsfilters/libcupsfilters_la-image-zoom.lo: cupsfilters/image-zoom.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/image-zoom.c' object='cupsfilters/libcupsfilters_la-image-zoom.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o cupsfilters/libcupsfilters_la-image-zoom.lo `test -f 'cupsfilters/image-zoom.c' || echo '$(srcdir)/'`cupsfilters/image-zoom.c
+
+cupsfilters/libcupsfilters_la-ipp.lo: cupsfilters/ipp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT cupsfilters/libcupsfilters_la-ipp.lo -MD -MP -MF cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Tpo -c -o cupsfilters/libcupsfilters_la-ipp.lo `test -f 'cupsfilters/ipp.c' || echo '$(srcdir)/'`cupsfilters/ipp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Tpo cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='cupsfilters/ipp.c' object='cupsfilters/libcupsfilters_la-ipp.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -c -o cupsfilters/libcupsfilters_la-ipp.lo `test -f 'cupsfilters/ipp.c' || echo '$(srcdir)/'`cupsfilters/ipp.c
 
 cupsfilters/libcupsfilters_la-lut.lo: cupsfilters/lut.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcupsfilters_la_CFLAGS) $(CFLAGS) -MT cupsfilters/libcupsfilters_la-lut.lo -MD -MP -MF cupsfilters/$(DEPDIR)/libcupsfilters_la-lut.Tpo -c -o cupsfilters/libcupsfilters_la-lut.lo `test -f 'cupsfilters/lut.c' || echo '$(srcdir)/'`cupsfilters/lut.c
@@ -5435,6 +5449,7 @@ distclean: distclean-recursive
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image-tiff.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image-zoom.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image.Plo
+	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-pack.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo
@@ -5605,6 +5620,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image-tiff.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image-zoom.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-image.Plo
+	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-ipp.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-lut.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-pack.Plo
 	-rm -f cupsfilters/$(DEPDIR)/libcupsfilters_la-pdftoippprinter.Plo

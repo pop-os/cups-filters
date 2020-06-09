@@ -504,7 +504,7 @@ name is the same as CUPS uses for the temporary queue
 ("LocalQueueNamingIPPPrinter DNS-SD" must be set). The directive
 applies only to IPP printers, not to remote CUPS queues, to not
 break clustering. Setting this directive to "No" lets cups-browsed
-generate the PPD file. Default setting is "Yes".
+generate the PPD file. Default setting is "No".
 .PP
 .nf
 .fam C
@@ -543,6 +543,26 @@ printers.
         LocalQueueNamingRemoteCUPS RemoteName
         LocalQueueNamingIPPPrinter DNS-SD
         LocalQueueNamingIPPPrinter MakeModel
+
+.fam T
+.fi
+Set DNSSDBasedDeviceURIs to "Yes" if cups-browsed should use
+DNS-SD-service-name-based device URIs for its local queues, as CUPS
+also does. These queues use the DNS-SD service name of the
+discovered printer. With this the URI is independent of network
+interfaces and ports, giving reliable connections to always the same
+physical device. This setting is the default.
+.PP
+Set DNSSDBasedDeviceURIs to "No" if cups-browsed should use the
+conventional host-name/IP-based URIs.
+.PP
+Note that this option has only influence on URIs for printers
+discovered via DNS-SD, not via legacy CUPS broewsing or LDAP.
+Those printers get always assigned the conventional URIs.
+.PP
+.nf
+.fam C
+        DNSSDBasedDeviceURIs Yes
 
 .fam T
 .fi
