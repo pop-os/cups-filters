@@ -1,7 +1,7 @@
 /*
  *   Text to PDF filter for the Common UNIX Printing System (CUPS).
  *
- *   Copyright 2008 by Tobias Hoffmann.
+ *   Copyright 2008,2012 by Tobias Hoffmann.
  *   Copyright 2007 by Apple Inc.
  *   Copyright 1993-2007 by Easy Software Products.
  *
@@ -50,37 +50,56 @@ EMB_PARAMS *font_load(const char *font)
 
   FcPattern *pattern;
   FcFontSet *candidates;
-  FcChar8   *fontformat, *fontname = NULL;
-  int i, spacing;
+  FcChar8   *fontname = NULL;
+  int i;
 
-  FcInit ();
-  pattern = FcNameParse (font);
-  FcConfigSubstitute (0, pattern, FcMatchPattern);
-  FcDefaultSubstitute (pattern);
+  if ( (font[0]=='/')||(font[0]=='.') ) {
+    candidates = NULL;
+    fontname=(FcChar8 *)strdup(font);
+  } else {
+    FcInit ();
+    pattern = FcNameParse ((const FcChar8 *)font);
+    FcPatternAddInteger (pattern, FC_SPACING, FC_MONO); // guide fc, in case substitution becomes necessary
+    FcConfigSubstitute (0, pattern, FcMatchPattern);
+    FcDefaultSubstitute (pattern);
 
-  /* Receive a sorted list of fonts matching our pattern */
-  candidates = FcFontSort (0, pattern, FcTrue, 0, 0);
-  FcPatternDestroy (pattern);
+    /* Receive a sorted list of fonts matching our pattern */
+    candidates = FcFontSort (0, pattern, FcTrue, 0, 0);
+    FcPatternDestroy (pattern);
 
-  /* In the list of fonts returned by FcFontSort()
-     find the first one that is both in TrueType format and monospaced */
-  for (i = 0; i < candidates->nfont; i++) {
-    FcPatternGetString  (candidates->fonts[i], FC_FONTFORMAT, 0, &fontformat);
-    FcPatternGetInteger (candidates->fonts[i], FC_SPACING,    0, &spacing);
+    /* In the list of fonts returned by FcFontSort()
+       find the first one that is both in TrueType format and monospaced */
+    for (i = 0; i < candidates->nfont; i++) {
+      FcChar8 *fontformat=NULL; // TODO? or just try?
+      int spacing=0; // sane default, as FC_MONO == 100
+      FcPatternGetString  (candidates->fonts[i], FC_FONTFORMAT, 0, &fontformat);
+      FcPatternGetInteger (candidates->fonts[i], FC_SPACING,    0, &spacing);
 
-    if ((strcmp(fontformat, "TrueType") == 0) && (spacing == FC_MONO)) {
-      fontname = FcPatternFormat (candidates->fonts[i], "%{file|cescape}/%{index}");
-      break;
+      if ( (fontformat)&&(spacing == FC_MONO) ) {
+        if (strcmp((const char *)fontformat, "TrueType") == 0) {
+          fontname = FcPatternFormat (candidates->fonts[i], (const FcChar8 *)"%{file|cescape}/%{index}");
+          break;
+        } else if (strcmp((const char *)fontformat, "CFF") == 0) {
+          fontname = FcPatternFormat (candidates->fonts[i], (const FcChar8 *)"%{file|cescape}"); // TTC only possible with non-cff glyphs!
+          break;
+        }
+      }
     }
+    FcFontSetDestroy (candidates);
   }
-  FcFontSetDestroy (candidates);
 
-  otf = otf_load(fontname);
-
-  if (!otf) {
+  if (!fontname) {
     // TODO: try /usr/share/fonts/*/*/%s.ttf
+    fprintf(stderr,"No viable font found\n");
     return NULL;
   }
+
+  otf = otf_load((const char *)fontname);
+  free(fontname);
+  if (!otf) {
+    return NULL;
+  }
+
   FONTFILE *ff=fontfile_open_sfnt(otf);
   assert(ff);
   EMB_PARAMS *emb=emb_new(ff,
@@ -269,7 +288,9 @@ WriteProlog(const char *title,		/* I - Title of job */
   char		line[1024],	/* Line from file */
 		*lineptr,	/* Pointer into line */
 		*valptr;	/* Pointer to value in line */
+#ifndef CUPS_1_4 /* CUPS 1.4.x or newer: support for non-utf8 removed */
   int		ch, unicode;	/* Character values */
+#endif
   int		start, end;	/* Start and end values for range */
   time_t	curtime;	/* Current time */
   struct tm	*curtm;		/* Current date */
@@ -1131,12 +1152,8 @@ static void write_font_str(float x,float y,int fontid, lchar_t *str, int len)
         break;
       }
       if (otf) { // TODO 
-        const unsigned short gid=otf_from_unicode(otf,ch);
+        const unsigned short gid=emb_get(emb,ch);
         pdfOut_printf(pdf,"%04x", gid);
-
-        if (emb->subset) {
-          bit_set(emb->subset,gid);
-        }
       } else { // std 14 font with 7-bit us-ascii uses single byte encoding, TODO
         pdfOut_printf(pdf,"%02x",ch);
       }

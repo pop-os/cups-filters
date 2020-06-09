@@ -38,6 +38,9 @@ all:
 		(cd $$dir ; $(MAKE) $(MFLAGS) all) || exit 1;\
 	done
 
+Makedefs:
+	$(CURDIR)/configure
+
 
 #
 # Remove object and target files...

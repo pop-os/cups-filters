@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.0.5 - 2012-03-14
+README - OpenPrinting CUPS Filters v1.0.6 - 2012-03-20
 ------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -140,7 +140,7 @@ orientation-requested
 
 See the CUPS documents for details of these options.
 
-6. KOWN PROBLEMS
+6. KNOWN PROBLEMS
 
 Problem:
   PBM and SUN raster images can not be printed.
@@ -368,7 +368,7 @@ fonts in the new PDF file
 
 "pdftopdf" finds fonts to embed by fontconfig library.
 "pdftopdf" now embed only TrueType format fonts.
-PDF Standard fonts are not embedded .
+PDF Standard fonts are not embedded.
 
 Note: Do not embed fonts that the font licenses inhibit embedding.
 
@@ -378,13 +378,36 @@ Many of these operators and sections are just ignored.
 Some of these may be output, but those functions are not assured.
 Encryption feature is not supported.
 
-2. LICENSE
+2. NATIVE PDF PRINTER SUPPORT
 
-Almost source files are under MIT like license. However, "pdftopdf" links
-some "poppler" libraries, and these files are under GNU public license.
-See copyright notice of each file for details.
+pdftopdf introduces native PDF printer support to CUPS for the first
+time. PPD files must have a line
 
-3. COMMAND LINE
+*cupsFilter: "application/vnd.cups-pdf 0 -"
+
+and use the "*JCLToPDFInterpreter:" keyword, for example:
+
+*JCLBegin:           "<1B>%-12345X@PJL JOB<0A>"
+*JCLToPDFInterpreter: "@PJL ENTER LANGUAGE = PDF <0A>"
+*JCLEnd:             "<1B>%-12345X@PJL EOJ <0A><1B>%-12345X"
+
+They MUST NOT accept PostScript as input data format and will not work
+with stock CUPS. They will need cups-filters (which implements the PDF-
+based printing workflow) to work.
+
+Options must not be implemented by specifying PostScript code to
+inject.  They must be injecting JCL code ("*JCLOpenUI:
+... ... *JCLCloseUI: ...").
+
+A sample PPD file, HP-Color_LaserJet_CM3530_MFP-PDF.ppd is included.
+
+3. LICENSE
+
+Almost all source files are under MIT like license. However,
+"pdftopdf" links some "poppler" libraries, and these files are under
+GNU public license.  See copyright notice of each file for details.
+
+4. COMMAND LINE
 
 "pdftopdf" is a CUPS filter, and the command line arguments, environment
 variables and configuration files are in accordance with the CUPS filter
@@ -406,7 +429,7 @@ CUPS options defined in <options> are delimited by space. Boolean
 type CUPS option is defined only by the option key, and other type
 CUPS option are defined by pairs of key and value, <key>=<value>.
 
-4. COMMAND OPTIONS
+5. COMMAND OPTIONS
 
 "pdftopdf" accepts the following CUPS standard options;
 
@@ -465,11 +488,11 @@ pdftopdfJCLBegin
   Force "pdftopdf" to create JCL info for the following PDF filter
   "pdftoopvp".
 
-5. INFORMATION FOR DEVELOPERS
+6. INFORMATION FOR DEVELOPERS
 
 Following information is for developers, not for driver users.
 
-5.1 Options handled by a printer or "pdftopdf"
+6.1 Options handled by a printer or "pdftopdf"
 
 Following options are handled by a printer or "pdftopdf".
   Collate, Copies, Duplex, OutputOrder
@@ -568,7 +591,7 @@ if (Duplex && OutputOrder == Reverse && !device_outputorder) {
 
 soft_copies = device_copies > 1 ? 1 : Copies;
 
-5.2 JCL
+6.2 JCL
 
 When you print PDF files to a PostScript(PS) printer, you can specify
 device options in PS. In this case, you can write PS commands in a PPD file
@@ -591,8 +614,29 @@ as follows;
 *JCLFrameBufferSize Legal: '@PJL SET PAGEPROTECT = LGL<0A>'
 *JCLCloseUI: *JCLFrameBufferSize
 
-Because PDF cannot specify device options in a PDF file, you have to define
-all the device options as JCLs.
+For PostScript printers all these options are handled by the pdftops
+filter which is the PostScript printer driver in the PDF-based
+printing workflow.
+
+If you have a native PDF printer you cannot use options which inject
+PostScript code into the data stream, you have to define all options
+with JCL. Only in this case pdftopdf adds the JCL header and trailer
+to the PDF job. Native PDF PPDs with JCL options are recognized by the
+"*JCLToPDFInterpreter:" keyword, for example with the following lines:
+
+*JCLBegin:           "<1B>%-12345X@PJL JOB<0A>"
+*JCLToPDFInterpreter: "@PJL ENTER LANGUAGE = PDF <0A>"
+*JCLEnd:             "<1B>%-12345X@PJL EOJ <0A><1B>%-12345X"
+
+To get the correct CUPS filter chain for them, they need the following
+line:
+
+*cupsFilter: "application/vnd.cups-pdf 0 -"
+
+and NO "*cupsFilter:" line which accepts PostScript input.
+
+A sample PPD file for a native PDF printer,
+HP-Color_LaserJet_CM3530_MFP-PDF.ppd is included.
 
 When a printer does not support PS nor PDF, you can use Ghostscript (GS).
 In this case, you can specify device options like a PS printer.
@@ -605,7 +649,7 @@ appropriate to specify device options.
 So, "pdftopdf" handles this case as follows;
 (In following pseudo program, JCL option is a option specified with JCLOpenUI)
 
-if (Both JCLBegin and JCLToPSInterpreter are specified in the PPD file) {
+if (Both JCLBegin and JCLToPDFInterpreter are specified in the PPD file) {
     output JCLs that marked JCL options.
 }
 
@@ -634,7 +678,7 @@ what you should do is to add the following line in the PPD file;
 *pdftopdfJCLBegin: "pdftoopvp jobInfo:"
 
 Note:
-  If you specify JCLBegin, you have to specify JCLToPSInterpreter as well.
+  If you specify JCLBegin, you have to specify JCLToPDFInterpreter as well.
 
 Note:
   When you need to specify the value which is different from the choosen
@@ -663,7 +707,7 @@ Note:
   *pdftopdfJCLPageSize Letter/US Letter: "PS=LT;"
   *CloseUI: *PageSize
 
-5.3 Special PDF comment
+6.3 Special PDF comment
 
 "pdftopdf" outputs the following special comments from the 4th line in the
 created PDF data.
@@ -671,7 +715,7 @@ created PDF data.
 %%PDFTOPDFNumCopies : <copies> --- <copies> specified Number of Copies
 %%PDFTOPDFCollate : <collate> --- <collate> is true or false
 
-5.4 Temporally files location
+6.4 Temporally files location
 
 "pdftopdf" creates temporally files if needed.　Temporary files are created
 in the location specified by TMPDIR environment　variable. Default location
@@ -685,16 +729,23 @@ This implements a texttopdf filter, and is derived from cups' texttops.
 To configure:
 -------------
 
-- texttopdf uses a CUPS_DATADIR/charset/pdf.* (e.g. pdf.utf-8) for
-  font configuration. All the fonts named here MUST also be present
-  under CUPS_DATADIR/fonts/ as TrueType fonts for texttopdf to work.
-  For TrueType Collections (.TTC) you'll have to append '/' and the 
-  number of the font in the collection to the filename charsets/pdf.utf-8
-  (resp. charsets/pdf.* ), for example to use the second font of uming.ttc 
-  use the filename uming.ttc/1
+- texttopdf uses CUPS_DATADIR/charset/pdf.utf-8 for font configuration
+  (when utf-8 was requested as charset). The font names given there are 
+  used as fontconfig selectors; the best matching font, that is both 
+  monospaced and in a supported format (TTC, TTF or OTF) will then be used.
 
-- There are examples of pdf.utf-8 in the cups/data directory,
-  you may use one of these (don't forget to copy / symlink the fonts).
+- As a special exception, all fontnames that start with a '.' or '/' are
+  considered filenames, and fontconfig is skipped; the name is used directly
+  for loading the font file.
+
+- Implementation note: TrueType Collections (.TTC) are internally handled
+  by appending '/' and the index of the font inside the collection to 
+  the filename (e.g. to use the second font of uming.ttc, the filename 
+  uming.ttc/1 must be given to the fontembed-library).
+  By appending the index-field returned from fontconfig, this is completely
+  transparent to the user (but currently not widely tested).
+
+- You may look at the two examples: pdf.utf-8.simple and pdf.utf-8.heavy.
 
 To use:
 -------
@@ -704,12 +755,13 @@ look at test.sh for example.
 
 Known Issues
 ------------
-(Release 0.0.1)
 
- - text extraction does not work (at least for pdftotext from xpdf)
+ - Text extraction does not work (at least for pdftotext from xpdf)
    for the resulting pdfs.
 
- - text wrapping in pretty-printing mode does not respect double-wide
+ - OTF(CFF) embedding currently does not subset the fonts.
+
+ - Text wrapping in pretty-printing mode does not respect double-wide
    characters (CJK), and thus produce wrong results (wrap too late)
    for lines where they occur.  The fix is not trivial, since all the
    pretty-printing processing is done without knowledge of / prior to
@@ -719,6 +771,15 @@ Known Issues
  - The hebrew example in test5.pdf shows one of our limitations:
    Compose glyphs are not composed with the primary glyph but printed
    as separate glyphs.
+
+Further Infos
+-------------
+
+Font embedding is handled by libfontembed in the filter/fontembed
+subdirectory.
+
+Please report all bugs to https://bugs.linuxfoundation.org/, product
+"OpenPrinting", component "cups-filters".
 
 
 PDFTORASTER
