@@ -1,5 +1,20 @@
-NEWS - OpenPrinting CUPS Filters v1.22.0 - 2019-01-18
+NEWS - OpenPrinting CUPS Filters v1.22.1 - 2019-02-15
 -----------------------------------------------------
+
+CHANGES IN V1.22.1
+
+	- braille: Use sort command with LC_ALL=C for reproducibility
+	  of the genrated files, needed for distribution packaging.
+	- cups-browsed, driverless: When polling the printer's
+          capabilities via get-printer-attributes IPP request for
+          driverless printing, use the attributes "all" and
+          "media-col-database". Without "all" some printers do not
+          report "urf-supported" and without "media-col-database" not
+          all paper size and marging info gets reported (Issue #22,
+          Pull request #86, CUPS issue #5484).
+	- braille: Document how to rework output before
+	  embossing. Thanks to Samuel Thibault for this patch (Pull
+	  request #90).
 
 CHANGES IN V1.22.0
 
