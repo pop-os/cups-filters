@@ -1,5 +1,18 @@
-NEWS - OpenPrinting CUPS Filters v1.0.67 - 2015-03-11
+NEWS - OpenPrinting CUPS Filters v1.0.68 - 2015-04-13
 -----------------------------------------------------
+
+CHANGES IN V1.0.68
+
+	- cups-browsed: Numeric IDs for GSources of the glib event
+	  loop must be positive integers greater than zero according
+	  to the documentation of the g_source_get_id() function.
+	  Taken care of this at all places.
+	- cups-browsed: Added conditionals so that it also builds with
+	  CUPS 1.5.x (but then withou support for automatically creating
+	  queues for IPP network printers). Thanks to Johannes Meixner from
+	  SUSE for the patch (Bug #1268).
+	- Ricoh-PDF_Printer-PDF.ppd: Added PPD file for Ricoh's PDF printers
+	  (experimental). Thanks to Ulrich Wehner from Ricoh for the file.
 
 CHANGES IN V1.0.67
 
