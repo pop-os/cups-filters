@@ -21,6 +21,9 @@
 /* gs binary to use */
 #undef CUPS_GHOSTSCRIPT
 
+/* ippfind binary to use. */
+#undef CUPS_IPPFIND
+
 /* mutool binary to use */
 #undef CUPS_MUTOOL
 

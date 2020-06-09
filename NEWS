@@ -1,5 +1,69 @@
-NEWS - OpenPrinting CUPS Filters v1.11.6 - 2016-10-31
+NEWS - OpenPrinting CUPS Filters v1.13.0 - 2016-12-09
 -----------------------------------------------------
+
+CHANGES IN V1.13.0
+
+	- cups-browsed: Use the httpGetAddr() only with CUPS 2.0.x or
+	  newer, as older CUPS versions do not provide it (Bug #1381).
+	- cups-browsed: Minor corrections in the handling of the data
+	  records of the discovered printers.
+	- rastertopdf, urftopdf: As with libcupsimage from CUPS 2.2.2
+	  on rastertopdf also understands Apple Raster and much better
+	  than urftopdf does, use rastertopdf for Apple Raster
+	  (image/urf) input files then. Also allow for manually
+	  choosing by the ./configure command line.
+	- driverless: Added a CUPS backend mode to the driverless
+	  utility. Running as a CUPS backend in discovery mode it
+	  lists the IPP URIs of the suitable printers in printer setup
+	  tools and in "lpinfo -v", as conneting via IPP is required
+	  for driverless printing.
+
+CHANGES IN V1.12.0
+
+	- cups-browsed: Added new "CreateRemoteCUPSPrinterQueues"
+	  directive to cups-browsed.conf, which allows to decide
+	  whether to auto-create local print queues for shared CUPS
+	  queues on remote machines. This way one can also set up
+	  servers which only create queues for IPP network printers.
+	- driverless: Added new /usr/lib/cups/driver/driverless
+	  utility to make CUPS auto-generate PPD files for printers
+	  designed for driverless use (IPP Everywhere, Apple Raster)
+	  when they are set up with a printer setup tool. This gives
+	  transparency to set up these printers with legacy printer
+	  setup tools. This utility is also linked to /ustr/bin to
+	  manually generate PPDs via command line.
+	- libcupsfilters, cups-browsed: Moved the PPD generator for
+	  IPP network printers from cups-browsed to libcupsfilters, so
+	  that it can also be used by other utilities.
+	- cups-browsed: When auto-generating a PPD set the cost values
+	  in the filter lines to give the highest priority to PDF,
+	  then PWG Raster, Apple Raster, PCL-XL, PostScript, PCL 5c/e.
+	- cups-browsed: Synced the PPD generator with the one of CUPS,
+	  giving the best possible support for IPP Everywhere and
+	  AirPrint printers. Especially support for more media types
+	  and for finishing units got added. Also support for more
+	  different ways to represent the printer capabilities via
+	  IPP attributes got added.
+	- cups-browsed: Added support for auto setup of IPP printers
+	  understanding the Apple Raster input data format (.urf, on
+	  AirPrint printers), only if CUPS 2.2.2 is used, which can
+	  generate this format via its rastertopwg filter.
+	- cups-browsed: Added new "NewIPPPrinterQueuesShared"
+	  directive to cups-browsed.conf, which allows to decide
+	  whether the auto-created local print queue for a newly
+	  discovered IPP network printer will be shared or not. For
+	  printers discovered earlier, cups-browsed remembers the
+	  previous setting.
+	- cups-browsed: If a user changes the printer-is-shared bit of
+	  an auto-created print queue for an IPP network printer (not
+	  for a remote CUPS queue), record this fact and recover the
+	  change when creating this queue in the next session.
+	- cups-browsed: For automatic creation of print queues for IPP
+	  network printers also allow only creating queues for IPP
+	  Everywhere printers, only for Apple Raster printers, or for
+	  both printer types designed for driverless printing and not
+	  only for all suitable printers, configurable via the
+	  CreateIPPPrinterQueues directive in cups-browsed.conf.
 
 CHANGES IN V1.11.6
 
