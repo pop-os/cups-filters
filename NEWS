@@ -1,5 +1,15 @@
-NEWS - OpenPrinting CUPS Filters v1.0.56 - 2014-08-13
+NEWS - OpenPrinting CUPS Filters v1.0.57 - 2014-08-14
 -----------------------------------------------------
+
+CHANGES IN V1.0.57
+
+	- rastertopclx: Fixed implicit declaration of
+          colord_get_inhibit_for_device_id.
+	- Build system: Explicitly link to libm as -lm was dropped
+          from cups-config --libs.
+	- libcupsfilters, foomaticrip, gstoraster, imagetoraster,
+          pdftoraster, rastertopclx, rastertopdf: Handle absence of
+          colord or D-Bus gracefully (Ubuntu bug #1356405).
 
 CHANGES IN V1.0.56
 
