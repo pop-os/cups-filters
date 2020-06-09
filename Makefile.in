@@ -1050,6 +1050,7 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POPPLER_CFLAGS = @POPPLER_CFLAGS@
 POPPLER_LIBS = @POPPLER_LIBS@
+QPDF_NO_PCLM = @QPDF_NO_PCLM@
 RANLIB = @RANLIB@
 RCLEVELS = @RCLEVELS@
 RCSTART = @RCSTART@
@@ -1527,7 +1528,8 @@ pdftopdf_LDADD = \
 # ======================
 # Simple filter binaries
 # ======================
-pkgfilter_SCRIPTS = filter/imagetops filter/texttops $(am__append_11)
+pkgfilter_SCRIPTS = filter/imagetops filter/texttops \
+	filter/rastertopclm $(am__append_11)
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
