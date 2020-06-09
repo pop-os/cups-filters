@@ -51,14 +51,30 @@
 /* Auto-setup driverless IPP network printers? */
 #undef DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
 
+/* Define to 1 if translation of program messages to the user's native
+   language is requested. */
+#undef ENABLE_NLS
+
 /* Define if you have the avahi library */
 #undef HAVE_AVAHI
+
+/* Define to 1 if you have the Mac OS X function CFLocaleCopyCurrent in the
+   CoreFoundation framework. */
+#undef HAVE_CFLOCALECOPYCURRENT
+
+/* Define to 1 if you have the Mac OS X function CFPreferencesCopyAppValue in
+   the CoreFoundation framework. */
+#undef HAVE_CFPREFERENCESCOPYAPPVALUE
 
 /* Define if you have Poppler's "cpp/poppler-version.h" header file. */
 #undef HAVE_CPP_POPPLER_VERSION_H
 
 /* define if the compiler supports basic C++11 syntax */
 #undef HAVE_CXX11
+
+/* Define if the GNU dcgettext() function is already present or preinstalled.
+   */
+#undef HAVE_DCGETTEXT
 
 /* Define to 1 if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
@@ -75,11 +91,17 @@
 /* Define to 1 if you have the `getline' function. */
 #undef HAVE_GETLINE
 
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#undef HAVE_GETTEXT
+
 /* Define that we provide ghostscript binary */
 #undef HAVE_GHOSTSCRIPT
 
 /* gs supports ps2write */
 #undef HAVE_GHOSTSCRIPT_PS2WRITE
+
+/* Define if you have the iconv() function and it works. */
+#undef HAVE_ICONV
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -185,6 +207,9 @@
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
+
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
