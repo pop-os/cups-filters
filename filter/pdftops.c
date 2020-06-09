@@ -422,8 +422,8 @@ main(int  argc,				/* I - Number of command-line args */
  /*
   * Select the PDF renderer: Ghostscript (gs), Poppler (pdftops),
   * Adobe Reader (arcoread), Poppler with Cairo (pdftocairo), or
-  * Hybrid (hybrid, Poppler for Brother, Minolta, and Konica Minolta and
-  * Ghostscript otherwise)
+  * Hybrid (hybrid, Poppler for Brother, Minolta, Konica Minolta, and
+  * Toshiba and Ghostscript otherwise)
   */
 
   if ((val = cupsGetOption("pdftops-renderer", num_options, options)) != NULL)
@@ -447,9 +447,10 @@ main(int  argc,				/* I - Number of command-line args */
   {
     if (make_model[0] &&
 	(!strncasecmp(make_model, "Brother", 7) ||
-	 strcasestr(make_model, "Minolta")))
+	 strcasestr(make_model, "Minolta") ||
+	 !strncasecmp(make_model, "Toshiba", 7)))
       {
-	fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, and Konica Minolta to work around bugs in the printer's PS interpreters\n");
+	fprintf(stderr, "DEBUG: Switching to Poppler's pdftops instead of Ghostscript for Brother, Minolta, Konica Minolta, and Toshiba to work around bugs in the printer's PS interpreters\n");
 	renderer = PDFTOPS;
       }
     else
@@ -581,7 +582,7 @@ main(int  argc,				/* I - Number of command-line args */
       {
         /* Do not emit PS Level 3 with Poppler on HP PostScript laser printers
 	   as some do not like it. See https://bugs.launchpad.net/bugs/277404.*/
-	if (make_model[0] ||
+	if (!make_model[0] ||
 	    ((!strncasecmp(make_model, "HP", 2) ||
 	      !strncasecmp(make_model, "Hewlett-Packard", 15)) &&
 	     (strcasestr(make_model, "laserjet"))))
