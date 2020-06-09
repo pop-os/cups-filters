@@ -115,36 +115,45 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
 
-@ENABLE_BRAILLE_TRUE@am__append_5 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_5 = \
+@ENABLE_GHOSTSCRIPT_TRUE@	mime/cupsfilters-ghostscript.convs
+
+@ENABLE_BRAILLE_TRUE@am__append_6 = \
 @ENABLE_BRAILLE_TRUE@	mime/braille.convs \
 @ENABLE_BRAILLE_TRUE@	mime/braille.types
 
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftoopvp$(EXEEXT) pdftopdf$(EXEEXT) \
 	bannertopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
-	commandtopclx$(EXEEXT) pdftoijs$(EXEEXT) \
-	sys5ippprinter$(EXEEXT) pdftops$(EXEEXT) pdftoraster$(EXEEXT) \
-	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
-	texttopdf$(EXEEXT) urftopdf$(EXEEXT) rastertopdf$(EXEEXT) \
-	$(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3)
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_6 = \
+	commandtopclx$(EXEEXT) sys5ippprinter$(EXEEXT) \
+	pdftops$(EXEEXT) pdftoraster$(EXEEXT) rastertoescpx$(EXEEXT) \
+	rastertopclx$(EXEEXT) texttopdf$(EXEEXT) urftopdf$(EXEEXT) \
+	rastertopdf$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopxl
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = \
+@ENABLE_IJS_TRUE@am__append_8 = \
+@ENABLE_IJS_TRUE@	pdftoijs
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_9 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_8 = \
+@ENABLE_FOOMATIC_TRUE@am__append_10 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_9 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_11 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__append_10 = \
+@ENABLE_FOOMATIC_TRUE@am__append_12 = \
 @ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = \
+@ENABLE_IJS_TRUE@am__append_13 = \
+@ENABLE_IJS_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
+
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_14 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
 @ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
 
@@ -273,9 +282,10 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libphpcups_la_CFLAGS) \
 	$(CFLAGS) $(libphpcups_la_LDFLAGS) $(LDFLAGS) -o $@
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
-@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_1 = gstoraster$(EXEEXT)
-@ENABLE_FOOMATIC_TRUE@am__EXEEXT_2 = foomatic-rip$(EXEEXT)
-@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_3 = imagetopdf$(EXEEXT) \
+@ENABLE_IJS_TRUE@am__EXEEXT_1 = pdftoijs$(EXEEXT)
+@ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_2 = gstoraster$(EXEEXT)
+@ENABLE_FOOMATIC_TRUE@am__EXEEXT_3 = foomatic-rip$(EXEEXT)
+@ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_4 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
 	$(pkgfilter_PROGRAMS) $(sbin_PROGRAMS)
@@ -958,7 +968,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PHPCONFIG = @PHPCONFIG@
 PHPDIR = @PHPDIR@
-PKGCONFIG = @PKGCONFIG@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -1280,7 +1289,7 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_4)
 # =====
 pkgmimedir = $(CUPS_DATADIR)/mime
 pkgmime_DATA = mime/cupsfilters.convs mime/cupsfilters.types \
-	$(am__append_5)
+	$(am__append_5) $(am__append_6)
 
 # =================
 # Braille aux files
@@ -1426,7 +1435,7 @@ pdftopdf_LDADD = \
 # Simple filter binaries
 # ======================
 pkgfilter_SCRIPTS = filter/imagetops filter/pstopdf filter/textonly \
-	filter/texttops $(am__append_6)
+	filter/texttops $(am__append_7)
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
@@ -1753,7 +1762,7 @@ cups_browsed_LDADD = \
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
 man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
-	$(am__append_10)
+	$(am__append_12)
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1764,9 +1773,8 @@ ppddir = $(datadir)/ppd/cupsfilters
 ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
 	ppd/Ricoh-PDF_Printer-PDF.ppd ppd/textonly.ppd \
-	$(am__append_11)
+	$(am__append_13) $(am__append_14)
 
 # =========
 # Scripting

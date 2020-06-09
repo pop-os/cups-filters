@@ -292,6 +292,10 @@ pkgmimedir = $(CUPS_DATADIR)/mime
 pkgmime_DATA = \
 	mime/cupsfilters.convs \
 	mime/cupsfilters.types
+if ENABLE_GHOSTSCRIPT
+pkgmime_DATA += \
+	mime/cupsfilters-ghostscript.convs
+endif
 if ENABLE_BRAILLE
 pkgmime_DATA += \
 	mime/braille.convs \
@@ -490,7 +494,6 @@ pkgfilter_PROGRAMS += \
 	bannertopdf \
 	commandtoescpx \
 	commandtopclx \
-	pdftoijs \
 	sys5ippprinter \
 	pdftops \
 	pdftoraster \
@@ -499,6 +502,10 @@ pkgfilter_PROGRAMS += \
 	texttopdf \
 	urftopdf \
 	rastertopdf
+if ENABLE_IJS
+pkgfilter_PROGRAMS += \
+	pdftoijs
+endif
 if ENABLE_GHOSTSCRIPT
 pkgfilter_PROGRAMS += \
 	gstoraster
@@ -846,9 +853,12 @@ ppd_DATA = \
 	ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
 	ppd/Ricoh-PDF_Printer-PDF.ppd \
 	ppd/textonly.ppd
+if ENABLE_IJS
+ppd_DATA += \
+	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
+endif
 if ENABLE_GHOSTSCRIPT
 ppd_DATA += \
 	ppd/pxlcolor.ppd \
