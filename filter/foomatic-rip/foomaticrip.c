@@ -142,9 +142,10 @@ int jobhasjcl;
 int pdfconvertedtops;
 
 
-/* no-color-management flag */
-int cm_off = 0;
+/* cm-calibration flag */
+int cm_calibrate = 0;
 
+int device_inhibited = 0;
 
 /* These variables were in 'dat' before */
 char colorprofile [128];
@@ -320,8 +321,13 @@ void process_cmdline_options()
             _log("Pondering option '%s'\n", key);
 
         /* "profile" option to supply a color correction profile to a CUPS raster driver */
-        if (!strcmp(key, "profile") && !cm_off) {
+        if (!strcmp(key, "profile")) {
             strlcpy(colorprofile, value, 128);
+            continue;
+        }
+        /* option to set color calibration mode */
+        if (!strcmp(key, "cm-calibration")) {
+            cm_calibrate = 1;
             continue;
         }
         /* Solaris options that have no reason to be */
@@ -415,6 +421,15 @@ void process_cmdline_options()
             _log("Unknown boolean option \"%s\".\n", key);
     }
     free(cmdlineopts);
+
+    /* We 'clear' the profile if cm-calibration mode was specified */
+    if (cm_calibrate) {
+        colorprofile[0] = '\0';
+        device_inhibited = 1;
+    }
+
+    _log("CM Color Calibration Mode in CUPS: %s\n", cm_calibrate ? 
+         "Activated" : "Off");
 
     _log("Options from the PPD file:\n");
     cmdlineopts = strdup(job->optstr->data);
@@ -701,7 +716,7 @@ int main(int argc, char** argv)
     char *p, *filename;
     const char *path;
     FILE *ppdfh = NULL;
-    char tmp[1024], gstoraster[256];
+    char tmp[1024], gstoraster[256], tmpstr[1024];
     int havefilter, havegstoraster;
     dstr_t *filelist;
     list_t * arglist;
@@ -740,7 +755,7 @@ int main(int argc, char** argv)
         debug = 1;
 
     if (debug) {
-#ifdef __UCLIBC__
+#if defined(__UCLIBC__) || defined(__NetBSD__)
 	sprintf(tmp, "%s-log-XXXXXX", LOG_FILE);
 	int fd = mkstemp (tmp);
 #else
@@ -781,6 +796,9 @@ int main(int argc, char** argv)
         spooler = SPOOLER_CUPS;
     }
 
+    snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
+    device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
+
     /* CUPS calls foomatic-rip only with 5 or 6 positional parameters,
        not with named options, like for example "-p <string>". */
     if (spooler != SPOOLER_CUPS) {
@@ -806,9 +824,11 @@ int main(int argc, char** argv)
         while ((str = arglist_get_value(arglist, "-o"))) {
             strncpy_omit(tmp, str, 1024, omit_shellescapes);
             dstrcatf(job->optstr, "%s ", tmp);
-            /* if "-o no-color-management" was passed, we raise a flag */
-            if (!strcmp(tmp, "no-color-management"))
-                cm_off = 1;           
+            /* if "-o cm-calibration" was passed, we raise a flag */
+            if (!strcmp(tmp, "cm-calibration")) {
+                cm_calibrate = 1;
+                device_inhibited = 1;
+            }
             arglist_remove(arglist, "-o");
 	    /* We print without spooler */
 	    spooler = SPOOLER_DIRECT;
@@ -827,6 +847,9 @@ int main(int argc, char** argv)
         }
 
     }
+
+    _log("'CM Color Calibration' Mode in SPOOLER-LESS: %s\n", cm_calibrate ? 
+         "Activated" : "Off");
 
     /* spooler specific initialization */
     switch (spooler) {
@@ -947,23 +970,26 @@ int main(int argc, char** argv)
                 const char **qualifier = NULL;
                 const char *icc_profile = NULL;
 
-                qualifier = get_ppd_qualifier();
-                _log("INFO: Using qualifer: '%s.%s.%s'\n",
-                      qualifier[0], qualifier[1], qualifier[2]);
+                if (!device_inhibited) {
+                  qualifier = get_ppd_qualifier();
+                  _log("INFO: Using qualifer: '%s.%s.%s'\n",
+                        qualifier[0], qualifier[1], qualifier[2]);
 
                 /* ask colord for the profile */
-                icc_profile = colord_get_profile_for_device_id ((const char *) getenv("PRINTER"),
-                                                                qualifier);
 
-                /* fall back to PPD */
-                if (icc_profile == NULL) {
-                  _log("INFO: need to look in PPD for matching qualifer\n");
-                  icc_profile = get_icc_profile_for_qualifier(qualifier);
+                  icc_profile = colord_get_profile_for_device_id ((const char *) getenv("PRINTER"),
+                                                                  qualifier);
+
+                  /* fall back to PPD */
+                  if (icc_profile == NULL) {
+                    _log("INFO: need to look in PPD for matching qualifer\n");
+                    icc_profile = get_icc_profile_for_qualifier(qualifier);
+                  }
                 }
 
                 /* ICC profile is specified for Ghostscript unless
-                   "no-color-management" option was passed in foomatic-rip */
-                if (icc_profile != NULL && !cm_off)
+                   "cm-calibration" option was passed in foomatic-rip */
+                if (icc_profile != NULL)
                   snprintf(cmd, sizeof(cmd),
                            "-sOutputICCProfile='%s'", icc_profile);
                 else

@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[54])
+m4_define([cups_filters_version_micro],[55])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -169,6 +169,8 @@ AC_SUBST(CUPS_DEFAULT_DOMAINSOCKET)
 # ======================
 # Check system functions
 # ======================
+AC_CHECK_FUNCS(strlcat)
+AC_CHECK_FUNCS(strlcpy)
 AC_CHECK_FUNCS(sigaction)
 AC_CHECK_FUNCS(waitpid wait3)
 AC_CHECK_FUNCS(strtoll)

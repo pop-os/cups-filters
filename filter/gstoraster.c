@@ -545,6 +545,7 @@ main (int argc, char **argv, char *envp[])
   int n;
   int num_options;
   int status = 1;
+  int cm_calibrate = 0;
   ppd_file_t *ppd = NULL;
   struct sigaction sa;
 #ifdef HAVE_CUPS_1_7
@@ -621,12 +622,14 @@ main (int argc, char **argv, char *envp[])
     goto out;
   }
 
-  /* support colord and the "no-color-management" option */
+  /* support colord and the "cm-calibration" option */
   snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
   device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
-  t = cupsGetOption("no-color-management", num_options, options);
-  if (t != NULL)
+  t = cupsGetOption("cm-calibration", num_options, options);
+  if (t != NULL) {
     device_inhibited = 1;
+    cm_calibrate = 1;
+  }
   if (device_inhibited)
     fprintf(stderr, "DEBUG: Device is inhibited, no CM performed\n");
   if (ppd)
@@ -647,6 +650,9 @@ main (int argc, char **argv, char *envp[])
     if(icc_profile != NULL)
       fprintf(stderr, "DEBUG: Using ICC Profile '%s'\n", icc_profile);
   }
+
+  fprintf(stderr, "DEBUG: Color Management: %s\n", cm_calibrate ?
+          "Calibration Mode/Enabled" : "Calibration Mode/Off");
 
   /* Ghostscript parameters */
   gs_args = cupsArrayNew(NULL, NULL);

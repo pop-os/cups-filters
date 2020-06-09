@@ -208,11 +208,11 @@ tempfiles="$tempfiles $ifile"
 
 cat >"$ifile"
 
-echo INFO: Starting GPL Ghostscript `gs --version`... 1>&2
-echo DEBUG: Running gs $gsopts $ppd_opts -sOUTPUTFILE="%stdout" -c "$ps_code" -f "$ifile" 1>&2
+echo INFO: Starting GPL Ghostscript `/usr/bin/gs --version`... 1>&2
+echo DEBUG: Running /usr/bin/gs $gsopts $ppd_opts -sOUTPUTFILE="%stdout" -c "$ps_code" -f "$ifile" 1>&2
 
 # Now run Ghostscript...
-gs $gsopts $ppd_opts -sOUTPUTFILE="%stdout" -c "$ps_code" -f "$ifile"
+/usr/bin/gs $gsopts $ppd_opts -sOUTPUTFILE="%stdout" -c "$ps_code" -f "$ifile"
 
 #
 #
