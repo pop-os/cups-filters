@@ -822,7 +822,7 @@ gboolean handle_cups_queues(gpointer unused) {
       num_options = cupsAddOption("device-uri", p->uri,
 				  num_options, &options);
       /* Option cups-browsed=true, marking that we have created this queue */
-      num_options = cupsAddOption("cups-browsed-default", "true",
+      num_options = cupsAddOption(CUPS_BROWSED_MARK "-default", "true",
 				  num_options, &options);
       /* Do not share a queue which serves only to point to a remote printer */
       num_options = cupsAddOption("printer-is-shared", "false",
@@ -985,6 +985,7 @@ void generate_local_queue(const char *host,
 	  }
 	}
       }
+      /* Find out which PDLs the printer understands */
       entry = avahi_string_list_find((AvahiStringList *)txt, "pdl");
       if (entry) {
 	avahi_string_list_get_pair(entry, &key, &value, NULL);
@@ -1082,11 +1083,20 @@ void generate_local_queue(const char *host,
 
   if (p) {
     /* We have already created a local queue, check whether the
-       discovered service allows us to upgrade the queue to IPPS */
-    if (strcasestr(type, "_ipps") &&
-	!strncmp(p->uri, "ipp:", 4)) {
+       discovered service allows us to upgrade the queue to IPPS
+       or whether the URI part after ipp(s):// has changed */
+    if ((strcasestr(type, "_ipps") &&
+	 !strncmp(p->uri, "ipp:", 4)) ||
+	strcmp(strchr(p->uri, ':'), strchr(uri, ':'))) {
 
-      /* Schedule local queue for upgrade to ipps: */
+      /* Schedule local queue for upgrade to ipps: or for URI change */
+      if (strcasestr(type, "_ipps") &&
+	  !strncmp(p->uri, "ipp:", 4))
+	debug_printf("cups-browsed: Upgrading printer %s (Host: %s) to IPPS. New URI: %s\n",
+		     p->name, remote_host, uri);
+      if (strcmp(strchr(p->uri, ':'), strchr(uri, ':')))
+	debug_printf("cups-browsed: Changing URI of printer %s (Host: %s) to %s.\n",
+		     p->name, remote_host, uri);
       free(p->uri);
       p->uri = strdup(uri);
       p->status = STATUS_TO_BE_CREATED;
@@ -1095,21 +1105,19 @@ void generate_local_queue(const char *host,
       p->service_name = strdup(name);
       p->type = strdup(type);
       p->domain = strdup(domain);
-      debug_printf("cups-browsed: Upgrading printer %s (Host: %s) to IPPS. New URI: %s\n",
-		   p->name, p->host, p->uri);
 
     } else {
 
       /* Nothing to do, mark queue entry as confirmed if the entry
 	 is unconfirmed */
-      debug_printf("cups-browsed: Entry for %s (Host: %s, URI: %s) already exists.\n",
-		   p->name, p->host, p->uri);
+      debug_printf("cups-browsed: Entry for %s (URI: %s) already exists.\n",
+		   p->name, p->uri);
       if (p->status == STATUS_UNCONFIRMED ||
 	  p->status == STATUS_DISAPPEARED) {
 	p->status = STATUS_CONFIRMED;
 	p->timeout = (time_t) -1;
-	debug_printf("cups-browsed: Marking entry for %s (Host: %s, URI: %s) as confirmed.\n",
-		     p->name, p->host, p->uri);
+	debug_printf("cups-browsed: Marking entry for %s (URI: %s) as confirmed.\n",
+		     p->name, p->uri);
       }
 
     }
@@ -1317,7 +1325,7 @@ static void browse_callback(
 	/* Schedule this printer for updating the CUPS queue */
 	p->status = STATUS_TO_BE_CREATED;
 	p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
-	/* Schedule the remote printer for removal */
+	/* Schedule the duplicate printer entry for removal */
 	q->status = STATUS_DISAPPEARED;
 	q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
 
