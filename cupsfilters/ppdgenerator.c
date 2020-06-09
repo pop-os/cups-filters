@@ -1164,6 +1164,7 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   cups_array_t		*sizes;		/* Media sizes we've added */
   cups_size_t		*size;		/* Current media size */
   ipp_attribute_t	*attr,		/* xxx-supported */
+                        *attr2,
 			*defattr,	/* xxx-default */
                         *quality,	/* print-quality-supported */
 			*x_dim, *y_dim;	/* Media dimensions */
@@ -1215,6 +1216,14 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
                                         /* Path to filter executable */
   const char		*cups_serverbin;/* CUPS_SERVERBIN environment
 					   variable */
+  char			*defaultoutbin = NULL;
+  const char		*outbin;
+  char			outbin_properties[1024];
+  int			octet_str_len;
+  void			*outbin_properties_octet;
+  int			outputorderinfofound = 0,
+			faceupdown = 1,
+			firsttolast = 1;
 
  /*
   * Range check input...
@@ -1283,6 +1292,54 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   cupsFilePrintf(fp, "*NickName: \"%s %s, driverless, cups-filters %s\"\n", make, model,
 		 VERSION);
   cupsFilePrintf(fp, "*ShortNickName: \"%s %s\"\n", make, model);
+
+  /* Which is the default output bin? */
+  if ((attr = ippFindAttribute(response, "output-bin-default", IPP_TAG_ZERO)) != NULL)
+    defaultoutbin = strdup(ippGetString(attr, 0, NULL));
+  /* Find out on which position of the list of output bins the default one is, if there
+     is no default bin, take the first of this list */
+  i = 0;
+  if ((attr = ippFindAttribute(response, "output-bin-supported", IPP_TAG_ZERO)) != NULL)
+  {
+    count = ippGetCount(attr);
+    for (i = 0; i < count; i ++)
+    {
+      outbin = ippGetString(attr, i, NULL);
+      if (outbin == NULL)
+	continue;
+      if (defaultoutbin == NULL)
+      {
+	defaultoutbin = strdup(outbin);
+	break;
+      }
+      else if (strcasecmp(outbin, defaultoutbin) == 0)
+	break;
+    }
+  }
+  if ((attr = ippFindAttribute(response, "printer-output-tray", IPP_TAG_STRING)) != NULL &&
+      i < ippGetCount(attr))
+  {
+    outbin_properties_octet = ippGetOctetString(attr, i, &octet_str_len);
+    memset(outbin_properties, 0, sizeof(outbin_properties));
+    memcpy(outbin_properties, outbin_properties_octet,
+	   ((size_t)octet_str_len < sizeof(outbin_properties) - 1 ?
+	    (size_t)octet_str_len : sizeof(outbin_properties) - 1));
+    if (strcasestr(outbin_properties, "pagedelivery=faceUp"))
+    {
+      outputorderinfofound = 1;
+      faceupdown = -1;
+    }
+    if (strcasestr(outbin_properties, "stackingorder=lastToFirst"))
+      firsttolast = -1;
+  }
+  if (outputorderinfofound == 0 && defaultoutbin && strcasestr(defaultoutbin, "face-up"))
+    faceupdown = -1;
+  if (defaultoutbin)
+    free (defaultoutbin);
+  if (firsttolast * faceupdown < 0)
+    cupsFilePuts(fp, "*DefaultOutputOrder: Reverse\n");
+  else
+    cupsFilePuts(fp, "*DefaultOutputOrder: Normal\n");
 
   if (((attr = ippFindAttribute(response, "color-supported", IPP_TAG_BOOLEAN)) != NULL && ippGetBoolean(attr, 0)) || color)
     cupsFilePuts(fp, "*ColorDevice: True\n");
@@ -2712,8 +2769,9 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
     cupsFilePrintf(fp, "*OpenUI *OutputBin/%s: PickOne\n"
                        "*OrderDependency: 10 AnySetup *OutputBin\n"
                        "*DefaultOutputBin: %s\n",
-		       (human_readable ? human_readable : "Media Type"),
+		       (human_readable ? human_readable : "Output Bin"),
 		       ppdname);
+    attr2 = ippFindAttribute(response, "printer-output-tray", IPP_TAG_STRING);
     for (i = 0; i < count; i ++)
     {
       keyword = ippGetString(attr, i, NULL);
@@ -2732,6 +2790,54 @@ ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
 		     ppdname,
 		     (human_readable ? "/" : ""),
 		     (human_readable ? human_readable : ""));
+      outputorderinfofound = 0;
+      faceupdown = 1;
+      firsttolast = 1;
+      if (attr2 && i < ippGetCount(attr2))
+      {
+	outbin_properties_octet = ippGetOctetString(attr2, i, &octet_str_len);
+	memset(outbin_properties, 0, sizeof(outbin_properties));
+	memcpy(outbin_properties, outbin_properties_octet,
+	       ((size_t)octet_str_len < sizeof(outbin_properties) - 1 ?
+		(size_t)octet_str_len : sizeof(outbin_properties) - 1));
+	if (strcasestr(outbin_properties, "pagedelivery=faceUp"))
+	{
+	  outputorderinfofound = 1;
+	  faceupdown = -1;
+	}
+	else if (strcasestr(outbin_properties, "pagedelivery=faceDown"))
+	{
+	  outputorderinfofound = 1;
+	  faceupdown = 1;
+	}
+	if (strcasestr(outbin_properties, "stackingorder=lastToFirst"))
+	{
+	  outputorderinfofound = 1;
+	  firsttolast = -1;
+	}
+	else if (strcasestr(outbin_properties, "stackingorder=firstToLast"))
+	{
+	  outputorderinfofound = 1;
+	  firsttolast = 1;
+	}
+      }
+      if (outputorderinfofound == 0)
+      {
+	if (strcasestr(keyword, "face-up"))
+	{
+	  outputorderinfofound = 1;
+	  faceupdown = -1;
+	}
+	if (strcasestr(keyword, "face-down"))
+	{
+	  outputorderinfofound = 1;
+	  faceupdown = 1;
+	}
+      }
+      if (outputorderinfofound)
+	cupsFilePrintf(fp, "*PageStackOrder %s: %s\n",
+		       ppdname,
+		       (firsttolast * faceupdown < 0 ? "Reverse" : "Normal"));
     }
     cupsFilePuts(fp, "*CloseUI: *OutputBin\n");
   }

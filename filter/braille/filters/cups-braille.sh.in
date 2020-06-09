@@ -187,10 +187,18 @@ MARGIN_TOP=$(points2mm "$HWMARGIN_TOP")
 MARGIN_BOTTOM=$(points2mm "$HWMARGIN_BOTTOM")
 
 # Margins requested by user
-PAGE_LEFT=$(points2mm $(getOptionNumber page-left))
-PAGE_RIGHT=$(points2mm $(getOptionNumber page-right))
-PAGE_TOP=$(points2mm $(getOptionNumber page-top))
-PAGE_BOTTOM=$(points2mm $(getOptionNumber page-bottom))
+PAGE_LEFT=$(getOptionNumber page-left)
+[ "$?" = 0 ] || exit 1
+PAGE_LEFT=$(points2mm $PAGE_LEFT)
+PAGE_RIGHT=$(getOptionNumber page-right)
+[ "$?" = 0 ] || exit 1
+PAGE_RIGHT=$(points2mm $PAGE_RIGHT)
+PAGE_TOP=$(getOptionNumber page-top)
+[ "$?" = 0 ] || exit 1
+PAGE_TOP=$(points2mm $PAGE_TOP)
+PAGE_BOTTOM=$(getOptionNumber page-bottom)
+[ "$?" = 0 ] || exit 1
+PAGE_BOTTOM=$(points2mm $PAGE_BOTTOM)
 
 [ -n "$PAGE_LEFT"   -a "$MARGIN_LEFT"   -le "$PAGE_LEFT"   ] || PAGE_LEFT=$MARGIN_LEFT
 [ -n "$PAGE_RIGHT"  -a "$MARGIN_RIGHT"  -le "$PAGE_RIGHT"  ] || PAGE_RIGHT=$MARGIN_RIGHT
@@ -211,6 +219,7 @@ echo "DEBUG: printable area is ${PRINTABLEWIDTH}x${PRINTABLEHEIGHT}" >&2
 #
 
 TEXTDOTDISTANCE=$(getOptionNumber TextDotDistance)
+[ "$?" = 0 ] || exit 1
 case "$TEXTDOTDISTANCE" in
   220) TEXTCELLDISTANCE=310 ;;
   250) TEXTCELLDISTANCE=350 ;;
@@ -222,40 +231,60 @@ case "$TEXTDOTDISTANCE" in
 esac
 
 TEXTDOTS=$(getOptionNumber TextDots)
+[ "$?" = 0 ] || exit 1
 LINESPACING=$(getOptionNumber LineSpacing)
+[ "$?" = 0 ] || exit 1
 
 # Cell dimension, including spacing
 TEXTCELLWIDTH=$(( $TEXTDOTDISTANCE + $TEXTCELLDISTANCE ))
 TEXTCELLHEIGHT=$(( $TEXTDOTDISTANCE * ($TEXTDOTS / 2 - 1) + $LINESPACING ))
 
+# Compute number of printable cells according to page width and height
+PRINTABLETEXTWIDTH=$(( ($PRINTABLEWIDTH + $TEXTCELLDISTANCE) / $TEXTCELLWIDTH  ))
+PRINTABLETEXTHEIGHT=$(( ($PRINTABLEHEIGHT + $LINESPACING) / $TEXTCELLHEIGHT ))
+
 if [ "$(getOption TopMargin)" = "" ]
 then
   # No margin
-  TEXTAREAWIDTH=$PRINTABLEWIDTH
-  TEXTAREAHEIGHT=$PRINTABLEHEIGHT
+  TEXTWIDTH=$PRINTABLETEXTWIDTH
+  TEXTHEIGHT=$PRINTABLETEXTHEIGHT
 else
   # Margins in cells
   TOPMARGIN=$(getOptionNumber TopMargin)
+  [ "$?" = 0 ] || exit 1
   BOTTOMMARGIN=$(getOptionNumber BottomMargin)
-  if [ "$(getOption InnerMargin)" = "" ]
-  then
-    LEFTMARGIN=$(getOptionNumber LeftMargin)
-    RIGHTMARGIN=$(getOptionNumber RightMargin)
-    WIDTHMARGIN=$(( $LEFTMARGIN + $RIGHTMARGIN ))
-  else
-    INNERMARGIN=$(getOptionNumber InnerMargin)
-    OUTERMARGIN=$(getOptionNumber OuterMargin)
-    WIDTHMARGIN=$(( $INNERMARGIN + $OUTERMARGIN ))
-  fi
-    
-  # Subtract margins from printable area
-  TEXTAREAWIDTH=$(( $PRINTABLEWIDTH - $WIDTHMARGIN * $TEXTCELLWIDTH ))
-  TEXTAREAHEIGHT=$(( $PRINTABLEHEIGHT - ($TOPMARGIN + $BOTTOMMARGIN) * $TEXTCELLHEIGHT ))
+  [ "$?" = 0 ] || exit 1
+  LEFTMARGIN=$(getOptionNumber LeftMargin)
+  [ "$?" = 0 ] || exit 1
+  RIGHTMARGIN=$(getOptionNumber RightMargin)
+  [ "$?" = 0 ] || exit 1
+  TEXTWIDTH=$(( $PRINTABLETEXTWIDTH - $LEFTMARGIN - $RIGHTMARGIN ))
+  TEXTHEIGHT=$(( $PRINTABLETEXTHEIGHT - $TOPMARGIN - $BOTTOMMARGIN ))
 fi
 
-# Compute number of printable cells according to page width and height
-TEXTWIDTH=$(( ($TEXTAREAWIDTH + $TEXTCELLDISTANCE) / $TEXTCELLWIDTH  ))
-TEXTHEIGHT=$(( ($TEXTAREAHEIGHT + $LINESPACING) / $TEXTCELLHEIGHT ))
+# Filter that adds top and left margins on the fly, to be used while producing
+# BRF output.
+addmargins() {
+  NEWPAGE=""
+  if [ -n "$TOPMARGIN" ]; then
+    for I in $(seq 1 $TOPMARGIN) ; do
+      NEWPAGE="$NEWPAGE"$'\r'$'\n'
+    done
+  fi
+  NEWPAGESED=${NEWPAGE//$'\n'/\\$'\n'}
+  LEFTSPACES=""
+  if [ -n "$LEFTMARGIN" ]; then
+    for I in $(seq 1 $LEFTMARGIN) ; do
+      LEFTSPACES="$LEFTSPACES "
+    done
+  fi
+
+  echo -n "$NEWPAGE"
+  sed -e '$s/$//' \
+      -e "s/^\(\?\)\([^]\)/\1$LEFTSPACES\2/" \
+      -e "s//$NEWPAGESED/"
+  echo -n ""
+}
 
 #
 # Graphic spacing
@@ -263,6 +292,7 @@ TEXTHEIGHT=$(( ($TEXTAREAHEIGHT + $LINESPACING) / $TEXTCELLHEIGHT ))
 
 # Compute number of printable cells according to page size
 GRAPHICDOTDISTANCE=$(getOptionNumber GraphicDotDistance)
+[ "$?" = 0 ] || exit 1
 
 # This is the total area we will send to the embosser
 TOTALGRAPHICWIDTH=$(( ( ($PRINTABLEWIDTH - 160) / $GRAPHICDOTDISTANCE ) / 2 * 2 ))
@@ -336,7 +366,7 @@ getOptionLibLouis () {
 
       if [ -n "$GRADE" ]; then
 	if grep -q "^#+grade:$GRADE$" $table || \
-	 ( [ "$GRADE" = 0 ] && grep -q "^#+contraction:no" $table ) \
+	 ( [ "$GRADE" = 0 ] && ( grep -q "^#+contraction:no" $table || grep -q "^#+type:computer" $table ) ) \
 	then
 	  printf "DEBUG: %s has correct grade %s\n" "$name" "$GRADE" >&2
 	  score=$((score + 10))
@@ -379,8 +409,9 @@ getOptionLibLouis () {
       elif [ -f "$TABLESDIR/$LANGUAGE.tbl" ]; then
 	printf "%s" "$LANGUAGE.tbl"
       else
-        printf "WARN: Could not find $OPTION table with locale %s\n" "$LOCALE" >&2
+        printf "ERROR: Could not find $OPTION table with locale %s\n" "$LOCALE" >&2
 	printf None
+	exit 1
       fi
       ;;
     Locale-g[0-3])
@@ -403,6 +434,16 @@ getOptionLibLouis () {
       printf None
       exit 1
       ;;
+    HyphLocale)
+      if [ -f "$TABLESDIR/hyph_$LOCALE.dic" ]; then
+	printf "%s" "hyph_$LOCALE.dic"
+      elif [ -f "$TABLESDIR/hyph_$LANGUAGE.dic" ]; then
+	printf "%s" "hyph_$LANGUAGE.dic"
+      else
+        printf "WARN: Could not find $OPTION hyphenation table with locale %s\n" "$LOCALE" >&2
+	printf None
+      fi
+      ;;
     *)
       [ -f "$TABLESDIR/$VALUE".utb ] && VALUE="$VALUE".utb
       [ -f "$TABLESDIR/$VALUE".ctb ] && VALUE="$VALUE".ctb
@@ -418,9 +459,13 @@ getOptionLibLouis () {
 }
 
 LIBLOUIS1=$(getOptionLibLouis LibLouis)
+[ "$?" = 0 ] || exit 1
 LIBLOUIS2=$(getOptionLibLouis LibLouis2)
+[ "$?" = 0 ] || exit 1
 LIBLOUIS3=$(getOptionLibLouis LibLouis3)
+[ "$?" = 0 ] || exit 1
 LIBLOUIS4=$(getOptionLibLouis LibLouis4)
+[ "$?" = 0 ] || exit 1
 
 echo "DEBUG: Table1 $LIBLOUIS1" >&2
 echo "DEBUG: Table2 $LIBLOUIS2" >&2
