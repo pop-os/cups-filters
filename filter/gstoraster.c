@@ -427,17 +427,25 @@ gs_spawn (const char *filename,
 
   /* Feed job data into Ghostscript */
   while ((n = fread(buf, 1, BUFSIZ, fp)) > 0) {
-    int count = write(fds[1], buf, n);
+    int count;
+retry_write:
+    count = write(fds[1], buf, n);
     if (count != n) {
-      if (count == -1)
+      if (count == -1) {
+        if (errno == EINTR)
+          goto retry_write;
         fprintf(stderr, "ERROR: write failed: %s\n", strerror(errno));
+      }
       fprintf(stderr, "ERROR: Can't feed job data into Ghostscript\n");
       goto out;
     }
   }
   close (fds[1]);
 
+retry_wait:
   if (waitpid (pid, &status, 0) == -1) {
+    if (errno == EINTR)
+      goto retry_wait;
     perror ("gs");
     goto out;
   }
@@ -517,12 +525,6 @@ out:
   return icc_profile;
 }
 
-static void
-child_reaper (int signum)
-{
-  wait(NULL);
-}
-
 int
 main (int argc, char **argv, char *envp[])
 {
@@ -559,9 +561,6 @@ main (int argc, char **argv, char *envp[])
   /* Ignore SIGPIPE and have write return an error instead */
   sa.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sa, NULL);
-
-  sa.sa_handler = child_reaper;
-  sigaction(SIGCHLD, &sa, NULL);
 
   num_options = cupsParseOptions(argv[5], 0, &options);
 
