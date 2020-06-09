@@ -62,6 +62,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <lcms.h>
 #define cmsColorSpaceSignature icColorSpaceSignature
 #define cmsSetLogErrorHandler cmsSetErrorHandler
+#define cmsToneCurve LPGAMMATABLE
 #define cmsSigXYZData icSigXYZData
 #define cmsSigLuvData icSigLuvData
 #define cmsSigLabData icSigLabData
@@ -183,6 +184,14 @@ namespace {
     {3,11,1,9},
     {15,7,13,5} 
   };
+  cmsCIExyYTRIPLE adobergb_matrix = {
+    {0.60974121, 0.31111145, 0.01947021}, 
+    {0.20527649, 0.62567139, 0.06086731}, 
+    {0.14918518, 0.06321716, 0.74456785}
+  };
+  cmsCIExyY adobergb_wp = {0.95045471, 1.0, 1.08905029};
+  cmsCIExyY sgray_wp = {0.9420288, 1.0, 0.82490540};
+
   /* for color profiles */
   cmsHPROFILE colorProfile = NULL;
   cmsHPROFILE popplerColorProfile = NULL;
@@ -367,6 +376,7 @@ static void parseOpts(int argc, char **argv)
   cups_option_t *options = 0;
   GooString profilePath;
   char tmpstr[1024];
+  char **qualifier = NULL;
   ppd_attr_t *attr;
 
   if (argc < 6 || argc > 7) {
@@ -447,20 +457,31 @@ static void parseOpts(int argc, char **argv)
       }
     }
 
-    snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
-    device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
-
-    /* support the "cm-calibration" option */
+    /* support the CUPS "cm-calibration" option */
     if (cupsGetOption("cm-calibration", num_options, options) != NULL) {
       cm_calibrate = true;
       device_inhibited = 1;
-    } 
+    } else {
+      /* rely on color manager */
+      snprintf (tmpstr, sizeof(tmpstr), "cups-%s", getenv("PRINTER"));
+      device_inhibited = colord_get_inhibit_for_device_id (tmpstr);
+    }
 
     if (!device_inhibited) {
-      if (getColorProfilePath(ppd,&profilePath)) {
-        /* ICCProfile is specified */
-        colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
-      }
+      if (ppd) 
+        qualifier = colord_get_qualifier_for_ppd(ppd);
+      
+      if (qualifier != NULL) 
+         colorProfile = colord_get_profile_for_device_id (tmpstr,
+                                                    (const char**) qualifier);
+
+      /* fall back to the PPD */
+      if (colorProfile == NULL) 
+        if (getColorProfilePath(ppd,&profilePath)) 
+          colorProfile = cmsOpenProfileFromFile(profilePath.getCString(),"r");
+
+      fprintf(stderr, "DEBUG: ICC Profile: %s\n", colorProfile ?
+          colorProfile : "None");
     }
   } else {
 #ifdef HAVE_CUPS_1_7
@@ -1325,6 +1346,28 @@ static void selectConvertFunc(cups_raster_t *raster)
     convertLineEven = convertLineOdd;
   }
   allocLineBuf = true;
+
+  if (header.cupsColorSpace == CUPS_CSPACE_ADOBERGB) {
+#if USE_LCMS1
+    cmsToneCurve Gamma = cmsBuildGamma(256, 2.2);
+    cmsToneCurve Gamma3[3];
+#else
+    cmsToneCurve * Gamma = cmsBuildGamma(NULL, 2.2);
+    cmsToneCurve * Gamma3[3];
+#endif    
+    Gamma3[0] = Gamma3[1] = Gamma3[2] = Gamma;
+
+    // Build AdobeRGB profile
+    colorProfile = cmsCreateRGBProfile(&adobergb_wp, &adobergb_matrix, Gamma3);
+  } else if (header.cupsColorSpace == CUPS_CSPACE_SW) {   
+#if USE_LCMS1
+    cmsToneCurve Gamma = cmsBuildGamma(256, 2.2);
+#else
+    cmsToneCurve * Gamma = cmsBuildGamma(NULL, 2.2);
+#endif 
+    // Build sGray profile
+    colorProfile = cmsCreateGrayProfile(&sgray_wp, Gamma);
+  }
 
   if (colorProfile != NULL && popplerColorProfile != colorProfile 
       && !device_inhibited) {
