@@ -49,6 +49,8 @@
 #include <avahi-common/error.h>
 #endif /* HAVE_AVAHI */
 
+#include <gio/gio.h>
+
 #include <cups/cups.h>
 #include <cups/ppd.h>
 
@@ -105,6 +107,12 @@ typedef struct allow_s {
   http_addr_t mask;
 } allow_t;
 
+/* Data struct for a printer discovered using BrowsePoll */
+typedef struct browsepoll_printer_s {
+  char *uri_supported;
+  char *info;
+} browsepoll_printer_t;
+
 /* Data structure for a BrowsePoll server */
 typedef struct browsepoll_s {
   char *server;
@@ -113,12 +121,42 @@ typedef struct browsepoll_s {
   int minor;
   gboolean can_subscribe;
   int subscription_id;
+  int sequence_number;
+
+  /* Remember which printers we discovered. This way we can just ask
+   * if anything has changed, and if not we know these printers are
+   * still there. */
+  GList *printers; /* of browsepoll_printer_t */
 } browsepoll_t;
+
+/* Local printer (key is name) */
+typedef struct local_printer_s {
+  char *device_uri;
+  gboolean cups_browsed_controlled;
+} local_printer_t;
+
+/* Browse data to send for local printer */
+typedef struct browse_data_s {
+  int type;
+  int state;
+  char *uri;
+  char *location;
+  char *info;
+  char *make_model;
+  char *browse_options;
+} browse_data_t;
 
 cups_array_t *remote_printers;
 static cups_array_t *netifs;
 static cups_array_t *browseallow;
 static gboolean browseallow_all = FALSE;
+
+static GHashTable *local_printers;
+static browsepoll_t *local_printers_context = NULL;
+static http_t *local_conn = NULL;
+static gboolean inhibit_local_printers_update = FALSE;
+
+static GList *browse_data = NULL;
 
 static GMainLoop *gmainloop = NULL;
 #ifdef HAVE_AVAHI
@@ -138,6 +176,7 @@ static unsigned int BrowseTimeout = 300;
 static uint16_t BrowsePort = 631;
 static browsepoll_t **BrowsePoll = NULL;
 static size_t NumBrowsePoll = 0;
+static guint update_netifs_sourceid = -1;
 static char *DomainSocket = NULL;
 static unsigned int CreateIPPPrinterQueues = 0;
 static int autoshutdown = 0;
@@ -148,7 +187,10 @@ static guint autoshutdown_exec_id = 0;
 static int debug = 0;
 
 static void recheck_timer (void);
-
+static void browse_poll_create_subscription (browsepoll_t *context,
+					     http_t *conn);
+static gboolean browse_poll_get_notifications (browsepoll_t *context,
+					       http_t *conn);
 char            *_ppdCreateFromIPP(char *buffer, size_t bufsize, ipp_t *response);
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
@@ -266,6 +308,336 @@ password_callback (const char *prompt,
 		   void *user_data)
 {
   return NULL;
+}
+
+static http_t *
+http_connect_local (void)
+{
+  if (!local_conn)
+    local_conn = httpConnectEncrypt(cupsServer(), ippPort(),
+				    cupsEncryption());
+
+  return local_conn;
+}
+
+static void
+http_close_local (void)
+{
+  if (local_conn) {
+    httpClose (local_conn);
+    local_conn = NULL;
+  }
+}
+
+static local_printer_t *
+new_local_printer (const char *device_uri,
+		   gboolean cups_browsed_controlled)
+{
+  local_printer_t *printer = g_malloc (sizeof (local_printer_t));
+  printer->device_uri = strdup (device_uri);
+  printer->cups_browsed_controlled = cups_browsed_controlled;
+  return printer;
+}
+
+static void
+free_local_printer (gpointer data)
+{
+  local_printer_t *printer = data;
+  free (printer->device_uri);
+  free (printer);
+}
+
+static gboolean
+local_printer_has_uri (gpointer key,
+		       gpointer value,
+		       gpointer user_data)
+{
+  local_printer_t *printer = value;
+  char *device_uri = user_data;
+  return g_str_equal (printer->device_uri, device_uri);
+}
+
+static void
+local_printers_create_subscription (http_t *conn)
+{
+  if (!local_printers_context) {
+    local_printers_context = g_malloc0 (sizeof (browsepoll_t));
+    local_printers_context->server = "localhost";
+    local_printers_context->port = BrowsePort;
+    local_printers_context->can_subscribe = TRUE;
+  }
+
+  browse_poll_create_subscription (local_printers_context, conn);
+}
+
+static void
+get_local_printers (void)
+{
+  cups_dest_t *dests = NULL;
+  int num_dests = cupsGetDests (&dests);
+  debug_printf ("cups-browsed [BrowsePoll localhost:631]: cupsGetDests\n");
+  g_hash_table_remove_all (local_printers);
+  for (int i = 0; i < num_dests; i++) {
+    const char *val;
+    cups_dest_t *dest = &dests[i];
+    local_printer_t *printer;
+    gboolean cups_browsed_controlled;
+    const char *device_uri = cupsGetOption ("device-uri",
+					    dest->num_options,
+					    dest->options);
+    val = cupsGetOption (CUPS_BROWSED_MARK,
+			 dest->num_options,
+			 dest->options);
+    cups_browsed_controlled = val && (!strcasecmp (val, "yes") ||
+				      !strcasecmp (val, "on") ||
+				      !strcasecmp (val, "true"));
+    printer = new_local_printer (device_uri,
+				 cups_browsed_controlled);
+    g_hash_table_insert (local_printers,
+			 g_strdup (dest->name),
+			 printer);
+  }
+
+  cupsFreeDests (num_dests, dests);
+}
+
+static browse_data_t *
+new_browse_data (int type, int state, const gchar *uri,
+		 const gchar *location, const gchar *info,
+		 const gchar *make_model, const gchar *browse_options)
+{
+  browse_data_t *data = g_malloc (sizeof (browse_data_t));
+  data->type = type;
+  data->state = state;
+  data->uri = g_strdup (uri);
+  data->location = g_strdup (location);
+  data->info = g_strdup (info);
+  data->make_model = g_strdup (make_model);
+  data->browse_options = g_strdup (browse_options);
+  return data;
+}
+
+static void
+browse_data_free (gpointer data)
+{
+  browse_data_t *bdata = data;
+  g_free (bdata->uri);
+  g_free (bdata->location);
+  g_free (bdata->info);
+  g_free (bdata->make_model);
+  g_free (bdata->browse_options);
+  g_free (bdata);
+}
+
+static void
+prepare_browse_data (void)
+{
+  static const char * const rattrs[] = { "printer-type",
+					 "printer-state",
+					 "printer-uri-supported",
+					 "printer-info",
+					 "printer-location",
+					 "printer-make-and-model",
+					 "auth-info-required",
+					 "printer-uuid",
+					 "job-template" };
+  ipp_t *request, *response = NULL;
+  ipp_attribute_t *attr;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
+
+  if (conn == NULL) {
+    debug_printf("cups-browsed: browse send failed to connect to localhost\n");
+    goto fail;
+  }
+
+  request = ippNewRequest(CUPS_GET_PRINTERS);
+  ippAddStrings (request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+		 "requested-attributes", sizeof (rattrs) / sizeof (rattrs[0]),
+		 NULL, rattrs);
+  ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_NAME,
+		"requesting-user-name", NULL, cupsUser ());
+
+  debug_printf("cups-browsed: preparing browse data\n");
+  response = cupsDoRequest (conn, request, "/");
+  if (cupsLastError() > IPP_OK_CONFLICT) {
+    debug_printf("cups-browsed: browse send failed for localhost: %s\n",
+		 cupsLastErrorString ());
+    goto fail;
+  }
+
+  g_list_free_full (browse_data, browse_data_free);
+  browse_data = NULL;
+  for (attr = ippFirstAttribute(response); attr;
+       attr = ippNextAttribute(response)) {
+    int type = -1, state = -1;
+    const char *uri = NULL;
+    gchar *location = NULL;
+    gchar *info = NULL;
+    gchar *make_model = NULL;
+    GString *browse_options = g_string_new ("");
+
+    /* Skip any non-printer attributes */
+    while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
+      attr = ippNextAttribute(response);
+
+    if (!attr)
+      break;
+
+    while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
+      const char *attrname = ippGetName(attr);
+      int value_tag = ippGetValueTag(attr);
+
+      if (!strcasecmp(attrname, "printer-type") &&
+	  value_tag == IPP_TAG_ENUM) {
+	type = ippGetInteger(attr, 0);
+	if (type & CUPS_PRINTER_NOT_SHARED) {
+	  /* Skip CUPS queues not marked as shared */
+	  state = -1;
+	  type = -1;
+	  break;
+	}
+      } else if (!strcasecmp(attrname, "printer-state") &&
+	       value_tag == IPP_TAG_ENUM)
+	state = ippGetInteger(attr, 0);
+      else if (!strcasecmp(attrname, "printer-uri-supported") &&
+	       value_tag == IPP_TAG_URI)
+	uri = ippGetString(attr, 0, NULL);
+      else if (!strcasecmp(attrname, "printer-location") &&
+	       value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	location = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "printer-info") &&
+		 value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	info = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "printer-make-and-model") &&
+		 value_tag == IPP_TAG_TEXT) {
+	/* Remove quotes */
+	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
+	make_model = g_strjoinv ("", tokens);
+	g_strfreev (tokens);
+      } else if (!strcasecmp(attrname, "auth-info-required") &&
+		 value_tag == IPP_TAG_KEYWORD) {
+	if (strcasecmp (ippGetString(attr, 0, NULL), "none"))
+	  g_string_append_printf (browse_options, "auth-info-required=%s ",
+				  ippGetString(attr, 0, NULL));
+      } else if (!strcasecmp(attrname, "printer-uuid") &&
+		 value_tag == IPP_TAG_URI)
+	g_string_append_printf (browse_options, "uuid=%s ",
+				ippGetString(attr, 0, NULL));
+      else if (!strcasecmp(attrname, "job-sheets-default") &&
+	       value_tag == IPP_TAG_NAME &&
+	       ippGetCount(attr) == 2)
+	g_string_append_printf (browse_options, "job-sheets=%s,%s ",
+				ippGetString(attr, 0, NULL),
+				ippGetString(attr, 1, NULL));
+      else if (strstr(attrname, "-default")) {
+	gchar *name = g_strdup (attrname);
+	gchar *value = NULL;
+	*strstr (name, "-default") = '\0';
+
+	switch (value_tag) {
+	  gchar **tokens;
+
+	case IPP_TAG_KEYWORD:
+	case IPP_TAG_STRING:
+	case IPP_TAG_NAME:
+	  /* Escape value */
+	  tokens = g_strsplit_set (ippGetString(attr, 0, NULL),
+				   " \"\'\\", -1);
+	  value = g_strjoinv ("\\", tokens);
+	  g_strfreev (tokens);
+	  break;
+
+	default:
+	  /* other values aren't needed? */
+	  debug_printf("cups-browsed: skipping %s (%d)\n", name, value_tag);
+	  break;
+	}
+
+	if (value) {
+	  g_string_append_printf (browse_options, "%s=%s ", name, value);
+	  g_free (value);
+	}
+
+	g_free (name);
+      }
+
+      attr = ippNextAttribute(response);
+    }
+
+    if (type != -1 && state != -1 && uri && location && info && make_model) {
+      gchar *browse_options_str = g_string_free (browse_options, FALSE);
+      browse_data_t *data;
+      browse_options = NULL;
+      g_strchomp (browse_options_str);
+      data = new_browse_data (type, state, uri, location,
+			      info, make_model, browse_options_str);
+      browse_data = g_list_insert (browse_data, data, 0);
+      g_free (browse_options_str);
+    }
+
+    if (make_model)
+      g_free (make_model);
+
+    if (info)
+      g_free (info);
+
+    if (location)
+      g_free (location);
+
+    if (browse_options)
+      g_string_free (browse_options, TRUE);
+
+    if (!attr)
+      break;
+  }
+
+ fail:
+  if (response)
+    ippDelete(response);
+}
+
+static void
+update_local_printers (void)
+{
+  gboolean get_printers = FALSE;
+  http_t *conn;
+
+  if (inhibit_local_printers_update)
+    return;
+
+  conn = http_connect_local ();
+  if (conn &&
+      (!local_printers_context || local_printers_context->can_subscribe)) {
+    if (!local_printers_context ||
+	local_printers_context->subscription_id == -1) {
+      /* No subscription yet. First, create the subscription. */
+      local_printers_create_subscription (conn);
+      get_printers = TRUE;
+    } else
+      /* We already have a subscription, so use it. */
+
+      /* Note: for the moment, browse_poll_get_notifications() just
+       * tells us whether we should re-fetch the printer list, so it
+       * is safe to use here. */
+      get_printers = browse_poll_get_notifications (local_printers_context,
+						    conn);
+  } else
+    get_printers = TRUE;
+
+  if (get_printers) {
+    get_local_printers ();
+
+    if (BrowseLocalProtocols & BROWSE_CUPS)
+      prepare_browse_data ();
+  }
 }
 
 gboolean
@@ -615,8 +987,7 @@ gboolean handle_cups_queues(gpointer unused) {
 
       /* Remove the CUPS queue */
       if (!p->duplicate) { /* Duplicates do not have a CUPS queue */
-	if ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				       cupsEncryption())) == NULL) {
+	if ((http = http_connect_local ()) == NULL) {
 	  debug_printf("cups-browsed: Unable to connect to CUPS!\n");
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  break;
@@ -630,7 +1001,6 @@ gboolean handle_cups_queues(gpointer unused) {
 	if (num_jobs != 0) { /* error or jobs */
 	  debug_printf("cups-browsed: Queue has still jobs or CUPS error!\n");
 	  cupsFreeJobs(num_jobs, jobs);
-	  httpClose(http);
 	  /* Schedule the removal of the queue for later */
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  break;
@@ -670,7 +1040,6 @@ gboolean handle_cups_queues(gpointer unused) {
 	    !strcasecmp(default_printer_name, p->name)) {
 	  /* Printer is currently the system's default printer,
 	     do not remove it */
-	  httpClose(http);
 	  /* Schedule the removal of the queue for later */
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  ippDelete(response);
@@ -694,10 +1063,8 @@ gboolean handle_cups_queues(gpointer unused) {
 	if (cupsLastError() > IPP_OK_CONFLICT) {
 	  debug_printf("cups-browsed: Unable to remove CUPS queue!\n");
 	  p->timeout = current_time + TIMEOUT_RETRY;
-	  httpClose(http);
 	  break;
 	}
-	httpClose(http);
       }
 
       /* CUPS queue removed, remove the list entry */
@@ -747,8 +1114,7 @@ gboolean handle_cups_queues(gpointer unused) {
 		   p->name);
 
       /* Create a new CUPS queue or modify the existing queue */
-      if ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				     cupsEncryption())) == NULL) {
+      if ((http = http_connect_local ()) == NULL) {
 	debug_printf("cups-browsed: Unable to connect to CUPS!\n");
 	p->timeout = current_time + TIMEOUT_RETRY;
 	break;
@@ -813,10 +1179,8 @@ gboolean handle_cups_queues(gpointer unused) {
       if (cupsLastError() > IPP_OK_CONFLICT) {
 	debug_printf("cups-browsed: Unable to create CUPS queue!\n");
 	p->timeout = current_time + TIMEOUT_RETRY;
-	httpClose(http);
 	break;
       }
-      httpClose(http);
 
       if (p->status == STATUS_BROWSE_PACKET_RECEIVED) {
 	p->status = STATUS_DISAPPEARED;
@@ -893,11 +1257,10 @@ generate_local_queue(const char *host,
   char *key = NULL, *value = NULL;
 #endif /* HAVE_AVAHI */
   remote_printer_t *p;
+  local_printer_t *local_printer;
   char *backup_queue_name = NULL, *local_queue_name = NULL;
-  cups_dest_t *dests = NULL, *dest = NULL;
-  int i, num_dests, is_cups_queue;
+  int is_cups_queue;
   size_t hl = 0;
-  const char *val = NULL;
   gboolean create = TRUE;
   
 
@@ -1006,48 +1369,30 @@ generate_local_queue(const char *host,
   sprintf(backup_queue_name, "%s@%s", remote_queue, remote_host);
 
   /* Get available CUPS queues */
-  num_dests = cupsGetDests(&dests);
+  update_local_printers ();
 
   local_queue_name = remote_queue;
-  if (num_dests > 0) {
-    /* Is there a local queue with the same URI as the remote queue? */
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
-      if (((val =
-	    cupsGetOption("device-uri", dest->num_options,
-			  dest->options)) != NULL) &&
-	  (!strcasecmp(val, uri)))
-	break;
-    if (i > 0)
-      create = FALSE;
 
+  /* Is there a local queue with the same URI as the remote queue? */
+  if (g_hash_table_find (local_printers,
+			 local_printer_has_uri,
+			 uri))
+    create = FALSE;
+
+  if (create) {
     /* Is there a local queue with the name of the remote queue? */
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++)
+    local_printer = g_hash_table_lookup (local_printers,
+					 local_queue_name);
       /* Only consider CUPS queues not created by us */
-      if ((((val =
-	     cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			   dest->options)) == NULL) ||
-	   (strcasecmp(val, "yes") != 0 &&
-	    strcasecmp(val, "on") != 0 &&
-	    strcasecmp(val, "true") != 0)) &&
-	  !strcasecmp(local_queue_name, dest->name))
-	break;
-    if (i > 0) {
+    if (local_printer && !local_printer->cups_browsed_controlled) {
       /* Found local queue with same name as remote queue */
       /* Is there a local queue with the name <queue>@<host>? */
       local_queue_name = backup_queue_name;
       debug_printf("cups-browsed: %s already taken, using fallback name: %s\n",
 		   remote_queue, local_queue_name);
-      for (i = num_dests, dest = dests; i > 0; i --, dest ++)
-	/* Only consider CUPS queues not created by us */
-	if ((((val =
-	       cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			     dest->options)) == NULL) ||
-	     (strcasecmp(val, "yes") != 0 &&
-	      strcasecmp(val, "on") != 0 &&
-	      strcasecmp(val, "true") != 0)) &&
-	    !strcasecmp(local_queue_name, dest->name))
-	  break;
-      if (i > 0) {
+      local_printer = g_hash_table_lookup (local_printers,
+					   local_queue_name);
+      if (local_printer && !local_printer->cups_browsed_controlled) {
 	/* Found also a local queue with name <queue>@<host>, so
 	   ignore this remote printer */
 	debug_printf("cups-browsed: %s also taken, printer ignored.\n",
@@ -1056,11 +1401,9 @@ generate_local_queue(const char *host,
 	free (remote_host);
 	free (pdl);
 	free (remote_queue);
-	cupsFreeDests(num_dests, dests);
 	return NULL;
       }
     }
-    cupsFreeDests(num_dests, dests);
   }
 
   /* Check if we have already created a queue for the discovered
@@ -1075,18 +1418,17 @@ generate_local_queue(const char *host,
       break;
 
   if (!create) {
-    if (p)
+    free (remote_host);
+    free (backup_queue_name);
+    free (pdl);
+    free (remote_queue);
+    if (p) {
       return p;
-    else {
+    } else {
       /* Found a local queue with the same URI as our discovered printer
 	 would get, so ignore this remote printer */
       debug_printf("cups-browsed: Printer with URI %s already exists, printer ignored.\n",
 		   uri);
-      free (remote_host);
-      free (backup_queue_name);
-      free (pdl);
-      free (remote_queue);
-      cupsFreeDests(num_dests, dests);
       return NULL;
     }
   }
@@ -1108,6 +1450,10 @@ generate_local_queue(const char *host,
 	debug_printf("cups-browsed: Changing URI of printer %s (Host: %s) to %s.\n",
 		     p->name, remote_host, uri);
       free(p->uri);
+      free(p->host);
+      free(p->service_name);
+      free(p->type);
+      free(p->domain);
       p->uri = strdup(uri);
       p->status = STATUS_TO_BE_CREATED;
       p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
@@ -1131,14 +1477,22 @@ generate_local_queue(const char *host,
       }
 
     }
-    if (p->host[0] == '\0')
+    if (p->host[0] == '\0') {
+      free (p->host);
       p->host = strdup(remote_host);
-    if (p->service_name[0] == '\0' && name)
+    }
+    if (p->service_name[0] == '\0' && name) {
+      free (p->service_name);
       p->service_name = strdup(name);
-    if (p->type[0] == '\0' && type)
+    }
+    if (p->type[0] == '\0' && type) {
+      free (p->type);
       p->type = strdup(type);
-    if (p->domain[0] == '\0' && domain)
+    }
+    if (p->domain[0] == '\0' && domain) {
+      free (p->domain);
       p->domain = strdup(domain);
+    }
   } else {
 
     /* We need to create a local queue pointing to the
@@ -1760,23 +2114,26 @@ process_browse_data (GIOChannel *source,
   if (c >= end)
     return TRUE;
 
-  found_cups_printer (remote_host, uri, info);
+  if (!(type & CUPS_PRINTER_DELETE))
+    found_cups_printer (remote_host, uri, info);
+
   recheck_timer ();
 
   /* Don't remove this I/O source */
   return TRUE;
 }
 
-void
-update_netifs (void)
+static gboolean
+update_netifs (gpointer data)
 {
   struct ifaddrs *ifaddr, *ifa;
   netif_t *iface;
 
+  update_netifs_sourceid = -1;
   if (getifaddrs (&ifaddr) == -1) {
     debug_printf("cups-browsed: unable to get interface addresses: %s\n",
 		 strerror (errno));
-    return;
+    return FALSE;
   }
 
   while ((iface = cupsArrayFirst (netifs)) != NULL) {
@@ -1847,14 +2204,15 @@ update_netifs (void)
   }
 
   freeifaddrs (ifaddr);
+
+  /* If run as a timeout, don't run it again. */
+  return FALSE;
 }
 
-void
-broadcast_browse_packets (int type, int state,
-			  const char *local_uri, const char *location,
-			  const char *info, const char *make_model,
-			  const char *browse_options)
+static void
+broadcast_browse_packets (gpointer data, gpointer user_data)
 {
+  browse_data_t *bdata = data;
   netif_t *browse;
   char packet[2048];
   char uri[HTTP_MAX_URI];
@@ -1868,7 +2226,7 @@ broadcast_browse_packets (int type, int state,
        browse != NULL;
        browse = (netif_t *)cupsArrayNext (netifs)) {
     /* Replace 'localhost' with our IP address on this interface */
-    httpSeparateURI(HTTP_URI_CODING_ALL, local_uri,
+    httpSeparateURI(HTTP_URI_CODING_ALL, bdata->uri,
 		    scheme, sizeof(scheme),
 		    username, sizeof(username),
 		    host, sizeof(host),
@@ -1887,11 +2245,16 @@ broadcast_browse_packets (int type, int state,
 		  "lease-duration=%d" /* BrowseTimeout */
 		  "%s%s" /* other browse options */
 		  "\n",
-		  type, state, uri, location,
-		  info, make_model,
+		  bdata->type,
+		  bdata->state,
+		  uri,
+		  bdata->location,
+		  bdata->info,
+		  bdata->make_model,
 		  BrowseTimeout,
-		  browse_options ? " " : "",
-		  browse_options ? browse_options : "") >= sizeof (packet)) {
+		  bdata->browse_options ? " " : "",
+		  bdata->browse_options ? bdata->browse_options : "")
+	>= sizeof (packet)) {
       debug_printf ("cups-browsed: oversize packet not sent\n");
       continue;
     }
@@ -1902,7 +2265,7 @@ broadcast_browse_packets (int type, int state,
 		      strlen (packet), 0,
 		      &browse->broadcast.addr,
 		      httpAddrLength (&browse->broadcast));
-    if (err)
+    if (err == -1)
       debug_printf("cupsd-browsed: sendto returned %d: %s\n",
 		   err, strerror (errno));
   }
@@ -1911,193 +2274,43 @@ broadcast_browse_packets (int type, int state,
 gboolean
 send_browse_data (gpointer data)
 {
-  static const char * const rattrs[] = { "printer-type",
-					 "printer-state",
-					 "printer-uri-supported",
-					 "printer-info",
-					 "printer-location",
-					 "printer-make-and-model",
-					 "auth-info-required",
-					 "printer-uuid",
-					 "job-template" };
-  ipp_t *request, *response = NULL;
-  ipp_attribute_t *attr;
-  http_t *conn = NULL;
-
-  update_netifs ();
+  update_netifs (NULL);
   res_init ();
-  conn = httpConnectEncrypt ("localhost", BrowsePort,
-			     HTTP_ENCRYPT_IF_REQUESTED);
-
-  if (conn == NULL) {
-    debug_printf("cups-browsed: browse send failed to connect to localhost\n");
-    goto fail;
-  }
-
-  request = ippNewRequest(CUPS_GET_PRINTERS);
-  ippAddStrings (request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-		 "requested-attributes", sizeof (rattrs) / sizeof (rattrs[0]),
-		 NULL, rattrs);
-  ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-		"requesting-user-name", NULL, cupsUser ());
-
-  response = cupsDoRequest (conn, request, "/");
-  if (cupsLastError() > IPP_OK_CONFLICT) {
-    debug_printf("cups-browsed: browse send failed for localhost: %s\n",
-		 cupsLastErrorString ());
-    goto fail;
-  }
-
-  for (attr = ippFirstAttribute(response); attr;
-       attr = ippNextAttribute(response)) {
-    int type = -1, state = -1;
-    const char *uri = NULL;
-    gchar *location = NULL;
-    gchar *info = NULL;
-    gchar *make_model = NULL;
-    GString *browse_options = g_string_new ("");
-
-    /* Skip any non-printer attributes */
-    while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
-      attr = ippNextAttribute(response);
-
-    if (!attr)
-      break;
-
-    while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
-      const char *attrname = ippGetName(attr);
-      int value_tag = ippGetValueTag(attr);
-
-      if (!strcasecmp(attrname, "printer-type") &&
-	  value_tag == IPP_TAG_ENUM) {
-	type = ippGetInteger(attr, 0);
-	if (type & CUPS_PRINTER_NOT_SHARED) {
-	  /* Skip CUPS queues not marked as shared */
-	  state = -1;
-	  type = -1;
-	  break;
-	}
-      } else if (!strcasecmp(attrname, "printer-state") &&
-	       value_tag == IPP_TAG_ENUM)
-	state = ippGetInteger(attr, 0);
-      else if (!strcasecmp(attrname, "printer-uri-supported") &&
-	       value_tag == IPP_TAG_URI)
-	uri = ippGetString(attr, 0, NULL);
-      else if (!strcasecmp(attrname, "printer-location") &&
-	       value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	location = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "printer-info") &&
-		 value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	info = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "printer-make-and-model") &&
-		 value_tag == IPP_TAG_TEXT) {
-	/* Remove quotes */
-	gchar **tokens = g_strsplit (ippGetString(attr, 0, NULL), "\"", -1);
-	make_model = g_strjoinv ("", tokens);
-	g_strfreev (tokens);
-      } else if (!strcasecmp(attrname, "auth-info-required") &&
-		 value_tag == IPP_TAG_KEYWORD) {
-	if (strcasecmp (ippGetString(attr, 0, NULL), "none"))
-	  g_string_append_printf (browse_options, "auth-info-required=%s ",
-				  ippGetString(attr, 0, NULL));
-      } else if (!strcasecmp(attrname, "printer-uuid") &&
-		 value_tag == IPP_TAG_URI)
-	g_string_append_printf (browse_options, "uuid=%s ",
-				ippGetString(attr, 0, NULL));
-      else if (!strcasecmp(attrname, "job-sheets-default") &&
-	       value_tag == IPP_TAG_NAME &&
-	       ippGetCount(attr) == 2)
-	g_string_append_printf (browse_options, "job-sheets=%s,%s ",
-				ippGetString(attr, 0, NULL),
-				ippGetString(attr, 1, NULL));
-      else if (strstr(attrname, "-default")) {
-	gchar *name = g_strdup (attrname);
-	gchar *value = NULL;
-	*strstr (name, "-default") = '\0';
-
-	switch (value_tag) {
-	  gchar **tokens;
-
-	case IPP_TAG_KEYWORD:
-	case IPP_TAG_STRING:
-	case IPP_TAG_NAME:
-	  /* Escape value */
-	  tokens = g_strsplit_set (ippGetString(attr, 0, NULL),
-				   " \"\'\\", -1);
-	  value = g_strjoinv ("\\", tokens);
-	  g_strfreev (tokens);
-	  break;
-
-	default:
-	  /* other values aren't needed? */
-	  debug_printf("cups-browsed: skipping %s (%d)\n", name, value_tag);
-	  break;
-	}
-
-	if (value) {
-	  g_string_append_printf (browse_options, "%s=%s ", name, value);
-	  g_free (value);
-	}
-
-	g_free (name);
-      }
-
-      attr = ippNextAttribute(response);
-    }
-
-    if (type != -1 && state != -1 && uri && location && info && make_model) {
-      gchar *browse_options_str = g_string_free (browse_options, FALSE);
-      browse_options = NULL;
-      g_strchomp (browse_options_str);
-
-      broadcast_browse_packets (type, state, uri, location,
-				info, make_model,
-				browse_options_str);
-
-      g_free (browse_options_str);
-    }
-
-    if (make_model)
-      g_free (make_model);
-
-    if (info)
-      g_free (info);
-
-    if (location)
-      g_free (location);
-
-    if (browse_options)
-      g_string_free (browse_options, TRUE);
-
-    if (!attr)
-      break;
-  }
-
- fail:
-  if (response)
-    ippDelete(response);
-
-  if (conn)
-    httpClose (conn);
-
+  update_local_printers ();
+  g_list_foreach (browse_data, broadcast_browse_packets, NULL);
   g_timeout_add_seconds (BrowseInterval, send_browse_data, NULL);
 
   /* Stop this timeout handler, we called a new one */
   return FALSE;
 }
 
+static browsepoll_printer_t *
+new_browsepoll_printer (const char *uri_supported,
+			const char *info)
+{
+  browsepoll_printer_t *printer = g_malloc (sizeof (browsepoll_printer_t));
+  printer->uri_supported = g_strdup (uri_supported);
+  printer->info = g_strdup (info);
+  return printer;
+}
+
+static void
+browsepoll_printer_free (gpointer data)
+{
+  browsepoll_printer_t *printer = data;
+  free (printer->uri_supported);
+  free (printer->info);
+  free (printer);
+}
+
 static void
 browse_poll_get_printers (browsepoll_t *context, http_t *conn)
 {
-  static const char * const rattrs[] = { "printer-uri-supported" };
+  static const char * const rattrs[] = { "printer-uri-supported",
+					 "printer-info"};
   ipp_t *request, *response = NULL;
   ipp_attribute_t *attr;
+  GList *printers = NULL;
 
   debug_printf ("cups-browsed [BrowsePoll %s:%d]: CUPS-Get-Printers\n",
 		context->server, context->port);
@@ -2136,6 +2349,7 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
 
   for (attr = ippFirstAttribute(response); attr;
        attr = ippNextAttribute(response)) {
+    browsepoll_printer_t *printer;
     const char *uri, *info;
 
     while (attr && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
@@ -2147,6 +2361,7 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
     uri = NULL;
     info = NULL;
     while (attr && ippGetGroupTag(attr) == IPP_TAG_PRINTER) {
+
       if (!strcasecmp (ippGetName(attr), "printer-uri-supported") &&
 	  ippGetValueTag(attr) == IPP_TAG_URI)
 	uri = ippGetString(attr, 0, NULL);
@@ -2157,13 +2372,18 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
       attr = ippNextAttribute(response);
     }
 
-    if (uri)
+    if (uri) {
       found_cups_printer (context->server, uri, info);
+      printer = new_browsepoll_printer (uri, info);
+      printers = g_list_insert (printers, printer, 0);
+    }
 
     if (!attr)
       break;
   }
 
+  g_list_free_full (context->printers, browsepoll_printer_free);
+  context->printers = printers;
   recheck_timer ();
 
 fail:
@@ -2255,7 +2475,7 @@ browse_poll_cancel_subscription (browsepoll_t *context)
     return;
   }
 
-  debug_printf ("cups-browsed [BrowsePoll %s:%d] IPP-Cancel-Subscription\n",
+  debug_printf ("cups-browsed [BrowsePoll %s:%d]: IPP-Cancel-Subscription\n",
 		context->server, context->port);
 
   request = ippNewRequest(IPP_CANCEL_SUBSCRIPTION);
@@ -2288,11 +2508,10 @@ static gboolean
 browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 {
   ipp_t *request, *response = NULL;
-  ipp_attribute_t *attr;
   ipp_status_t status;
   gboolean get_printers = FALSE;
 
-  debug_printf ("cups-browsed [BrowsePoll %s:%d] IPP-Get-Notifications\n",
+  debug_printf ("cups-browsed [BrowsePoll %s:%d]: IPP-Get-Notifications\n",
 		context->server, context->port);
 
   request = ippNewRequest(IPP_GET_NOTIFICATIONS);
@@ -2309,6 +2528,8 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 		"requesting-user-name", NULL, cupsUser ());
   ippAddInteger (request, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
 		 "notify-subscription-ids", context->subscription_id);
+  ippAddInteger (request, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
+		 "notify-sequence-numbers", context->sequence_number + 1);
 
   response = cupsDoRequest (conn, request, "/");
   if (!response)
@@ -2318,7 +2539,7 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
 
   if (status == IPP_NOT_FOUND) {
     /* Subscription lease has expired. */
-    debug_printf ("cups-browsed [BrowsePoll %s:%d] Lease expired\n",
+    debug_printf ("cups-browsed [BrowsePoll %s:%d]: Lease expired\n",
 		  context->server, context->port);
     browse_poll_create_subscription (context, conn);
     get_printers = TRUE;
@@ -2328,29 +2549,48 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
     context->can_subscribe = FALSE;
     browse_poll_cancel_subscription (context);
     context->subscription_id = -1;
+    context->sequence_number = 0;
     get_printers = TRUE;
-    goto fail;
   }
 
-  for (attr = ippFirstAttribute(response); attr;
-       attr = ippNextAttribute(response))
-    if (ippGetGroupTag (attr) == IPP_TAG_EVENT_NOTIFICATION)
-      /* There is a printer-* event here. */
-      break;
+  if (!get_printers) {
+    ipp_attribute_t *attr;
+    gboolean seen_event = FALSE;
+    int last_seq = context->sequence_number;
+    assert (response != NULL);
+    for (attr = ippFirstAttribute(response); attr;
+	 attr = ippNextAttribute(response))
+      if (ippGetGroupTag (attr) == IPP_TAG_EVENT_NOTIFICATION) {
+	/* There is a printer-* event here. */
+	seen_event = TRUE;
 
-  if (attr) {
-    debug_printf("cups-browsed [BrowsePoll %s:%d]: printer-* event\n",
-		 context->server, context->port);
-    get_printers = TRUE;
-  } else
-    debug_printf("cups-browsed [BrowsePoll %s:%d]: no events\n",
-		 context->server, context->port);
+	if (!strcmp (ippGetName (attr), "notify-sequence-number") &&
+	    ippGetValueTag (attr) == IPP_TAG_INTEGER)
+	  last_seq = ippGetInteger (attr, 0);
+      }
 
-fail:
+    if (seen_event) {
+      debug_printf("cups-browsed [BrowsePoll %s:%d]: printer-* event\n",
+		   context->server, context->port);
+      context->sequence_number = last_seq;
+      get_printers = TRUE;
+    } else
+      debug_printf("cups-browsed [BrowsePoll %s:%d]: no events\n",
+		   context->server, context->port);
+  }
+
   if (response)
-    ippDelete(response);
+    ippDelete (response);
 
   return get_printers;
+}
+
+static void
+browsepoll_printer_keepalive (gpointer data, gpointer user_data)
+{
+  browsepoll_printer_t *printer = data;
+  const char *server = user_data;
+  found_cups_printer (server, printer->uri_supported, printer->info);
 }
 
 gboolean
@@ -2387,8 +2627,15 @@ browse_poll (gpointer data)
   else
     get_printers = TRUE;
 
+  update_local_printers ();
+  inhibit_local_printers_update = TRUE;
   if (get_printers)
     browse_poll_get_printers (context, conn);
+  else
+    g_list_foreach (context->printers, browsepoll_printer_keepalive,
+		    context->server);
+
+  inhibit_local_printers_update = FALSE;
 
 fail:
 
@@ -2574,52 +2821,47 @@ read_configuration (const char *filename)
 	BrowsePoll = old;
       } else {
 	char *colon, *slash;
-	browsepoll_t *b = malloc (sizeof (browsepoll_t));
-	if (!b) {
-	  debug_printf("cups-browsed: unable to malloc: ignoring BrowsePoll line\n");
-	  BrowsePoll = old;
-	} else {
-	  debug_printf("cups-browsed: Adding BrowsePoll server: %s\n", value);
-	  b->server = strdup (value);
-	  b->port = BrowsePort;
-	  b->can_subscribe = TRUE; /* first assume subscriptions work */
-	  b->subscription_id = -1;
-	  slash = strchr (b->server, '/');
-	  if (slash) {
-	    *slash++ = '\0';
-	    if (!strcasecmp (slash, "version=1.0")) {
-	      b->major = 1;
-	      b->minor = 0;
-	    } else if (!strcasecmp (slash, "version=1.1")) {
-	      b->major = 1;
-	      b->minor = 1;
-	    } else if (!strcasecmp (slash, "version=2.0")) {
-	      b->major = 2;
-	      b->minor = 0;
-	    } else if (!strcasecmp (slash, "version=2.1")) {
-	      b->major = 2;
-	      b->minor = 1;
-	    } else if (!strcasecmp (slash, "version=2.2")) {
-	      b->major = 2;
-	      b->minor = 2;
-	    } else {
-	      debug_printf ("ignoring unknown server option: %s\n", slash);
-	    }
-	  } else
-	    b->major = 0;
-
-	  colon = strchr (b->server, ':');
-	  if (colon) {
-	    char *endptr;
-	    unsigned long n;
-	    *colon++ = '\0';
-	    n = strtoul (colon, &endptr, 10);
-	    if (endptr != colon && n < INT_MAX)
-	      b->port = (int) n;
+	browsepoll_t *b = g_malloc0 (sizeof (browsepoll_t));
+	debug_printf("cups-browsed: Adding BrowsePoll server: %s\n", value);
+	b->server = strdup (value);
+	b->port = BrowsePort;
+	b->can_subscribe = TRUE; /* first assume subscriptions work */
+	b->subscription_id = -1;
+	slash = strchr (b->server, '/');
+	if (slash) {
+	  *slash++ = '\0';
+	  if (!strcasecmp (slash, "version=1.0")) {
+	    b->major = 1;
+	    b->minor = 0;
+	  } else if (!strcasecmp (slash, "version=1.1")) {
+	    b->major = 1;
+	    b->minor = 1;
+	  } else if (!strcasecmp (slash, "version=2.0")) {
+	    b->major = 2;
+	    b->minor = 0;
+	  } else if (!strcasecmp (slash, "version=2.1")) {
+	    b->major = 2;
+	    b->minor = 1;
+	  } else if (!strcasecmp (slash, "version=2.2")) {
+	    b->major = 2;
+	    b->minor = 2;
+	  } else {
+	    debug_printf ("ignoring unknown server option: %s\n", slash);
 	  }
+	} else
+	  b->major = 0;
 
-	  BrowsePoll[NumBrowsePoll++] = b;
+	colon = strchr (b->server, ':');
+	if (colon) {
+	  char *endptr;
+	  unsigned long n;
+	  *colon++ = '\0';
+	  n = strtoul (colon, &endptr, 10);
+	  if (endptr != colon && n < INT_MAX)
+	    b->port = (int) n;
 	}
+
+	BrowsePoll[NumBrowsePoll++] = b;
       }
     } else if (!strcasecmp(line, "BrowseAllow")) {
       if (read_browseallow_value (value))
@@ -2669,15 +2911,76 @@ read_configuration (const char *filename)
   cupsFileClose(fp);
 }
 
+static void
+defer_update_netifs (void)
+{
+  if (update_netifs_sourceid != -1)
+    g_source_remove (update_netifs_sourceid);
+
+  update_netifs_sourceid = g_timeout_add_seconds (10, update_netifs, NULL);
+}
+
+static void
+nm_properties_changed (GDBusProxy *proxy,
+		       GVariant *changed_properties,
+		       const gchar *const *invalidated_properties,
+		       gpointer user_data)
+{
+  GVariantIter *iter;
+  const gchar *key;
+  GVariant *value;
+  g_variant_get (changed_properties, "a{sv}", &iter);
+  while (g_variant_iter_loop (iter, "{&sv}", &key, &value)) {
+    if (!strcmp (key, "ActiveConnections")) {
+      debug_printf ("cups-browsed: NetworkManager ActiveConnections changed\n");
+      defer_update_netifs ();
+      break;
+    }
+  }
+
+  g_variant_iter_free (iter);
+}
+
+static void
+find_previous_queue (gpointer key,
+		     gpointer value,
+		     gpointer user_data)
+{
+  const char *name = key;
+  const local_printer_t *printer = value;
+  remote_printer_t *p;
+  if (printer->cups_browsed_controlled) {
+    /* Queue found, add to our list */
+    p = create_local_queue (name,
+			    printer->device_uri,
+			    "", "", "", "", NULL, NULL, 1);
+    if (p) {
+      /* Mark as unconfirmed, if no Avahi report of this queue appears
+	 in a certain time frame, we will remove the queue */
+      p->status = STATUS_UNCONFIRMED;
+
+      if (BrowseRemoteProtocols & BROWSE_CUPS)
+	p->timeout = time(NULL) + BrowseTimeout;
+      else
+	p->timeout = time(NULL) + TIMEOUT_CONFIRM;
+
+      p->duplicate = 0;
+      debug_printf("cups-browsed: Found CUPS queue %s (URI: %s) from previous session.\n",
+		   p->name, p->uri);
+    } else {
+      debug_printf("cups-browsed: ERROR: Unable to allocate memory.\n");
+      exit(1);
+    }
+  }
+}
+
 int main(int argc, char*argv[]) {
   int ret = 1;
   http_t *http;
-  cups_dest_t *dests,
-              *dest;
-  int i,
-      num_dests;
+  int i;
   const char *val;
   remote_printer_t *p;
+  GDBusProxy *proxy = NULL;
 
   /* Turn on debug mode if requested */
   if (argc >= 2)
@@ -2780,54 +3083,24 @@ int main(int argc, char*argv[]) {
 #endif /* HAVE_AVAHI */
 
   /* Wait for CUPS daemon to start */
-  while ((http = httpConnectEncrypt(cupsServer(), ippPort(),
-				    cupsEncryption())) == NULL)
+  while ((http = http_connect_local ()) == NULL)
     sleep(1);
 
   /* Initialise the array of network interfaces */
   netifs = cupsArrayNew(compare_pointers, NULL);
-  update_netifs ();
+  update_netifs (NULL);
+
+  local_printers = g_hash_table_new_full (g_str_hash,
+					  g_str_equal,
+					  g_free,
+					  free_local_printer);
 
   /* Read out the currently defined CUPS queues and find the ones which we
      have added in an earlier session */
-  num_dests = cupsGetDests(&dests);
+  update_local_printers ();
   remote_printers = cupsArrayNew((cups_array_func_t)compare_remote_printers,
 				 NULL);
-  if (num_dests > 0) {
-    for (i = num_dests, dest = dests; i > 0; i --, dest ++) {
-      if ((val = cupsGetOption(CUPS_BROWSED_MARK, dest->num_options,
-			       dest->options)) != NULL) {
-	if (strcasecmp(val, "no") != 0 && strcasecmp(val, "off") != 0 &&
-	    strcasecmp(val, "false") != 0) {
-	  /* Queue found, add to our list */
-	  p = create_local_queue (dest->name,
-				  cupsGetOption("device-uri",
-						dest->num_options,
-						dest->options),
-				  "", "", "", "", NULL, NULL, 1);
-	  if (p) {
-	    /* Mark as unconfirmed, if no Avahi report of this queue appears
-	       in a certain time frame, we will remove the queue */
-	    p->status = STATUS_UNCONFIRMED;
-
-	    if (BrowseRemoteProtocols & BROWSE_CUPS)
-	      p->timeout = time(NULL) + BrowseTimeout;
-	    else
-	      p->timeout = time(NULL) + TIMEOUT_CONFIRM;
-
-	    p->duplicate = 0;
-	    debug_printf("cups-browsed: Found CUPS queue %s (URI: %s) from previous session.\n",
-			 p->name, p->uri);
-	  } else {
-	    debug_printf("cups-browsed: ERROR: Unable to allocate memory.\n");
-	    exit(1);
-	  }
-	}
-      }
-    }
-    cupsFreeDests(num_dests, dests);
-  }
-  httpClose(http);
+  g_hash_table_foreach (local_printers, find_previous_queue, NULL);
 
   /* Redirect SIGINT and SIGTERM so that we do a proper shutdown, removing
      the CUPS queues which we have created
@@ -2920,6 +3193,22 @@ int main(int argc, char*argv[]) {
    * prompting for it. */
   cupsSetPasswordCB2 (password_callback, NULL);
 
+  /* Watch NetworkManager for network interface changes */
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					 G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+					 NULL, /* GDBusInterfaceInfo */
+					 "org.freedesktop.NetworkManager",
+					 "/org/freedesktop/NetworkManager",
+					 "org.freedesktop.NetworkManager",
+					 NULL, /* GCancellable */
+					 NULL); /* GError */
+
+  if (proxy)
+    g_signal_connect (proxy,
+		      "g-properties-changed",
+		      G_CALLBACK (nm_properties_changed),
+		      NULL);
+
   /* Run the main loop */
   gmainloop = g_main_loop_new (NULL, FALSE);
   recheck_timer ();
@@ -2967,6 +3256,9 @@ fail:
 
   /* Clean up things */
 
+  if (proxy)
+    g_object_unref (proxy);
+
   /* Remove all queues which we have set up */
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
        p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
@@ -2985,11 +3277,22 @@ fail:
 	browse_poll_cancel_subscription (BrowsePoll[index]);
 
       free (BrowsePoll[index]->server);
+      g_list_free_full (BrowsePoll[index]->printers,
+			browsepoll_printer_free);
       free (BrowsePoll[index]);
     }
 
     free (BrowsePoll);
   }
+
+  if (local_printers_context) {
+    browse_poll_cancel_subscription (local_printers_context);
+    g_list_free_full (local_printers_context->printers,
+		      browsepoll_printer_free);
+    free (local_printers_context);
+  }
+
+  http_close_local ();
 
 #ifdef HAVE_AVAHI
   avahi_shutdown();
@@ -2997,6 +3300,11 @@ fail:
 
   if (browsesocket != -1)
       close (browsesocket);
+
+  g_hash_table_destroy (local_printers);
+
+  if (BrowseLocalProtocols & BROWSE_CUPS)
+    g_list_free_full (browse_data, browse_data_free);
 
   return ret;
 }
