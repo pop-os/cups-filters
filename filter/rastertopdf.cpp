@@ -1305,7 +1305,7 @@ int main(int argc, char **argv)
 {
     char *outformat_env = NULL;
     OutFormatType outformat; /* Output format */
-    int fd, Page;
+    int fd, Page, empty = 1;
     struct pdf_info pdf;
     FILE * input = NULL;
     cups_raster_t	*ras;		/* Raster stream for printing */
@@ -1400,10 +1400,6 @@ int main(int argc, char **argv)
     // Process pages as needed...
     Page = 0;
 
-    // Create PDF file
-    if (create_pdf_file(&pdf, outformat) != 0)
-      die("Unable to create PDF file");
-
     /* Get PCLm attributes from PPD */
     if (ppd && outformat == OUTPUT_FORMAT_PCLM)
     {
@@ -1487,6 +1483,14 @@ int main(int argc, char **argv)
 
     while (cupsRasterReadHeader2(ras, &header))
     {
+      if (empty)
+      {
+	empty = 0;
+	// We have a valid input page, so create PDF file
+	if (create_pdf_file(&pdf, outformat) != 0)
+	  die("Unable to create PDF file");
+      }
+
       // Write a status message with the page number
       Page ++;
       fprintf(stderr, "INFO: Starting page %d.\n", Page);
@@ -1514,6 +1518,13 @@ int main(int argc, char **argv)
 			 header.cupsBitsPerPixel, header.cupsBytesPerLine, 
 			 &pdf) != 0)
 	die("Failed to convert page bitmap");
+    }
+
+    if (empty)
+    {
+      fprintf(stderr, "DEBUG: Input is empty, outputting empty file.\n");
+      cupsRasterClose(ras);
+      return 0;
     }
 
     close_pdf_file(&pdf); // will output to stdout
