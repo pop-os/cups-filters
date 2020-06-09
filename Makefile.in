@@ -91,7 +91,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-pkgbackend_PROGRAMS = parallel$(EXEEXT) serial$(EXEEXT) \
+pkgbackend_PROGRAMS = parallel$(EXEEXT) serial$(EXEEXT) beh$(EXEEXT) \
 	implicitclass$(EXEEXT)
 check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	testdither$(EXEEXT) testimage$(EXEEXT) testrgb$(EXEEXT) \
@@ -139,6 +139,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
 	$(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_compare_version.m4 \
+	$(top_srcdir)/m4/basic-directories.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -266,6 +267,12 @@ bannertopdf_OBJECTS = $(am_bannertopdf_OBJECTS)
 bannertopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(bannertopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_beh_OBJECTS = beh-beh.$(OBJEXT)
+beh_OBJECTS = $(am_beh_OBJECTS)
+beh_DEPENDENCIES = $(am__DEPENDENCIES_1)
+beh_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(beh_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_commandtoescpx_OBJECTS = commandtoescpx-commandtoescpx.$(OBJEXT)
 commandtoescpx_OBJECTS = $(am_commandtoescpx_OBJECTS)
 commandtoescpx_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -540,26 +547,9 @@ am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
-	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
-	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
-	$(nodist_cups_browsed_SOURCES) $(foomatic_rip_SOURCES) \
-	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
-	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
-	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
-	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
-	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
-	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
-	$(rastertopdf_SOURCES) $(serial_SOURCES) \
-	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
-	$(test1284_SOURCES) $(test_analyze_SOURCES) \
-	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
-	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
-	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
-DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
-	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
-	$(EXTRA_bannertopdf_SOURCES) $(commandtoescpx_SOURCES) \
-	$(commandtopclx_SOURCES) $(cups_browsed_SOURCES) \
+	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
+	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
+	$(cups_browsed_SOURCES) $(nodist_cups_browsed_SOURCES) \
 	$(foomatic_rip_SOURCES) $(gstoraster_SOURCES) \
 	$(imagetopdf_SOURCES) $(imagetoraster_SOURCES) \
 	$(implicitclass_SOURCES) $(parallel_SOURCES) \
@@ -574,6 +564,24 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(testcmyk_SOURCES) $(testdither_SOURCES) $(testimage_SOURCES) \
 	$(testrgb_SOURCES) $(texttopdf_SOURCES) $(ttfread_SOURCES) \
 	$(urftopdf_SOURCES)
+DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
+	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
+	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
+	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
+	$(cups_browsed_SOURCES) $(foomatic_rip_SOURCES) \
+	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
+	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
+	$(parallel_SOURCES) $(pdftoijs_SOURCES) $(pdftoopvp_SOURCES) \
+	$(pdftopdf_SOURCES) $(pdftops_SOURCES) \
+	$(EXTRA_pdftops_SOURCES) $(pdftoraster_SOURCES) \
+	$(rastertoescpx_SOURCES) $(rastertopclx_SOURCES) \
+	$(rastertopdf_SOURCES) $(serial_SOURCES) \
+	$(sys5ippprinter_SOURCES) $(EXTRA_sys5ippprinter_SOURCES) \
+	$(test1284_SOURCES) $(test_analyze_SOURCES) \
+	$(test_pdf_SOURCES) $(test_pdf1_SOURCES) $(test_pdf2_SOURCES) \
+	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
+	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
+	$(ttfread_SOURCES) $(urftopdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1054,6 +1062,12 @@ serial_SOURCES = \
 
 serial_LDADD = $(CUPS_LIBS)
 serial_CFLAGS = $(CUPS_CFLAGS)
+beh_SOURCES = \
+	backend/backend-private.h \
+	backend/beh.c
+
+beh_LDADD = $(CUPS_LIBS)
+beh_CFLAGS = $(CUPS_CFLAGS)
 implicitclass_SOURCES = \
 	backend/backend-private.h \
 	backend/implicitclass.c
@@ -2134,6 +2148,10 @@ bannertopdf$(EXEEXT): $(bannertopdf_OBJECTS) $(bannertopdf_DEPENDENCIES) $(EXTRA
 	@rm -f bannertopdf$(EXEEXT)
 	$(AM_V_CXXLD)$(bannertopdf_LINK) $(bannertopdf_OBJECTS) $(bannertopdf_LDADD) $(LIBS)
 
+beh$(EXEEXT): $(beh_OBJECTS) $(beh_DEPENDENCIES) $(EXTRA_beh_DEPENDENCIES) 
+	@rm -f beh$(EXEEXT)
+	$(AM_V_CCLD)$(beh_LINK) $(beh_OBJECTS) $(beh_LDADD) $(LIBS)
+
 commandtoescpx$(EXEEXT): $(commandtoescpx_OBJECTS) $(commandtoescpx_DEPENDENCIES) $(EXTRA_commandtoescpx_DEPENDENCIES) 
 	@rm -f commandtoescpx$(EXEEXT)
 	$(AM_V_CCLD)$(commandtoescpx_LINK) $(commandtoescpx_OBJECTS) $(commandtoescpx_LDADD) $(LIBS)
@@ -2413,6 +2431,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-bannertopdf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-getline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bannertopdf-pdf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/beh-beh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/commandtoescpx-commandtoescpx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/commandtopclx-commandtopclx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cups_browsed-cups-browsed.Po@am__quote@
@@ -2828,6 +2847,20 @@ bannertopdf-getline.obj: filter/getline.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filter/getline.c' object='bannertopdf-getline.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bannertopdf_CFLAGS) $(CFLAGS) -c -o bannertopdf-getline.obj `if test -f 'filter/getline.c'; then $(CYGPATH_W) 'filter/getline.c'; else $(CYGPATH_W) '$(srcdir)/filter/getline.c'; fi`
+
+beh-beh.o: backend/beh.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(beh_CFLAGS) $(CFLAGS) -MT beh-beh.o -MD -MP -MF $(DEPDIR)/beh-beh.Tpo -c -o beh-beh.o `test -f 'backend/beh.c' || echo '$(srcdir)/'`backend/beh.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/beh-beh.Tpo $(DEPDIR)/beh-beh.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backend/beh.c' object='beh-beh.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(beh_CFLAGS) $(CFLAGS) -c -o beh-beh.o `test -f 'backend/beh.c' || echo '$(srcdir)/'`backend/beh.c
+
+beh-beh.obj: backend/beh.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(beh_CFLAGS) $(CFLAGS) -MT beh-beh.obj -MD -MP -MF $(DEPDIR)/beh-beh.Tpo -c -o beh-beh.obj `if test -f 'backend/beh.c'; then $(CYGPATH_W) 'backend/beh.c'; else $(CYGPATH_W) '$(srcdir)/backend/beh.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/beh-beh.Tpo $(DEPDIR)/beh-beh.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='backend/beh.c' object='beh-beh.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(beh_CFLAGS) $(CFLAGS) -c -o beh-beh.obj `if test -f 'backend/beh.c'; then $(CYGPATH_W) 'backend/beh.c'; else $(CYGPATH_W) '$(srcdir)/backend/beh.c'; fi`
 
 commandtoescpx-commandtoescpx.o: filter/commandtoescpx.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(commandtoescpx_CFLAGS) $(CFLAGS) -MT commandtoescpx-commandtoescpx.o -MD -MP -MF $(DEPDIR)/commandtoescpx-commandtoescpx.Tpo -c -o commandtoescpx-commandtoescpx.o `test -f 'filter/commandtoescpx.c' || echo '$(srcdir)/'`filter/commandtoescpx.c

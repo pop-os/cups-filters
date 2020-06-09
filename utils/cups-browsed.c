@@ -5836,7 +5836,8 @@ int main(int argc, char*argv[]) {
 	  debug_printf("cups-browsed: Unknown mode '%s'\n\n", val);
 	  goto help;
 	}
-      } else if (!strcasecmp(argv[i], "--help") || !strcasecmp(argv[i], "-h")) {
+      } else if (!strcasecmp(argv[i], "--version") ||
+		 !strcasecmp(argv[i], "--help") || !strcasecmp(argv[i], "-h")) {
 	/* Help!! */
 	goto help;
       } else {
@@ -5847,6 +5848,8 @@ int main(int argc, char*argv[]) {
         goto help;
       }
 
+  debug_printf("cups-browsed of cups-filters version "VERSION" starting.\n");
+  
   /* Read in cups-browsed.conf */
   read_configuration (alt_config_file);
 
@@ -5860,7 +5863,8 @@ int main(int argc, char*argv[]) {
   if (DomainSocket != NULL) {
     struct stat sockinfo;               /* Domain socket information */
     if (!stat(DomainSocket, &sockinfo) &&
-        (sockinfo.st_mode & S_IRWXO) == S_IRWXO)
+        (sockinfo.st_mode & S_IROTH) != 0 &&
+        (sockinfo.st_mode & S_IWOTH) != 0)
       setenv("CUPS_SERVER", DomainSocket, 1);
     else
       setenv("CUPS_SERVER", "localhost", 1);
@@ -6169,11 +6173,16 @@ fail:
  help:
 
   fprintf(stderr,
+	  "cups-browsed of cups-filters version "VERSION"\n\n"
 	  "Usage: cups-browsed [options]\n"
 	  "Options:\n"
 	  "  -c cups-browsed.conf    Set alternative cups-browsed.conf file to use.\n"
-	  "  -d                      Run in debug mode (verbose logging).\n"
-	  "  -h                      Show this usage message.\n"
+	  "  -d\n"
+	  "  -v\n"
+	  "  --debug                 Run in debug mode (verbose logging).\n"
+	  "  -h\n"
+	  "  --help\n"
+	  "  --version               Show this usage message.\n"
 	  "  -o Option=Value         Supply configuration option via command line,\n"
 	  "                          options are the same as in cups-browsed.conf.\n"
 	  "  --autoshutdown=<mode>   Automatically shut down cups-browsed when inactive:\n"

@@ -1,5 +1,28 @@
-NEWS - OpenPrinting CUPS Filters v1.5.0 - 2015-12-17
+NEWS - OpenPrinting CUPS Filters v1.6.0 - 2016-01-14
 ----------------------------------------------------
+
+CHANGES IN V1.6.0
+
+	- cups-browsed: Fixed use of CUPS domain socket, both
+	  detection during build process and permission check at
+	  runtime.
+	- foomatic-rip: Fixed buffer overflow when reading environment
+	  variables CUPS_FONTPATH, CUPS_DATADIR, and GS_LIB (Bug
+	  #1336).
+	- beh: Introduced beh, the Backend Error Handler, a wrapper
+	  backend to make handling of backend errors more
+	  configurable. This backend is a C re-write of the beh
+	  backend written in Perl which was part of the former
+	  foomatic-filters package. Several people asked for beh
+	  getting moved to cups-filters.
+	- braille: Make image printing working also if ImageMagick
+	  generates formatted images without header.
+	- braille: If the user does not select a Braille translation,
+	  let the embosser do the translation.
+	- cups-browsed: Added version info to help screen and start-up
+	  in debug mode, call help screen also via "--version" option.
+	- cups-browsed: Minor improvements in help screen and man
+          page.
 
 CHANGES IN V1.5.0
 
