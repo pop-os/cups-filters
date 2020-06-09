@@ -21,6 +21,9 @@
 /* gs binary to use */
 #undef CUPS_GHOSTSCRIPT
 
+/* mutool binary to use */
+#undef CUPS_MUTOOL
+
 /* max resolution used for pdftops when converting images */
 #undef CUPS_PDFTOPS_MAX_RESOLUTION
 

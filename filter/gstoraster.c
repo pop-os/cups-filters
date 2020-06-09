@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2008-2013, Till Kamppeter
+Copyright (c) 2008-2016, Till Kamppeter
 Copyright (c) 2011, Tim Waugh
 Copyright (c) 2011-2013, Richard Hughes
 
@@ -773,8 +773,7 @@ main (int argc, char **argv, char *envp[])
   cupsArrayAdd(gs_args, strdup("-dNOPAUSE"));
   cupsArrayAdd(gs_args, strdup("-dBATCH"));
   cupsArrayAdd(gs_args, strdup("-dNOINTERPOLATE"));
-  if (doc_type == GS_DOC_TYPE_PS)
-    cupsArrayAdd(gs_args, strdup("-dNOMEDIAATTRS"));
+  cupsArrayAdd(gs_args, strdup("-dNOMEDIAATTRS"));
   if (cm_disabled)
     cupsArrayAdd(gs_args, strdup("-dUseFastColor"));
   cupsArrayAdd(gs_args, strdup("-sstdout=%stderr"));
@@ -867,6 +866,8 @@ main (int argc, char **argv, char *envp[])
       h.HWResolution[0] = 300;
       h.HWResolution[1] = 300;
     }
+    h.cupsWidth = h.HWResolution[0] * h.PageSize[0] / 72;
+    h.cupsHeight = h.HWResolution[1] * h.PageSize[1] / 72;
   }
 
   /* set PDF-specific options */
