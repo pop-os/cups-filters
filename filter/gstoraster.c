@@ -35,27 +35,21 @@ MIT Open Source License  -  http://www.opensource.org/
 #define HAVE_CUPS_1_7 1
 #endif
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <fcntl.h>
 #include <cups/raster.h>
 #include <cupsfilters/raster.h>
+#include <cupsfilters/colord.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
 
-#include "colord.h"
-
 #define PDF_MAX_CHECK_COMMENT_LINES	20
 
-#ifndef GS
-#define GS "gs"
-#endif
-#ifndef BINDIR
-#define BINDIR "/usr/bin"
-#endif
 #ifndef CUPS_FONTPATH
 #define CUPS_FONTPATH "/usr/share/cups/fonts"
 #endif
@@ -551,6 +545,9 @@ main (int argc, char **argv, char *envp[])
   int status = 1;
   ppd_file_t *ppd = NULL;
   struct sigaction sa;
+#ifdef HAVE_CUPS_1_7
+  int pwgraster;
+#endif /* HAVE_CUPS_1_7 */
 
   if (argc < 6 || argc > 7) {
     fprintf(stderr, "ERROR: %s job-id user title copies options [file]\n",
@@ -661,7 +658,7 @@ main (int argc, char **argv, char *envp[])
 
   /* Part of Ghostscript command line which is not dependent on the job and/or
      the driver */
-  snprintf(tmpstr, sizeof(tmpstr), "%s/%s", BINDIR, GS);
+  snprintf(tmpstr, sizeof(tmpstr), "%s", CUPS_GHOSTSCRIPT);
   cupsArrayAdd(gs_args, strdup(tmpstr));
   cupsArrayAdd(gs_args, strdup("-dQUIET"));
   /*cupsArrayAdd(gs_args, strdup("-dDEBUG"));*/
@@ -680,14 +677,25 @@ main (int argc, char **argv, char *envp[])
   if (ppd)
     cupsRasterInterpretPPD(&h,ppd,num_options,options,0);
   else
-#ifdef HAVE_CUPS_1_7
-    cupsRasterParseIPPOptions(&h,num_options,options,1,1);
-#else
   {
+#ifdef HAVE_CUPS_1_7
+    pwgraster = 1;
+    t = cupsGetOption("media-class", num_options, options);
+    if (t == NULL)
+      t = cupsGetOption("MediaClass", num_options, options);
+    if (t != NULL)
+    {
+      if (strcasestr(t, "pwg"))
+	pwgraster = 1;
+      else
+	pwgraster = 0; 
+    }
+    cupsRasterParseIPPOptions(&h, num_options, options, pwgraster, 1);
+#else
     fprintf(stderr, "ERROR: No PPD file specified.\n");
     exit(1);
-  }
 #endif /* HAVE_CUPS_1_7 */
+  }
 
   /* setPDF specific options */
   if (doc_type == GS_DOC_TYPE_PDF) {
@@ -716,6 +724,16 @@ main (int argc, char **argv, char *envp[])
   /* Switch to taking PostScript commands on the Ghostscript command line */
   cupsArrayAdd(gs_args, strdup("-c"));
 
+  /* Set margins if we have a bounding box defined */
+  if (h.cupsImagingBBox[3] > 0.0) {
+    snprintf(tmpstr, sizeof(tmpstr),
+	     "<</.HWMargins[%f %f %f %f] /Margins[0 0]>>setpagedevice",
+	     h.cupsImagingBBox[0], h.cupsImagingBBox[1],
+	     h.cupsPageSize[0] - h.cupsImagingBBox[2],
+	     h.cupsPageSize[1] - h.cupsImagingBBox[3]);
+    cupsArrayAdd(gs_args, strdup(tmpstr));
+  }
+
   if ((t = cupsGetOption("profile", num_options, options)) != NULL) {
     snprintf(tmpstr, sizeof(tmpstr), "<</cupsProfile(%s)>>setpagedevice", t);
     cupsArrayAdd(gs_args, strdup(tmpstr));
@@ -729,7 +747,7 @@ main (int argc, char **argv, char *envp[])
   cupsArrayAdd(gs_args, strdup("-_"));
 
   /* Execute Ghostscript command line ... */
-  snprintf(tmpstr, sizeof(tmpstr), "%s/%s", BINDIR, GS);
+  snprintf(tmpstr, sizeof(tmpstr), "%s", CUPS_GHOSTSCRIPT);
 
   /* call Ghostscript */
   rewind(fp);

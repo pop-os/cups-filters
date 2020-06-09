@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[41])
+m4_define([cups_filters_version_micro],[42])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -391,6 +391,16 @@ PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 3.0.2])
 # ================
 AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
 
+# ===============
+# Check for D-Bus
+# ===============
+AC_ARG_ENABLE(dbus, AS_HELP_STRING([--enable-dbus],[enable DBus CMS code]),
+	      enable_dbus=$enableval,enable_dbus=yes)
+AM_CONDITIONAL(BUILD_DBUS, test x$enable_dbus = xyes)
+if test x$enable_dbus = xyes; then
+	PKG_CHECK_MODULES(DBUS, dbus-1)
+fi
+
 # ===================================
 # Check for large files and long long
 # ===================================
@@ -612,6 +622,7 @@ AC_CONFIG_FILES([
 	filter/gstopxl
 	utils/cups-browsed
 	utils/cups-browsed.conf
+	filter/foomatic-rip/foomatic-rip.1
 ])
 AC_OUTPUT
 
@@ -641,6 +652,7 @@ Build configuration:
 	test-font:       ${with_test_font_path}
 	tiff:            ${with_tiff}
 	avahi:           ${enable_avahi}
+	dbus:            ${enable_dbus}
 	browsing:        ${with_browseremoteprotocols}
 	werror:          ${enable_werror}
 ==============================================================================
