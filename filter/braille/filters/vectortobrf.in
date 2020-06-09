@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2015-2017 Samuel Thibault <samuel.thibault@ens-lyon.org>
+# Copyright (c) 2017 Samuel Thibault <samuel.thibault@ens-lyon.org>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ FILE=$6
 OUTPUT_FORMAT=brf
 
 case $0 in
-  *imagetoubrl*) OUTPUT_FORMAT=ubrl ;;
+  *vectortoubrl*) OUTPUT_FORMAT=ubrl ;;
 esac
 
 . @CUPS_DATADIR@/braille/cups-braille.sh
@@ -54,60 +54,17 @@ case "$NEGATE" in
     ;;
 esac
 
-ROTATE=$(getOption Rotate)
-case "$ROTATE" in
-  90\>|270\>)
-    if [ "$GRAPHICWIDTH" -gt "$GRAPHICHEIGHT" ]
-    then
-      # Landscape paper, rotate to landscape instead of to portrait
-      ROTATE=${ROTATE/\>/\<}
-    fi
-    ;;
-  0|90|270|180) ;;
-  *)
-    printf "ERROR: Option Rotate must be a valid rotation value, got '%s'\n" "$ROTATE" >&2
-    exit 1
-    ;;
-esac
-
-RESIZE=$(getOption Resize)
-case "$RESIZE" in
-  True) RESIZE="-size ${GRAPHICWIDTH}x${GRAPHICHEIGHT} -resize ${GRAPHICWIDTH}x${GRAPHICHEIGHT}" ;;
-  False) RESIZE="-crop ${GRAPHICWIDTH}x${GRAPHICHEIGHT}+0+0" ;;
-  *)
-    printf "ERROR: Option Resize must either True or False, got '%s'\n" "$RESIZE" >&2
-    exit 1
-    ;;
-esac
-
-EDGE=$(getOption Edge)
-EDGEFACTOR=$(getOptionNumber EdgeFactor)
-
-CANNY_RADIUS=$(getOptionNumber CannyRadius)
-CANNY_SIGMA=$(getOptionNumber CannySigma)
-CANNY_LOWER=$(getOptionNumber CannyLower)
-CANNY_UPPER=$(getOptionNumber CannyUpper)
-
-case $EDGE in
-  None)  WORK=$NEGATE;;
-  Edge)  WORK="$NEGATE -edge $EDGEFACTOR -negate" ;;
-  Canny) WORK="-canny ${CANNY_RADIUS}x${CANNY_SIGMA}+$CANNY_LOWER%+$CANNY_UPPER% -negate" ;;
-  *)
-    printf "ERROR: Unknown Edge option value '%s'\n" "$EDGE" >&2
-    exit 1
-    ;;
-esac
-
-RENDER_CALL="convert $WORK -rotate $ROTATE $RESIZE - $OUTPUT_FORMAT:-"
+GS_CALL="gs -q -dDEVICEWIDTHPOINTS=${GRAPHICWIDTH} -dDEVICEHEIGHTPOINTS=${GRAPHICHEIGHT} -noantialias -dTextAlphaBits=1 -dGraphicsAlphaBits=1 -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngmono -dFitPage -r72 -sOutputFile=-"
+RENDER_CALL="convert $NEGATE - $OUTPUT_FORMAT:-"
 
 # Now proceeed
 echo "INFO: Converting image" 1>&2
 if [ -z "$FILE" ]
 then
-  printf "DEBUG: Calling $RENDER_CALL from stdin\n" 1>&2
-  $RENDER_CALL | sed -e '/^Width: [0-9]*$/,/^$/d' 
+  printf "DEBUG: Calling $GS_CALL and $RENDER_CALL from stdin\n" 1>&2
+  $GS_CALL - | sed -e '/-noantialias/d' | $RENDER_CALL | sed -e '/^Width: [0-9]*$/,/^$/d'
 else
-  printf "DEBUG: Calling $RENDER_CALL on '%s'\n" "$FILE" 1>&2
-  $RENDER_CALL < "$FILE" | sed -e '/^Width: [0-9]*$/,/^$/d' 
+  printf "DEBUG: Calling $GS_CALL and $RENDER_CALL on '%s'\n" "$FILE" 1>&2
+  $GS_CALL "$FILE" | sed -e '/-noantialias/d' | $RENDER_CALL | sed -e '/^Width: [0-9]*$/,/^$/d' 
 fi
 echo "INFO: Ready" >&2
