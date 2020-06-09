@@ -43,6 +43,12 @@ extern "C" pdf_t * pdf_load_template(const char *filename)
 }
 
 
+extern "C" void pdf_free(pdf_t *pdf)
+{
+    delete pdf;
+}
+
+
 extern "C" void pdf_prepend_stream(pdf_t *doc,
                                    int page,
                                    char *buf,
@@ -50,9 +56,10 @@ extern "C" void pdf_prepend_stream(pdf_t *doc,
 {
     XRef *xref = doc->getXRef();
     Ref *pageref = doc->getCatalog()->getPageRef(page);
-    Object dict, lenobj, stream;
+    Object dict, lenobj, stream, streamrefobj;
     Object pageobj, contents;
     Object array;
+    Ref r;
 
     xref->fetch(pageref->num, pageref->gen, &pageobj);
     if (!pageobj.isDict() || !pageobj.dictLookupNF("Contents", &contents)) {
@@ -68,8 +75,11 @@ extern "C" void pdf_prepend_stream(pdf_t *doc,
     dict.dictSet("Length", &lenobj);
     stream.initStream(new MemStream(buf, 0, len, &dict));
 
+    r = xref->addIndirectObject(&stream);
+    streamrefobj.initRef(r.num, r.gen);
+
     array.initArray(xref);
-    array.arrayAdd(&stream);
+    array.arrayAdd(&streamrefobj);
 
     if (contents.isStream()) {
         array.arrayAdd(&contents);
@@ -78,7 +88,7 @@ extern "C" void pdf_prepend_stream(pdf_t *doc,
         int i, len = contents.arrayGetLength();
         Object obj;
         for (i = 0; i < len; i++) {
-            contents.arrayGet(i, &obj);
+            contents.arrayGetNF(i, &obj);
             array.arrayAdd(&obj);
         }
     }
@@ -272,10 +282,92 @@ extern "C" void pdf_resize_page (pdf_t *doc,
 }
 
 
+extern "C" void pdf_duplicate_page (pdf_t *doc,
+                                    int pagenr,
+                                    int count)
+{
+    XRef *xref = doc->getXRef();
+    Ref *pageref = doc->getCatalog()->getPageRef(pagenr);
+    Object page, parentref, parent, kids, ref, countobj;
+    int i;
+
+    xref->fetch(pageref->num, pageref->gen, &page);
+    if (!page.isDict("Page")) {
+        fprintf(stderr, "Error: malformed pdf (invalid Page object)\n");
+        return;
+    }
+
+    page.dictLookupNF("Parent", &parentref);
+    parentref.fetch(xref, &parent);
+    if (!parent.isDict("Pages")) {
+        fprintf(stderr, "Error: malformed pdf (Page.Parent must point to a "
+                        "Pages object)\n");
+        return;
+    }
+
+    parent.dictLookup("Kids", &kids);
+    if (!kids.isArray()) {
+        fprintf(stderr, "Error: malformed pdf (Pages.Kids must be an array)\n");
+        return;
+    }
+
+    // Since we're dealing with single page pdfs, simply append the same page
+    // object to the end of the array
+    for (i = 1; i < count; i++) {
+        ref.initRef(pageref->num, pageref->gen);
+        kids.arrayAdd(&ref);
+        ref.free();
+    }
+
+    countobj.initInt(count);
+    parent.dictSet("Count", &countobj);
+    countobj.free();
+
+    xref->setModifiedObject(&parent, parentref.getRef());
+}
+
+
+class NonSeekableFileOutStream: public OutStream
+{
+public:
+    NonSeekableFileOutStream(FILE *f):
+        file(f), pos(0)
+    {
+    }
+
+    void close()
+    {
+    }
+
+    int getPos()
+    {
+        return this->pos;
+    }
+
+    void put(char c)
+    {
+        fputc(c, this->file);
+        this->pos++;
+    }
+
+    void printf(const char *fmt, ...)
+    {
+        va_list args;
+        va_start(args, fmt);
+        this->pos += vfprintf(this->file, fmt, args);
+        va_end(args);
+    }
+
+private:
+    FILE *file;
+    int pos;
+};
+
+
 extern "C" void pdf_write(pdf_t *doc,
                           FILE *file)
 {
-    FileOutStream outs(file, 0);
+    NonSeekableFileOutStream outs(file);
     doc->saveAs(&outs, writeForceRewrite);
 }
 
