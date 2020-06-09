@@ -189,6 +189,7 @@ typedef struct remote_printer_s {
   int overwritten;
   int netprinter;
   int is_legacy;
+  int timeouted;
 } remote_printer_t;
 
 /* Data structure for network interfaces */
@@ -384,6 +385,7 @@ static char local_server_str[1024];
 static char *DomainSocket = NULL;
 static unsigned int HttpLocalTimeout = 5;
 static unsigned int HttpRemoteTimeout = 10;
+static unsigned int HttpMaxRetries = 5;
 static ip_based_uris_t IPBasedDeviceURIs = IP_BASED_URIS_NO;
 static local_queue_naming_t LocalQueueNamingRemoteCUPS=LOCAL_QUEUE_NAMING_DNSSD;
 static local_queue_naming_t LocalQueueNamingIPPPrinter=LOCAL_QUEUE_NAMING_DNSSD;
@@ -422,6 +424,9 @@ static char local_default_printer_file[1024];
 static char remote_default_printer_file[1024];
 static char save_options_file[1024];
 static char debug_log_file[1024];
+
+/* Static global variable for indicating we have reached the HTTP timeout */
+static int timeout_reached = 0;
 
 static void recheck_timer (void);
 static void browse_poll_create_subscription (browsepoll_t *context,
@@ -638,6 +643,7 @@ int
 http_timeout_cb(http_t *http, void *user_data)
 {
   debug_printf("HTTP timeout! (consider increasing HttpLocalTimeout/HttpRemoteTimeout value)\n");
+  timeout_reached = 1;
   return 0;
 }
 
@@ -4000,6 +4006,10 @@ create_remote_printer_entry (const char *queue_name,
      CUPS broadcast (1) or through DNS-SD (0) */
   p->is_legacy = 0;
 
+  /* Initialize field for how many timeouts cups-browsed experienced
+     in a row during creation of this printer's queue */
+  p->timeouted = 0;
+
   /* Remote CUPS printer or local queue remaining from previous cups-browsed
      session */
   /* is_cups_queue: -1: Unknown, 0: IPP printer, 1: Remote CUPS queue,
@@ -4407,7 +4417,7 @@ gboolean update_cups_queues(gpointer unused) {
   int num_jobs;
   cups_job_t *jobs;
   ipp_t *request;
-  time_t current_time = time(NULL);
+  time_t current_time;
   int i, new_cupsfilter_line_inserted, ap_remote_queue_id_line_inserted,
     cont_line_read, want_raw;
   char *disabled_str, *ptr, *prefix;
@@ -4461,6 +4471,20 @@ gboolean update_cups_queues(gpointer unused) {
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
        p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
 
+    /* We need to get the current time as precise as possible for retries
+       and reset the timeout flag */
+    current_time = time(NULL);
+    timeout_reached = 0;
+
+    /* cups-browsed tried to add this print queue unsuccessfully for too
+       many times due to timeouts - Skip print queue creation for this one */
+    if (p->timeouted >= HttpMaxRetries)
+    {
+      fprintf(stderr, "Max number of retries (%d) for creating print queue %s reached, skipping it.\n",
+	      HttpMaxRetries, p->queue_name);
+      continue;
+    }
+
     /* terminating means we have received a signal and should shut down.
        in_shutdown means we have exited the main loop.
        update_cups_queues() is called after having exited the main loop
@@ -4502,8 +4526,10 @@ gboolean update_cups_queues(gpointer unused) {
       if ((q = p->slave_of) == NULL) {
 	if ((http = http_connect_local ()) == NULL) {
 	  debug_printf("Unable to connect to CUPS!\n");
-	  if (in_shutdown == 0)
+	  if (in_shutdown == 0) {
+            current_time = time(NULL);
 	    p->timeout = current_time + TIMEOUT_RETRY;
+	  }
 	  break;
 	}
 
@@ -4537,6 +4563,7 @@ gboolean update_cups_queues(gpointer unused) {
 			      "Printer disappeared or cups-browsed shutdown");
 	    /* Schedule the removal of the queue for later */
 	    if (in_shutdown == 0) {
+              current_time = time(NULL);
 	      p->timeout = current_time + TIMEOUT_RETRY;
 	      p->no_autosave = 0;
 	      break;
@@ -4556,6 +4583,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  if (cups_notifier == NULL && is_cups_default_printer(p->queue_name)) {
 	    /* Schedule the removal of the queue for later */
 	    if (in_shutdown == 0) {
+              current_time = time(NULL);
 	      p->timeout = current_time + TIMEOUT_RETRY;
 	      p->no_autosave = 0;
 	      break;
@@ -4579,6 +4607,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
 	    debug_printf("Unable to remove CUPS queue!\n");
 	    if (in_shutdown == 0) {
+              current_time = time(NULL);
 	      p->timeout = current_time + TIMEOUT_RETRY;
 	      p->no_autosave = 0;
 	      break;
@@ -4657,6 +4686,7 @@ gboolean update_cups_queues(gpointer unused) {
       /* Make sure to have a connection to the local CUPS daemon */
       if ((http = http_connect_local ()) == NULL) {
 	debug_printf("Unable to connect to CUPS!\n");
+        current_time = time(NULL);
 	p->timeout = current_time + TIMEOUT_RETRY;
 	break;
       }
@@ -4779,6 +4809,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      cupsFreeJobs(num_jobs, jobs);
 	      /* Schedule the removal of the queue for later */
 	      if (in_shutdown == 0) {
+                current_time = time(NULL);
 		p->timeout = current_time + TIMEOUT_RETRY;
 		p->no_autosave = 0;
 		break;
@@ -4794,6 +4825,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
 	      debug_printf("Unable to remove temporary CUPS queue, retrying later\n");
 	      if (in_shutdown == 0) {
+                current_time = time(NULL);
 		p->timeout = current_time + TIMEOUT_RETRY;
 		p->no_autosave = 0;
 		break;
@@ -4817,6 +4849,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  debug_printf("get-printer-attributes IPP call failed on printer %s (%s).\n",
 		       p->queue_name, p->uri);
 	  p->status = STATUS_DISAPPEARED;
+          current_time = time(NULL);
 	  p->timeout = current_time + TIMEOUT_IMMEDIATELY;
 	  goto cannot_create;
 	}
@@ -4834,6 +4867,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      else
 		debug_printf("Unable to create PPD file: %s\n", ppdgenerator_msg);
 	      p->status = STATUS_DISAPPEARED;
+              current_time = time(NULL);
 	      p->timeout = current_time + TIMEOUT_IMMEDIATELY;
 	      goto cannot_create;
 	    } else {
@@ -4959,6 +4993,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  if ((fd = cupsTempFd(tempfile, sizeof(tempfile))) < 0) {
 	    debug_printf("Unable to create interface script file\n");
 	    p->status = STATUS_DISAPPEARED;
+            current_time = time(NULL);
 	    p->timeout = current_time + TIMEOUT_IMMEDIATELY;
 	    goto cannot_create;
 	  }
@@ -4986,6 +5021,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  if (bytes != strlen(buffer)) {
 	    debug_printf("Unable to write interface script into the file\n");
 	    p->status = STATUS_DISAPPEARED;
+            current_time = time(NULL);
 	    p->timeout = current_time + TIMEOUT_IMMEDIATELY;
 	    goto cannot_create;
 	  }
@@ -5061,6 +5097,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      == NULL) {
 	    debug_printf("Could not connect to the server %s:%d for %s!\n",
 			 p->host, p->port, p->queue_name);
+            current_time = time(NULL);
 	    p->timeout = current_time + TIMEOUT_RETRY;
 	    p->no_autosave = 0;
 	    break;
@@ -5071,6 +5108,7 @@ gboolean update_cups_queues(gpointer unused) {
 	      CreateRemoteRawPrinterQueues == 0) {
 	    debug_printf("Unable to load PPD file for %s from the server %s:%d!\n",
 			 p->queue_name, p->host, p->port);
+            current_time = time(NULL);
 	    p->timeout = current_time + TIMEOUT_RETRY;
 	    p->no_autosave = 0;
 	    httpClose(remote_http);
@@ -5104,6 +5142,7 @@ gboolean update_cups_queues(gpointer unused) {
 	  ppd_status_t status = ppdLastError(&linenum);
 	  debug_printf("Unable to open PPD \"%s\": %s on line %d.",
 		       loadedppd, ppdErrorString(status), linenum);
+          current_time = time(NULL);
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  p->no_autosave = 0;
 	  unlink(loadedppd);
@@ -5113,6 +5152,7 @@ gboolean update_cups_queues(gpointer unused) {
 	cupsMarkOptions(ppd, p->num_options, p->options);
 	if ((out = cupsTempFile2(buf, sizeof(buf))) == NULL) {
 	  debug_printf("Unable to create temporary file!\n");
+          current_time = time(NULL);
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  p->no_autosave = 0;
 	  ppdClose(ppd);
@@ -5121,6 +5161,7 @@ gboolean update_cups_queues(gpointer unused) {
 	}
 	if ((in = cupsFileOpen(loadedppd, "r")) == NULL) {
 	  debug_printf("Unable to open the downloaded PPD file!\n");
+          current_time = time(NULL);
 	  p->timeout = current_time + TIMEOUT_RETRY;
 	  p->no_autosave = 0;
 	  cupsFileClose(out);
@@ -5323,6 +5364,7 @@ gboolean update_cups_queues(gpointer unused) {
       if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
 	debug_printf("Unable to create/modify CUPS queue (%s)!\n",
 		     cupsLastErrorString());
+        current_time = time(NULL);
 	p->timeout = current_time + TIMEOUT_RETRY;
 	p->no_autosave = 0;
 	break;
@@ -5441,6 +5483,27 @@ gboolean update_cups_queues(gpointer unused) {
 
       break;
 
+    }
+
+    /* Check if an HTTP timeout happened during the print queue creation
+       If it does - increment p->timeouted and set status to TO_BE_CREATED
+       because the creation can fall through the process, have state changed to
+       STATUS_CONFIRMED and experience the timeout */
+    /* If no timeout has happened, clear p->timeouted */
+    if (timeout_reached == 1)
+    {
+      fprintf(stderr, "Timeout happened during creating the queue %s, turn on DebugLogging for more info.\n", p->queue_name);
+      p->timeouted ++;
+
+      debug_printf("The queue %s already timeouted %d times in a row.\n",
+		   p->queue_name, p->timeouted);
+      p->status = STATUS_TO_BE_CREATED;
+    }
+    else if (p->timeouted != 0)
+    {
+      debug_printf("Creating the queue %s went smoothly after %d timeouts.\n",
+		   p->queue_name, p->timeouted);
+      p->timeouted = 0;
     }
   }
   log_all_printers();
@@ -7903,6 +7966,16 @@ read_configuration (const char *filename)
 	  HttpRemoteTimeout = t;
 
 	debug_printf("Set %s to %d sec.\n",
+		     line, t);
+      } else
+	debug_printf("Invalid %s value: %d\n",
+		     line, t);
+    } else if (!strcasecmp(line, "HttpMaxRetries") && value) {
+      int t = atoi(value);
+      if (t > 0) {
+	HttpMaxRetries = t;
+
+	debug_printf("Set %s to %d retries.\n",
 		     line, t);
       } else
 	debug_printf("Invalid %s value: %d\n",
