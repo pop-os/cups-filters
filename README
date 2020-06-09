@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.0.47 - 2014-03-10
+README - OpenPrinting CUPS Filters v1.0.48 - 2014-03-12
 -------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -305,7 +305,6 @@ HELPER DAEMON FOR BROWSING REMOTE CUPS PRINTERS AND IPP NETWORK PRINTERS
     On systems using Upstart use an /etc/init/cups-browsed.conf file like this:
 
         start on (filesystem
-                  and started avahi-daemon
                   and (started cups or runlevel [2345]))
         stop on runlevel [016]
 
