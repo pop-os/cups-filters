@@ -16,7 +16,9 @@ EXTRA_DIST = \
 	$(doc_DATA) \
 	autogen.sh \
 	libcupsfilters.pc.in \
-	libfontembed.pc.in
+	libfontembed.pc.in \
+	utils/cups-browsed.service \
+	utils/cups-browsed-upstart.conf
 
 # ========
 # Backends
@@ -79,7 +81,8 @@ EXTRA_DIST += $(pkgcharset_DATA)
 pkgfiltersincludedir = $(includedir)/cupsfilters
 pkgfiltersinclude_DATA = \
 	cupsfilters/driver.h \
-	cupsfilters/image.h
+	cupsfilters/image.h \
+	cupsfilters/raster.h
 
 lib_LTLIBRARIES = libcupsfilters.la
 
@@ -127,6 +130,7 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/image-zoom.c \
 	cupsfilters/lut.c \
 	cupsfilters/pack.c \
+	cupsfilters/raster.c \
 	cupsfilters/rgb.c \
 	cupsfilters/srgb.c \
 	$(pkgfiltersinclude_DATA)
@@ -212,6 +216,16 @@ pkgdriver_DATA = \
 	drv/cupsfilters.drv
 
 EXTRA_DIST += $(pkgdriver_DATA)
+
+# =======
+# Definitions for drivers
+# =======
+pkgppdcdir = $(CUPS_DATADIR)/ppdc
+pkgppdc_DATA = \
+	filter/pcl.h \
+	filter/escp.h
+
+EXTRA_DIST += $(pkgppdc_DATA)
 
 # =====
 # MIMEs
@@ -380,6 +394,7 @@ pdftopdf_LDADD = \
 # Simple filter binaries
 # ======================
 pkgfilter_SCRIPTS = \
+	filter/gstopxl \
 	filter/imagetops \
 	filter/pstopdf \
 	filter/textonly \
@@ -388,7 +403,9 @@ pkgfilter_PROGRAMS += \
 	bannertopdf \
 	commandtoescpx \
 	commandtopclx \
+	gstoraster \
 	pdftoijs \
+	pdftoippprinter \
 	pdftops \
 	pdftoraster \
 	rastertoescpx \
@@ -450,6 +467,18 @@ commandtopclx_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 commandtopclx_LDADD = $(CUPS_LIBS)
 
+gstoraster_SOURCES = \
+	filter/gstoraster.c \
+	filter/colord.c \
+	filter/colord.h \
+	cupsfilters/raster.h
+gstoraster_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	-I$(srcdir)/cupsfilters/
+gstoraster_LDADD = \
+	$(CUPS_LIBS) \
+	libcupsfilters.la
+
 imagetopdf_SOURCES = \
 	cupsfilters/image.h \
 	filter/common.c \
@@ -501,6 +530,15 @@ pdftoijs_LDADD = \
 	$(CUPS_LIBS) \
 	$(IJS_LIBS) \
 	$(POPPLER_LIBS)
+
+pdftoippprinter_SOURCES = \
+	filter/common.c \
+	filter/common.h \
+	filter/pdftoippprinter.c
+EXTRA_pdftoippprinter_SOURCES = filter/strcasestr.c
+pdftoippprinter_CFLAGS = $(CUPS_CFLAGS)
+pdftoippprinter_LDADD = $(STRCASESTR) $(CUPS_LIBS)
+pdftoippprinter_DEPENDENCIES = $(STRCASESTR)
 
 pdftops_SOURCES = \
 	filter/common.c \
@@ -609,7 +647,6 @@ EXTRA_DIST += \
 # UTILS
 # =====
 
-EXTRA_DIST += utils/cups-browsed.in
 sbin_PROGRAMS = \
 	cups-browsed
 cups_browsed_SOURCES = \
@@ -627,6 +664,11 @@ cups_browsed_LDADD = \
 	$(GLIB_LIBS)
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
+man_MANS = \
+	utils/cups-browsed.8 \
+	utils/cups-browsed.conf.5
+EXTRA_DIST += utils/cups-browsed.in \
+	$(man_MANS)
 
 # ===
 # PPD
@@ -636,6 +678,8 @@ ppd_DATA = \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd \
+	ppd/pxlcolor.ppd \
+	ppd/pxlmono.ppd \
 	ppd/textonly.ppd
 
 EXTRA_DIST += $(ppd_DATA)
