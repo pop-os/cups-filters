@@ -99,62 +99,60 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 @ENABLE_BRAILLE_TRUE@am__append_1 = cups-brf
 @ENABLE_DRIVERLESS_TRUE@pkgppdgen_PROGRAMS = driverless$(EXEEXT)
-@ENABLE_POPPLER_TRUE@am__append_2 = $(bannerfiles)
 TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
-@BUILD_DBUS_TRUE@am__append_3 = $(DBUS_CFLAGS) -DHAVE_DBUS
-@BUILD_DBUS_TRUE@am__append_4 = $(DBUS_LIBS)
-@ENABLE_BRAILLE_TRUE@am__append_5 = $(brldrvfiles)
-@ENABLE_BRAILLE_TRUE@am__append_6 = $(brlppdcfiles)
-@ENABLE_POPPLER_TRUE@am__append_7 = $(popplermimefiles)
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_8 = $(gsmimefiles)
-@ENABLE_MUTOOL_TRUE@am__append_9 = $(mutoolmimefiles)
-@ENABLE_BRAILLE_TRUE@am__append_10 = $(brlmimefiles)
+@BUILD_DBUS_TRUE@am__append_2 = $(DBUS_CFLAGS) -DHAVE_DBUS
+@BUILD_DBUS_TRUE@am__append_3 = $(DBUS_LIBS)
+@ENABLE_BRAILLE_TRUE@am__append_4 = $(brldrvfiles)
+@ENABLE_BRAILLE_TRUE@am__append_5 = $(brlppdcfiles)
+@ENABLE_POPPLER_TRUE@am__append_6 = $(popplermimefiles)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = $(gsmimefiles)
+@ENABLE_MUTOOL_TRUE@am__append_8 = $(mutoolmimefiles)
+@ENABLE_BRAILLE_TRUE@am__append_9 = $(brlmimefiles)
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = $(am__EXEEXT_2) pdftopdf$(EXEEXT) \
 	commandtoescpx$(EXEEXT) commandtopclx$(EXEEXT) \
 	sys5ippprinter$(EXEEXT) texttotext$(EXEEXT) pdftops$(EXEEXT) \
 	rastertoescpx$(EXEEXT) rastertopclx$(EXEEXT) \
-	texttopdf$(EXEEXT) rastertopdf$(EXEEXT) rastertops$(EXEEXT) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
-	$(am__EXEEXT_6) $(am__EXEEXT_7) $(am__EXEEXT_8) \
-	$(am__EXEEXT_9)
+	texttopdf$(EXEEXT) rastertopdf$(EXEEXT) bannertopdf$(EXEEXT) \
+	rastertops$(EXEEXT) $(am__EXEEXT_3) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7) \
+	$(am__EXEEXT_8) $(am__EXEEXT_9)
 
 # ===========
 # PDF to OPVP
 # ===========
-@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__append_11 = \
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__append_10 = \
 @ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_12 = $(gsfilterscripts)
-@ENABLE_URFTOPDF_TRUE@am__append_13 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_11 = $(gsfilterscripts)
+@ENABLE_URFTOPDF_TRUE@am__append_12 = \
 @ENABLE_URFTOPDF_TRUE@	urftopdf
 
-@ENABLE_POPPLER_TRUE@am__append_14 = \
-@ENABLE_POPPLER_TRUE@	bannertopdf \
+@ENABLE_POPPLER_TRUE@am__append_13 = \
 @ENABLE_POPPLER_TRUE@	pdftoraster
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_15 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_14 = \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_16 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_15 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_MUTOOL_TRUE@am__append_17 = \
+@ENABLE_MUTOOL_TRUE@am__append_16 = \
 @ENABLE_MUTOOL_TRUE@	mupdftoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_18 = \
+@ENABLE_FOOMATIC_TRUE@am__append_17 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_19 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_18 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_DRIVERLESS_TRUE@am__append_20 = $(driverlessmanpages)
-@ENABLE_FOOMATIC_TRUE@am__append_21 = $(foomaticmanpages)
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_22 = $(ijsppdfiles)
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_23 = $(gsppdfiles)
+@ENABLE_DRIVERLESS_TRUE@am__append_19 = $(driverlessmanpages)
+@ENABLE_FOOMATIC_TRUE@am__append_20 = $(foomaticmanpages)
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_21 = $(ijsppdfiles)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_22 = $(gsppdfiles)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx.m4 \
@@ -289,8 +287,7 @@ libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 @ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_2 =  \
 @ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp$(EXEEXT)
 @ENABLE_URFTOPDF_TRUE@am__EXEEXT_3 = urftopdf$(EXEEXT)
-@ENABLE_POPPLER_TRUE@am__EXEEXT_4 = bannertopdf$(EXEEXT) \
-@ENABLE_POPPLER_TRUE@	pdftoraster$(EXEEXT)
+@ENABLE_POPPLER_TRUE@am__EXEEXT_4 = pdftoraster$(EXEEXT)
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_5 =  \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs$(EXEEXT)
 @ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_6 = gstoraster$(EXEEXT)
@@ -1194,7 +1191,7 @@ driverless_LDADD = \
 # Banners
 # =======
 pkgbannerdir = $(CUPS_DATADIR)/banners
-pkgbanner_DATA = $(am__append_2)
+pkgbanner_DATA = $(bannerfiles)
 bannerfiles = \
 	banners/classified \
 	banners/confidential \
@@ -1271,9 +1268,9 @@ libcupsfilters_la_SOURCES = \
 	$(pkgfiltersinclude_DATA)
 
 libcupsfilters_la_LIBADD = $(CUPS_LIBS) $(LIBJPEG_LIBS) $(LIBPNG_LIBS) \
-	$(TIFF_LIBS) -lm $(am__append_4)
+	$(TIFF_LIBS) -lm $(am__append_3)
 libcupsfilters_la_CFLAGS = $(CUPS_CFLAGS) $(LIBJPEG_CFLAGS) \
-	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_3)
+	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_2)
 libcupsfilters_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1
@@ -1354,7 +1351,7 @@ pkgdriverdir = $(CUPS_DATADIR)/drv
 gendrvfiles = \
 	drv/cupsfilters.drv
 
-pkgdriver_DATA = $(gendrvfiles) $(am__append_5)
+pkgdriver_DATA = $(gendrvfiles) $(am__append_4)
 brldrvfiles = \
 	drv/generic-brf.drv \
 	drv/generic-ubrl.drv \
@@ -1370,7 +1367,7 @@ genppdcfiles = \
 	filter/pcl.h \
 	filter/escp.h
 
-pkgppdc_DATA = $(genppdcfiles) $(am__append_6)
+pkgppdc_DATA = $(genppdcfiles) $(am__append_5)
 GENERATED_LIBLOUIS = \
 	filter/braille/filters/liblouis3.defs \
 	filter/braille/filters/liblouis4.defs
@@ -1399,8 +1396,8 @@ pkgmimedir = $(CUPS_DATADIR)/mime
 genmimefiles = \
 	mime/cupsfilters.types
 
-pkgmime_DATA = $(genmimefiles) mime/cupsfilters.convs $(am__append_7) \
-	$(am__append_8) $(am__append_9) $(am__append_10)
+pkgmime_DATA = $(genmimefiles) mime/cupsfilters.convs $(am__append_6) \
+	$(am__append_7) $(am__append_8) $(am__append_9)
 popplermimefiles = \
 	mime/cupsfilters-poppler.convs
 
@@ -1559,7 +1556,7 @@ genfilterscripts = \
 	filter/texttops  \
 	filter/rastertopclm
 
-pkgfilter_SCRIPTS = $(genfilterscripts) $(am__append_12)
+pkgfilter_SCRIPTS = $(genfilterscripts) $(am__append_11)
 gsfilterscripts = \
 	filter/gstopxl \
 	filter/gstopdf
@@ -1590,7 +1587,7 @@ bannertopdf_CFLAGS = \
 	$(CUPS_CFLAGS) \
 	$(LIBJPEG_CFLAGS) \
 	$(LIBPNG_CFLAGS) \
-	$(POPPLER_CFLAGS) \
+	$(LIBQPDF_CFLAGS) \
 	$(TIFF_CFLAGS) \
 	$(FONTCONFIG_CFLAGS) \
 	-I$(srcdir)/fontembed/
@@ -1601,7 +1598,7 @@ bannertopdf_LDADD = \
 	$(CUPS_LIBS) \
 	$(LIBJPEG_LIBS) \
 	$(LIBPNG_LIBS) \
-	$(POPPLER_LIBS) \
+	$(LIBQPDF_LIBS) \
 	$(TIFF_LIBS) \
 	$(FONTCONFIG_LIBS) \
 	libfontembed.la
@@ -1930,7 +1927,7 @@ cupsbrowsedmanpages = \
 	utils/cups-browsed.8 \
 	utils/cups-browsed.conf.5
 
-man_MANS = $(cupsbrowsedmanpages) $(am__append_20) $(am__append_21)
+man_MANS = $(cupsbrowsedmanpages) $(am__append_19) $(am__append_20)
 driverlessmanpages = \
 	utils/driverless.1
 
@@ -1950,7 +1947,7 @@ genppdfiles = \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
 	ppd/Ricoh-PDF_Printer-PDF.ppd
 
-ppd_DATA = $(genppdfiles) $(am__append_22) $(am__append_23)
+ppd_DATA = $(genppdfiles) $(am__append_21) $(am__append_22)
 ijsppdfiles = \
 	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
 
