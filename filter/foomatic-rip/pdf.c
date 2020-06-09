@@ -39,7 +39,7 @@
 static int wait_for_renderer();
 
 
-static int pdf_count_pages(const char *filename)
+int pdf_count_pages(const char *filename)
 {
     char gscommand[CMDLINE_MAX];
     char output[63] = "";
@@ -47,7 +47,7 @@ static int pdf_count_pages(const char *filename)
     size_t bytes;
     char *p;
 
-    snprintf(gscommand, CMDLINE_MAX, "%s -dNODISPLAY -q -c "
+    snprintf(gscommand, CMDLINE_MAX, "%s -dNODISPLAY -dSAFER -dNOPAUSE -q -c "
 	     "'/pdffile (%s) (r) file runpdfbegin (PageCount: ) print "
 	     "pdfpagecount = quit'",
 	     gspath, filename);
@@ -56,7 +56,7 @@ static int pdf_count_pages(const char *filename)
     if (!pd)
       rip_die(EXIT_STARVED, "Failed to execute ghostscript to determine number of input pages!\n");
 
-    bytes = fread_or_die(output, 1, 63, pd);
+    bytes = fread_or_die(output, 1, sizeof(output), pd);
     pclose(pd);
 
     p = output;
@@ -68,7 +68,7 @@ static int pdf_count_pages(const char *filename)
       if (p == NULL)
 	break;
       p ++;
-      bytes = output + bytes - p;
+      bytes = sizeof(output) - (p - output);
     }
 
     return pagecount;
