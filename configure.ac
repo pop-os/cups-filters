@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[53])
+m4_define([cups_filters_version_micro],[54])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -424,7 +424,7 @@ AS_IF([test x"$long_long_found" = "xyes"], [
 AC_ARG_WITH([pdftops],
 	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread,hybrid).])],
 	[with_pdftops="$withval"],
-	[with_pdftops=gs]
+	[with_pdftops=hybrid]
 )
 AS_CASE([x$with_pdftops],
         [xgs|xpdftops|xpdftocairo|xacroread|xhybrid], [],

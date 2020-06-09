@@ -142,6 +142,10 @@ int jobhasjcl;
 int pdfconvertedtops;
 
 
+/* no-color-management flag */
+int cm_off = 0;
+
+
 /* These variables were in 'dat' before */
 char colorprofile [128];
 char cupsfilter[256];
@@ -316,7 +320,7 @@ void process_cmdline_options()
             _log("Pondering option '%s'\n", key);
 
         /* "profile" option to supply a color correction profile to a CUPS raster driver */
-        if (!strcmp(key, "profile")) {
+        if (!strcmp(key, "profile") && !cm_off) {
             strlcpy(colorprofile, value, 128);
             continue;
         }
@@ -736,8 +740,13 @@ int main(int argc, char** argv)
         debug = 1;
 
     if (debug) {
+#ifdef __UCLIBC__
+	sprintf(tmp, "%s-log-XXXXXX", LOG_FILE);
+	int fd = mkstemp (tmp);
+#else
 	sprintf(tmp, "%s-XXXXXX.log", LOG_FILE);
 	int fd = mkstemps (tmp, 4);
+#endif
 	if (fd != -1)
 	    logh = fdopen(fd, "w");
 	else
@@ -797,6 +806,9 @@ int main(int argc, char** argv)
         while ((str = arglist_get_value(arglist, "-o"))) {
             strncpy_omit(tmp, str, 1024, omit_shellescapes);
             dstrcatf(job->optstr, "%s ", tmp);
+            /* if "-o no-color-management" was passed, we raise a flag */
+            if (!strcmp(tmp, "no-color-management"))
+                cm_off = 1;           
             arglist_remove(arglist, "-o");
 	    /* We print without spooler */
 	    spooler = SPOOLER_DIRECT;
@@ -949,7 +961,9 @@ int main(int argc, char** argv)
                   icc_profile = get_icc_profile_for_qualifier(qualifier);
                 }
 
-                if (icc_profile != NULL)
+                /* ICC profile is specified for Ghostscript unless
+                   "no-color-management" option was passed in foomatic-rip */
+                if (icc_profile != NULL && !cm_off)
                   snprintf(cmd, sizeof(cmd),
                            "-sOutputICCProfile='%s'", icc_profile);
                 else
