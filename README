@@ -1,4 +1,4 @@
-README - OpenPrinting CUPS Filters v1.7.0 - 2016-01-18
+README - OpenPrinting CUPS Filters v1.8.1 - 2016-01-22
 ------------------------------------------------------
 
 Looking for compile instructions?  Read the file "INSTALL.txt"
@@ -34,6 +34,12 @@ INTRODUCTION
     used, to have Ghostscript, foomatic-filters, and foomatic-db
     installed.
 
+    For Braille embosser support (see below) you will also need at
+    least liblouis, ImageMagick, and poppler-utils. Recommended is to
+    also have liblouisutdml, antiword, docx2txt for more sophisticated
+    Braille generation representing also the formatting of the input
+    text. None of these is needed for compiling cups-filters.
+
     CUPS, this package, and Ghostscript contain some rudimentary printer
     drivers, see http://www.openprinting.org/drivers/ for a more
     comprehensive set of printer drivers for Linux.
@@ -50,7 +56,7 @@ INTRODUCTION
 
     Choose "OpenPrinting" as the product and "cups-filters" as the component.
 
-    See the "LICENSE.txt" files for legal information.
+    See the "COPYING" files for legal information.
 
 IMAGE PRINTING DEFAULT CHANGED TO "SCALE TO FIT"
 
@@ -450,7 +456,7 @@ printable area.
 
 2. LICENSE
 
-"imagetopdf.c" is under the CUPS license. See the "LICENSE.txt" file.
+"imagetopdf.c" is under the CUPS license. See the "COPYING" file.
 For other files, see the copyright notice and license of each file.
 
 3. COMMAND LINE
