@@ -1,5 +1,13 @@
-NEWS - OpenPrinting CUPS Filters v1.17.8 - 2017-09-28
+NEWS - OpenPrinting CUPS Filters v1.17.9 - 2017-10-05
 -----------------------------------------------------
+
+CHANGES IN V1.17.9
+
+	- cups-browsed: Applying option defaults from the
+	  DefaultOptions directive in cups-browsed.conf got
+	  lost. Re-introduced it (Bug #1414).
+	- cups-browsed: Get printer-location field from remote
+	  printers.  Thanks to Marek Kasik for the patch (Bug #1413).
 
 CHANGES IN V1.17.8
 
