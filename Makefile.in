@@ -99,47 +99,17 @@ check_PROGRAMS = test1284$(EXEEXT) testcmyk$(EXEEXT) \
 	test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 @ENABLE_BRAILLE_TRUE@am__append_1 = cups-brf
 @ENABLE_DRIVERLESS_TRUE@pkgppdgen_PROGRAMS = driverless$(EXEEXT)
-@ENABLE_POPPLER_TRUE@am__append_2 = \
-@ENABLE_POPPLER_TRUE@	banners/classified \
-@ENABLE_POPPLER_TRUE@	banners/confidential \
-@ENABLE_POPPLER_TRUE@	banners/secret \
-@ENABLE_POPPLER_TRUE@	banners/standard \
-@ENABLE_POPPLER_TRUE@	banners/form \
-@ENABLE_POPPLER_TRUE@	banners/topsecret \
-@ENABLE_POPPLER_TRUE@	banners/unclassified
-
+@ENABLE_POPPLER_TRUE@am__append_2 = $(bannerfiles)
 TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 	test_ps$(EXEEXT) test_pdf1$(EXEEXT) test_pdf2$(EXEEXT)
 @BUILD_DBUS_TRUE@am__append_3 = $(DBUS_CFLAGS) -DHAVE_DBUS
 @BUILD_DBUS_TRUE@am__append_4 = $(DBUS_LIBS)
-@ENABLE_BRAILLE_TRUE@am__append_5 = \
-@ENABLE_BRAILLE_TRUE@	drv/generic-brf.drv \
-@ENABLE_BRAILLE_TRUE@	drv/generic-ubrl.drv \
-@ENABLE_BRAILLE_TRUE@	drv/indexv3.drv \
-@ENABLE_BRAILLE_TRUE@	drv/indexv4.drv
-
-@ENABLE_BRAILLE_TRUE@am__append_6 = \
-@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/media-braille.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/index.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/braille.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/imagemagick.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/drivers/common/fr-braille.po
-
-@ENABLE_BRAILLE_TRUE@am__append_7 = filter/braille/filters/liblouis1.defs.gen.in
-@ENABLE_POPPLER_TRUE@am__append_8 = \
-@ENABLE_POPPLER_TRUE@	mime/cupsfilters-poppler.convs
-
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_9 = \
-@ENABLE_GHOSTSCRIPT_TRUE@	mime/cupsfilters-ghostscript.convs
-
-@ENABLE_MUTOOL_TRUE@am__append_10 = \
-@ENABLE_MUTOOL_TRUE@	mime/cupsfilters-mupdf.convs
-
-@ENABLE_BRAILLE_TRUE@am__append_11 = \
-@ENABLE_BRAILLE_TRUE@	mime/braille.convs \
-@ENABLE_BRAILLE_TRUE@	mime/braille.types
-
+@ENABLE_BRAILLE_TRUE@am__append_5 = $(brldrvfiles)
+@ENABLE_BRAILLE_TRUE@am__append_6 = $(brlppdcfiles)
+@ENABLE_POPPLER_TRUE@am__append_7 = $(popplermimefiles)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_8 = $(gsmimefiles)
+@ENABLE_MUTOOL_TRUE@am__append_9 = $(mutoolmimefiles)
+@ENABLE_BRAILLE_TRUE@am__append_10 = $(brlmimefiles)
 bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = $(am__EXEEXT_2) pdftopdf$(EXEEXT) \
 	commandtoescpx$(EXEEXT) commandtopclx$(EXEEXT) \
@@ -149,48 +119,42 @@ pkgfilter_PROGRAMS = $(am__EXEEXT_2) pdftopdf$(EXEEXT) \
 	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
 	$(am__EXEEXT_6) $(am__EXEEXT_7) $(am__EXEEXT_8) \
 	$(am__EXEEXT_9)
-@ENABLE_POPPLER_TRUE@am__append_12 = \
-@ENABLE_POPPLER_TRUE@	pdftoopvp
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_13 = \
-@ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopxl \
-@ENABLE_GHOSTSCRIPT_TRUE@	filter/gstopdf
+# ===========
+# PDF to OPVP
+# ===========
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__append_11 = \
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp
 
-@ENABLE_URFTOPDF_TRUE@am__append_14 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_12 = $(gsfilterscripts)
+@ENABLE_URFTOPDF_TRUE@am__append_13 = \
 @ENABLE_URFTOPDF_TRUE@	urftopdf
 
-@ENABLE_POPPLER_TRUE@am__append_15 = \
+@ENABLE_POPPLER_TRUE@am__append_14 = \
 @ENABLE_POPPLER_TRUE@	bannertopdf \
 @ENABLE_POPPLER_TRUE@	pdftoraster
 
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_16 = \
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_15 = \
 @ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	pdftoijs
 
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_17 = \
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_16 = \
 @ENABLE_GHOSTSCRIPT_TRUE@	gstoraster
 
-@ENABLE_MUTOOL_TRUE@am__append_18 = \
+@ENABLE_MUTOOL_TRUE@am__append_17 = \
 @ENABLE_MUTOOL_TRUE@	mupdftoraster
 
-@ENABLE_FOOMATIC_TRUE@am__append_19 = \
+@ENABLE_FOOMATIC_TRUE@am__append_18 = \
 @ENABLE_FOOMATIC_TRUE@	foomatic-rip
 
-@ENABLE_IMAGEFILTERS_TRUE@am__append_20 = \
+@ENABLE_IMAGEFILTERS_TRUE@am__append_19 = \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetopdf \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster
 
 sbin_PROGRAMS = cups-browsed$(EXEEXT)
-@ENABLE_DRIVERLESS_TRUE@am__append_21 = utils/driverless.1
-@ENABLE_FOOMATIC_TRUE@am__append_22 = \
-@ENABLE_FOOMATIC_TRUE@	filter/foomatic-rip/foomatic-rip.1
-
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_23 = \
-@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
-
-@ENABLE_GHOSTSCRIPT_TRUE@am__append_24 = \
-@ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlcolor.ppd \
-@ENABLE_GHOSTSCRIPT_TRUE@	ppd/pxlmono.ppd
-
+@ENABLE_DRIVERLESS_TRUE@am__append_20 = $(driverlessmanpages)
+@ENABLE_FOOMATIC_TRUE@am__append_21 = $(foomaticmanpages)
+@ENABLE_IJS_TRUE@@ENABLE_POPPLER_TRUE@am__append_22 = $(ijsppdfiles)
+@ENABLE_GHOSTSCRIPT_TRUE@am__append_23 = $(gsppdfiles)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx.m4 \
@@ -313,17 +277,16 @@ libfontembed_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libfontembed_la_LDFLAGS) $(LDFLAGS) \
 	-o $@
-@WITH_PHP_TRUE@libphpcups_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__libphpcups_la_SOURCES_DIST = scripting/php/phpcups.c \
-	scripting/php/phpcups.h
-@WITH_PHP_TRUE@am_libphpcups_la_OBJECTS = libphpcups_la-phpcups.lo
+libphpcups_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libphpcups_la_OBJECTS = libphpcups_la-phpcups.lo
 libphpcups_la_OBJECTS = $(am_libphpcups_la_OBJECTS)
 libphpcups_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libphpcups_la_CFLAGS) \
 	$(CFLAGS) $(libphpcups_la_LDFLAGS) $(LDFLAGS) -o $@
 @WITH_PHP_TRUE@am_libphpcups_la_rpath = -rpath $(phpextensiondir)
 @ENABLE_BRAILLE_TRUE@am__EXEEXT_1 = cups-brf$(EXEEXT)
-@ENABLE_POPPLER_TRUE@am__EXEEXT_2 = pdftoopvp$(EXEEXT)
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@am__EXEEXT_2 =  \
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@	pdftoopvp$(EXEEXT)
 @ENABLE_URFTOPDF_TRUE@am__EXEEXT_3 = urftopdf$(EXEEXT)
 @ENABLE_POPPLER_TRUE@am__EXEEXT_4 = bannertopdf$(EXEEXT) \
 @ENABLE_POPPLER_TRUE@	pdftoraster$(EXEEXT)
@@ -361,8 +324,7 @@ commandtopclx_DEPENDENCIES = $(am__DEPENDENCIES_1)
 commandtopclx_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(commandtopclx_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__cups_brf_SOURCES_DIST = backend/cups-brf.c
-@ENABLE_BRAILLE_TRUE@am_cups_brf_OBJECTS = cups-brf.$(OBJEXT)
+am_cups_brf_OBJECTS = cups-brf.$(OBJEXT)
 cups_brf_OBJECTS = $(am_cups_brf_OBJECTS)
 cups_brf_LDADD = $(LDADD)
 am_cups_browsed_OBJECTS = cups_browsed-cups-browsed.$(OBJEXT)
@@ -377,13 +339,9 @@ cups_browsed_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 cups_browsed_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cups_browsed_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__driverless_SOURCES_DIST = utils/driverless.c
-@ENABLE_DRIVERLESS_TRUE@am_driverless_OBJECTS =  \
-@ENABLE_DRIVERLESS_TRUE@	driverless-driverless.$(OBJEXT)
+am_driverless_OBJECTS = driverless-driverless.$(OBJEXT)
 driverless_OBJECTS = $(am_driverless_OBJECTS)
-@ENABLE_DRIVERLESS_TRUE@driverless_DEPENDENCIES =  \
-@ENABLE_DRIVERLESS_TRUE@	$(am__DEPENDENCIES_1) \
-@ENABLE_DRIVERLESS_TRUE@	libcupsfilters.la
+driverless_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 driverless_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(driverless_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -591,11 +549,9 @@ texttotext_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_ttfread_OBJECTS = main.$(OBJEXT)
 ttfread_OBJECTS = $(am_ttfread_OBJECTS)
 ttfread_DEPENDENCIES = libfontembed.la
-am__urftopdf_SOURCES_DIST = filter/urftopdf.cpp filter/unirast.h
-@ENABLE_URFTOPDF_TRUE@am_urftopdf_OBJECTS =  \
-@ENABLE_URFTOPDF_TRUE@	urftopdf-urftopdf.$(OBJEXT)
+am_urftopdf_OBJECTS = urftopdf-urftopdf.$(OBJEXT)
 urftopdf_OBJECTS = $(am_urftopdf_OBJECTS)
-@ENABLE_URFTOPDF_TRUE@urftopdf_DEPENDENCIES = $(am__DEPENDENCIES_1)
+urftopdf_DEPENDENCIES = $(am__DEPENDENCIES_1)
 urftopdf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(urftopdf_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -675,11 +631,11 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(texttotext_SOURCES) $(EXTRA_texttotext_SOURCES) \
 	$(ttfread_SOURCES) $(urftopdf_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
-	$(am__libphpcups_la_SOURCES_DIST) $(bannertopdf_SOURCES) \
+	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
 	$(commandtoescpx_SOURCES) $(commandtopclx_SOURCES) \
-	$(am__cups_brf_SOURCES_DIST) $(cups_browsed_SOURCES) \
-	$(am__driverless_SOURCES_DIST) $(foomatic_rip_SOURCES) \
+	$(cups_brf_SOURCES) $(cups_browsed_SOURCES) \
+	$(driverless_SOURCES) $(foomatic_rip_SOURCES) \
 	$(gstoraster_SOURCES) $(imagetopdf_SOURCES) \
 	$(imagetoraster_SOURCES) $(implicitclass_SOURCES) \
 	$(mupdftoraster_SOURCES) $(parallel_SOURCES) \
@@ -694,7 +650,7 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
 	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
 	$(texttotext_SOURCES) $(EXTRA_texttotext_SOURCES) \
-	$(ttfread_SOURCES) $(am__urftopdf_SOURCES_DIST)
+	$(ttfread_SOURCES) $(urftopdf_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1152,14 +1108,24 @@ EXTRA_DIST = $(doc_DATA) autogen.sh libcupsfilters.pc.in \
 	libfontembed.pc.in utils/cups-browsed.service \
 	utils/cups-browsed-upstart.conf \
 	filter/braille/drivers/index/ubrlto4dot.c \
-	filter/braille/filters/TODO.txt $(pkgbanner_DATA) \
+	filter/braille/filters/TODO.txt cupsfilters/kmdevices.cpp \
+	cupsfilters/kmdevices.h cupsfilters/testdriver.c \
+	data/makePDFfromPS.sh data/classified.ps data/confidential.ps \
+	data/secret.ps data/standard.ps data/topsecret.ps \
+	data/unclassified.ps drv/custom-media-lines $(bannerfiles) \
 	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
 	cupsfilters/image.pgm cupsfilters/image.ppm \
-	$(pkgcupsdata_DATA) $(pkgdriver_DATA) $(am__append_7) \
-	$(pkgppdc_DATA) $(pkgmime_DATA) $(pkgfontembedinclude_DATA) \
-	fontembed/README $(pkgfontconfig_DATA) $(pkgfilter_SCRIPTS) \
-	filter/test.sh utils/cups-browsed.in $(man_MANS) \
-	utils/org.cups.cupsd.Notifier.xml $(ppd_DATA) scripting/perl \
+	$(pkgcupsdata_DATA) $(gendrvfiles) $(brldrvfiles) \
+	filter/braille/filters/liblouis1.defs.gen.in $(genppdcfiles) \
+	$(brlppdcfiles) $(genmimefiles) $(popplermimefiles) \
+	$(gsmimefiles) $(mutoolmimefiles) $(brlmimefiles) \
+	mime/cupsfilters.convs.in $(pkgfontembedinclude_DATA) \
+	fontembed/README filter/pdftoopvp/99pdftoopvp.conf \
+	$(genfilterscripts) $(gsfilterscripts) filter/test.sh \
+	utils/cups-browsed.in $(cupsbrowsedmanpages) \
+	$(driverlessmanpages) filter/foomatic-rip/foomatic-rip.1.in \
+	utils/org.cups.cupsd.Notifier.xml $(genppdfiles) \
+	$(ijsppdfiles) $(gsppdfiles) scripting/perl \
 	scripting/php/README scripting/php/phpcups.php
 
 # ========
@@ -1201,25 +1167,25 @@ test1284_SOURCES = \
 
 test1284_LDADD = $(CUPS_LIBS)
 test1284_CFLAGS = $(CUPS_CFLAGS)
-@ENABLE_BRAILLE_TRUE@cups_brf_SOURCES = \
-@ENABLE_BRAILLE_TRUE@	backend/cups-brf.c
+cups_brf_SOURCES = \
+	backend/cups-brf.c
 
 
 # ==============
 # PPD Generators
 # ==============
-@ENABLE_DRIVERLESS_TRUE@pkgppdgendir = $(CUPS_SERVERBIN)/driver
-@ENABLE_DRIVERLESS_TRUE@driverless_SOURCES = \
-@ENABLE_DRIVERLESS_TRUE@	utils/driverless.c
+pkgppdgendir = $(CUPS_SERVERBIN)/driver
+driverless_SOURCES = \
+	utils/driverless.c
 
-@ENABLE_DRIVERLESS_TRUE@driverless_CFLAGS = \
-@ENABLE_DRIVERLESS_TRUE@	$(CUPS_CFLAGS) \
-@ENABLE_DRIVERLESS_TRUE@	-I$(srcdir)/cupsfilters/
+driverless_CFLAGS = \
+	$(CUPS_CFLAGS) \
+	-I$(srcdir)/cupsfilters/
 
-@ENABLE_DRIVERLESS_TRUE@driverless_CXXFLAGS = $(driverless_CFLAGS)
-@ENABLE_DRIVERLESS_TRUE@driverless_LDADD = \
-@ENABLE_DRIVERLESS_TRUE@	$(CUPS_LIBS) \
-@ENABLE_DRIVERLESS_TRUE@	libcupsfilters.la
+driverless_CXXFLAGS = $(driverless_CFLAGS)
+driverless_LDADD = \
+	$(CUPS_LIBS) \
+	libcupsfilters.la
 
 
 # =======
@@ -1227,6 +1193,15 @@ test1284_CFLAGS = $(CUPS_CFLAGS)
 # =======
 pkgbannerdir = $(CUPS_DATADIR)/banners
 pkgbanner_DATA = $(am__append_2)
+bannerfiles = \
+	banners/classified \
+	banners/confidential \
+	banners/secret \
+	banners/standard \
+	banners/form \
+	banners/topsecret \
+	banners/unclassified
+
 
 # ========
 # Charsets
@@ -1374,21 +1349,42 @@ pkgcupsserverroot_DATA = \
 # Drivers
 # =======
 pkgdriverdir = $(CUPS_DATADIR)/drv
-pkgdriver_DATA = drv/cupsfilters.drv $(am__append_5)
+gendrvfiles = \
+	drv/cupsfilters.drv
+
+pkgdriver_DATA = $(gendrvfiles) $(am__append_5)
+brldrvfiles = \
+	drv/generic-brf.drv \
+	drv/generic-ubrl.drv \
+	drv/indexv3.drv \
+	drv/indexv4.drv
+
 
 # =======
 # Definitions for drivers
 # =======
 pkgppdcdir = $(CUPS_DATADIR)/ppdc
-pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_6)
-@ENABLE_BRAILLE_TRUE@GENERATED_LIBLOUIS = \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis2.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis3.defs \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis4.defs
+genppdcfiles = \
+	filter/pcl.h \
+	filter/escp.h
 
-@ENABLE_BRAILLE_TRUE@GENERATED_DEFS = \
-@ENABLE_BRAILLE_TRUE@	filter/braille/filters/liblouis1.defs \
-@ENABLE_BRAILLE_TRUE@	$(GENERATED_LIBLOUIS)
+pkgppdc_DATA = $(genppdcfiles) $(am__append_6)
+GENERATED_LIBLOUIS = \
+	filter/braille/filters/liblouis2.defs \
+	filter/braille/filters/liblouis3.defs \
+	filter/braille/filters/liblouis4.defs
+
+GENERATED_DEFS = \
+	filter/braille/filters/liblouis1.defs \
+	$(GENERATED_LIBLOUIS)
+
+brlppdcfiles = \
+	filter/braille/drivers/common/media-braille.defs \
+	filter/braille/drivers/index/index.defs \
+	filter/braille/filters/braille.defs \
+	filter/braille/filters/imagemagick.defs \
+	filter/braille/filters/liblouis.defs \
+	filter/braille/drivers/common/fr-braille.po
 
 @ENABLE_BRAILLE_TRUE@nodist_pkgppdc_DATA = \
 @ENABLE_BRAILLE_TRUE@	$(GENERATED_DEFS)
@@ -1398,9 +1394,24 @@ pkgppdc_DATA = filter/pcl.h filter/escp.h $(am__append_6)
 # MIMEs
 # =====
 pkgmimedir = $(CUPS_DATADIR)/mime
-pkgmime_DATA = mime/cupsfilters.convs mime/cupsfilters.types \
-	$(am__append_8) $(am__append_9) $(am__append_10) \
-	$(am__append_11)
+genmimefiles = \
+	mime/cupsfilters.types
+
+pkgmime_DATA = $(genmimefiles) mime/cupsfilters.convs $(am__append_7) \
+	$(am__append_8) $(am__append_9) $(am__append_10)
+popplermimefiles = \
+	mime/cupsfilters-poppler.convs
+
+gsmimefiles = \
+	mime/cupsfilters-ghostscript.convs
+
+mutoolmimefiles = \
+	mime/cupsfilters-mupdf.convs
+
+brlmimefiles = \
+	mime/braille.convs \
+	mime/braille.types
+
 
 # =================
 # Braille aux files
@@ -1459,13 +1470,9 @@ test_pdf_SOURCES = fontembed/test_pdf.c
 test_pdf_LDADD = libfontembed.la
 test_ps_SOURCES = fontembed/test_ps.c
 test_ps_LDADD = libfontembed.la
-
-# ===========
-# PDF to OPVP
-# ===========
 pkgfilterdir = $(CUPS_SERVERBIN)/filter
-pkgfontconfigdir = $(sysconfdir)/$(FONTDIR)
-pkgfontconfig_DATA = filter/pdftoopvp/99pdftoopvp.conf
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@pkgfontconfigdir = $(sysconfdir)/$(FONTDIR)
+@ENABLE_OPVP_TRUE@@ENABLE_POPPLER_TRUE@pkgfontconfig_DATA = filter/pdftoopvp/99pdftoopvp.conf
 pdftoopvp_SOURCES = \
 	filter/pdftoopvp/oprs/OPRS.cxx \
 	filter/pdftoopvp/oprs/OPRS.h \
@@ -1545,8 +1552,16 @@ pdftopdf_LDADD = \
 # ======================
 # Simple filter binaries
 # ======================
-pkgfilter_SCRIPTS = filter/imagetops filter/texttops \
-	filter/rastertopclm $(am__append_13)
+genfilterscripts = \
+	filter/imagetops \
+	filter/texttops  \
+	filter/rastertopclm
+
+pkgfilter_SCRIPTS = $(genfilterscripts) $(am__append_12)
+gsfilterscripts = \
+	filter/gstopxl \
+	filter/gstopdf
+
 @ENABLE_BRAILLE_TRUE@nodist_pkgfilter_SCRIPTS = \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/generic/brftoembosser \
 @ENABLE_BRAILLE_TRUE@	filter/braille/drivers/index/imageubrltoindexv3 \
@@ -1690,15 +1705,15 @@ imagetoraster_LDADD = \
 	-lm \
 	libcupsfilters.la
 
-@ENABLE_URFTOPDF_TRUE@urftopdf_SOURCES = \
-@ENABLE_URFTOPDF_TRUE@	filter/urftopdf.cpp \
-@ENABLE_URFTOPDF_TRUE@	filter/unirast.h
+urftopdf_SOURCES = \
+	filter/urftopdf.cpp \
+	filter/unirast.h
 
-@ENABLE_URFTOPDF_TRUE@urftopdf_CXXFLAGS = \
-@ENABLE_URFTOPDF_TRUE@	$(LIBQPDF_CFLAGS)
+urftopdf_CXXFLAGS = \
+	$(LIBQPDF_CFLAGS)
 
-@ENABLE_URFTOPDF_TRUE@urftopdf_LDADD = \
-@ENABLE_URFTOPDF_TRUE@	$(LIBQPDF_LIBS)
+urftopdf_LDADD = \
+	$(LIBQPDF_LIBS)
 
 rastertopdf_SOURCES = \
 	filter/rastertopdf.cpp
@@ -1908,8 +1923,17 @@ cups_browsed_LDADD = \
 
 initrcdir = $(INITDDIR)
 initrc_SCRIPTS = utils/cups-browsed
-man_MANS = utils/cups-browsed.8 utils/cups-browsed.conf.5 \
-	$(am__append_21) $(am__append_22)
+cupsbrowsedmanpages = \
+	utils/cups-browsed.8 \
+	utils/cups-browsed.conf.5
+
+man_MANS = $(cupsbrowsedmanpages) $(am__append_20) $(am__append_21)
+driverlessmanpages = \
+	utils/driverless.1
+
+foomaticmanpages = \
+	filter/foomatic-rip/foomatic-rip.1
+
 BUILT_SOURCES = $(cups_notifier_sources)
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -1917,24 +1941,33 @@ CLEANFILES = $(BUILT_SOURCES)
 # PPD
 # ===
 ppddir = $(datadir)/ppd/cupsfilters
-ppd_DATA = ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
+genppdfiles = \
+	ppd/Fuji_Xerox-DocuPrint_CM305_df-PDF.ppd \
 	ppd/Generic-PDF_Printer-PDF.ppd \
 	ppd/HP-Color_LaserJet_CM3530_MFP-PDF.ppd \
-	ppd/Ricoh-PDF_Printer-PDF.ppd $(am__append_23) \
-	$(am__append_24)
+	ppd/Ricoh-PDF_Printer-PDF.ppd
+
+ppd_DATA = $(genppdfiles) $(am__append_22) $(am__append_23)
+ijsppdfiles = \
+	ppd/HP-PhotoSmart_Pro_B8300-hpijs-pdftoijs.ppd
+
+gsppdfiles = \
+	ppd/pxlcolor.ppd \
+	ppd/pxlmono.ppd
+
 
 # =========
 # Scripting
 # =========
 @WITH_PHP_TRUE@phpextensiondir = $(PHPDIR)
 @WITH_PHP_TRUE@phpextension_LTLIBRARIES = libphpcups.la
-@WITH_PHP_TRUE@libphpcups_la_SOURCES = \
-@WITH_PHP_TRUE@	scripting/php/phpcups.c \
-@WITH_PHP_TRUE@	scripting/php/phpcups.h
+libphpcups_la_SOURCES = \
+	scripting/php/phpcups.c \
+	scripting/php/phpcups.h
 
-@WITH_PHP_TRUE@libphpcups_la_LIBADD = $(CUPS_LIBS)
-@WITH_PHP_TRUE@libphpcups_la_CFLAGS = $(CUPS_CFLAGS)
-@WITH_PHP_TRUE@libphpcups_la_LDFLAGS = -no-undefined
+libphpcups_la_LIBADD = $(CUPS_LIBS)
+libphpcups_la_CFLAGS = $(CUPS_CFLAGS)
+libphpcups_la_LDFLAGS = -no-undefined
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -5355,15 +5388,15 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 .PRECIOUS: Makefile
 
 
-@ENABLE_BRAILLE_TRUE@filter/braille/filters/liblouis1.defs: filter/braille/filters/liblouis1.defs.gen
-@ENABLE_BRAILLE_TRUE@	$< > $@
+filter/braille/filters/liblouis1.defs: filter/braille/filters/liblouis1.defs.gen
+	$< > $@
 
-@ENABLE_BRAILLE_TRUE@$(GENERATED_LIBLOUIS): filter/braille/filters/liblouis%.defs: filter/braille/filters/liblouis1.defs
-@ENABLE_BRAILLE_TRUE@	sed -e "s/Braille transcription/Additional Braille transcription ($*)/" \
-@ENABLE_BRAILLE_TRUE@	    -e "s/^  \\*Choice /  Choice /" \
-@ENABLE_BRAILLE_TRUE@	    -e "s/^  Choice \"None\//  *Choice \"None\//" \
-@ENABLE_BRAILLE_TRUE@	    -e s/LibLouis/LibLouis$*/ \
-@ENABLE_BRAILLE_TRUE@	    < $< > $@
+$(GENERATED_LIBLOUIS): filter/braille/filters/liblouis%.defs: filter/braille/filters/liblouis1.defs
+	sed -e "s/Braille transcription/Additional Braille transcription ($*)/" \
+	    -e "s/^  \\*Choice /  Choice /" \
+	    -e "s/^  Choice \"None\//  *Choice \"None\//" \
+	    -e s/LibLouis/LibLouis$*/ \
+	    < $< > $@
 
 $(cups_notifier_sources): utils/org.cups.cupsd.Notifier.xml
 	gdbus-codegen \

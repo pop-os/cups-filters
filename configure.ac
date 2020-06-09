@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[17])
-m4_define([cups_filters_version_micro],[9])
+m4_define([cups_filters_version_minor],[18])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -550,14 +550,20 @@ AC_ARG_ENABLE([ghostscript],
 	[enable_ghostscript=yes]
 )
 AC_ARG_ENABLE([ijs],
-	[AS_HELP_STRING([--disable-ijs], [Disable filters using IJS.])],
+	[AS_HELP_STRING([--enable-ijs], [Enable filters using IJS.])],
 	[enable_ijs="$enableval"],
-	[enable_ijs=yes]
+	[enable_ijs=no]
 )
 AS_IF([test "x$enable_ijs" = "xyes" -a "x$have_ijs" != "xyes"], [
        AC_MSG_ERROR([IJS not found, but requested.])
 ])
 AM_CONDITIONAL(ENABLE_IJS, test "x$enable_ijs" = "xyes")
+AC_ARG_ENABLE([opvp],
+	[AS_HELP_STRING([--enable-opvp], [Enable filters using OpenPrinting Vector (OPVP).])],
+	[enable_opvp="$enableval"],
+	[enable_opvp=no]
+)
+AM_CONDITIONAL(ENABLE_OPVP, test "x$enable_opvp" = "xyes")
 AC_ARG_WITH([pdftops],
 	[AS_HELP_STRING([--with-pdftops=value], [Set which pdftops to use (gs,pdftops,pdftocairo,acroread,mupdf,hybrid).])],
 	[with_pdftops="$withval"],
@@ -668,7 +674,7 @@ AS_IF([test "x$with_pdftops_path" != "xsystem"], [
 	CUPS_PDFTOPS="$with_pdftops_path"
 ], [
 	AS_IF([test "x$cross_compiling" = "xyes"], [
-		CUPS_PDFTOPS="pdftops"
+		CUPS_PDFTOPS="/usr/bin/pdftops"
 	], [
 		AC_CHECK_PROG(CUPS_PDFTOPS, pdftops, /usr/bin/pdftops)
 	])
@@ -903,5 +909,7 @@ Build configuration:
 	apple-raster:    ${APPLE_RASTER_FILTER}
 	pclm:            ${enable_pclm}
 	driverless auto-setup: ${enable_auto_setup_driverless}
+	ijs:             ${enable_ijs}
+	opvp:            ${enable_opvp}
 ==============================================================================
 ])
