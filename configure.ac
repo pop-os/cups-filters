@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[21])
-m4_define([cups_filters_version_micro],[6])
+m4_define([cups_filters_version_minor],[22])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -462,7 +462,7 @@ PKG_CHECK_MODULES([FONTCONFIG], [fontconfig >= 2.0.0])
 PKG_CHECK_MODULES([IJS], [ijs], [have_ijs=yes], [have_ijs=no])
 PKG_CHECK_MODULES([ZLIB], [zlib])
 AC_DEFINE([HAVE_LIBZ], [], [Define that we use zlib])
-PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 8.1.0])
+PKG_CHECK_MODULES([LIBQPDF], [libqpdf >= 8.3.0])
 
 # ===============================
 # Check for PCLm printing support
@@ -471,13 +471,6 @@ AC_ARG_ENABLE([pclm], [AS_HELP_STRING([--enable-pclm], [enable PCLm printing.])]
 	[enable_pclm="$enableval"],
 	[enable_pclm=yes]
 )
-if test "x$enable_pclm" != "xno"; then
-	# Do we have QPDF 7.0.0 or newer?
-	AC_CHECK_HEADERS([qpdf/Pl_RunLength.hh],
-		[],
-		[enable_pclm=no]
-	)
-fi
 if test "x$enable_pclm" != "xno"; then
 	AC_DEFINE([QPDF_HAVE_PCLM], [1], [QPDF has PCLm support?])
 	QPDF_NO_PCLM=
@@ -495,7 +488,7 @@ AC_ARG_ENABLE(poppler, AS_HELP_STRING([--enable-poppler],[enable Poppler-based f
 	      enable_poppler=$enableval,enable_poppler=yes)
 AM_CONDITIONAL(ENABLE_POPPLER, test x$enable_poppler = xyes)
 if test x$enable_poppler = xyes; then
-	PKG_CHECK_MODULES([POPPLER], [poppler >= 0.18])
+	PKG_CHECK_MODULES([POPPLER], [poppler >= 0.19])
 	AC_CHECK_HEADER([poppler/cpp/poppler-version.h], [AC_DEFINE([HAVE_CPP_POPPLER_VERSION_H],,[Define if you have Poppler's "cpp/poppler-version.h" header file.])], [])
 fi
 

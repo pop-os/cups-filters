@@ -1,5 +1,19 @@
-NEWS - OpenPrinting CUPS Filters v1.21.6 - 2018-12-17
+NEWS - OpenPrinting CUPS Filters v1.22.0 - 2019-01-18
 -----------------------------------------------------
+
+CHANGES IN V1.22.0
+
+	- pdftopdf: Use QPDF for flattening interactive PDF forms
+	  (Issues #2, #23, #36, Pull request #88).
+	- pdftopdf: Fixed bug of closing temporary file prematurely
+	  when external PDF form flattening utilities fail (Thanks to
+	  Tobias Hoffmann for finding this, see pull request #88).
+	- pdftoopvp: More fixes for building with Poppler 0.72
+	  (Pull request #83, Issue #75).
+	- pdftoraster, pdftoijs, pdftoopvp: Removed support for
+	  Poppler 0.18 (Pull request #83).
+	- cups-browsed: Fixed crash in applying the BrowseFilter
+	  cups-browsed.conf directives (Debian bug #916765).
 
 CHANGES IN V1.21.6
 
