@@ -1,5 +1,36 @@
-CHANGES.txt - OpenPrinting CUPS Filters v1.0.17 - 2012-04-20
+CHANGES.txt - OpenPrinting CUPS Filters v1.0.18 - 2012-05-16
 ------------------------------------------------------------
+
+CHANGES IN V1.0.18
+
+	- Modified "./configure" options related to the pdftops filter to
+	  allow changing the defaults for the renderer being used by default
+	  (Ghostscript or Poppler) and the maximum image rendering resolution
+	  and to supply paths for both Ghostscript's gs and Poppler's pdftops.
+	- pdftops: Allow selection whether Ghostscript or Poppler is used
+	  at runtime, setting the "pdftops-renderer" option to "gs" or
+	  "pdftops".
+	- pdftops: Allow setting an upper limit for the image rendering
+	  resolution, also at runtime, setting the option
+	  "pdftops-max-image-resolution-default" to the desired limit in dpi.
+	  "0" means no limit.
+	- pdftops: Fixed crash by wrong usage of sizeof() function when adding
+	  "Collate" to the fifth command line argument for the "pstops" CUPS
+	  filter call (Ubuntu bug #982675).
+	- pdftops: Removed newline from copies value when reading it from
+	  the "%%PDFTOPDFNumCopies" entry of the incoming PDF file.
+	- pdftops: Silenced compiler warning about ignoring the return
+	  value of the write() function.
+	- pdftops: Added a crash guard.
+	- pdftops: Start determining the printing resolution with
+	  cupsRasterInterpretPPD(), this is the most reliable as often
+	  the choice names of the "Resolution" option are marketing names
+	  with higher numerical values than the actual resolution. Also
+	  ignore error exit values of cupsRasterInterpretPPD() as the
+	  function can error out after having found the resolution.
+	- pdftops: If printing resolution is determined by
+          cupsRasterInterpretPPD() do not stick on 100 dpi if the
+	  resolution cannot be determined (Ubuntu bug #984082).
 
 CHANGES IN V1.0.17
 
