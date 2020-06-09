@@ -5803,8 +5803,11 @@ get_printer_attributes(const char* uri, int fallback_request,
 
         if(!strcmp(ippGetName(attr),"status-message") && 
           !strcmp(valuebuffer,"server-error-version-not-supported")){
-          debug_printf("The server doesn't support IPP2.0 request, trying to IPP1.1 request\n");
-          return get_printer_attributes(uri,1,pattrs,job_state_attributes, attr_size);
+	  if (!fallback_request) {
+	    debug_printf("The server doesn't support IPP2.0 request, trying to IPP1.1 request\n");
+	    httpClose(http_printer);
+	    return get_printer_attributes(uri,1,pattrs,job_state_attributes, attr_size);
+	  }
         }
        attr = ippNextAttribute(response);
       }
@@ -5812,9 +5815,13 @@ get_printer_attributes(const char* uri, int fallback_request,
   } else{
     debug_printf("Request for IPP attributes (get-printer-attributes) for printer with URI %s failed: %s\n",
      uri, cupsLastErrorString());
-    debug_printf("Trying IPP1.1 Request\n");
-    return get_printer_attributes(uri,1,pattrs,job_state_attributes, attr_size);
+    if (!fallback_request) {
+      debug_printf("Trying IPP1.1 Request\n");
+      httpClose(http_printer);
+      return get_printer_attributes(uri,1,pattrs,job_state_attributes, attr_size);
+    }
   }
+  httpClose(http_printer);
 
   return response;
 }
