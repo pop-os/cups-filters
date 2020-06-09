@@ -364,7 +364,7 @@ am_foomatic_rip_OBJECTS = foomatic_rip-foomaticrip.$(OBJEXT) \
 	foomatic_rip-process.$(OBJEXT) foomatic_rip-renderer.$(OBJEXT) \
 	foomatic_rip-spooler.$(OBJEXT) foomatic_rip-util.$(OBJEXT)
 foomatic_rip_OBJECTS = $(am_foomatic_rip_OBJECTS)
-foomatic_rip_DEPENDENCIES = libcupsfilters.la
+foomatic_rip_DEPENDENCIES = $(am__DEPENDENCIES_1) libcupsfilters.la
 foomatic_rip_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(foomatic_rip_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -1567,6 +1567,7 @@ foomatic_rip_CFLAGS = \
 	-I$(srcdir)/cupsfilters/
 
 foomatic_rip_LDADD = \
+	$(CUPS_LIBS) \
 	-lm \
 	libcupsfilters.la
 

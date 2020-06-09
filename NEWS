@@ -1,5 +1,105 @@
-NEWS - OpenPrinting CUPS Filters v1.11.1 - 2016-08-18
+NEWS - OpenPrinting CUPS Filters v1.11.3 - 2016-09-15
 -----------------------------------------------------
+
+CHANGES IN V1.11.3
+
+	- cups-browsed: If a queue is not only discovered via Bonjour
+	  but also via legacy CUPS or LDAP, prefer the Bonjour record
+	  as it provides more information and there is also a defined
+	  cancellation broadcast.
+	- cups-browsed: Let PPD options saved in the last session also
+	  get applied to generated PPDs for IPP network printers.
+	- cups-browsed: Make sure that saved PPD options do not get
+	  lost if for some reason the PPD file cannot be loaded in a
+	  new cups-browsed session (or the loaded PPD file is
+	  different).  This is done by holding a copy of the settings
+	  in the remote printer data structure.
+	- cups-browsed: When saving option settings, remove
+	  backslashes added when the settings are read out via IPP
+	  request. Otherwise the backslashes would double with each
+	  session of cups-browsed.
+	- implicitclass: Do not let the job get immediately retried on
+	  failure to send it out to the remote CUPS printer. By
+	  repeating to send the job to an unavailable server so
+	  quickly, cups-browsed gets bombed with requests and hangs on
+	  shutdown.
+	- cups-browsed: Shortened timeouts of HTTP connections and IPP
+	  requests to 3 seconds amd of IPP requests to remote CUPS
+	  servers to 2 seconds. For local IPP requests always use the
+	  connection once created via http_connect_local(). Also call
+	  g_main_context_wakeup(NULL) after each
+	  g_main_loop_quit(gmainloop) call. These measures should
+	  reduce long hangs of cups-browsed on shutdown when a CUPS
+	  server got unavailable.
+	- cups-browsed: Do not mark remote printers discovered via
+	  legacy CUPS broadcasts as disappeared right from the
+	  beginning to implement the browse timeout. Instead manage
+	  their expiring by introducing a flag which marks them as
+	  CUPS legacy printers. Printers with disappeared status are
+	  considered invalid in some situations, especially when
+	  clusterin equally-named remote printers (Bug #1374).
+	- cups-browsed: When we have remote CUPS printers, we use the
+	  implicitclass backend and a local copy of the remote PPD
+	  file already if we have only a single remote printer with
+	  this queue name. This simplifies the management of remote
+	  CUPS printers and also we do not hassle with using a remote
+	  PPD file. Now one can change PPD option defaults with
+	  printer setup tools or the lpadmin command and they get
+	  preserved in the next cups-browsed sessions.
+	- if we are using the implicitclass backend CUPS does not make
+	  the server's PPD file available on the client any more. To
+	  fix this, we download the PPD file when creating an
+	  implictclass:... queue and apply it to the queue. This way
+	  the options of the printer(s) are always available for
+	  enumeration, especially in print dialogs (Bug #1372). We
+	  modify the local copy setting any options saved from the
+	  previous session and inhibiting local execution of filters
+	  (as the driver for the remote printer is not necessarily
+	  available locally).
+	- cups-browsed: Added flag to inhibit auto-backup of option
+	  settings by the on_printer_modified() notification handler
+	  during print queue setup and removal.
+	- cups-browsed: Let the printer_record() function always
+	  return the master record for the printer name and not an
+	  arbitrary duplicate.
+	- cups-browsed: Fixes in the functionality for saving option
+	  settings: Make sure to not save the same option twice with
+	  different values, do not save the "printer-is-shared" option
+	  (errors out when re-applying option in the next session).
+	- cups-browsed: Treat discovered printers correctly also if
+	  they use a non-standard port, even if several CUPS daemons
+	  are running on the same server but on different ports. This
+	  also improves the support of a sandboxed printing stack.
+	- cups-browsed: Close http connections opened for polling
+	  properties of IPP network printers, to fix a possible memory
+	  leak.
+	- cups-browsed: Cleaned up HTTP access to local and remote
+	  CUPS servers and IPP printers, to assure that the local CUPS
+	  daemon is always accessed the same (user-defined) way
+	  (domain socket/localhost:port). This especially prevents
+	  cups-browwsed hanging on shutdown (Debian bug #832637).
+	- cups-browsed: Fixed clustering equally-named queues of
+	  different remote servers, to assure to have one master
+	  referencing to all duplicates and not a daisy chain of
+	  duplicate references.
+
+CHANGES IN V1.11.2
+
+	- cups-browsed: Allow turning off the use of CUPS' domain
+	  socket via cups-browsed.conf.
+	- foomatic-rip: When run as regular CUPS filter use preferably
+	  /etc/cups/foomatic-rip.conf (or whereever the CUPS
+	  configuration files reside, according to the CUPS_SERVERROOT
+	  environment variable) as configuration file. This way we can
+	  more easily run the printing stack in a sandbox.
+	- foomatic-rip: When run as regular CUPS filter, read the PPD
+	  through CUPS and get the print queue name by environment
+	  variable.
+	- bannertopdf, foomatic-rip, gstoraster, mupdftoraster,
+	  pdftoopvp, pdftoraster: Do not use build-time hard-coded
+	  paths, but always the paths from the environment variables
+	  which CUPS sets when calling its filters. This is needed to
+	  run the printing stack in a sandbox.
 
 CHANGES IN V1.11.1
 

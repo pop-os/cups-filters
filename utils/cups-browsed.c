@@ -154,7 +154,6 @@ typedef enum printer_status_e {
   STATUS_UNCONFIRMED = 0,	/* Generated in a previous session */
   STATUS_CONFIRMED,		/* Avahi confirms UNCONFIRMED printer */
   STATUS_TO_BE_CREATED,		/* Scheduled for creation */
-  STATUS_BROWSE_PACKET_RECEIVED,/* Scheduled for creation with timeout */
   STATUS_DISAPPEARED		/* Scheduled for removal */
 } printer_status_t;
 
@@ -174,9 +173,13 @@ typedef struct remote_printer_s {
   int last_printer;
   char *host;
   char *ip;
+  int port;
   char *service_name;
   char *type;
   char *domain;
+  int no_autosave;
+  int netprinter;
+  int is_legacy;
 } remote_printer_t;
 
 /* Data structure for network interfaces */
@@ -334,6 +337,7 @@ static uint16_t BrowsePort = 631;
 static browsepoll_t **BrowsePoll = NULL;
 static size_t NumBrowsePoll = 0;
 static guint update_netifs_sourceid = 0;
+static char local_server_str[1024];
 static char *DomainSocket = NULL;
 static ip_based_uris_t IPBasedDeviceURIs = IP_BASED_URIS_NO;
 static unsigned int CreateRemoteRawPrinterQueues = 0;
@@ -480,6 +484,32 @@ ippSetVersion(ipp_t *ipp, int major, int minor)
 }
 #endif
 
+
+#if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 6)
+#define HAVE_CUPS_1_7 1
+#endif
+
+/*
+ * The httpAddrPort() function was only introduced in CUPS 1.7.x
+ */
+#ifndef HAVE_CUPS_1_7
+int                                     /* O - Port number */
+httpAddrPort(http_addr_t *addr)         /* I - Address */
+{
+  if (!addr)
+    return (-1);
+#ifdef AF_INET6
+  else if (addr->addr.sa_family == AF_INET6)
+    return (ntohs(addr->ipv6.sin6_port));
+#endif /* AF_INET6 */
+  else if (addr->addr.sa_family == AF_INET)
+    return (ntohs(addr->ipv4.sin_port));
+  else
+    return (0);
+}
+#endif
+
+
 void
 start_debug_logging()
 {
@@ -538,12 +568,28 @@ password_callback (const char *prompt,
   return NULL;
 }
 
+http_t *
+httpConnectEncryptShortTimeout(const char *host, int port,
+			       http_encryption_t encryption)
+{
+  return (httpConnect2(host, port, NULL, AF_UNSPEC, encryption, 1, 3000,
+                       NULL));
+}
+
+int
+http_timeout_cb(http_t *http, void *user_data)
+{
+  return 0;
+}
+
 static http_t *
 http_connect_local (void)
 {
+  debug_printf("cups-browsed: Creating http connection to local CUPS daemon: %s:%d\n", cupsServer(), ippPort());
   if (!local_conn)
-    local_conn = httpConnectEncrypt(cupsServer(), ippPort(),
-				    cupsEncryption());
+    local_conn = httpConnectEncryptShortTimeout(cupsServer(), ippPort(),
+						cupsEncryption());
+  httpSetTimeout(local_conn, 3, http_timeout_cb, NULL);
 
   return local_conn;
 }
@@ -588,10 +634,13 @@ local_printer_has_uri (gpointer key,
 static void
 local_printers_create_subscription (http_t *conn)
 {
+  char temp[1024];
   if (!local_printers_context) {
     local_printers_context = g_malloc0 (sizeof (browsepoll_t));
-    local_printers_context->server = "localhost";
-    local_printers_context->port = BrowsePort;
+    local_printers_context->server =
+      strdup(httpAddrString(httpGetAddress(conn),
+			    temp, sizeof(temp)));
+    local_printers_context->port = httpAddrPort(httpGetAddress(conn));
     local_printers_context->can_subscribe = TRUE;
   }
 
@@ -603,7 +652,7 @@ get_local_printers (void)
 {
   cups_dest_t *dests = NULL;
   int num_dests = cupsGetDests (&dests);
-  debug_printf ("cups-browsed [BrowsePoll localhost:631]: cupsGetDests\n");
+  debug_printf ("cups-browsed (%s): cupsGetDests\n", local_server_str);
   g_hash_table_remove_all (local_printers);
   for (int i = 0; i < num_dests; i++) {
     const char *val;
@@ -873,13 +922,16 @@ check_jobs () {
   int num_jobs = 0;
   cups_job_t *jobs = NULL;
   remote_printer_t *p;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   if (cupsArrayCount(remote_printers) > 0)
     for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
 	 p;
 	 p = (remote_printer_t *)cupsArrayNext(remote_printers))
       if (!p->duplicate_of) {
-	num_jobs = cupsGetJobs2(CUPS_HTTP_DEFAULT, &jobs, p->name, 0,
+	num_jobs = cupsGetJobs2(conn, &jobs, p->name, 0,
 				CUPS_WHICHJOBS_ACTIVE);
 	if (num_jobs > 0) {
 	  debug_printf("Queue %s still has jobs!\n", p->name);
@@ -903,6 +955,7 @@ autoshutdown_execute (gpointer data)
     debug_printf("Automatic shutdown as there are no print queues maintained by us or no jobs on them for %d sec.\n",
 		 autoshutdown_timeout);
     g_main_loop_quit(gmainloop);
+    g_main_context_wakeup(NULL);
   }
 
   /* Stop this timeout handler, we needed it only once */
@@ -1681,6 +1734,9 @@ create_subscription ()
   ipp_t *resp;
   ipp_attribute_t *attr;
   int id = 0;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   req = ippNewRequest (IPP_CREATE_PRINTER_SUBSCRIPTION);
   ippAddString (req, IPP_TAG_OPERATION, IPP_TAG_URI,
@@ -1692,7 +1748,7 @@ create_subscription ()
   ippAddInteger (req, IPP_TAG_SUBSCRIPTION, IPP_TAG_INTEGER,
 		 "notify-lease-duration", NOTIFY_LEASE_DURATION);
 
-  resp = cupsDoRequest (CUPS_HTTP_DEFAULT, req, "/");
+  resp = cupsDoRequest (conn, req, "/");
   if (!resp || cupsLastError() != IPP_OK) {
     debug_printf ("Error subscribing to CUPS notifications: %s\n",
 		  cupsLastErrorString ());
@@ -1717,6 +1773,9 @@ renew_subscription (int id)
 {
   ipp_t *req;
   ipp_t *resp;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   req = ippNewRequest (IPP_RENEW_SUBSCRIPTION);
   ippAddInteger (req, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
@@ -1728,7 +1787,7 @@ renew_subscription (int id)
   ippAddInteger (req, IPP_TAG_SUBSCRIPTION, IPP_TAG_INTEGER,
 		 "notify-lease-duration", NOTIFY_LEASE_DURATION);
 
-  resp = cupsDoRequest (CUPS_HTTP_DEFAULT, req, "/");
+  resp = cupsDoRequest (conn, req, "/");
   if (!resp || cupsLastError() != IPP_OK) {
     debug_printf ("Error renewing CUPS subscription %d: %s\n",
 		  id, cupsLastErrorString ());
@@ -1757,6 +1816,9 @@ cancel_subscription (int id)
 {
   ipp_t *req;
   ipp_t *resp;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   if (id <= 0)
     return;
@@ -1767,7 +1829,7 @@ cancel_subscription (int id)
   ippAddInteger (req, IPP_TAG_OPERATION, IPP_TAG_INTEGER,
 		 "notify-subscription-id", id);
 
-  resp = cupsDoRequest (CUPS_HTTP_DEFAULT, req, "/");
+  resp = cupsDoRequest (conn, req, "/");
   if (!resp || cupsLastError() != IPP_OK) {
     debug_printf ("Error subscribing to CUPS notifications: %s\n",
 		  cupsLastErrorString ());
@@ -1775,6 +1837,35 @@ cancel_subscription (int id)
   }
 
   ippDelete (resp);
+}
+
+int
+is_created_by_cups_browsed (const char *printer) {
+  remote_printer_t *p;
+
+  if (printer == NULL)
+    return 0;
+  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
+       p; p = (remote_printer_t *)cupsArrayNext(remote_printers))
+    if (!strcasecmp(printer, p->name))
+      return 1;
+
+  return 0;
+}
+
+remote_printer_t *
+printer_record (const char *printer) {
+  remote_printer_t *p;
+
+  if (printer == NULL)
+    return NULL;
+  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
+       p; p = (remote_printer_t *)cupsArrayNext(remote_printers))
+    if (!strcasecmp(printer, p->name) &&
+	!p->duplicate_of)
+      return p;
+
+  return NULL;
 }
 
 char*
@@ -1791,6 +1882,9 @@ is_disabled(const char *printer, const char *reason) {
                   "printer-state",
 		  "printer-state-message"
                 };
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   request = ippNewRequest(CUPS_GET_PRINTERS);
   ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
@@ -1800,7 +1894,7 @@ is_disabled(const char *printer, const char *reason) {
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 	       "requesting-user-name",
 	       NULL, cupsUser());
-  if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
+  if ((response = cupsDoRequest(conn, request, "/")) != NULL) {
     for (attr = ippFirstAttribute(response); attr != NULL;
 	 attr = ippNextAttribute(response)) {
       while (attr != NULL && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
@@ -1871,13 +1965,16 @@ int
 enable_printer (const char *printer) {
   ipp_t *request;
   char uri[HTTP_MAX_URI];
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
 		   "localhost", 0, "/printers/%s", printer);
   request = ippNewRequest (IPP_RESUME_PRINTER);
   ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_URI,
 		"printer-uri", NULL, uri);
-  ippDelete(cupsDoRequest (CUPS_HTTP_DEFAULT, request, "/admin/"));
+  ippDelete(cupsDoRequest (conn, request, "/admin/"));
   if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
     debug_printf("ERROR: Failed enabling printer '%s': %s\n",
 		 printer, cupsLastErrorString());
@@ -1891,6 +1988,9 @@ int
 disable_printer (const char *printer, const char *reason) {
   ipp_t *request;
   char uri[HTTP_MAX_URI];
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   if (reason == NULL)
     reason = "Disabled by cups-browsed";
@@ -1901,7 +2001,7 @@ disable_printer (const char *printer, const char *reason) {
 		"printer-uri", NULL, uri);
   ippAddString (request, IPP_TAG_OPERATION, IPP_TAG_TEXT,
 		"printer-state-message", NULL, reason);
-  ippDelete(cupsDoRequest (CUPS_HTTP_DEFAULT, request, "/admin/"));
+  ippDelete(cupsDoRequest (conn, request, "/admin/"));
   if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
     debug_printf("ERROR: Failed disabling printer '%s': %s\n",
 		 printer, cupsLastErrorString());
@@ -1915,6 +2015,9 @@ int
 set_cups_default_printer(const char *printer) {
   ipp_t	*request;
   char uri[HTTP_MAX_URI];
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   if (printer == NULL)
     return 0;
@@ -1925,7 +2028,7 @@ set_cups_default_printer(const char *printer) {
                "printer-uri", NULL, uri);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
                NULL, cupsUser());
-  ippDelete(cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/admin/"));
+  ippDelete(cupsDoRequest(conn, request, "/admin/"));
   if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
     debug_printf("ERROR: Failed setting CUPS default printer to '%s': %s\n",
 		 printer, cupsLastErrorString());
@@ -1942,13 +2045,16 @@ get_cups_default_printer() {
   ipp_attribute_t *attr;
   const char *default_printer_name = NULL;
   char *name_string;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
   
   request = ippNewRequest(CUPS_GET_DEFAULT);
   /* Default user */
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
 	       "requesting-user-name", NULL, cupsUser());
   /* Do it */
-  response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/");
+  response = cupsDoRequest(conn, request, "/");
   if (cupsLastError() > IPP_OK_CONFLICT || !response) {
     debug_printf("Could not determine system default printer!\n");
   } else {
@@ -2065,16 +2171,19 @@ invalidate_printer_options(const char *printer) {
 
 int
 record_printer_options(const char *printer) {
+  remote_printer_t *p;
   char filename[1024];
   FILE *fp = NULL;
   char uri[HTTP_MAX_URI], *resource;
   ipp_t *request, *response;
   ipp_attribute_t *attr;
   const char *key;
-  char valuebuffer[65536];
-  const char *ppdname;
+  char buf[65536], *c;
+  const char *ppdname = NULL;
   ppd_file_t *ppd;
   ppd_option_t *ppd_opt;
+  cups_option_t *option;
+  int i;
   /* List of IPP attributes to get recorded */
   static const char *attrs_to_record[] =
                 {
@@ -2088,7 +2197,7 @@ record_printer_options(const char *printer) {
 		  "printer-error-policy",
 		  "printer-info",
 		  "printer-is-accepting-jobs",
-		  "printer-is-shared",
+		  /*"printer-is-shared",*/
 		  "printer-geo-location",
 		  "printer-location",
 		  "printer-op-policy",
@@ -2102,15 +2211,50 @@ record_printer_options(const char *printer) {
 		  NULL
                 };
   const char **ptr;
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   if (printer == NULL || strlen(printer) == 0)
     return 0;
 
+  /* Get our data about this printer */
+  p = printer_record(printer);
+
+  if (p == NULL) {
+    debug_printf("Not recording printer options for %s: Unkown printer!\n",
+		 printer);
+    return 0;
+  }
+  
   snprintf(filename, sizeof(filename), save_options_file,
 	   printer);
 
   debug_printf("Recording printer options for %s to %s\n",
 	       printer, filename);
+
+  /* If there is a PPD file for this printer, we save the local
+     settings for the PPD options. */
+  if (cups_notifier != NULL || (p && p->netprinter)) {
+    if ((ppdname = cupsGetPPD(printer)) == NULL) {
+      debug_printf("Unable to get PPD file for %s: %s\n",
+		   printer, cupsLastErrorString());
+    } else if ((ppd = ppdOpenFile(ppdname)) == NULL) {
+      unlink(ppdname);
+      debug_printf("Unable to open PPD file for %s.\n",
+		   printer);
+    } else {
+      ppdMarkDefaults(ppd);
+      for (ppd_opt = ppdFirstOption(ppd); ppd_opt; ppd_opt = ppdNextOption(ppd))
+	if (strcasecmp(ppd_opt->keyword, "PageRegion") != 0) {
+	  strncpy(buf, ppd_opt->keyword, sizeof(buf));
+	  p->num_options = cupsAddOption(buf, ppd_opt->defchoice,
+					 p->num_options, &(p->options));
+	}
+      ppdClose(ppd);
+      unlink(ppdname);
+    }
+  }
 
   httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
 		   "localhost", 0, "/printers/%s", printer);
@@ -2118,90 +2262,72 @@ record_printer_options(const char *printer) {
   request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL,
 	       uri);
-  response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, resource);
-
-  fp = fopen(filename, "w+");
-  if (fp == NULL) {
-    debug_printf("ERROR: Failed creating file %s\n",
-		 filename);
-    ippDelete(response);
-    return -1;
-  }
+  response = cupsDoRequest(conn, request, resource);
 
   /* Write all supported printer attributes */
-  attr = ippFirstAttribute(response);
-  while (attr) {
-    key = ippGetName(attr);
-    for (ptr = attrs_to_record; *ptr; ptr++)
-      if (strcasecmp(key, *ptr) == 0 ||
-	  (*ptr[0] == '*' &&
-	   strcasecmp(key + strlen(key) - strlen(*ptr) + 1, *ptr + 1) == 0))
-	break;
-    if (*ptr != NULL) {
-      if (strcasecmp(key, CUPS_BROWSED_DEST_PRINTER "-default") != 0) {
-	fprintf (fp, "%s=", key);
-	ippAttributeString(attr, valuebuffer, sizeof(valuebuffer));
-	fprintf (fp, "%s\n", valuebuffer);
+  if (response) {
+    attr = ippFirstAttribute(response);
+    while (attr) {
+      key = ippGetName(attr);
+      for (ptr = attrs_to_record; *ptr; ptr++)
+	if (strcasecmp(key, *ptr) == 0 ||
+	    (*ptr[0] == '*' &&
+	     strcasecmp(key + strlen(key) - strlen(*ptr) + 1, *ptr + 1) == 0))
+	  break;
+      if (*ptr != NULL) {
+	if (strcasecmp(key, CUPS_BROWSED_DEST_PRINTER "-default") != 0 &&
+	    (ppdname == NULL ||
+	     strncasecmp(key + strlen(key) - 8, "-default", 8))) {
+	  ippAttributeString(attr, buf, sizeof(buf));
+	  buf[sizeof(buf) - 1] = '\0';
+	  c = buf;
+	  while (*c) {
+	    if (*c == '\\')
+	      memmove(c, c + 1, strlen(c));
+	    if (*c) c ++;
+	  }
+	  p->num_options = cupsAddOption(key, buf, p->num_options,
+					 &(p->options));
+	}
       }
+      attr = ippNextAttribute(response);
     }
-    attr = ippNextAttribute(response);
+    ippDelete(response);
   }
 
-  /* If there is a PPD file for this printer, either local for IPP network
-     printers or on the remote CUPS server for remote CUPS printers, we
-     save the local settings for the PPD options. */
-  if ((ppdname = cupsGetPPD(printer)) == NULL) {
-    debug_printf("Unable to get PPD file for %s: %s\n",
-		 printer, cupsLastErrorString());
-  } else if ((ppd = ppdOpenFile(ppdname)) == NULL) {
-    unlink(ppdname);
-    debug_printf("Unable to open PPD file for %s.\n",
-		 printer);
-  } else {
-    ppdMarkDefaults(ppd);
+  if (p->num_options > 0) {
+    fp = fopen(filename, "w+");
+    if (fp == NULL) {
+      debug_printf("ERROR: Failed creating file %s\n",
+		   filename);
+      return -1;
+    }
 
-    for (ppd_opt = ppdFirstOption(ppd); ppd_opt; ppd_opt = ppdNextOption(ppd))
-      if (strcasecmp(ppd_opt->keyword, "PageRegion") != 0)
-	fprintf (fp, "%s=%s\n", ppd_opt->keyword, ppd_opt->defchoice);
+    for (i = p->num_options, option = p->options; i > 0; i --, option ++)
+      fprintf (fp, "%s=%s\n", option->name, option->value);
 
-    ppdClose(ppd);
-    unlink(ppdname);
-  }
+    fclose(fp);
 
-  fclose(fp);
-  ippDelete(response);
-
-  return 0;
+    return 0;
+  } else
+    return -1;
 }
 
 int
-retrieve_printer_options(const char *printer) {
+load_printer_options(const char *printer, int num_options,
+		     cups_option_t **options) {
   char filename[1024];
   FILE *fp = NULL;
-  char uri[HTTP_MAX_URI];
-  ipp_t *request;
-  int num_options;
-  cups_option_t *options;
   char opt[65536], *val;
 
-  if (printer == NULL || strlen(printer) == 0)
+  if (printer == NULL || strlen(printer) == 0 || options == NULL)
     return 0;
-
-  num_options = 0;
-  options = NULL;
-
-  /* Do we have default option settings in cups-browsed.conf? */
-  if (DefaultOptions) {
-    debug_printf("Applying default option settings to printer %s: %s\n",
-		 printer, DefaultOptions);
-    num_options = cupsParseOptions(DefaultOptions, num_options, &options);
-  }
 
   /* Prepare reading file with saved option settings */
   snprintf(filename, sizeof(filename), save_options_file,
 	   printer);
 
-  debug_printf("Retrieving printer options for %s from %s\n",
+  debug_printf("Loading saved printer options for %s from %s\n",
 	       printer, filename);
 
   /* Open the file with the saved option settings for this print queue */
@@ -2212,72 +2338,24 @@ retrieve_printer_options(const char *printer) {
   } else {
     /* Now read the lines of the file and add each setting to our request */
     errno = 0;
-    debug_printf("Applying retrieved option settings to printer %s:\n", printer);
+    debug_printf("Loading following option settings for printer %s:\n",
+		 printer);
     while ((val = fgets(opt, sizeof(opt), fp)) != NULL) {
       if (strlen(opt) > 1 && (val = strchr(opt, '=')) != NULL) {
 	*val = '\0';
 	val ++;
 	val[strlen(val)-1] = '\0';
 	debug_printf("   %s=%s\n", opt, val);
-	num_options = cupsAddOption(opt, val, num_options, &options);
+	num_options = cupsAddOption(opt, val, num_options, options);
       }
     }
     debug_printf("\n");
-    if (errno != 0) {
-      debug_printf("Failed reading file %s: %s\n",
+    if (errno != 0)
+      debug_printf("Failed reading saved options file %s: %s\n",
 		   filename, strerror(errno));
-      fclose(fp);
-    }	 
     fclose(fp);
   }
-
-  if (num_options > 0) {
-    /* Do an IPP request to apply the option settings */
-    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
-		     "localhost", ippPort(), "/printers/%s", printer);
-    request = ippNewRequest(CUPS_ADD_MODIFY_PRINTER);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL,
-		 uri);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-		 "requesting-user-name", NULL, cupsUser());
-    cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
-    cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
-    ippDelete(cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/admin/"));
-    cupsFreeOptions(num_options, options);
-    if (cupsLastError() > IPP_OK_CONFLICT)
-      debug_printf("Unable to modify CUPS queue (%s)!\n",
-		   cupsLastErrorString());
-  }
-
-  return 0;
-}
-
-int
-is_created_by_cups_browsed (const char *printer) {
-  remote_printer_t *p;
-
-  if (printer == NULL)
-    return 0;
-  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
-       p; p = (remote_printer_t *)cupsArrayNext(remote_printers))
-    if (!strcasecmp(printer, p->name))
-      return 1;
-
-  return 0;
-}
-
-remote_printer_t *
-printer_record (const char *printer) {
-  remote_printer_t *p;
-
-  if (printer == NULL)
-    return NULL;
-  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
-       p; p = (remote_printer_t *)cupsArrayNext(remote_printers))
-    if (!strcasecmp(printer, p->name))
-      return p;
-
-  return NULL;
+  return (num_options);
 }
 
 int
@@ -2360,7 +2438,7 @@ on_printer_state_changed (CupsNotifier *object,
   int i;
   char *ptr, buf[1024];
   remote_printer_t *p, *q;
-  char server_str[1024];
+  http_t *http = NULL;
   ipp_t *request, *response;
   ipp_attribute_t *attr;
   const char *pname = NULL;
@@ -2369,6 +2447,7 @@ on_printer_state_changed (CupsNotifier *object,
   int num_jobs, min_jobs = 99999999;
   cups_job_t *jobs = NULL;
   const char *dest_host = NULL;
+  int dest_port = 0;
   int dest_index = 0;
   int valid_dest_found = 0;
   char uri[HTTP_MAX_URI];
@@ -2386,6 +2465,9 @@ on_printer_state_changed (CupsNotifier *object,
 		  "job-id",
 		  "job-state"
 		};
+  http_t *conn = NULL;
+
+  conn = http_connect_local ();
 
   debug_printf("[CUPS Notification] Printer state change on printer %s: %s\n",
 	       printer, text);
@@ -2505,8 +2587,9 @@ on_printer_state_changed (CupsNotifier *object,
     /* If we hit a duplicate and not the "master", switch to the "master" */
     if (q && q->duplicate_of)
       q = q->duplicate_of;
-    /* Having duplicates means that we are using the implicitclass backend */
-    if (q && q->num_duplicates > 0) {
+    if (q && q->netprinter == 0) {
+      /* We have remote CUPS queue(s) and so are using the implicitclass 
+	 backend */
       debug_printf("[CUPS Notification] %s is using the \"implicitclass\" CUPS backend, so let us search for a destination for this job.\n", printer);
       /* We keep track of the printer which we used last time and start
 	 checking with the next printer this time, to get a "round robin"
@@ -2522,101 +2605,112 @@ on_printer_state_changed (CupsNotifier *object,
 	p = (remote_printer_t *)cupsArrayIndex(remote_printers, i);
 	if (!strcasecmp(p->name, printer) &&
 	    p->status == STATUS_CONFIRMED) {
-	  debug_printf("Checking state of remote printer %s on host %s.\n", printer, p->host);
-	  snprintf(server_str, sizeof(server_str), "%s:%d",
-		   p->ip ? p->ip : p->host, ippPort());
-	  cupsSetServer(server_str);
-	  /* Check whether the printer is idle, processing, or disabled */
-	  request = ippNewRequest(CUPS_GET_PRINTERS);
-	  ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
-			"requested-attributes",
-			sizeof(pattrs) / sizeof(pattrs[0]),
-			NULL, pattrs);
-	  ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
-		       "requesting-user-name",
-		       NULL, cupsUser());
-	  if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) !=
-	      NULL) {
-	    pname = NULL;
-	    pstate = IPP_PRINTER_IDLE;
-	    paccept = 0;
-	    for (attr = ippFirstAttribute(response); attr != NULL;
-		 attr = ippNextAttribute(response)) {
-	      while (attr != NULL && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
-		attr = ippNextAttribute(response);
-	      if (attr == NULL)
-		break;
+	  debug_printf("Checking state of remote printer %s on host %s, IP %s, port %d.\n", printer, p->host, p->ip, p->port);
+	  http = httpConnectEncryptShortTimeout (p->ip ? p->ip : p->host,
+						 p->port,
+						 HTTP_ENCRYPT_IF_REQUESTED);
+	  debug_printf("HTTP connection to %s:%d established.\n", p->host,
+		       p->port);
+	  if (http) {
+	    /* Check whether the printer is idle, processing, or disabled */
+	    httpSetTimeout(http, 2, http_timeout_cb, NULL);
+	    request = ippNewRequest(CUPS_GET_PRINTERS);
+	    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD,
+			  "requested-attributes",
+			  sizeof(pattrs) / sizeof(pattrs[0]),
+			  NULL, pattrs);
+	    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
+			 "requesting-user-name",
+			 NULL, cupsUser());
+	    if ((response = cupsDoRequest(http, request, "/")) !=
+		NULL) {
+	      debug_printf("IPP request to %s:%d successful.\n", p->host,
+			   p->port);
 	      pname = NULL;
 	      pstate = IPP_PRINTER_IDLE;
 	      paccept = 0;
-	      while (attr != NULL && ippGetGroupTag(attr) ==
-		     IPP_TAG_PRINTER) {
-		if (!strcmp(ippGetName(attr), "printer-name") &&
-		    ippGetValueTag(attr) == IPP_TAG_NAME)
-		  pname = ippGetString(attr, 0, NULL);
-		else if (!strcmp(ippGetName(attr), "printer-state") &&
-			 ippGetValueTag(attr) == IPP_TAG_ENUM)
-		  pstate = (ipp_pstate_t)ippGetInteger(attr, 0);
-		else if (!strcmp(ippGetName(attr),
-				 "printer-is-accepting-jobs") &&
-			 ippGetValueTag(attr) == IPP_TAG_BOOLEAN)
-		  paccept = ippGetBoolean(attr, 0);
-		attr = ippNextAttribute(response);
-	      }
-	      if (pname == NULL) {
+	      for (attr = ippFirstAttribute(response); attr != NULL;
+		   attr = ippNextAttribute(response)) {
+		while (attr != NULL && ippGetGroupTag(attr) != IPP_TAG_PRINTER)
+		  attr = ippNextAttribute(response);
 		if (attr == NULL)
 		  break;
-		else
-		  continue;
-	      }
-	      if (!strcasecmp(pname, printer)) {
-		if (paccept) {
-		  debug_printf("Printer %s on host %s is accepting jobs.\n", printer, p->host);
-		  switch (pstate) {
-		  case IPP_PRINTER_IDLE:
-		    valid_dest_found = 1;
-		    dest_host = p->ip ? p->ip : p->host;
-		    dest_index = i;
-		    debug_printf("Printer %s on host %s is idle, take this as destination and stop searching.\n", printer, p->host);
-		    break;
-		  case IPP_PRINTER_PROCESSING:
-		    valid_dest_found = 1;
-		    if (LoadBalancingType == QUEUE_ON_SERVERS) {
-		      num_jobs = 0;
-		      jobs = NULL;
-		      num_jobs =
-			cupsGetJobs2(CUPS_HTTP_DEFAULT, &jobs, printer, 0,
-				     CUPS_WHICHJOBS_ACTIVE);
-		      if (num_jobs >= 0 && num_jobs < min_jobs) {
-			min_jobs = num_jobs;
-			dest_host = p->ip ? p->ip : p->host;
-			dest_index = i;
-		      }
-		      debug_printf("Printer %s on host %s is printing and it has %d jobs.\n", printer, p->host, num_jobs);
-		    } else
-		      debug_printf("Printer %s on host %s is printing.\n", printer, p->host);
-		    break;
-		  case IPP_PRINTER_STOPPED:
-		    debug_printf("Printer %s on host %s is disabled, skip it.\n", printer, p->host);
-		    break;
-		  }
-		} else {
-		  debug_printf("Printer %s on host %s is not accepting jobs, skip it.\n", printer, p->host);
+		pname = NULL;
+		pstate = IPP_PRINTER_IDLE;
+		paccept = 0;
+		while (attr != NULL && ippGetGroupTag(attr) ==
+		       IPP_TAG_PRINTER) {
+		  if (!strcmp(ippGetName(attr), "printer-name") &&
+		      ippGetValueTag(attr) == IPP_TAG_NAME)
+		    pname = ippGetString(attr, 0, NULL);
+		  else if (!strcmp(ippGetName(attr), "printer-state") &&
+			   ippGetValueTag(attr) == IPP_TAG_ENUM)
+		    pstate = (ipp_pstate_t)ippGetInteger(attr, 0);
+		  else if (!strcmp(ippGetName(attr),
+				   "printer-is-accepting-jobs") &&
+			   ippGetValueTag(attr) == IPP_TAG_BOOLEAN)
+		    paccept = ippGetBoolean(attr, 0);
+		  attr = ippNextAttribute(response);
 		}
+		if (pname == NULL) {
+		  if (attr == NULL)
+		    break;
+		  else
+		    continue;
+		}
+		if (!strcasecmp(pname, printer)) {
+		  if (paccept) {
+		    debug_printf("Printer %s on host %s, port %d is accepting jobs.\n", printer, p->host, p->port);
+		    switch (pstate) {
+		    case IPP_PRINTER_IDLE:
+		      valid_dest_found = 1;
+		      dest_host = p->ip ? p->ip : p->host;
+		      dest_port = p->port;
+		      dest_index = i;
+		      debug_printf("Printer %s on host %s, port %d is idle, take this as destination and stop searching.\n", printer, p->host, p->port);
+		      break;
+		    case IPP_PRINTER_PROCESSING:
+		      valid_dest_found = 1;
+		      if (LoadBalancingType == QUEUE_ON_SERVERS) {
+			num_jobs = 0;
+			jobs = NULL;
+			num_jobs =
+			  cupsGetJobs2(http, &jobs, printer, 0,
+				       CUPS_WHICHJOBS_ACTIVE);
+			if (num_jobs >= 0 && num_jobs < min_jobs) {
+			  min_jobs = num_jobs;
+			  dest_host = p->ip ? p->ip : p->host;
+			  dest_port = p->port;
+			  dest_index = i;
+			}
+			debug_printf("Printer %s on host %s, port %d is printing and it has %d jobs.\n", printer, p->host, p->port, num_jobs);
+		      } else
+			debug_printf("Printer %s on host %s, port %d is printing.\n", printer, p->host, p->port);
+		      break;
+		    case IPP_PRINTER_STOPPED:
+		      debug_printf("Printer %s on host %s, port %d is disabled, skip it.\n", printer, p->host, p->port);
+		      break;
+		    }
+		  } else {
+		    debug_printf("Printer %s on host %s, port %d is not accepting jobs, skip it.\n", printer, p->host, p->port);
+		  }
+		  break;
+		}
+	      }
+	      if (pstate == IPP_PRINTER_IDLE && paccept) {
+		q->last_printer = i;
 		break;
 	      }
-	    }
-	    if (pstate == IPP_PRINTER_IDLE && paccept) {
-	      q->last_printer = i;
-	      break;
-	    }
+	    } else
+	      debug_printf("IPP request to %s:%d failed.\n", p->host,
+			   p->port);
+	    httpClose(http);
+	    http = NULL;
 	  }
 	}
 	if (i == q->last_printer)
 	  break;
       }
-      /* Set CUPS server back to local */
-      cupsSetServer(NULL);
       /* Find the ID of the current job */
       request = ippNewRequest(IPP_GET_JOBS);
       httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
@@ -2627,7 +2721,7 @@ on_printer_state_changed (CupsNotifier *object,
 		    "requested-attributes",
 		    sizeof(jattrs) / sizeof(jattrs[0]), NULL, jattrs);
       job_id = 0;
-      if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
+      if ((response = cupsDoRequest(conn, request, "/")) != NULL) {
 	/* Get the current active job on this queue... */
 	ipp_jstate_t jobstate = IPP_JOB_PENDING;
 	for (attr = ippFirstAttribute(response); attr != NULL;
@@ -2663,9 +2757,10 @@ on_printer_state_changed (CupsNotifier *object,
 		   "requesting-user-name", NULL, cupsUser());
       if (dest_host) {
 	q->last_printer = dest_index;
-	snprintf(buf, sizeof(buf), "\"%d %s\"", job_id, dest_host);
-	debug_printf("Destination for job %d to %s: %s\n",
-		     job_id, printer, dest_host);
+	snprintf(buf, sizeof(buf), "\"%d %s:%d\"", job_id, dest_host,
+		 dest_port);
+	debug_printf("Destination for job %d to %s: %s:%d\n",
+		     job_id, printer, dest_host, dest_port);
       } else if (valid_dest_found == 1) {
 	snprintf(buf, sizeof(buf), "\"%d ALL_DESTS_BUSY\"", job_id);
 	debug_printf("All destinations busy for job %d to %s\n",
@@ -2681,10 +2776,11 @@ on_printer_state_changed (CupsNotifier *object,
 				  num_options, &options);
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
-      ippDelete(cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/admin/"));
+      ippDelete(cupsDoRequest(conn, request, "/admin/"));
       cupsFreeOptions(num_options, options);
       if (cupsLastError() > IPP_OK_CONFLICT) {
-	debug_printf("ERROR: Unable to set printer-is-shared bit to false (%s)!\n",
+	debug_printf("ERROR: Unable to set \"" CUPS_BROWSED_DEST_PRINTER
+		     "-default\" option to communicate the destination server for this job (%s)!\n",
 		     cupsLastErrorString());
 	return;
       }
@@ -2734,7 +2830,8 @@ on_printer_deleted (CupsNotifier *object,
     if (p && p->status != STATUS_DISAPPEARED) {
       p->status = STATUS_TO_BE_CREATED;
       p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
-      recheck_timer();
+      if (in_shutdown == 0)
+	recheck_timer();
     }
   }
 }
@@ -2749,6 +2846,8 @@ on_printer_modified (CupsNotifier *object,
 		     gboolean printer_is_accepting_jobs,
 		     gpointer user_data)
 {
+  remote_printer_t *p;
+
   debug_printf("[CUPS Notification] Printer modified: %s\n",
 	       text);
 
@@ -2756,9 +2855,14 @@ on_printer_modified (CupsNotifier *object,
     /* The user has changed settings of a printer which we have generated,
        backup the changes for the case of a crash or unclean shutdown of
        cups-browsed. */
-    debug_printf("Settings of printer %s got modified, doing backup.\n",
-		 printer);
-    record_printer_options(printer);
+    p = printer_record(printer);
+    if (!p->no_autosave) {
+      debug_printf("Settings of printer %s got modified, doing backup.\n",
+		   printer);
+      p->no_autosave = 1; /* Avoid infinite recursion */
+      record_printer_options(printer);
+      p->no_autosave = 0;
+    }
   }
 }
 
@@ -2768,6 +2872,7 @@ create_local_queue (const char *name,
 		    const char *uri,
 		    const char *host,
 		    const char *ip,
+		    int port,
 		    const char *info,
 		    const char *type,
 		    const char *domain,
@@ -2785,8 +2890,8 @@ create_local_queue (const char *name,
   char		buffer[8192];		/* Buffer for creating script */
   int           bytes;
   const char	*cups_serverbin;	/* CUPS_SERVERBIN environment variable */
-  int uri_status, port;
-  http_t *http;
+  int uri_status, host_port;
+  http_t *http = NULL;
   char scheme[10], userpass[1024], host_name[1024], resource[1024];
   ipp_t *request, *response = NULL;
 #ifdef HAVE_CUPS_1_6
@@ -2823,6 +2928,8 @@ create_local_queue (const char *name,
 
   p->ip = (ip != NULL ? strdup (ip) : NULL);
 
+  p->port = (port != 0 ? port : ippPort());
+
   p->service_name = strdup (info);
   if (!p->service_name)
     goto fail;
@@ -2841,9 +2948,18 @@ create_local_queue (const char *name,
   p->status = STATUS_TO_BE_CREATED;
   p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
 
+  /* Flag which can be set to inhibit automatic saving of option settings
+     by the on_printer_modified() notification handler function */
+  p->no_autosave = 0;
+
+  /* Flag to mark whether this printer was discovered through a legacy
+     CUPS broadcast (1) or through DNS-SD/Bonjour (0) */
+  p->is_legacy = 0;
+  
   if (is_cups_queue) {
     /* Our local queue must be raw, so that the PPD file and driver
        on the remote CUPS server get used */
+    p->netprinter = 0;
     p->ppd = NULL;
     p->model = NULL;
     p->ifscript = NULL;
@@ -2852,27 +2968,27 @@ create_local_queue (const char *name,
     for (q = (remote_printer_t *)cupsArrayFirst(remote_printers);
 	 q;
 	 q = (remote_printer_t *)cupsArrayNext(remote_printers))
-      if (!strcasecmp(q->name, p->name) &&
-	  q != p)
+      if (!strcasecmp(q->name, p->name) && /* Queue with same name on server */
+	  !q->duplicate_of && /* Find the master of the queues with this name,
+				 to avoid "daisy chaining" */
+	  q != p) /* Skip our current queue */
 	break;
     p->duplicate_of = (q && q->status != STATUS_DISAPPEARED &&
 		       q->status != STATUS_UNCONFIRMED) ? q : NULL;
     if (p->duplicate_of) {
-      debug_printf("Printer %s already available through host %s.\n",
-		   p->name, q->host);
-      if (!q->duplicate_of) {
-	/* Update q to get implicitclass:... URI */
-	q->num_duplicates ++;
-	if (q->status != STATUS_DISAPPEARED) {
-	  q->status = STATUS_TO_BE_CREATED;
-	  q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
-	}
+      debug_printf("Printer %s already available through host %s, port %d.\n",
+		   p->name, q->host, q->port);
+      /* Update q */
+      q->num_duplicates ++;
+      if (q->status != STATUS_DISAPPEARED) {
+	q->status = STATUS_TO_BE_CREATED;
+	q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
       }
     } else if (q) {
       q->duplicate_of = p;
-      debug_printf("Unconfirmed/disappeared printer %s already available through host %s, marking that printer duplicate of the newly found one.\n",
-		   p->name, q->host);
-      /* Update p to get implicitclass:... URI */
+      debug_printf("Unconfirmed/disappeared printer %s already available through host %s, port %d, marking that printer duplicate of the newly found one.\n",
+		   p->name, q->host, q->port);
+      /* Update p */
       p->num_duplicates ++;
       if (p->status != STATUS_DISAPPEARED) {
 	p->status = STATUS_TO_BE_CREATED;
@@ -2926,6 +3042,7 @@ create_local_queue (const char *name,
     p->duplicate_of = NULL;
     p->num_duplicates = 0;
     p->model = NULL;
+    p->netprinter = 1;
 
     /* Request printer properties via IPP to generate a PPD file for the
        printer (mainly IPP Everywhere printers)
@@ -2935,14 +3052,14 @@ create_local_queue (const char *name,
 				 scheme, sizeof(scheme),
 				 userpass, sizeof(userpass),
 				 host_name, sizeof(host_name),
-				 &(port),
+				 &(host_port),
 				 resource, sizeof(resource));
     if (uri_status != HTTP_URI_OK)
       goto fail;
-    if ((http = httpConnect(host_name, port)) ==
+    if ((http = httpConnect(host_name, host_port)) ==
 	NULL) {
       debug_printf("Cannot connect to remote printer %s (%s:%d), ignoring this printer.\n",
-		   p->uri, host_name, port);
+		   p->uri, host_name, host_port);
       goto fail;
     }
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
@@ -3152,11 +3269,15 @@ create_local_queue (const char *name,
   }
 
   ippDelete(response);
+  if (http)
+    httpClose(http);
   return p;
 
  fail:
   debug_printf("ERROR: Unable to create print queue, ignoring printer.\n");
   ippDelete(response);
+  if (http)
+    httpClose(http);
   free (p->type);
   free (p->service_name);
   free (p->host);
@@ -3245,16 +3366,23 @@ remove_bad_chars(const char *str_orig, /* I - Original string */
 
 gboolean handle_cups_queues(gpointer unused) {
   remote_printer_t *p, *q;
-  http_t *http;
-  char uri[HTTP_MAX_URI], device_uri[HTTP_MAX_URI];
+  http_t *http, *remote_http;
+  char uri[HTTP_MAX_URI], device_uri[HTTP_MAX_URI], buf[1024], line[1024];
   int num_options;
   cups_option_t *options;
   int num_jobs;
   cups_job_t *jobs;
   ipp_t *request;
   time_t current_time = time(NULL);
-  int i;
-  char *disabled_str;
+  int i, new_cupsfilter_line_inserted, cont_line_read, want_raw;
+  char *disabled_str, *ptr, *prefix;
+  const char *loadedppd = NULL;
+  int pass_through_ppd;
+  ppd_file_t *ppd;
+  ppd_choice_t *choice;
+  cups_file_t *in, *out;
+  char keyword[1024], *keyptr;
+  const char *customval;
 
   debug_printf("Processing printer list ...\n");
   for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
@@ -3295,6 +3423,10 @@ gboolean handle_cups_queues(gpointer unused) {
 	  break;
 	}
 
+	/* Do not auto-save option settings due to the print queue removal
+	   process */
+	p->no_autosave = 1;
+
 	/* Record the option settings to retrieve them when the remote
 	   queue re-appears later or when cups-browsed gets started again */
 	record_printer_options(p->name);
@@ -3319,6 +3451,7 @@ gboolean handle_cups_queues(gpointer unused) {
 	  /* Schedule the removal of the queue for later */
 	  if (in_shutdown == 0) {
 	    p->timeout = current_time + TIMEOUT_RETRY;
+	    p->no_autosave = 0;
 	    break;
 	  }
 	}
@@ -3337,6 +3470,7 @@ gboolean handle_cups_queues(gpointer unused) {
 	  /* Schedule the removal of the queue for later */
 	  if (in_shutdown == 0) {
 	    p->timeout = current_time + TIMEOUT_RETRY;
+	    p->no_autosave = 0;
 	    break;
 	  }
 	}
@@ -3357,6 +3491,7 @@ gboolean handle_cups_queues(gpointer unused) {
 	  debug_printf("Unable to remove CUPS queue!\n");
 	  if (in_shutdown == 0) {
 	    p->timeout = current_time + TIMEOUT_RETRY;
+	    p->no_autosave = 0;
 	    break;
 	  }
 	}
@@ -3364,10 +3499,9 @@ gboolean handle_cups_queues(gpointer unused) {
 	/* "master printer" of this duplicate */
 	q = p->duplicate_of;
 	if (q->status != STATUS_DISAPPEARED) {
-	  debug_printf("Removed a duplicate of printer %s on %s, scheduling its master printer %s on host %s for update, to assure it will have the correct device URI.\n",
-		       p->name, p->host, q->name, q->host);
-	  /* Schedule for update, so that an implicitclass:... URI gets
-	     removed if not needed any more */
+	  debug_printf("Removed duplicate printer %s on %s:%d, scheduling its master printer %s on host %s, port %d for update.\n",
+		       p->name, p->host, p->port, q->name, q->host, q->port);
+	  /* Schedule for update */
 	  q->status = STATUS_TO_BE_CREATED;
 	  q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
 	}
@@ -3407,14 +3541,18 @@ gboolean handle_cups_queues(gpointer unused) {
     /* Bonjour has reported a new remote printer, create a CUPS queue for it,
        or upgrade an existing queue, or update a queue to use a backup host
        when it has disappeared on the currently used host */
-    case STATUS_TO_BE_CREATED:
       /* (...or, we've just received a CUPS Browsing packet for this queue) */
-    case STATUS_BROWSE_PACKET_RECEIVED:
+    case STATUS_TO_BE_CREATED:
 
       /* Do not create a queue for duplicates */
       if (p->duplicate_of) {
 	p->status = STATUS_CONFIRMED;
-	p->timeout = (time_t) -1;
+	if (p->is_legacy) {
+	  p->timeout = time(NULL) + BrowseTimeout;
+	  debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
+		       p->name, BrowseTimeout);
+	} else
+	  p->timeout = (time_t) -1;
 	break;
       }
 
@@ -3427,33 +3565,236 @@ gboolean handle_cups_queues(gpointer unused) {
       debug_printf("Queue has %d duplicates\n",
 		   p->num_duplicates);
 
-      /* Determine whether we we have duplicates, and so an implicit class
-         for load balancing. In this case we will assign an implicitclass:...
-	 device URI, which makes cups-browsed find the best destination for
-	 each job. */
-      if (cups_notifier != NULL && p->num_duplicates > 0) {
-	/* We have duplicates, so we use the device URI
+      /* Make sure to have a connection to the local CUPS daemon */
+      if ((http = http_connect_local ()) == NULL) {
+	debug_printf("Unable to connect to CUPS!\n");
+	p->timeout = current_time + TIMEOUT_RETRY;
+	break;
+      }
+      httpSetTimeout(http, 3, http_timeout_cb, NULL);
+
+      /* Do not auto-save option settings due to the print queue creation
+	 process */
+      p->no_autosave = 1;
+
+      /* Loading saved option settings from last session */
+      p->num_options = load_printer_options(p->name, p->num_options,
+					    &p->options);
+
+      /* Determine whether we have an IPP network printer. If not we
+	 have remote CUPS queue(s) and so we use an implicit class for
+	 load balancing. In this case we will assign an
+	 implicitclass:...  device URI, which makes cups-browsed find
+	 the best destination for each job. */
+      loadedppd = NULL;
+      pass_through_ppd = 0;
+      if (cups_notifier != NULL && p->netprinter == 0) {
+	/* We are not an IPP network printer, so we use the device URI
 	   implicitclass:<queue name>
 	   We never use the implicitclass backend if we do not have D-Bus
 	   notification from CUPS as we cannot assign a destination printer
 	   to an incoming job then. */
 	snprintf(device_uri, sizeof(device_uri), "implicitclass:%s",
 		 p->name);
-	debug_printf("Print queue %s has duplicates, using implicit class device URI %s\n",
+	debug_printf("Print queue %s is for remote CUPS queue(s) and we get notifications from CUPS, using implicit class device URI %s\n",
 		     p->name, device_uri);
+	if (!p->ppd && !p->model && !p->ifscript) {
+	  /* Having another backend than the CUPS "ipp" backend the
+	     options from the PPD of the queue on the server are not
+	     automatically used on the client any more, so we have to
+	     explicitly load the PPD from one of the servers, apply it
+	     to our local queue, and replace its "*cupsFilter(2): ..."
+	     lines by one line making the print data get passed through
+	     to the server without filtering on the client (where not
+	     necessarily the right filters/drivers are installed) so
+	     that it gets filtered on the server. In addition, we prefix
+	     the PPD's NickName, so that automatic PPD updating by the
+	     distribution's package installation/update infrastructure
+	     is suppressed. */
+	  /* Load the PPD file from one of the servers */
+	  if ((remote_http =
+	       httpConnectEncryptShortTimeout(p->ip ? p->ip : p->host,
+					      p->port ? p->port :
+					      ippPort(),
+					      cupsEncryption()))
+	      == NULL) {
+	    debug_printf("Could not connect to the server %s:%d for %s!\n",
+			 p->host, p->port, p->name);
+	    p->timeout = current_time + TIMEOUT_RETRY;
+	    p->no_autosave = 0;
+	    break;
+	  }
+	  httpSetTimeout(remote_http, 3, http_timeout_cb, NULL);
+	  if ((loadedppd = cupsGetPPD2(remote_http, p->name)) == NULL &&
+	      CreateRemoteRawPrinterQueues == 0) {
+	    debug_printf("Unable to load PPD file for %s from the server %s:%d!\n",
+			 p->name, p->host, p->port);
+	    p->timeout = current_time + TIMEOUT_RETRY;
+	    p->no_autosave = 0;
+	    httpClose(remote_http);
+	    break;
+	  } else if (loadedppd) {
+	    debug_printf("Loaded PPD file %s for printer %s from server %s:%d!\n",
+			 loadedppd, p->name, p->host, p->port);
+	    /* Modify PPD to not filter the job */
+	    pass_through_ppd = 1;
+	  }
+	  httpClose(remote_http);
+	}
       } else {
 	/* Device URI: ipp(s)://<remote host>:631/printers/<remote queue> */
 	strncpy(device_uri, p->uri, sizeof(device_uri));
-	debug_printf("Print queue %s has no duplicates, using direct device URI %s\n",
+	debug_printf("Print queue %s is for an IPP network printer, or we do not get notifications from CUPS, using direct device URI %s\n",
 		     p->name, device_uri);
+      }
+      /* PPD from system's CUPS installation */
+      if (p->model) {
+	debug_printf("Loading system PPD %s for queue %s.\n",
+		     p->model, p->name);
+	loadedppd = cupsGetServerPPD(http, p->model);
+      }
+      /* PPD readily available */
+      if (p->ppd) {
+	debug_printf("Using PPD %s for queue %s.\n",
+		     p->ppd, p->name);
+	loadedppd = p->ppd;
+      }
+      if (loadedppd) {
+	if ((ppd = ppdOpenFile(loadedppd)) == NULL) {
+	  int linenum; /* Line number of error */
+	  ppd_status_t status = ppdLastError(&linenum);
+	  debug_printf("Unable to open PPD \"%s\": %s on line %d.",
+		       loadedppd, ppdErrorString(status), linenum);
+	  p->timeout = current_time + TIMEOUT_RETRY;
+	  p->no_autosave = 0;
+	  unlink(loadedppd);
+	  break;
+	}
+	ppdMarkDefaults(ppd);
+	cupsMarkOptions(ppd, p->num_options, p->options);
+	if ((out = cupsTempFile2(buf, sizeof(buf))) == NULL) {
+	  debug_printf("Unable to create temporary file!\n");
+	  p->timeout = current_time + TIMEOUT_RETRY;
+	  p->no_autosave = 0;
+	  ppdClose(ppd);
+	  unlink(loadedppd);
+	  break;
+	}
+	if ((in = cupsFileOpen(loadedppd, "r")) == NULL) {
+	  debug_printf("Unable to open the downloaded PPD file!\n");
+	  p->timeout = current_time + TIMEOUT_RETRY;
+	  p->no_autosave = 0;
+	  cupsFileClose(out);
+	  ppdClose(ppd);
+	  unlink(loadedppd);
+	  break;
+	}
+	debug_printf("Editing PPD file %s for printer %s, setting the option defaults of the previous cups-browsed session%s, saving the resulting PPD in %s.\n",
+		     loadedppd, p->name,
+		     (pass_through_ppd == 1 ?
+		      " and inhibiting client-side filtering of the job" : ""),
+		     buf);
+	new_cupsfilter_line_inserted = 0;
+	cont_line_read = 0;
+	while (cupsFileGets(in, line, sizeof(line))) {
+	  if (pass_through_ppd == 1 &&
+	      (!strncmp(line, "*cupsFilter:", 12) ||
+	       !strncmp(line, "*cupsFilter2:", 13))) {
+	    cont_line_read = 0;
+	    /* "*cupfFilter(2): ..." line: Remove it and replace the
+	       first one by a line which passes through the data
+	       unfiltered */
+	    if (new_cupsfilter_line_inserted == 0) {
+	      cupsFilePrintf(out, "*cupsFilter: \"*/* 0 -\"\n");
+	      new_cupsfilter_line_inserted = 1;
+	    }
+	    /* Find the end of the "*cupsFilter(2): ..." entry in the
+	       case it spans more than one line */
+	    do {
+	      if (strlen(line) != 0) {
+		ptr = line + strlen(line) - 1;
+		while(isspace(*ptr) && ptr > line)
+		  ptr --;
+		if (*ptr == '"')
+		  break;
+	      }
+	      cont_line_read = 1;
+	    } while (cupsFileGets(in, line, sizeof(line)));
+	  } else if (pass_through_ppd == 1 &&
+		     !strncmp(line, "*NickName:", 10)) {
+	    cont_line_read = 0;
+	    /* Prefix the "NickName" of the printer so that automatic
+	       PPD updaters skip this PPD */
+	    ptr = strchr(line, '"');
+	    if (ptr) {
+	      ptr ++;
+	      prefix = "Remote printer: ";
+	      line[sizeof(line) - strlen(prefix) - 1] = '\0';
+	      memmove(ptr + strlen(prefix), ptr, strlen(ptr) + 1);
+	      memmove(ptr, prefix, strlen(prefix));
+	      ptr = line + strlen(line) - 1;
+	      while(isspace(*ptr) && ptr > line) {
+		ptr --;
+		*ptr = '\0';
+	      }
+	      if (*ptr != '"') {
+		if (ptr < line + sizeof(line) - 2) {
+		  *(ptr + 1) = '"';
+		  *(ptr + 2) = '\0';
+		} else {
+		  line[sizeof(line) - 2] = '"';
+		  line[sizeof(line) - 1] = '\0';
+		}
+	      }
+	    }
+	    cupsFilePrintf(out, "%s\n", line);
+	  } else if (!strncmp(line, "*Default", 8)) {
+	    cont_line_read = 0;
+	    strncpy(keyword, line + 8, sizeof(keyword));
+	    for (keyptr = keyword; *keyptr; keyptr ++)
+	      if (*keyptr == ':' || isspace(*keyptr & 255))
+		break;
+	    *keyptr++ = '\0';
+	    while (isspace(*keyptr & 255))
+	      keyptr ++;
+	    if (!strcmp(keyword, "PageRegion") ||
+		!strcmp(keyword, "PageSize") ||
+		!strcmp(keyword, "PaperDimension") ||
+		!strcmp(keyword, "ImageableArea")) {
+	      if ((choice = ppdFindMarkedChoice(ppd, "PageSize")) == NULL)
+		choice = ppdFindMarkedChoice(ppd, "PageRegion");
+	    } else
+	      choice = ppdFindMarkedChoice(ppd, keyword);
+	    if (choice && strcmp(choice->choice, keyptr)) {
+	      if (strcmp(choice->choice, "Custom"))
+		cupsFilePrintf(out, "*Default%s: %s\n", keyword,
+			       choice->choice);
+	      else if ((customval = cupsGetOption(keyword, p->num_options,
+						  p->options)) != NULL)
+		cupsFilePrintf(out, "*Default%s: %s\n", keyword, customval);
+	      else
+		cupsFilePrintf(out, "%s\n", line);
+	    } else
+	      cupsFilePrintf(out, "%s\n", line);
+	  } else if (cont_line_read == 0 || strncmp(line, "*End", 4)) {
+	    cont_line_read = 0;
+	    /* Simply write out the line as we read it */
+	    cupsFilePrintf(out, "%s\n", line);
+	  }
+	}
+	if (pass_through_ppd == 1 && new_cupsfilter_line_inserted == 0)
+	  cupsFilePrintf(out, "*cupsFilter: \"*/* 0 -\"\n");
+	cupsFileClose(in);
+	cupsFileClose(out);
+	ppdClose(ppd);
+	unlink(loadedppd);
+	loadedppd = NULL;
+	if (p->ppd)
+	  free(p->ppd);
+	p->ppd = strdup(buf);
       }
 
       /* Create a new CUPS queue or modify the existing queue */
-      if ((http = http_connect_local ()) == NULL) {
-	debug_printf("Unable to connect to CUPS!\n");
-	p->timeout = current_time + TIMEOUT_RETRY;
-	break;
-      }
       request = ippNewRequest(CUPS_ADD_MODIFY_PRINTER);
       /* Printer URI: ipp://localhost:631/printers/<queue name> */
       httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
@@ -3480,44 +3821,49 @@ gboolean handle_cups_queues(gpointer unused) {
       /* Description: <Bonjour service name> */
       num_options = cupsAddOption("printer-info", p->service_name,
 				  num_options, &options);
-      /* Location: <Remote host name> */
-      num_options = cupsAddOption("printer-location", p->host,
+      /* Location: <Remote host name> (Port: <port>) */
+      snprintf(buf, sizeof(buf), "%s (Port: %d)", p->host, p->port);
+      num_options = cupsAddOption("printer-location", buf,
 				  num_options, &options);
       /* Default option settings from printer entry */
       for (i = 0; i < p->num_options; i ++)
 	num_options = cupsAddOption(strdup(p->options[i].name),
 				    strdup(p->options[i].value),
 				    num_options, &options);
+      /* Encode option list into IPP attributes */
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
-      /* PPD from system's CUPS installation */
-      if (p->model) {
-	debug_printf("Non-raw queue %s with system PPD: %s\n", p->name, p->model);
-	p->ppd = cupsGetServerPPD(http, p->model);
-      }
       /* Do it */
       if (p->ppd) {
 	debug_printf("Non-raw queue %s with PPD file: %s\n", p->name, p->ppd);
 	ippDelete(cupsDoFileRequest(http, request, "/admin/", p->ppd));
-	if (p->model) {
-	  unlink(p->ppd);
-	  free(p->ppd);
-	  p->ppd = NULL;
-	}
+	want_raw = 0;
+	unlink(p->ppd);
+	free(p->ppd);
+	p->ppd = NULL;
       } else if (p->ifscript) {
 	debug_printf("Non-raw queue %s with interface script: %s\n", p->name, p->ifscript);
 	ippDelete(cupsDoFileRequest(http, request, "/admin/", p->ifscript));
+	want_raw = 0;
 	unlink(p->ifscript);
 	free(p->ifscript);
 	p->ifscript = NULL;
       } else {
-	debug_printf("Raw queue %s\n", p->name);
+	if (p->netprinter == 0) {
+	  debug_printf("Raw queue %s\n", p->name);
+	  want_raw = 1;
+	} else {
+	  debug_printf("Queue %s keeping its current PPD file/interface script\n", p->name);
+	  want_raw = 0;
+	}	  
 	ippDelete(cupsDoRequest(http, request, "/admin/"));
       }
       cupsFreeOptions(num_options, options);
       if (cupsLastError() > IPP_OK_CONFLICT) {
-	debug_printf("Unable to create/modify CUPS queue!\n");
+	debug_printf("Unable to create/modify CUPS queue (%s)!\n",
+		     cupsLastErrorString());
 	p->timeout = current_time + TIMEOUT_RETRY;
+	p->no_autosave = 0;
 	break;
       }
 
@@ -3548,8 +3894,31 @@ gboolean handle_cups_queues(gpointer unused) {
 	debug_printf("Unable to set printer-is-shared bit to false (%s)!\n",
 		     cupsLastErrorString());
 
-      /* Option settings which we have recorded from the previous session */
-      retrieve_printer_options(p->name);
+      /* If we are about to create a raw queue or turn a non-raw queue
+	 into a raw one, we apply the "ppd-name=raw" option to remove any
+	 existing PPD file assigned to the queue.
+
+         Also here we do a separate IPP request as it errors in some
+         cases. */
+      if (want_raw) {
+	debug_printf("Removing local PPD file for printer %s\n", p->name);
+	request = ippNewRequest(CUPS_ADD_MODIFY_PRINTER);
+	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI,
+		     "printer-uri", NULL, uri);
+	ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME,
+		     "requesting-user-name", NULL, cupsUser());
+	num_options = 0;
+	options = NULL;
+	num_options = cupsAddOption("ppd-name", "raw",
+				    num_options, &options);
+	cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
+	cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
+	ippDelete(cupsDoRequest(http, request, "/admin/"));
+	cupsFreeOptions(num_options, options);
+	if (cupsLastError() > IPP_OK_CONFLICT)
+	  debug_printf("Unable to remove PPD file from the print queue (%s)!\n",
+		       cupsLastErrorString());
+      }
 
       /* If this queue was the default printer in its previous life, make
 	 it the default printer again. */
@@ -3565,29 +3934,36 @@ gboolean handle_cups_queues(gpointer unused) {
 	free(disabled_str);
       }
 
-      if (p->status == STATUS_BROWSE_PACKET_RECEIVED) {
-	p->status = STATUS_DISAPPEARED;
+      p->status = STATUS_CONFIRMED;
+      if (p->is_legacy) {
 	p->timeout = time(NULL) + BrowseTimeout;
 	debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
 		     p->name, BrowseTimeout);
-      } else {
-	p->status = STATUS_CONFIRMED;
+      } else
 	p->timeout = (time_t) -1;
-      }
 
+      p->no_autosave = 0;
       break;
 
     case STATUS_CONFIRMED:
-      /* If this queue was the default printer in its previous life, make
-	 it the default printer again. */
-      queue_creation_handle_default(p->name);
+      if (p->is_legacy && p->timeout > current_time) {
+	/* Remove a queue based on a legacy CUPS broadcast when the
+	   broadcast timeout expires without a new broadcast of this
+	   queue from the server */
+	p->status = STATUS_DISAPPEARED;
+	p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+      } else {
+	/* If this queue was the default printer in its previous life, make
+	   it the default printer again. */
+	queue_creation_handle_default(p->name);
 
-      /* If this queue is disabled, re-enable it. */
-      enable_printer(p->name);
+	/* If this queue is disabled, re-enable it. */
+	enable_printer(p->name);
 
-      /* Record the options, to record any changes which happened
-	 while cups-browsed was not running */
-      record_printer_options(p->name);
+	/* Record the options, to record any changes which happened
+	   while cups-browsed was not running */
+	record_printer_options(p->name);
+      }
 
       break;
 
@@ -4006,7 +4382,7 @@ generate_local_queue(const char *host,
 	(p->host[0] == '\0' ||
 	 p->status == STATUS_UNCONFIRMED ||
 	 p->status == STATUS_DISAPPEARED ||
-	 !strcasecmp(p->host, remote_host)))
+	 (!strcasecmp(p->host, remote_host) && p->port == port)))
       break;
 
   if (!create) {
@@ -4029,19 +4405,38 @@ generate_local_queue(const char *host,
   if (p) {
     /* We have already created a local queue, check whether the
        discovered service allows us to upgrade the queue to IPPS
-       or whether the URI part after ipp(s):// has changed */
+       or whether the URI part after ipp(s):// has changed, or
+       whether the discovered queue is discovered via Bonjour
+       having more info in contrary to the existing being
+       discovered by legacy CUPS or LDAP */
     if ((strcasestr(type, "_ipps") &&
 	 !strncasecmp(p->uri, "ipp:", 4)) ||
-	strcasecmp(strchr(p->uri, ':'), strchr(uri, ':'))) {
+	strcasecmp(strchr(p->uri, ':'), strchr(uri, ':')) ||
+	((p->domain == NULL || p->domain[0] == '\0') &&
+	 domain != NULL && domain[0] != '\0' &&
+	 (p->type == NULL || p->type[0] == '\0') &&
+	 type != NULL && type[0] != '\0')) {
 
       /* Schedule local queue for upgrade to ipps: or for URI change */
       if (strcasestr(type, "_ipps") &&
 	  !strncasecmp(p->uri, "ipp:", 4))
-	debug_printf("Upgrading printer %s (Host: %s) to IPPS. New URI: %s\n",
-		     p->name, remote_host, uri);
+	debug_printf("Upgrading printer %s (Host: %s, Port :%d) to IPPS. New URI: %s\n",
+		     p->name, remote_host, port, uri);
       if (strcasecmp(strchr(p->uri, ':'), strchr(uri, ':')))
-	debug_printf("Changing URI of printer %s (Host: %s) to %s.\n",
-		     p->name, remote_host, uri);
+	debug_printf("Changing URI of printer %s (Host: %s, Port: %d) to %s.\n",
+		     p->name, remote_host, port, uri);
+      if ((p->domain == NULL || p->domain[0] == '\0') &&
+	  domain != NULL && domain[0] != '\0' &&
+	  (p->type == NULL || p->type[0] == '\0') &&
+	  type != NULL && type[0] != '\0') {
+	debug_printf("Discovered printer %s (Host: %s, Port: %d, URI: %s) by Bonjour now.\n",
+		     p->name, remote_host, port, uri);
+	if (p->is_legacy) {
+	  p->is_legacy = 0;
+	  if (p->status == STATUS_CONFIRMED)
+	    p->timeout = (time_t) -1;
+	}
+      }
       free(p->uri);
       free(p->host);
       free(p->ip);
@@ -4053,6 +4448,7 @@ generate_local_queue(const char *host,
       p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
       p->host = strdup(remote_host);
       p->ip = (ip != NULL ? strdup(ip) : NULL);
+      p->port = port;
       p->service_name = strdup(name);
       p->type = strdup(type);
       p->domain = strdup(domain);
@@ -4066,7 +4462,12 @@ generate_local_queue(const char *host,
       if (p->status == STATUS_UNCONFIRMED ||
 	  p->status == STATUS_DISAPPEARED) {
 	p->status = STATUS_CONFIRMED;
-	p->timeout = (time_t) -1;
+	if (p->is_legacy) {
+	  p->timeout = time(NULL) + BrowseTimeout;
+	  debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
+		       p->name, BrowseTimeout);
+	} else
+	  p->timeout = (time_t) -1;
 	debug_printf("Marking entry for %s (URI: %s) as confirmed.\n",
 		     p->name, p->uri);
       }
@@ -4080,6 +4481,8 @@ generate_local_queue(const char *host,
       free (p->ip);
       p->ip = (ip !=NULL ? strdup(ip) : NULL);
     }
+    if (p->port == 0)
+      p->port = port;
     if (p->service_name[0] == '\0' && name) {
       free (p->service_name);
       p->service_name = strdup(name);
@@ -4096,7 +4499,7 @@ generate_local_queue(const char *host,
 
     /* We need to create a local queue pointing to the
        discovered printer */
-    p = create_local_queue (local_queue_name, uri, remote_host, ip,
+    p = create_local_queue (local_queue_name, uri, remote_host, ip, port,
 			    name ? name : "", type, domain, pdl, color, duplex,
 			    make_model, remote_queue, is_cups_queue);
   }
@@ -4243,6 +4646,10 @@ static void resolve_callback(
   if (r == NULL)
     return;
 
+  /* Ignore local queues on the port of the cupsd we are serving for */
+  if (flags & AVAHI_LOOKUP_RESULT_LOCAL && port == ippPort())
+    goto ignore;
+
   /* Called whenever a service has been resolved successfully or timed out */
 
   switch (event) {
@@ -4353,9 +4760,11 @@ static void resolve_callback(
   }
   }
 
+ ignore:
   avahi_service_resolver_free(r);
 
-  recheck_timer ();
+  if (in_shutdown == 0)
+    recheck_timer ();
 }
 
 static void browse_callback(
@@ -4384,14 +4793,11 @@ static void browse_callback(
     debug_printf("Avahi Browser: ERROR: %s\n",
 		 avahi_strerror(avahi_client_errno(avahi_service_browser_get_client(b))));
     g_main_loop_quit(gmainloop);
+    g_main_context_wakeup(NULL);
     return;
 
   /* New service (remote printer) */
   case AVAHI_BROWSER_NEW:
-
-    /* Ignore events from the local machine */
-    if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
-      break;
 
     debug_printf("Avahi Browser: NEW: service '%s' of type '%s' in domain '%s'\n",
 		 name, type, domain);
@@ -4409,7 +4815,6 @@ static void browse_callback(
   /* A service (remote printer) has disappeared */
   case AVAHI_BROWSER_REMOVE: {
     remote_printer_t *p, *q, *r;
-    int i;
 
     /* Ignore events from the local machine */
     if (flags & AVAHI_LOOKUP_RESULT_LOCAL)
@@ -4432,10 +4837,9 @@ static void browse_callback(
 	q = p->duplicate_of;
 	q->num_duplicates --;
 	if (q->status != STATUS_DISAPPEARED) {
-	  debug_printf("Removing the duplicate printer %s on host %s, scheduling its master printer %s on host %s for update, to assure it will have the correct device URI.\n",
-		       p->name, p->host, q->name, q->host);
-	  /* Schedule for update, so that an implicitclass:... URI gets
-	     removed if not needed any more */
+	  debug_printf("Removing the duplicate printer %s on host %s, port %d, scheduling its master printer %s on host %s, port %d for update, to assure it will have the correct device URI.\n",
+		       p->name, p->host, p->port, q->name, q->host, q->port);
+	  /* Schedule for update */
 	  q->status = STATUS_TO_BE_CREATED;
 	  q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
 	}
@@ -4447,7 +4851,7 @@ static void browse_callback(
 	     q;
 	     q = (remote_printer_t *)cupsArrayNext(remote_printers))
 	  if (!strcasecmp(q->name, p->name) &&
-	      strcasecmp(q->host, p->host) &&
+	      (strcasecmp(q->host, p->host) || q->port != p->port) &&
 	      q->duplicate_of)
 	    break;
       }
@@ -4459,7 +4863,6 @@ static void browse_callback(
 	free (p->service_name);
 	free (p->type);
 	free (p->domain);
-	cupsFreeOptions(p->num_options, p->options);
 	if (p->ppd) free (p->ppd);
 	if (p->model) free (p->model);
 	if (p->ifscript) free (p->ifscript);
@@ -4467,22 +4870,21 @@ static void browse_callback(
 	p->uri = strdup(q->uri);
 	p->host = strdup(q->host);
 	p->ip = (q->ip != NULL ? strdup(q->ip) : NULL);
+	p->port = q->port;
 	p->service_name = strdup(q->service_name);
 	p->type = strdup(q->type);
 	p->domain = strdup(q->domain);
 	p->num_duplicates --;
-	for (i = 0; i < q->num_options; i ++)
-	  p->num_options = cupsAddOption(strdup(q->options[i].name),
-					 strdup(q->options[i].value),
-					 p->num_options, &(p->options));
 	if (q->ppd) p->ppd = strdup(q->ppd);
 	if (q->model) p->model = strdup(q->model);
 	if (q->ifscript) p->ifscript = strdup(q->ifscript);
+	p->netprinter = q->netprinter;
+	p->is_legacy = q->is_legacy;
 	for (r = (remote_printer_t *)cupsArrayFirst(remote_printers);
 	     r;
 	     r = (remote_printer_t *)cupsArrayNext(remote_printers))
 	  if (!strcasecmp(p->name, r->name) &&
-	      strcasecmp(p->host, r->host) &&
+	      (strcasecmp(p->host, r->host) || p->port != r->port) &&
 	      r->duplicate_of)
 	    r->duplicate_of = p;
 	/* Schedule this printer for updating the CUPS queue */
@@ -4492,23 +4894,24 @@ static void browse_callback(
 	q->status = STATUS_DISAPPEARED;
 	q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
 
-	debug_printf("Printer %s diasappeared, replacing by backup on host %s with URI %s.\n",
-		     p->name, p->host, p->uri);
+	debug_printf("Printer %s diasappeared, replacing by backup on host %s, port %d with URI %s.\n",
+		     p->name, p->host, p->port, p->uri);
       } else {
 
 	/* Schedule CUPS queue for removal */
 	p->status = STATUS_DISAPPEARED;
 	p->timeout = time(NULL) + TIMEOUT_REMOVE;
 
-	debug_printf("Printer %s (Host: %s, URI: %s) disappeared and no duplicate available, or a duplicate of another printer, removing entry.\n",
-		     p->name, p->host, p->uri);
+	debug_printf("Printer %s (Host: %s, Port: %d, URI: %s) disappeared and no duplicate available, or a duplicate of another printer, removing entry.\n",
+		     p->name, p->host, p->port, p->uri);
 
       }
 
       debug_printf("Bonjour IDs: Service name: \"%s\", Service type: \"%s\", Domain: \"%s\"\n",
 		   p->service_name, p->type, p->domain);
 
-      recheck_timer ();
+      if (in_shutdown == 0)
+	recheck_timer ();
     }
     break;
   }
@@ -4649,6 +5052,7 @@ static void client_callback(AvahiClient *c, AvahiClientState state, AVAHI_GCC_UN
       debug_printf("ERROR: Avahi server connection failure: %s\n",
 		   avahi_strerror(avahi_client_errno(c)));
       g_main_loop_quit(gmainloop);
+      g_main_context_wakeup(NULL);
     }
     break;
 
@@ -4752,12 +5156,14 @@ found_cups_printer (const char *remote_host, const char *uri,
 				 info ? info : "",
 				 "", "", NULL);
 
-  if (printer) {
-    if (printer->status == STATUS_TO_BE_CREATED)
-      printer->status = STATUS_BROWSE_PACKET_RECEIVED;
-    else {
-      printer->status = STATUS_DISAPPEARED;
+  if (printer &&
+      (printer->domain == NULL || printer->domain[0] == '\0' ||
+       printer->type == NULL || printer->type[0] == '\0')) {
+    printer->is_legacy = 1;
+    if (printer->status != STATUS_TO_BE_CREATED) {
       printer->timeout = time(NULL) + BrowseTimeout;
+      debug_printf("starting BrowseTimeout timer for %s (%ds)\n",
+		   printer->name, BrowseTimeout);
     }
   }
 }
@@ -4852,7 +5258,8 @@ process_browse_data (GIOChannel *source,
   if (!(type & CUPS_PRINTER_DELETE))
     found_cups_printer (remote_host, uri, info);
 
-  recheck_timer ();
+  if (in_shutdown == 0)
+    recheck_timer ();
 
   /* Don't remove this I/O source */
   return TRUE;
@@ -5119,7 +5526,8 @@ browse_poll_get_printers (browsepoll_t *context, http_t *conn)
 
   g_list_free_full (context->printers, browsepoll_printer_free);
   context->printers = printers;
-  recheck_timer ();
+  if (in_shutdown == 0)
+    recheck_timer ();
 
 fail:
   if (response)
@@ -5201,14 +5609,16 @@ static void
 browse_poll_cancel_subscription (browsepoll_t *context)
 {
   ipp_t *request, *response = NULL;
-  http_t *conn = httpConnectEncrypt (context->server, context->port,
-				     HTTP_ENCRYPT_IF_REQUESTED);
+  http_t *conn = httpConnectEncryptShortTimeout (context->server, context->port,
+						 HTTP_ENCRYPT_IF_REQUESTED);
 
   if (conn == NULL) {
     debug_printf("cups-browsed [BrowsePoll %s:%d]: connection failure "
 		 "attempting to cancel\n", context->server, context->port);
     return;
   }
+
+  httpSetTimeout(conn, 3, http_timeout_cb, NULL);
 
   debug_printf ("cups-browsed [BrowsePoll %s:%d]: IPP-Cancel-Subscription\n",
 		context->server, context->port);
@@ -5279,7 +5689,7 @@ browse_poll_get_notifications (browsepoll_t *context, http_t *conn)
     browse_poll_create_subscription (context, conn);
     get_printers = TRUE;
   } else if (status > IPP_OK_CONFLICT) {
-    debug_printf("cupsd-browsed [BrowsePoll %s:%d]: failed: %s\n",
+    debug_printf("cups-browsed [BrowsePoll %s:%d]: failed: %s\n",
 		 context->server, context->port, cupsLastErrorString ());
     context->can_subscribe = FALSE;
     browse_poll_cancel_subscription (context);
@@ -5341,13 +5751,15 @@ browse_poll (gpointer data)
 
   res_init ();
 
-  conn = httpConnectEncrypt (context->server, context->port,
-			     HTTP_ENCRYPT_IF_REQUESTED);
+  conn = httpConnectEncryptShortTimeout (context->server, context->port,
+					 HTTP_ENCRYPT_IF_REQUESTED);
   if (conn == NULL) {
     debug_printf("cups-browsed [BrowsePoll %s:%d]: failed to connect\n",
 		 context->server, context->port);
     goto fail;
   }
+
+  httpSetTimeout(conn, 3, http_timeout_cb, NULL);
 
   if (context->can_subscribe) {
     if (context->subscription_id == -1) {
@@ -5443,7 +5855,8 @@ browse_ldap_poll (gpointer data)
     }
 
     cupsdUpdateLDAPBrowse();
-    recheck_timer();
+    if (in_shutdown == 0)
+      recheck_timer();
   }
 
   /* Call a new timeout handler so that we run again */
@@ -5474,6 +5887,7 @@ sigterm_handler(int sig) {
 
   /* Flag that we should stop and return... */
   g_main_loop_quit(gmainloop);
+  g_main_context_wakeup(NULL);
   debug_printf("Caught signal %d, shutting down ...\n", sig);
 }
 
@@ -6029,7 +6443,7 @@ find_previous_queue (gpointer key,
     /* Queue found, add to our list */
     p = create_local_queue (name,
 			    printer->device_uri,
-			    "", "", "", "", "", NULL, 0, 0, NULL, NULL, 1);
+			    "", "", 0, "", "", "", NULL, 0, 0, NULL, NULL, 1);
     if (p) {
       /* Mark as unconfirmed, if no Avahi report of this queue appears
 	 in a certain time frame, we will remove the queue */
@@ -6248,23 +6662,34 @@ int main(int argc, char*argv[]) {
   if (debug_logfile == 1)
     start_debug_logging();
 
-  /* Set the CUPS_SERVER environment variable to assure that cups-browsed
-     always works with the local CUPS daemon and never with a remote one
-     specified by a client.conf file */
+  /* Point to selected CUPS server or domain socket via the CUPS_SERVER
+     environment variable or DomainSocket configuration file option.
+     Default to localhost:631 (and not to CUPS default to override
+     client.conf files as cups-browsed works only with a local CUPS
+     daemon, not with remote ones. */
+  if (getenv("CUPS_SERVER") != NULL) {
+    strncpy(local_server_str, getenv("CUPS_SERVER"), sizeof(local_server_str));
+  } else {
 #ifdef CUPS_DEFAULT_DOMAINSOCKET
-  if (DomainSocket == NULL)
-    DomainSocket = CUPS_DEFAULT_DOMAINSOCKET;
+    if (DomainSocket == NULL)
+      DomainSocket = CUPS_DEFAULT_DOMAINSOCKET;
 #endif
-  if (DomainSocket != NULL) {
-    struct stat sockinfo;               /* Domain socket information */
-    if (!stat(DomainSocket, &sockinfo) &&
-        (sockinfo.st_mode & S_IROTH) != 0 &&
-        (sockinfo.st_mode & S_IWOTH) != 0)
-      setenv("CUPS_SERVER", DomainSocket, 1);
-    else
-      setenv("CUPS_SERVER", "localhost", 1);
-  } else
-    setenv("CUPS_SERVER", "localhost", 1);
+    if (DomainSocket != NULL) {
+      struct stat sockinfo;               /* Domain socket information */
+      if (strcasecmp(DomainSocket, "None") != 0 &&
+	  strcasecmp(DomainSocket, "Off") != 0 &&
+	  !stat(DomainSocket, &sockinfo) &&
+	  (sockinfo.st_mode & S_IROTH) != 0 &&
+	  (sockinfo.st_mode & S_IWOTH) != 0)
+	strncpy(local_server_str, DomainSocket, sizeof(local_server_str));
+      else
+	strncpy(local_server_str, "localhost:631", sizeof(local_server_str));
+    } else
+      strncpy(local_server_str, "localhost:631", sizeof(local_server_str));
+    setenv("CUPS_SERVER", local_server_str, 1);
+  }
+  cupsSetServer(local_server_str);
+  BrowsePort = ippPort();
 
   if (BrowseLocalProtocols & BROWSE_DNSSD) {
     debug_printf("Local support for DNSSD not implemented\n");
@@ -6969,7 +7394,8 @@ _ppdCreateFromIPP(char   *buffer,	/* I - Filename buffer */
   cupsFilePrintf(fp, "*Manufacturer: \"%s\"\n", make);
   cupsFilePrintf(fp, "*ModelName: \"%s %s\"\n", make, model);
   cupsFilePrintf(fp, "*Product: \"(%s %s)\"\n", make, model);
-  cupsFilePrintf(fp, "*NickName: \"%s %s\"\n", make, model);
+  cupsFilePrintf(fp, "*NickName: \"%s %s, cups-filters %s\"\n", make, model,
+		 VERSION);
   cupsFilePrintf(fp, "*ShortNickName: \"%s %s\"\n", make, model);
 
   if (((attr = ippFindAttribute(response, "color-supported", IPP_TAG_BOOLEAN)) != NULL && ippGetBoolean(attr, 0)) || color)
