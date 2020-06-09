@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([cups_filters_version_major],[1])
 m4_define([cups_filters_version_minor],[0])
-m4_define([cups_filters_version_micro],[71])
+m4_define([cups_filters_version_micro],[73])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -287,6 +287,57 @@ fi
 AC_SUBST(AVAHI_LIBS)
 AC_SUBST(AVAHI_CFLAGS)
 
+dnl
+dnl "$Id: cups-ldap.m4 9771 2011-05-12 05:21:56Z mike $"
+dnl
+dnl   LDAP configuration stuff for CUPS.
+dnl
+dnl   Copyright 2007-2011 by Apple Inc.
+dnl   Copyright 2003-2006 by Easy Software Products, all rights reserved.
+dnl
+dnl   These coded instructions, statements, and computer programs are the
+dnl   property of Apple Inc. and are protected by Federal copyright
+dnl   law.  Distribution and use rights are outlined in the file "LICENSE.txt"
+dnl   which should have been included with this file.  If this file is
+dnl   file is missing or damaged, see the license at "http://www.cups.org/".
+dnl
+
+AC_ARG_ENABLE([ldap], [AS_HELP_STRING([--disable-ldap], [disable LDAP support.])],
+        [enable_ldap="$enableval"],
+        [enable_ldap=yes]
+)
+AC_ARG_WITH([ldap-libs], [AS_HELP_STRING([--with-ldap-libs], [set directory for LDAP library.])],
+    LDFLAGS="-L$withval $LDFLAGS"
+    DSOFLAGS="-L$withval $DSOFLAGS",)
+AC_ARG_WITH([ldap-includes], [AS_HELP_STRING([--with-ldap-includes], [set directory for LDAP includes.])],
+    CFLAGS="-I$withval $CFLAGS"
+    CPPFLAGS="-I$withval $CPPFLAGS",)
+
+if test x$enable_ldap != xno; then
+
+    AC_CHECK_HEADER([ldap.h], [
+	AC_SEARCH_LIBS([ldap_initialize], [ldap], [
+	    AC_DEFINE([HAVE_LDAP], [], [Define if LDAP support should be enabled])
+	    AC_DEFINE([HAVE_OPENLDAP], [], [If LDAP support is that of OpenLDAP])
+	    AC_CHECK_LIB([ldap], [ldap_start_tls],
+		AC_DEFINE([HAVE_LDAP_SSL], [], [If LDAP has SSL/TLS support enabled]))],[
+
+	    AC_CHECK_LIB([ldap], [ldap_init], [
+		AC_DEFINE([HAVE_LDAP], [], [Define if LDAP support should be enabled])
+		AC_DEFINE([HAVE_MOZILLA_LDAP], [], [If LDAP support is that of Mozilla])
+		AC_CHECK_HEADERS([ldap_ssl.h], [], [], [#include <ldap.h>])
+		AC_CHECK_LIB([ldap], [ldapssl_init],
+		    AC_DEFINE([HAVE_LDAP_SSL], [], [If LDAP has SSL/TLS support enabled]))])]
+	)
+	AC_CHECK_LIB([ldap], [ldap_set_rebind_proc], AC_DEFINE([HAVE_LDAP_REBIND_PROC], [], [If libldap implements ldap_set_rebind_proc]))
+    ])
+
+fi
+
+dnl
+dnl End of "$Id: cups-ldap.m4 9771 2011-05-12 05:21:56Z mike $".
+dnl
+
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.30.2])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
@@ -305,6 +356,14 @@ if test "x$PKGCONFIG" != x; then
 fi
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
+
+GIO_UNIX_CFLAGS=""
+GIO_UNIX_LIBS=""
+if test "x$PKGCONFIG" != x; then
+	PKG_CHECK_MODULES(GIO_UNIX, [gio-unix-2.0])
+fi
+AC_SUBST(GIO_UNIX_CFLAGS)
+AC_SUBST(GIO_UNIX_LIBS)
 
 AC_ARG_WITH([browseremoteprotocols],
 	[AS_HELP_STRING([--with-browseremoteprotocols=value], [Set which protocols to listen for in cups-browsed (default: dnssd cups)])],
