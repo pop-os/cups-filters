@@ -5,7 +5,7 @@ Uploaders: Till Kamppeter <till.kamppeter@gmail.com>,
 Section: net
 Priority: optional
 Build-Depends: autoconf,
-               debhelper-compat (= 12),
+               debhelper-compat (= 13),
                dh-apparmor,
                pkg-config,
                sharutils,
@@ -30,7 +30,6 @@ Build-Depends: autoconf,
                libavahi-glib-dev,
                librsvg2-bin,
                liblouis-dev,
-# Needed for tests
                fonts-dejavu-core
 Standards-Version: 4.5.0
 Vcs-Browser: https://salsa.debian.org/printing-team/cups-filters

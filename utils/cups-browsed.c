@@ -456,6 +456,7 @@ static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_DRIVERL
 static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_ALL;
 #endif
 #endif
+static unsigned int KeepGeneratedQueuesOnShutdown = 1;
 static ipp_queue_type_t IPPPrinterQueueType = PPD_YES;
 static int NewIPPPrinterQueuesShared = 0;
 static int AutoClustering = 1;
@@ -9791,7 +9792,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 			     AvahiLookupResultFlags flags,
 			     AVAHI_GCC_UNUSED void* userdata) {
   char ifname[IF_NAMESIZE];
-  AvahiStringList *uuid_entry;
+  AvahiStringList *uuid_entry, *printer_type_entry;
   char *uuid_key, *uuid_value;
 
   debug_printf("resolve_callback() in THREAD %ld\n", pthread_self());
@@ -9815,9 +9816,9 @@ static void resolve_callback(AvahiServiceResolver *r,
     uuid_value = NULL;
     if (txt && (uuid_entry = avahi_string_list_find(txt, "UUID")))
       avahi_string_list_get_pair(uuid_entry, &uuid_key, &uuid_value, NULL);
-    if (g_hash_table_find (local_printers,
-			   local_printer_has_uuid,
-			   uuid_value)) {
+    if (uuid_value && g_hash_table_find (local_printers,
+					 local_printer_has_uuid,
+					 uuid_value)) {
       debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with host name '%s' and port %d on interface '%s' (%s) with UUID %s is from local CUPS, ignored (Avahi lookup result or host name of local machine).\n",
 		   name, type, domain, host_name, port, ifname,
 		   (address ?
@@ -9825,6 +9826,19 @@ static void resolve_callback(AvahiServiceResolver *r,
 		     address->proto == AVAHI_PROTO_INET6 ? "IPv6" :
 		     "IPv4/IPv6 Unknown") :
 		    "IPv4/IPv6 Unknown"), uuid_value);
+      goto ignore;
+    }
+    if (txt &&
+	(printer_type_entry = avahi_string_list_find(txt, "printer-type")) &&
+	strcasestr(type, "_ipps")) {
+      debug_printf("Avahi Resolver: Service '%s' of type '%s' in domain '%s' with host name '%s' and port %d on interface '%s' (%s) with UUID %s is from another CUPS instance on the local system and uses IPPS, the local CUPS has problems to print on this printer, so we ignore it (Avahi lookup result or host name of local machine).\n",
+		   name, type, domain, host_name, port, ifname,
+		   (address ?
+		    (address->proto == AVAHI_PROTO_INET ? "IPv4" :
+		     address->proto == AVAHI_PROTO_INET6 ? "IPv6" :
+		     "IPv4/IPv6 Unknown") :
+		    "IPv4/IPv6 Unknown"),
+		   (uuid_value ? uuid_value : "(unknown)"));
       goto ignore;
     }
   }
@@ -10186,9 +10200,17 @@ void avahi_browser_shutdown() {
     for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
 	 p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
       if (p->type && p->type[0]) {
-	if (p->status != STATUS_TO_BE_RELEASED)
-	  p->status = STATUS_DISAPPEARED;
-	p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+	if (KeepGeneratedQueuesOnShutdown) {
+	  if (p->status != STATUS_TO_BE_RELEASED &&
+	      p->status != STATUS_DISAPPEARED) {
+	    p->status = STATUS_UNCONFIRMED;
+	    p->timeout = time(NULL) + TIMEOUT_CONFIRM;
+	  }
+	} else {
+	  if (p->status != STATUS_TO_BE_RELEASED)
+	    p->status = STATUS_DISAPPEARED;
+	  p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+	}
       }
     }
     if (in_shutdown == 0)
@@ -11623,6 +11645,13 @@ read_configuration (const char *filename)
       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
 	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
 	NewBrowsePollQueuesShared = 0;
+    } else if (!strcasecmp(line, "KeepGeneratedQueuesOnShutdown") && value) {
+      if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
+	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
+	KeepGeneratedQueuesOnShutdown = 1;
+      else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
+	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
+	KeepGeneratedQueuesOnShutdown = 0;
     } else if (!strcasecmp(line, "AutoClustering") && value) {
       if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
 	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
@@ -12112,9 +12141,10 @@ int main(int argc, char*argv[]) {
   if (getenv("IPP_PORT") != NULL) {
     snprintf(local_server_str, sizeof(local_server_str) - 1,
 	     "localhost:%s", getenv("IPP_PORT"));
-    if (strlen(getenv("CUPS_SERVER")) > 1023)
-      local_server_str[1023] = '\0';
+    local_server_str[sizeof(local_server_str) - 1] = '\0';
     cupsSetServer(local_server_str);
+    debug_printf("Set port on which CUPS is listening via env variable: IPP_PORT=%s\n",
+		 getenv("IPP_PORT"));
   }
 
   /* Point to selected CUPS server or domain socket via the CUPS_SERVER
@@ -12122,33 +12152,35 @@ int main(int argc, char*argv[]) {
      Default to localhost:631 (and not to CUPS default to override
      client.conf files as cups-browsed works only with a local CUPS
      daemon, not with remote ones. */
+  local_server_str[0] = '\0';
   if (getenv("CUPS_SERVER") != NULL) {
     strncpy(local_server_str, getenv("CUPS_SERVER"),
 	    sizeof(local_server_str) - 1);
-    if (strlen(getenv("CUPS_SERVER")) > 1023)
-      local_server_str[1023] = '\0';
+    local_server_str[sizeof(local_server_str) - 1] = '\0';
+    cupsSetServer(local_server_str);
+    debug_printf("Set host/port/domain socket which CUPS is listening via env variable: CUPS_SERVER=%s\n",
+		 getenv("CUPS_SERVER"));
   } else {
-#ifdef CUPS_DEFAULT_DOMAINSOCKET
-    if (DomainSocket == NULL)
-      DomainSocket = strdup(CUPS_DEFAULT_DOMAINSOCKET);
-#endif
     if (DomainSocket != NULL) {
+      debug_printf("Set host/port/domain socket on which CUPS is listening via cups-browsed directive DomainSocket: %s\n",
+		   DomainSocket);
       struct stat sockinfo;               /* Domain socket information */
       if (strcasecmp(DomainSocket, "None") != 0 &&
 	  strcasecmp(DomainSocket, "Off") != 0 &&
 	  !stat(DomainSocket, &sockinfo) &&
 	  (sockinfo.st_mode & S_IROTH) != 0 &&
-	  (sockinfo.st_mode & S_IWOTH) != 0)
+	  (sockinfo.st_mode & S_IWOTH) != 0) {
 	strncpy(local_server_str, DomainSocket,
 		sizeof(local_server_str) - 1);
-      else
-	strncpy(local_server_str, "localhost:631",
-		sizeof(local_server_str) - 1);
-    } else
-      strncpy(local_server_str, "localhost:631", sizeof(local_server_str));
-    setenv("CUPS_SERVER", local_server_str, 1);
+	local_server_str[sizeof(local_server_str) - 1] = '\0';
+	cupsSetServer(local_server_str);
+      } else
+	debug_printf("DomainSocket %s not accessible: %s\n",
+		     DomainSocket, strerror(errno));
+    }
   }
-  cupsSetServer(local_server_str);
+  if (local_server_str[0])
+    setenv("CUPS_SERVER", local_server_str, 1);
 
   if (BrowseLocalProtocols & BROWSE_DNSSD) {
     debug_printf("Local support for DNSSD not implemented\n");
@@ -12412,12 +12444,13 @@ fail:
     g_object_unref (proxy);
 
   /* Remove all queues which we have set up */
-  for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
-       p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
-    if (p->status != STATUS_TO_BE_RELEASED)
-      p->status = STATUS_DISAPPEARED;
-    p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
-  }
+  if (KeepGeneratedQueuesOnShutdown == 0)
+    for (p = (remote_printer_t *)cupsArrayFirst(remote_printers);
+	 p; p = (remote_printer_t *)cupsArrayNext(remote_printers)) {
+      if (p->status != STATUS_TO_BE_RELEASED)
+	p->status = STATUS_DISAPPEARED;
+      p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+    }
   update_cups_queues(NULL);
 
   cancel_subscription (subscription_id);
