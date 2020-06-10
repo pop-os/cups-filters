@@ -39,6 +39,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  adobergb_wp@Base 1.0.58
  apply_filters@Base 1.24.0
  blackpoint_default@Base 1.0.58
+ check_driverless_support@Base 1.27.5
  cmBlackPointDefault@Base 1.0.58
  cmGammaAdobeRgb@Base 1.0.58
  cmGammaSGray@Base 1.0.58
@@ -119,6 +120,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  cupsRasterParseIPPOptions@Base 1.0.36
  cups_scmy_lut@Base 1.0~b1
  cups_srgb_lut@Base 1.0~b1
+ driverless_support_strs@Base 1.27.5
  find_choice_in_array@Base 1.20.0
  find_opt_in_array@Base 1.20.0
  free_choice_strings@Base 1.20.0
@@ -126,6 +128,7 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  free_resolution@Base 1.17.1
  generate_sizes@Base 1.24.0
  get_printer_attributes2@Base 1.27.0
+ get_printer_attributes3@Base 1.27.5
  get_printer_attributes@Base 1.26.0
  get_printer_attributes_log@Base 1.26.0
  get_profile_inhibitors@Base 1.0.42
