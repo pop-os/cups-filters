@@ -1,3 +1,10 @@
+cups-filters (1.27.5-2) unstable; urgency=medium
+
+  * Patch configure.ac to force-set INITDIR instead of relying on
+    'test -d /etc/init.d', which fails in s390x chroots
+
+ -- Didier Raboud <odyx@debian.org>  Sat, 13 Jun 2020 16:43:11 +0200
+
 cups-filters (1.27.5-1) unstable; urgency=medium
 
   * New upstream version 1.27.5
