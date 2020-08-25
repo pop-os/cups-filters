@@ -211,6 +211,18 @@
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
+/* Define that we create local queues for remote CUPS queues based on DNS-SD
+   name */
+#undef NAMING_DNSSD
+
+/* Define that we create local queues for remote CUPS queues based on printer
+   Make-Model */
+#undef NAMING_MAKE_MODEL
+
+/* Define that we create local queues for remote CUPS queues based on their
+   print queue name on the server */
+#undef NAMING_REMOTE_NAME
+
 /* Auto-setup only driverless IPP network printers? */
 #undef ONLY_DRIVERLESS_IPP_PRINTERS_AUTO_SETUP
 
@@ -243,6 +255,9 @@
 
 /* QPDF has PCLm support? */
 #undef QPDF_HAVE_PCLM
+
+/* Define whether we save queues during shutdown */
+#undef SAVING_CREATED_QUEUES
 
 /* Path for a modern shell */
 #undef SHELL

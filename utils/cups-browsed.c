@@ -153,6 +153,7 @@ static int  ldap_rebind_proc(LDAP *RebindLDAPHandle,
 #define REMOTE_DEFAULT_PRINTER_FILE "/cups-browsed-remote-default-printer"
 #define SAVE_OPTIONS_FILE "/cups-browsed-options-%s"
 #define DEBUG_LOG_FILE "/cups-browsed_log"
+#define DEBUG_LOG_FILE_2 "/cups-browsed_previous_logs"
 
 /* Status of remote printer */
 typedef enum printer_status_e {
@@ -432,6 +433,7 @@ static uint16_t BrowsePort = 631;
 static browsepoll_t **BrowsePoll = NULL;
 static unsigned int NewBrowsePollQueuesShared = 0;
 static unsigned int AllowResharingRemoteCUPSPrinters = 0;
+static unsigned int DebugLogFileSize = 300;
 static size_t NumBrowsePoll = 0;
 static guint update_netifs_sourceid = 0;
 static char local_server_str[1024];
@@ -441,7 +443,15 @@ static unsigned int HttpRemoteTimeout = 10;
 static unsigned int HttpMaxRetries = 5;
 static unsigned int DNSSDBasedDeviceURIs = 1;
 static ip_based_uris_t IPBasedDeviceURIs = IP_BASED_URIS_NO;
-static local_queue_naming_t LocalQueueNamingRemoteCUPS=LOCAL_QUEUE_NAMING_DNSSD;
+#ifdef NAMING_MAKE_MODEL
+static local_queue_naming_t LocalQueueNamingRemoteCUPS = LOCAL_QUEUE_NAMING_MAKE_MODEL;
+#else
+# ifdef NAMING_REMOTE_NAME
+static local_queue_naming_t LocalQueueNamingRemoteCUPS = LOCAL_QUEUE_NAMING_REMOTE_NAME;
+# else
+static local_queue_naming_t LocalQueueNamingRemoteCUPS = LOCAL_QUEUE_NAMING_DNSSD;
+# endif
+#endif
 static local_queue_naming_t LocalQueueNamingIPPPrinter=LOCAL_QUEUE_NAMING_DNSSD;
 static unsigned int OnlyUnsupportedByCUPS = 0;
 static unsigned int UseCUPSGeneratedPPDs = 0;
@@ -456,7 +466,11 @@ static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_DRIVERL
 static create_ipp_printer_queues_t CreateIPPPrinterQueues = IPP_PRINTERS_ALL;
 #endif
 #endif
+#ifdef SAVING_CREATED_QUEUES
 static unsigned int KeepGeneratedQueuesOnShutdown = 1;
+#else
+static unsigned int KeepGeneratedQueuesOnShutdown = 0;
+#endif
 static ipp_queue_type_t IPPPrinterQueueType = PPD_YES;
 static int NewIPPPrinterQueuesShared = 0;
 static int AutoClustering = 1;
@@ -486,6 +500,7 @@ static char local_default_printer_file[2048];
 static char remote_default_printer_file[2048];
 static char save_options_file[2048];
 static char debug_log_file[2048];
+static char debug_log_file_bckp[2048];
 
 /*Contains ppd keywords which are written by ppdgenerator.c in the ppd file.*/
 static char* ppd_keywords[] = 
@@ -694,6 +709,35 @@ stop_debug_logging()
   lfp = NULL;
 }
 
+// returns the size of debug log file
+long int findLogFileSize() 
+{ 
+    FILE* fp = fopen(debug_log_file, "r"); 
+    if (fp == NULL) { 
+        return -1; 
+    } 
+    fseek(fp, 0L, SEEK_END); 
+    long int res = ftell(fp); 
+    fclose(fp); 
+    return res; 
+}
+
+void copyToFile(FILE **fp1, FILE **fp2){
+  int buffer_size = 2048;
+  char *buf = (char*) malloc(sizeof(char)*buffer_size);
+  if(!buf){
+    fprintf(stderr,"Error creating buffer for debug logging\n");
+    return;
+  }
+  fseek(*fp1, 0, SEEK_SET);
+  size_t r;
+  do {
+    r = fread(buf, sizeof(char), buffer_size, *fp1);
+    fwrite(buf, sizeof(char), r, *fp2);
+  } while(r==buffer_size);
+
+}
+
 void
 debug_printf(const char *format, ...) {
   if (debug_stderr || debug_logfile) {
@@ -716,7 +760,18 @@ debug_printf(const char *format, ...) {
       fflush(lfp);
       va_end(arglist);
     }
-  }
+
+    long int log_file_size = findLogFileSize(); 
+    if(DebugLogFileSize>0 && log_file_size>(long int)DebugLogFileSize*1024){
+      fclose(lfp);
+      FILE *fp1 = fopen(debug_log_file, "r");
+      FILE *fp2 = fopen(debug_log_file_bckp, "w");
+      copyToFile(&fp1,&fp2);
+      fclose(fp1);
+      fclose(fp2);
+      lfp = fopen(debug_log_file, "w");
+    }
+}
 }
 
 void
@@ -1366,9 +1421,15 @@ void add_mimetype_attributes(char* cluster_name, ipp_t **merged_attributes)
       ippAddStrings(*merged_attributes, IPP_TAG_PRINTER,IPP_TAG_MIMETYPE,
 		    attributes[attr_no], num_value, NULL,
 		    (const char * const *)values);
+
+      for (int k = 0; k < i; k++) {
+        free(values[k]);
+        values[k] = NULL;
+      }
     }
+    cupsArrayDelete(list);
+    list = NULL;
   }
-  cupsArrayDelete(list);
 }
 
 /*add_tagzero_attributes - Adds attribute to the merged_attribute variable for
@@ -1433,9 +1494,15 @@ void add_tagzero_attributes(char* cluster_name, ipp_t **merged_attributes)
 		    IPP_CONST_TAG(IPP_TAG_KEYWORD),
                     attributes[attr_no], num_value, NULL,
                     (const char * const *)values);
+
+      for (int k = 0; k < i; k++) {
+        free(values[k]);
+        values[k] = NULL;
+      }
     }
+    cupsArrayDelete(list);
+    list = NULL;
   }
-  cupsArrayDelete(list);
 }
 
 /*add_keyword_attributes - Adds attributes to the merged_attribute variable for
@@ -1497,9 +1564,15 @@ void add_keyword_attributes(char* cluster_name, ipp_t **merged_attributes)
       ippAddStrings(*merged_attributes, IPP_TAG_PRINTER, IPP_TAG_KEYWORD,
 		    attributes[attr_no], num_value, NULL,
 		    (const char * const *)values);
+
+      for (int k = 0; k < i; k++) {
+        free(values[k]);
+        values[k] = NULL;
+      }
     }
+    cupsArrayDelete(list);
+    list = NULL;
   }
-  cupsArrayDelete(list);
 }
 
 /*add_enum_attributes - Adds attributes to the merged_attribute variable for
@@ -1509,7 +1582,7 @@ void add_enum_attributes(char* cluster_name, ipp_t **merged_attributes)
 {
   int                  count, i, value;
   remote_printer_t     *p;
-  char                 *str;
+  char                 *str = NULL;
   char                 *q;
   cups_array_t         *list;
   ipp_attribute_t      *attr;
@@ -1557,8 +1630,14 @@ void add_enum_attributes(char* cluster_name, ipp_t **merged_attributes)
       ippAddIntegers(*merged_attributes, IPP_TAG_PRINTER,IPP_TAG_ENUM,
 		     attributes[attr_no], num_value,values);
     }
+
+    if (str != NULL) {
+      free(str);
+      str = NULL;
+    }
+    cupsArrayDelete(list);
+    list = NULL;
   }
-  cupsArrayDelete(list);
 }
 
 /*add_margin_attribute - Adds margin attributes to the merged_attribute variable for the cluster.*/
@@ -1614,8 +1693,14 @@ void add_margin_attributes(char* cluster_name, ipp_t **merged_attributes)
       ippAddIntegers(*merged_attributes, IPP_TAG_PRINTER,IPP_TAG_INTEGER,
 		     attributes[attr_no], num_value,values);
     }
+
+    if (str != NULL) {
+      free(str);
+      str = NULL;
+    }
+    cupsArrayDelete(list);
+    list = NULL;
   }
-  cupsArrayDelete(list);
 }
 
 /*add_resolution_attributes - Adds resolution attributes to the merged_attribute
@@ -1667,8 +1752,9 @@ void add_resolution_attributes(char* cluster_name, ipp_t **merged_attributes)
 			attributes[attr_no], num_resolution,
 			IPP_RES_PER_INCH, xres, yres);
     }
+    cupsArrayDelete(res_array);
+    res_array = NULL;
   }
-  cupsArrayDelete(res_array);
 }
 
 /*add_mediasize_attribute - Adds media sizes to the merged_attribute for the
@@ -1767,7 +1853,11 @@ void add_mediasize_attributes(char* cluster_name, ipp_t **merged_attributes)
       }
     }
   }
+
+  free(temp);
+  free(temp_range);
   cupsArrayDelete(sizes);
+  cupsArrayDelete(size_ranges);
 }
 
 /*add_mediadatabase_attribute - Adds media-col-database attributes for the
@@ -1885,6 +1975,8 @@ add_mediadatabase_attributes(char* cluster_name, ipp_t **merged_attributes)
       }
     }
   }
+
+  free(temp);
   cupsArrayDelete(media_database);
 }
 
@@ -1931,8 +2023,11 @@ void add_jobpresets_attribute(char* cluster_name, ipp_t ** merged_attributes)
     }
   }
 
-  if (num_preset == 0)
+  if (num_preset == 0) {
+    cupsArrayDelete(list);
+    cupsArrayDelete(added_presets);
     return;
+  }
 
   preset_attribute = ippAddCollections(*merged_attributes, IPP_TAG_PRINTER,
 				       "job-presets-supported", num_preset,
@@ -1955,6 +2050,9 @@ void add_jobpresets_attribute(char* cluster_name, ipp_t ** merged_attributes)
       }
     }
   }
+
+  cupsArrayDelete(list);
+  cupsArrayDelete(added_presets);
 }
 
 /* get_pagesize: Function returns the standard/custom page size using
@@ -1986,6 +2084,8 @@ static cups_array_t* get_pagesize(ipp_t *printer_attributes)
     cupsArrayAdd(page_media, ppdsizename);
   }
   free(ppdsizename);
+  cupsArrayDelete(sizes);
+
   return page_media;
 }
 
@@ -2626,8 +2726,14 @@ cups_array_t* get_cluster_sizes(char* cluster_name)
 	  }
         }
       }
+
+      cupsArrayDelete(sizes);
+      sizes = NULL;
     }
   }
+
+  cupsArrayDelete(sizes_ppdname);
+
   return cluster_sizes;
 }
 
@@ -2675,6 +2781,9 @@ cups_array_t* generate_cluster_conflicts(char* cluster_name,
         cupsArrayAdd(pagesizes, ppdsizename);
       }
       cluster_options[i] = pagesizes;
+
+      cupsArrayDelete(sizes);
+      sizes = NULL;
     }
   }
 
@@ -2731,10 +2840,21 @@ cups_array_t* generate_cluster_conflicts(char* cluster_name,
 		cupsArrayAdd(conflict_pairs, constraint);
 	      }
 	    }
+
+	    cupsArrayDelete(printer_second_options);
+	    printer_second_options = NULL;
 	  }
 	}
+
+      cupsArrayDelete(printer_first_options);
+      printer_first_options = NULL;
     }
   }
+
+  for(i = 0; i < no_of_ppd_keywords; i ++) {
+    cupsArrayDelete(cluster_options[i]);
+  }
+
   free(ppdsizename);
   return conflict_pairs;
 }
@@ -2967,6 +3087,8 @@ void get_cluster_default_attributes(ipp_t** merged_attributes,
 				     temp->bottom_margin,
 				     temp->media_source, temp->media_type);
     ippSetCollection(*merged_attributes, &media_col_default, 0, current_media);
+
+    free(temp);
   }
 
   /*Finding the default colormodel for the cluster*/
@@ -3648,7 +3770,8 @@ get_printer_uuid(http_t *http_printer,
 		 const char* raw_uri)
 {
   ipp_t *response = NULL;
-  ipp_attribute_t *attr;
+  ipp_attribute_t *attr = NULL;
+  const char * uuid = NULL;
 
   const char * const pattrs[] = {
     "printer-uuid",
@@ -3670,13 +3793,18 @@ get_printer_uuid(http_t *http_printer,
   }
 
   attr = ippFindAttribute(response, "printer-uuid", IPP_TAG_URI);
+
+
   if (attr)
-    return (ippGetString(attr, 0, NULL) + 9);
+    uuid = ippGetString(attr, 0, NULL) + 9;
   else {
     debug_printf ("Printer with URI %s: Cannot read \"printer-uuid\" IPP attribute!\n",
 		  raw_uri);
-    return NULL;
   }
+
+  ippDelete(response);
+
+  return uuid;
 }
 
 static void
@@ -5308,7 +5436,7 @@ record_default_printer(const char *printer, int local) {
   return 0;
 }
 
-const char*
+char*
 retrieve_default_printer(int local) {
   FILE *fp = NULL;
   const char *filename = local ? local_default_printer_file :
@@ -5331,7 +5459,7 @@ retrieve_default_printer(int local) {
   }
   fclose(fp);
   
-  return printer;
+  return (printer ? strdup(printer) : NULL);
 }
 
 int
@@ -5604,9 +5732,12 @@ queue_creation_handle_default(const char *printer) {
   /* If this queue is recorded as the former default queue (and the current
      default is local), set it as default (the CUPS notification handler
      will record the local default printer then) */
-  const char *recorded_default = retrieve_default_printer(0);
-  if (recorded_default == NULL || strcasecmp(recorded_default, printer))
+  char *recorded_default = retrieve_default_printer(0);
+  if (recorded_default == NULL || strcasecmp(recorded_default, printer)) {
+    if (recorded_default) free(recorded_default);
     return 0;
+  }
+  free(recorded_default);
   char *current_default = get_cups_default_printer();
   if (current_default == NULL || !is_created_by_cups_browsed(current_default)) {
     if (set_cups_default_printer(printer) < 0) {
@@ -5647,14 +5778,16 @@ queue_removal_handle_default(const char *printer) {
     debug_printf("Recorded the fact that the current printer (%s) is the default printer before deleting the queue and returning to the local default printer.\n",
 		 printer);
   /* Switch back to a recorded local printer, if available */
-  const char *local_default = retrieve_default_printer(1);
+  char *local_default = retrieve_default_printer(1);
   if (local_default != NULL) {
-    if (set_cups_default_printer(local_default) >= 0)
+    if (set_cups_default_printer(local_default) >= 0) {
       debug_printf("Switching back to %s as default printer.\n",
 		   local_default);
-    else {
+      free(local_default);
+    } else {
       debug_printf("ERROR: Unable to switch back to %s as default printer.\n",
 		   local_default);
+      free(local_default);
       return -1;
     }
   }
@@ -6470,7 +6603,7 @@ on_printer_deleted (CupsNotifier *object,
 		    gpointer user_data)
 {
   remote_printer_t *p;
-  const char* r;
+  char *r;
   char *local_queue_name_lower = NULL;
   local_printer_t *local_printer = NULL;
 
@@ -6517,7 +6650,7 @@ on_printer_deleted (CupsNotifier *object,
       if ((r = retrieve_default_printer(1)) != NULL) {
 	if (default_printer != NULL)
 	  free((void *)default_printer);
-	default_printer = strdup(r);
+	default_printer = r;
       }
     }
     /* Schedule for immediate creation of the CUPS queue */
@@ -6558,6 +6691,12 @@ queue_overwritten (remote_printer_t *p)
     /* We already have discovered that this queue got overwritten
        so we do not repeat the tests and exit positively */
     return 1;
+
+  if (p->uri[0] == '\0')
+    /* Also skip unconfirmed printer entries from queues of the
+       previous session, they do not have a PPD file registered, so we
+       cannot compare */
+    return 0;
 
   /* Get the device URI which our CUPS queue actually has now, a
      change of the URI means a modification or replacement of the
@@ -7494,11 +7633,11 @@ gboolean update_cups_queues(gpointer unused) {
   ipp_t         *printer_attributes = NULL;
   cups_array_t  *sizes=NULL;
   ipp_t         *printer_ipp_response; 
-  char    *make_model;
+  char          *make_model = NULL;
   const char    *pdl=NULL;
   int           color;
   int           duplex;
-  char          *default_pagesize;
+  char          *default_pagesize = NULL;
   const char    *default_color = NULL;
   int           cups_queues_updated = 0;
 
@@ -7776,7 +7915,7 @@ gboolean update_cups_queues(gpointer unused) {
       /* cups-browsed tried to add this print queue unsuccessfully for too
 	 many times due to timeouts - Skip print queue creation for this one */
       if (p->timeouted >= HttpMaxRetries) {
-	fprintf(stderr, "Max number of retries (%d) for creating print queue %s reached, skipping it.\n",
+	debug_printf("Max number of retries (%d) for creating print queue %s reached, skipping it.\n",
 		HttpMaxRetries, p->queue_name);
 	continue;
       }
@@ -7807,7 +7946,9 @@ gboolean update_cups_queues(gpointer unused) {
 #ifdef HAVE_CUPS_1_6
       /* Check whether there is a temporary CUPS queue which we would
          overwrite */
-      dest = cupsGetNamedDest(http, p->queue_name, NULL);
+      dest = NULL;
+      if (OnlyUnsupportedByCUPS == 0)
+        dest = cupsGetNamedDest(http, p->queue_name, NULL);
       if (dest) {
 	/* CUPS has found a queue with this name.
 	   Either CUPS generates a temporary queue here or we have already
@@ -7891,6 +8032,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    num_options = cupsAddOption("printer-is-shared",
 					(i == 0 ? "true" : "false"),
 					num_options, &options);
+	    num_options = cupsAddOption(CUPS_BROWSED_MARK "-default", "true", num_options, &options);
 	    cupsEncodeOptions2(request, num_options, options,
 			       IPP_TAG_OPERATION);
 	    cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
@@ -8060,6 +8202,29 @@ gboolean update_cups_queues(gpointer unused) {
 	      debug_printf("PPD generation successful: %s\n", ppdgenerator_msg);
 	      debug_printf("Created temporary PPD file: %s\n", buffer);
 	      ppdfile = strdup(buffer);
+	    }
+	  }
+
+	  if (num_cluster_printers != 1) {
+	    if (default_pagesize != NULL) {
+	      free(default_pagesize);
+	      default_pagesize = NULL;
+	    }
+	    if (make_model != NULL) {
+	      free(make_model);
+	      make_model = NULL;
+	    }
+	    if (conflicts != NULL) {
+	      cupsArrayDelete(conflicts);
+	      conflicts = NULL;
+	    }
+	    if (printer_attributes != NULL) {
+	      ippDelete(printer_attributes);
+	      printer_attributes = NULL;
+	    }
+	    if (sizes != NULL) {
+	      cupsArrayDelete(sizes);
+	      sizes = NULL;
 	    }
 	  }
 	} else if (IPPPrinterQueueType == PPD_NO) {
@@ -8378,6 +8543,29 @@ gboolean update_cups_queues(gpointer unused) {
 	    }
 	  }
 	}
+
+	if (num_cluster_printers != 1) {
+	  if (default_pagesize != NULL) {
+	    free(default_pagesize);
+	    default_pagesize = NULL;
+	  }
+	  if (make_model != NULL) {
+	    free(make_model);
+	    make_model = NULL;
+	  }
+	  if (conflicts != NULL) {
+	    cupsArrayDelete(conflicts);
+	    conflicts = NULL;
+	  }
+	  if (printer_attributes != NULL) {
+	    ippDelete(printer_attributes);
+	    printer_attributes = NULL;
+	  }
+	  if (sizes != NULL) {
+	    cupsArrayDelete(sizes);
+	    sizes = NULL;
+	  }
+	}
       } else {
 	/* Device URI: using implicitclass backend for IPP network printer */
 	httpAssembleURI(HTTP_URI_CODING_ALL, device_uri, sizeof(device_uri),
@@ -8479,8 +8667,9 @@ gboolean update_cups_queues(gpointer unused) {
 	    cupsFilePrintf(out, "%s\n", line);
 	  }
 	  /* Save the NickName of the PPD to check whether external
-	     manipulations of the print queue have replaced the PPD */
-	  if (!strncmp(line, "*NickName:", 10)) {
+	     manipulations of the print queue have replaced the PPD.
+	     Check whether nickname is defined too */
+	  if (!strncmp(line, "*NickName:", 10) && p->nickname == NULL) {
 	    ptr = strchr(line, '"');
 	    if (ptr) {
 	      ptr ++;
@@ -8699,7 +8888,8 @@ gboolean update_cups_queues(gpointer unused) {
 	 to STATUS_CONFIRMED and experience the timeout */
       /* If no timeout has happened, clear p->timeouted */
       if (timeout_reached == 1) {
-	fprintf(stderr, "Timeout happened during creation of the queue %s, turn on DebugLogging for more info.\n", p->queue_name);
+	debug_printf("Timeout happened during creation of the queue %s.\n",
+		     p->queue_name);
 	p->timeouted ++;
 	debug_printf("The queue %s already timeouted %d times in a row.\n",
 		     p->queue_name, p->timeouted);
@@ -11631,6 +11821,12 @@ read_configuration (const char *filename)
       else if (!strcasecmp(value, "no") || !strcasecmp(value, "false") ||
 	       !strcasecmp(value, "off") || !strcasecmp(value, "0"))
 	NewIPPPrinterQueuesShared = 0;
+    } else if(!strcasecmp(line, "DebugLogFileSize") && value) {
+      int val = atoi(value);
+      if(val<=0){
+        DebugLogFileSize=0;
+      }
+      else DebugLogFileSize=val;
     } else if (!strcasecmp(line, "AllowResharingRemoteCUPSPrinters") && value) {
       if (!strcasecmp(value, "yes") || !strcasecmp(value, "true") ||
 	  !strcasecmp(value, "on") || !strcasecmp(value, "1"))
@@ -11920,7 +12116,7 @@ find_previous_queue (gpointer key,
       p->status = STATUS_UNCONFIRMED;
 
       if (BrowseRemoteProtocols & BROWSE_CUPS)
-	p->timeout = time(NULL) + BrowseTimeout;
+	p->timeout = time(NULL) + BrowseInterval * 3 / 2;
       else
 	p->timeout = time(NULL) + TIMEOUT_CONFIRM;
 
@@ -12131,6 +12327,13 @@ int main(int argc, char*argv[]) {
   strncpy(debug_log_file + strlen(logdir),
 	  DEBUG_LOG_FILE,
 	  sizeof(debug_log_file) - strlen(logdir) - 1);
+
+  strncpy(debug_log_file_bckp, logdir,
+	  sizeof(debug_log_file_bckp) - 1);
+  strncpy(debug_log_file_bckp + strlen(logdir),
+	  DEBUG_LOG_FILE_2,
+	  sizeof(debug_log_file_bckp) - strlen(logdir) - 1);
+  
   if (debug_logfile == 1)
     start_debug_logging();
 

@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([cups_filters_version_major],[1])
-m4_define([cups_filters_version_minor],[27])
-m4_define([cups_filters_version_micro],[5])
+m4_define([cups_filters_version_minor],[28])
+m4_define([cups_filters_version_micro],[0])
 m4_define([cups_filters_version],[cups_filters_version_major.cups_filters_version_minor.cups_filters_version_micro])
 
 # =============
@@ -758,10 +758,10 @@ AC_ARG_WITH([test-font-path],
 	[with_test_font_path=`find /usr/share/fonts -name DejaVuSans.ttf || echo /usr/share/fonts/dejavu/DejaVuSans.ttf`]
 )
 
-AS_IF([test -f "$with_test_font_path"],
-	[AC_DEFINE_UNQUOTED([TESTFONT], ["$with_test_font_path"], [Path to font used in tests])],
+AS_IF([test "x$cross_compiling" != "xyes" && ! test -f "$with_test_font_path"],
 	[AC_MSG_ERROR(DejaVuSans.ttf font file is missing. Please install a package providing it.)]
 )
+AC_DEFINE_UNQUOTED([TESTFONT], ["$with_test_font_path"], [Path to font used in tests])
 
 # ================
 # Check for cflags
@@ -801,6 +801,39 @@ PKG_CHECK_EXISTS([liblouis], [
 ])
 AM_CONDITIONAL(ENABLE_BRAILLE, test "x$enable_braille" = xyes)
 AC_SUBST(TABLESDIR)
+
+# ===============================================
+# Should we keep generated queues after shutdown?
+# ===============================================
+AC_ARG_ENABLE(saving-created-queues, AS_HELP_STRING([--enable-saving-created-queues], [enable saving created queues during shutdown]),
+	      [SAVING_CREATED_QUEUES=$enableval],[SAVING_CREATED_QUEUES="no"])
+
+AS_IF([test "x$SAVING_CREATED_QUEUES" != "xno"],
+      [AC_DEFINE([SAVING_CREATED_QUEUES], [1], [Define whether we save queues during shutdown])]
+)
+
+# =========================================
+# Local queue naming for remote CUPS queues
+# =========================================
+AC_ARG_WITH([remote-cups-local-queue-naming],
+	[AS_HELP_STRING([--with-remote-cups-local-queue-naming=DNS-SD|MakeModel|RemoteName], [Choose the origin of local queue naming for remote CUPS queues, default based on DNS-SD ID])],
+	[case "x$withval" in
+		"xMakeModel")
+			REMOTE_CUPS_LOCAL_QUEUE_NAMING="MakeModel"
+	                AC_DEFINE([NAMING_MAKE_MODEL], [1], [Define that we create local queues for remote CUPS queues based on printer Make-Model])
+			;;
+		"xRemoteName")
+			REMOTE_CUPS_LOCAL_QUEUE_NAMING="RemoteName"
+	                AC_DEFINE([NAMING_REMOTE_NAME], [1], [Define that we create local queues for remote CUPS queues based on their print queue name on the server])
+			;;
+		*)
+			REMOTE_CUPS_LOCAL_QUEUE_NAMING="DNS-SD"
+	                AC_DEFINE([NAMING_DNSSD], [1], [Define that we create local queues for remote CUPS queues based on DNS-SD name])
+			;;
+	esac],
+	[REMOTE_CUPS_LOCAL_QUEUE_NAMING="DNS-SD"
+	 AC_DEFINE([NAMING_DNSSD], [1], [Define that we create local queues for remote CUPS queues based on DNS-SD name])]
+)
 
 # =========================================================
 # Select a different shell instead of the default /bin/bash
@@ -850,9 +883,9 @@ AC_OUTPUT
 AC_MSG_NOTICE([
 ==============================================================================
 Environment settings:
-	CFLAGS:          ${CFLAGS}
-	CXXFLAGS:        ${CXXFLAGS}
-	LDFLAGS:         ${LDFLAGS}
+	CFLAGS:                                    ${CFLAGS}
+	CXXFLAGS:                                  ${CXXFLAGS}
+	LDFLAGS:                                   ${LDFLAGS}
 Build configuration:
 	cups-config:     ${with_cups_config}
 	font directory:  ${sysconfdir}/${FONTDIR}
@@ -885,6 +918,8 @@ Build configuration:
 	driverless:      ${enable_driverless}
 	apple-raster:    ${APPLE_RASTER_FILTER}
 	pclm:            ${enable_pclm}
+	local queue naming for remote CUPS queues: ${REMOTE_CUPS_LOCAL_QUEUE_NAMING}
+	keep generated queues during shutdown:     ${SAVING_CREATED_QUEUES}
 	all ipp printer auto-setup: ${enable_auto_setup_all}
 	only driverless auto-setup: ${enable_auto_setup_driverless_only}
 	only local auto-setup: ${enable_auto_setup_local_only}
