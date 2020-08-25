@@ -146,6 +146,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          cups-daemon,
          lsb-base
+Pre-Depends: ${misc:Pre-Depends}
 Recommends: avahi-daemon
 Enhances: cups
 Breaks: cups-filters (<< 1.4.0~)
