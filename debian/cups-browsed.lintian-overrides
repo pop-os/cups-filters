@@ -1,0 +1,2 @@
+# Upstream choices; they need to be run as root
+cups-filters: executable-is-not-world-readable usr/lib/cups/backend/implicitclass 0700
