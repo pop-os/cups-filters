@@ -130,11 +130,14 @@ libcupsfilters.so.1 libcupsfilters1 #MINVER#
  generate_sizes@Base 1.24.0
  get_printer_attributes2@Base 1.27.0
  get_printer_attributes3@Base 1.27.5
+ get_printer_attributes4@Base 1.28.0
+ get_printer_attributes5@Base 1.28.0
  get_printer_attributes@Base 1.26.0
  get_printer_attributes_log@Base 1.26.0
  get_profile_inhibitors@Base 1.0.42
  ippResolutionListToArray@Base 1.17.1
  ippResolutionToRes@Base 1.17.1
+ ippfind_based_uri_converter@Base 1.28.0
  is_colordevice@Base 1.24.0
  joinResolutionArrays@Base 1.17.1
  load_opt_strings_catalog@Base 1.20.0
