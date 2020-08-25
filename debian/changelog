@@ -1,8 +1,23 @@
-cups-filters (1.28.0-1) UNRELEASED; urgency=medium
+cups-filters (1.28.0-1) unstable; urgency=medium
 
-  * Update to new upstream version 1.28.0.
+  * New 1.28.0 upstream version
+    - Install driverless-fax in cups-filters
+    - Add 3 1.28.0 symbols in libcupsfilters1
 
- -- Didier Raboud <odyx@debian.org>  Tue, 25 Aug 2020 21:55:44 +0200
+  * Add patches
+    - Fix successful{,l}y and unne{c,}cessarily typos
+    - Fix att{t,}ributes typo
+
+  * Packaging cleanup
+    - Fix spelling errors in copyright
+    - Fix file mismatch in d/copyright
+    - Drop -Wl,--as-needed for Bullseye+
+    - Fix cups-brf non-standard-executable-perm lintian override
+    - Add Build-Depends-Package metadata in symbol files
+    - Add cups-browsed lintian override
+    - Add missing Pre-Depends in cups-browsed
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 25 Aug 2020 22:25:50 +0200
 
 cups-filters (1.27.5-2) unstable; urgency=medium
 
