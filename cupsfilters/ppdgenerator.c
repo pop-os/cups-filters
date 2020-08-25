@@ -28,13 +28,7 @@
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 6)
 #define HAVE_CUPS_1_7 1
 #endif
-/* In CUPS < 2.3.x "ACCORDION" was mistyped "ACCORDIAN" */
-#ifndef IPP_FINISHINGS_FOLD_ACCORDION
-#define IPP_FINISHINGS_FOLD_ACCORDION 90
-#endif
-#ifndef IPP_FINISHINGS_CUPS_FOLD_ACCORDION
-#define IPP_FINISHINGS_CUPS_FOLD_ACCORDION 0x4000005A
-#endif
+
 
 /*
  * Include necessary headers.
@@ -47,6 +41,17 @@
 #ifdef HAVE_CUPS_1_7
 #include <cups/pwg.h>
 #endif /* HAVE_CUPS_1_7 */
+
+
+/*
+ * Macros to work around typos in older libcups version
+ */
+
+#if (CUPS_VERSION_MAJOR < 2) || ((CUPS_VERSION_MAJOR == 2) && ((CUPS_VERSION_MINOR < 3) || ((CUPS_VERSION_MINOR == 3) && (CUPS_VERSION_PATCH < 1))))
+#define IPP_FINISHINGS_CUPS_FOLD_ACCORDION IPP_FINISHINGS_CUPS_FOLD_ACCORDIAN
+#define IPP_FINISHINGS_FOLD_ACCORDION IPP_FINISHINGS_FOLD_ACCORDIAN
+#endif
+
 
 #ifdef HAVE_CUPS_1_6
 /* The following code uses a lot of CUPS >= 1.6 specific stuff.
@@ -1627,7 +1632,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
   int			outputorderinfofound = 0,
 			faceupdown = 1,
 			firsttolast = 1;
-  int			manual_copies = -1;
+  int			manual_copies = -1,
+          is_fax = 0;
 
  /*
   * Range check input...
@@ -1669,6 +1675,11 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
   cupsFilePuts(fp, "*FileSystem: False\n");
   cupsFilePuts(fp, "*PCFileName: \"drvless.ppd\"\n");
 
+  if ((attr = ippFindAttribute(response, "ipp-features-supported",
+			       IPP_TAG_KEYWORD))!= NULL &&
+      ippContainsString(attr, "faxout"))
+    is_fax = 1;
+
   if ((attr = ippFindAttribute(response, "printer-make-and-model",
 			       IPP_TAG_TEXT)) != NULL)
     strlcpy(make, ippGetString(attr, 0, NULL), sizeof(make));
@@ -1690,8 +1701,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
   cupsFilePrintf(fp, "*Manufacturer: \"%s\"\n", make);
   cupsFilePrintf(fp, "*ModelName: \"%s %s\"\n", make, model);
   cupsFilePrintf(fp, "*Product: \"(%s %s)\"\n", make, model);
-  cupsFilePrintf(fp, "*NickName: \"%s %s, driverless, cups-filters %s\"\n",
-		 make, model, VERSION);
+  cupsFilePrintf(fp, "*NickName: \"%s %s, %sdriverless, cups-filters %s\"\n",
+		 make, model, (is_fax ? "Fax, " : ""), VERSION);
   cupsFilePrintf(fp, "*ShortNickName: \"%s %s\"\n", make, model);
 
   /* Which is the default output bin? */
@@ -1858,6 +1869,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
     cupsFilePrintf(fp, "*cupsJobPassword: \"%s\"\n", pattern);
   }
 
+  
+
  /*
   * PDLs and common resolutions ...
   */
@@ -1904,6 +1917,13 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       }
     }
   }
+
+  /*
+   * Fax 
+   */
+
+  if (is_fax)
+    cupsFilePuts(fp, "*cupsIPPFaxOut: True\n");
 
   /* Check for each CUPS/cups-filters-supported PDL, starting with the
      most desirable going to the least desirable. If a PDL requires a
@@ -2062,7 +2082,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
      format, we need to create multiple copies on the client. We add a line to
      the PPD which tells the pdftopdf filter to generate the copies */
   if (manual_copies == 1)
-    cupsFilePuts(fp, "*cupsManualCopies: true\n");
+    cupsFilePuts(fp, "*cupsManualCopies: True\n");
 
   /* No resolution requirements by any of the supported PDLs? 
      Use "printer-resolution-supported" attribute */
@@ -3940,6 +3960,23 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       }
       cupsFilePuts(fp, "*CloseUI: *print-scaling\n");
     }
+  }
+   /*
+  * Phone Option for Fax..
+  */
+
+  if(is_fax){
+    human_readable = lookup_option("Phone", opt_strings_catalog,
+				   printer_opt_strings_catalog);
+
+    cupsFilePrintf(fp, "*OpenUI *phone/%s: PickOne\n"
+		   "*OrderDependency: 10 AnySetup *phone\n"
+		   "*Defaultphone: None\n" 
+       "*phone None: \"\"\n" 
+       "*CloseUI: *phone\n",
+       (human_readable ? human_readable : "Phone Number"));
+    cupsFilePrintf(fp,"*Customphone True: \"\"\n" 
+      "*ParamCustomphone Text: 1 string 0 64\n");
   }
 
  /*
