@@ -1,3 +1,4 @@
 # Upstream choices; they need to be run as root
-cups-filters: non-standard-executable-perm usr/lib/cups/backend/cups-brf 0744 != 0755
+cups-filters: non-standard-executable-perm usr/lib/cups/backend/cups-brf 0700 != 0755
+# Upstream choices; they need to be run as root
 cups-filters: non-standard-executable-perm usr/lib/cups/backend/serial 0744 != 0755
