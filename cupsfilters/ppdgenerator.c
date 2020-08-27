@@ -1633,7 +1633,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 			faceupdown = 1,
 			firsttolast = 1;
   int			manual_copies = -1,
-          is_fax = 0;
+			is_fax = 0;
 
  /*
   * Range check input...
@@ -2209,7 +2209,24 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 		twidth[256],		/* Width string */
 		tlength[256],		/* Length string */
 		ppdsizename[128];
-    char        *ippsizename;
+    char        *ippsizename,
+                *suffix;
+    int         all_borderless = 1;
+
+    /* Find a page size without ".Borderless" suffix */
+    /* (if all are ".Borderless" we drop the suffix in the PPD) */
+    for (size = (cups_size_t *)cupsArrayFirst(sizes); size;
+	 size = (cups_size_t *)cupsArrayNext(sizes))
+      if (strcasestr(size->media, ".Borderless") == NULL)
+	break;
+    if (size)
+      all_borderless = 0;
+
+    if (all_borderless) {
+      suffix = strcasestr(ppdname, ".Borderless");
+      *suffix = '\0';
+    }
+
     cupsFilePrintf(fp, "*OpenUI *PageSize/%s: PickOne\n"
 		   "*OrderDependency: 10 AnySetup *PageSize\n"
 		   "*DefaultPageSize: %s\n", "Media Size", ppdname);
@@ -2238,6 +2255,12 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 					 opt_strings_catalog,
 					 printer_opt_strings_catalog);
       }
+
+      if (all_borderless) {
+	suffix = strcasestr(ppdsizename, ".Borderless");
+	*suffix = '\0';
+      }
+
       cupsFilePrintf(fp, "*PageSize %s%s%s%s: \"<</PageSize[%s %s]>>setpagedevice\"\n",
 		     ppdsizename,
 		     (human_readable ? "/" : ""),
@@ -2276,6 +2299,12 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 					 opt_strings_catalog,
 					 printer_opt_strings_catalog);
       }
+
+      if (all_borderless) {
+	suffix = strcasestr(ppdsizename, ".Borderless");
+	*suffix = '\0';
+      }
+
       cupsFilePrintf(fp, "*PageRegion %s%s%s%s: \"<</PageSize[%s %s]>>setpagedevice\"\n",
 		     ppdsizename,
 		     (human_readable ? "/" : ""),
@@ -2306,6 +2335,11 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       strlcpy(ppdsizename, size->media, sizeof(ppdsizename));
       if ((ippsizename = strchr(ppdsizename, ' ')) != NULL)
 	*ippsizename = '\0';
+
+      if (all_borderless) {
+	suffix = strcasestr(ppdsizename, ".Borderless");
+	*suffix = '\0';
+      }
 
       cupsFilePrintf(fp, "*ImageableArea %s: \"%s %s %s %s\"\n", ppdsizename,
 		     tleft, tbottom, tright, ttop);
@@ -3961,22 +3995,35 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       cupsFilePuts(fp, "*CloseUI: *print-scaling\n");
     }
   }
-   /*
-  * Phone Option for Fax..
+
+ /*
+  * Phone Options for Fax..
   */
 
-  if(is_fax){
+  if (is_fax) {
     human_readable = lookup_option("Phone", opt_strings_catalog,
 				   printer_opt_strings_catalog);
 
     cupsFilePrintf(fp, "*OpenUI *phone/%s: PickOne\n"
 		   "*OrderDependency: 10 AnySetup *phone\n"
-		   "*Defaultphone: None\n" 
-       "*phone None: \"\"\n" 
-       "*CloseUI: *phone\n",
-       (human_readable ? human_readable : "Phone Number"));
-    cupsFilePrintf(fp,"*Customphone True: \"\"\n" 
-      "*ParamCustomphone Text: 1 string 0 64\n");
+		   "*Defaultphone: None\n"
+		   "*phone None: \"\"\n"
+		   "*CloseUI: *phone\n",
+		   (human_readable ? human_readable : "Phone Number"));
+    cupsFilePrintf(fp,"*Customphone True: \"\"\n"
+		   "*ParamCustomphone Text: 1 string 0 64\n");
+
+    human_readable = lookup_option("faxPrefix", opt_strings_catalog,
+				   printer_opt_strings_catalog);
+
+    cupsFilePrintf(fp, "*OpenUI *faxPrefix/%s: PickOne\n"
+		   "*OrderDependency: 10 AnySetup *faxPrefix\n"
+		   "*DefaultfaxPrefix: None\n"
+		   "*faxPrefix None: \"\"\n"
+		   "*CloseUI: *faxPrefix\n",
+		   (human_readable ? human_readable : "Pre-Dial Number"));
+    cupsFilePrintf(fp,"*CustomfaxPrefix True: \"\"\n"
+		   "*ParamCustomfaxPrefix Text: 1 string 0 64\n");
   }
 
  /*
