@@ -1264,22 +1264,22 @@ doc_DATA = \
 EXTRA_DIST = $(doc_DATA) autogen.sh config.rpath ln-srf \
 	libcupsfilters.pc.in libfontembed.pc.in \
 	utils/cups-browsed.service utils/cups-browsed-upstart.conf \
+	utils/driverless-fax.in \
 	filter/braille/drivers/index/ubrlto4dot.c \
 	filter/braille/filters/TODO.txt cupsfilters/kmdevices.cpp \
 	cupsfilters/kmdevices.h cupsfilters/testdriver.c \
 	data/makePDFfromPS.sh data/classified.ps data/confidential.ps \
 	data/secret.ps data/standard.ps data/topsecret.ps \
-	data/unclassified.ps drv/custom-media-lines \
-	$(driverlessfaxscripts) $(bannerfiles) $(pkgcharset_DATA) \
-	$(pkgfiltersinclude_DATA) cupsfilters/image.pgm \
-	cupsfilters/image.ppm $(pkgcupsdata_DATA) $(gendrvfiles) \
-	$(brldrvfiles) filter/braille/filters/liblouis1.defs.gen.in \
-	$(genppdcfiles) $(brlppdcfiles) $(genmimefiles) \
-	$(popplermimefiles) $(gsmimefiles) $(mutoolmimefiles) \
-	$(brlmimefiles) mime/cupsfilters.convs.in \
-	$(pkgfontembedinclude_DATA) fontembed/README \
-	$(genfilterscripts) $(gsfilterscripts) filter/test.sh \
-	utils/cups-browsed.in $(cupsbrowsedmanpages) \
+	data/unclassified.ps drv/custom-media-lines $(bannerfiles) \
+	$(pkgcharset_DATA) $(pkgfiltersinclude_DATA) \
+	cupsfilters/image.pgm cupsfilters/image.ppm \
+	$(pkgcupsdata_DATA) $(gendrvfiles) $(brldrvfiles) \
+	filter/braille/filters/liblouis1.defs.gen.in $(genppdcfiles) \
+	$(brlppdcfiles) $(genmimefiles) $(popplermimefiles) \
+	$(gsmimefiles) $(mutoolmimefiles) $(brlmimefiles) \
+	mime/cupsfilters.convs.in $(pkgfontembedinclude_DATA) \
+	fontembed/README $(genfilterscripts) $(gsfilterscripts) \
+	filter/test.sh utils/cups-browsed.in $(cupsbrowsedmanpages) \
 	$(driverlessmanpages) filter/foomatic-rip/foomatic-rip.1.in \
 	utils/org.cups.cupsd.Notifier.xml $(genppdfiles) $(gsppdfiles) \
 	scripting/perl scripting/php/README scripting/php/phpcups.php
@@ -1330,10 +1330,6 @@ test1284_CFLAGS = $(CUPS_CFLAGS)
 cups_brf_SOURCES = \
 	backend/cups-brf.c
 
-
-# ==============
-# PPD Generators
-# ==============
 pkgppdgendir = $(CUPS_SERVERBIN)/driver
 driverlessfaxscripts = \
 	utils/driverless-fax
@@ -5856,6 +5852,14 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
 .PRECIOUS: Makefile
 
+
+# ==============
+# PPD Generators
+# ==============
+utils/driverless-fax: utils/driverless-fax.in Makefile
+	sed \
+	  -e "s|\@CUPS_SERVERBIN\@|$(CUPS_SERVERBIN)|" \
+	  $< >$@
 
 filter/braille/filters/liblouis1.defs: filter/braille/filters/liblouis1.defs.gen
 	$< > $@

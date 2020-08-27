@@ -103,7 +103,8 @@ check_driverless_support(const char* uri)
   int support_status = DRVLESS_CHECKERR;
   ipp_t *response = NULL;
 
-  response = get_printer_attributes3(NULL, uri, NULL, 0, NULL, 0, 1, &support_status);
+  response = get_printer_attributes3(NULL, uri, NULL, 0, NULL, 0, 1,
+				     &support_status);
   if (response != NULL)
     ippDelete(response);
 
@@ -152,56 +153,29 @@ get_printer_attributes3(http_t *http_printer,
                         int* driverless_info)
 {
   return get_printer_attributes5(http_printer, raw_uri, pattrs, pattrs_size,
-				 req_attrs, req_attrs_size, debug, driverless_info,CUPS_BACKEND_URI_CONVERTER);
+				 req_attrs, req_attrs_size, debug,
+				 driverless_info, CUPS_BACKEND_URI_CONVERTER);
 }
+
 /* Get attributes of a printer specified only by URI and given info about fax-support*/
 ipp_t   *get_printer_attributes4(const char* raw_uri,
-				const char* const pattrs[],
-				int pattrs_size,
-				const char* const req_attrs[],
-				int req_attrs_size,
-				int debug,
-        int is_fax)
+				 const char* const pattrs[],
+				 int pattrs_size,
+				 const char* const req_attrs[],
+				 int req_attrs_size,
+				 int debug,
+				 int is_fax)
 {
-  #if defined(HAVE_SIGACTION) && !defined(HAVE_SIGSET)
-  struct sigaction action;		/* Actions for POSIX signals */
-#endif /* HAVE_SIGACTION && !HAVE_SIGSET */
-
- /*
-  * Make sure status messages are not buffered...
-  */
-
-  setbuf(stderr, NULL);
-
- /*
-  * Ignore broken pipe signals...
-  */
-
-  signal(SIGPIPE, SIG_IGN);
-
- /*
-  * Register a signal handler to cleanly cancel a job.
-  */
-
-#ifdef HAVE_SIGSET /* Use System V signals over POSIX to avoid bugs */
-  sigset(SIGTERM, cancel_job);
-#elif defined(HAVE_SIGACTION)
-  memset(&action, 0, sizeof(action));
-
-  sigemptyset(&action.sa_mask);
-  action.sa_handler = cancel_job;
-  sigaction(SIGTERM, &action, NULL);
-#else
-  signal(SIGTERM, cancel_job);
-#endif /* HAVE_SIGSET */
   if(is_fax)
     return get_printer_attributes5(NULL, raw_uri, pattrs, pattrs_size,
-				 req_attrs, req_attrs_size, debug,NULL,IPPFIND_BASED_CONVERTER_FOR_FAX_URI);
+				   req_attrs, req_attrs_size, debug, NULL,
+				   IPPFIND_BASED_CONVERTER_FOR_FAX_URI);
   else
     return get_printer_attributes5(NULL, raw_uri, pattrs, pattrs_size,
-				 req_attrs, req_attrs_size, debug,NULL,IPPFIND_BASED_CONVERTER_FOR_PRINT_URI);
-  
+				   req_attrs, req_attrs_size, debug, NULL,
+				   IPPFIND_BASED_CONVERTER_FOR_PRINT_URI);
 }
+
 /* Get attributes of a printer specified by URI and under a given HTTP
    connection, for example via a domain socket, and give info about used
    fallbacks */
@@ -213,10 +187,9 @@ get_printer_attributes5(http_t *http_printer,
 			const char* const req_attrs[],
 			int req_attrs_size,
 			int debug,
-      int* driverless_info,
-      int resolve_uri_type )
+			int* driverless_info,
+			int resolve_uri_type )
 {
-  
   const char *uri;
   int have_http, uri_status, host_port, i = 0, total_attrs = 0, fallback,
     cap = 0;
@@ -259,6 +232,37 @@ get_printer_attributes5(http_t *http_printer,
     "uri-security-supported"
   };
 
+#if defined(HAVE_SIGACTION) && !defined(HAVE_SIGSET)
+  struct sigaction action;		/* Actions for POSIX signals */
+#endif /* HAVE_SIGACTION && !HAVE_SIGSET */
+
+ /*
+  * Make sure status messages are not buffered...
+  */
+
+  setbuf(stderr, NULL);
+
+ /*
+  * Ignore broken pipe signals...
+  */
+
+  signal(SIGPIPE, SIG_IGN);
+
+ /*
+  * Register a signal handler to cleanly cancel a job.
+  */
+
+#ifdef HAVE_SIGSET /* Use System V signals over POSIX to avoid bugs */
+  sigset(SIGTERM, cancel_job);
+#elif defined(HAVE_SIGACTION)
+  memset(&action, 0, sizeof(action));
+  sigemptyset(&action.sa_mask);
+  action.sa_handler = cancel_job;
+  sigaction(SIGTERM, &action, NULL);
+#else
+  signal(SIGTERM, cancel_job);
+#endif /* HAVE_SIGSET */
+
   /* Expect a device capable of standard IPP Everywhere*/
   if (driverless_info != NULL)
     *driverless_info = FULL_DRVLESS;
@@ -275,8 +279,8 @@ get_printer_attributes5(http_t *http_printer,
   if(resolve_uri_type == CUPS_BACKEND_URI_CONVERTER)
     uri = resolve_uri(raw_uri);
   else
-    uri = ippfind_based_uri_converter(raw_uri,resolve_uri_type);
-   
+    uri = ippfind_based_uri_converter(raw_uri, resolve_uri_type);
+
   /* Extract URI componants needed for the IPP request */
   uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, uri,
 			       scheme, sizeof(scheme),
@@ -428,84 +432,101 @@ get_printer_attributes5(http_t *http_printer,
   if (have_http == 0) httpClose(http_printer);
   return NULL;
 }
-const char*
-ippfind_based_uri_converter (const char *uri ,int is_fax){
-  int		
-      ippfind_pid = 0,	        /* Process ID of ippfind for IPP */
-      post_proc_pipe[2],  /* Pipe to post-processing for IPP */
-      wait_children,		/* Number of child processes left */
-      wait_pid,		/* Process ID from wait() */
-      wait_status,		/* Status from child */
-      exit_status = 0,	/* Exit status */
-      bytes,
-      port,
-      i,
-      output_of_fax_uri = 0;   
-  char
-      *ippfind_argv[100],	/* Arguments for ippfind */
-      *ptr_to_port = NULL,
-      *ptr3,
-      *resolved_uri,		/*  Buffer for resolved URI */
-      *resource_field = NULL,
-      *service_hostname = NULL,
-    /* URI components... */
-			scheme[32],	
-			userpass[256],
-			hostname[1024],
-      reg_type[64],
-			resource[1024],
-      buffer[8192],		/* Copy buffer */
-      *ptr;		/* Pointer into string */;
-  cups_file_t
-    	*fp;			/* Post-processing input file */ 
-  int		status;		/* Status of GET request */
-  resolved_uri = (char *)malloc(2048*(sizeof(char)));
 
-  status = httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme,sizeof(scheme), userpass, sizeof(userpass),
-		      hostname, sizeof(hostname), &port, resource,sizeof(resource));
-  if (status != HTTP_URI_OK) {
+const char*
+ippfind_based_uri_converter (const char *uri, int is_fax)
+{
+  int  ippfind_pid = 0,	        /* Process ID of ippfind for IPP */
+       post_proc_pipe[2],	/* Pipe to post-processing for IPP */
+       wait_children,		/* Number of child processes left */
+       wait_pid,		/* Process ID from wait() */
+       wait_status,		/* Status from child */
+       exit_status = 0,		/* Exit status */
+       bytes,
+       port,
+       i,
+       output_of_fax_uri = 0,
+       is_local;
+  char *ippfind_argv[100],	/* Arguments for ippfind */
+       *ptr_to_port = NULL,
+       *reg_type,
+       *resolved_uri,		/*  Buffer for resolved URI */
+       *resource_field = NULL,
+       *service_hostname = NULL,
+       /* URI components... */
+       scheme[32],
+       userpass[256],
+       hostname[1024],
+       resource[1024],
+       buffer[8192],		/* Copy buffer */
+       *ptr;			/* Pointer into string */;
+  cups_file_t *fp;		/* Post-processing input file */
+  int  status;			/* Status of GET request */
+
+  resolved_uri = (char *)malloc(2048 * (sizeof(char)));
+
+  status = httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme),
+			   userpass, sizeof(userpass),
+			   hostname, sizeof(hostname), &port, resource,
+			   sizeof(resource));
+  if (status < HTTP_URI_OK) {
     /* Invalid URI */
-    fprintf(stderr,"Error:get-printer-attributes: Cannot parse the printer URI: %s\n",uri);
-    exit(1);
+    fprintf(stderr, "ERROR: Could not parse URI: %s\n", uri);
+    goto error;
   }
 
-  snprintf(reg_type,63,"._%s._tcp",scheme);
-  reg_type[63] = '\0';
-  if ((ptr3 = strstr(hostname, reg_type)))
-      *ptr3++ = '\0';
-  
+  /* URI is not DNS-SD-based, so do not resolve */
+  if ((reg_type = strstr(hostname, "._tcp")) == NULL) {
+    free(resolved_uri);
+    return strdup(uri);
+  }
+
+  reg_type --;
+  while (reg_type >= hostname && *reg_type != '.')
+    reg_type --;
+  if (reg_type < hostname) {
+    fprintf(stderr, "ERROR: Invalid DNS-SD service name: %s\n", hostname);
+    goto error;
+  }
+  *reg_type++ = '\0';
+
   i = 0;
   ippfind_argv[i++] = "ippfind";
-  ippfind_argv[i++] = reg_type+1;     /* list IPPS entries */
-  ippfind_argv[i++] = "-T";               /* Bonjour poll timeout */
-  ippfind_argv[i++] = "3";                /* 3 seconds */
-  if(is_fax){
+  ippfind_argv[i++] = reg_type;           /* list IPP(S) entries */
+  ippfind_argv[i++] = "-T";               /* DNS-SD poll timeout */
+  ippfind_argv[i++] = "0";                /* Minimum time required */
+  if (is_fax) {
     ippfind_argv[i++] = "--txt";
     ippfind_argv[i++] = "rfo";
   }
   ippfind_argv[i++] = "-N";
-  ippfind_argv[i++] = hostname; 
+  ippfind_argv[i++] = hostname;
   ippfind_argv[i++] = "-x";
   ippfind_argv[i++] = "echo";             /* Output the needed data fields */
   ippfind_argv[i++] = "-en";              /* separated by tab characters */
   if(is_fax)
-    ippfind_argv[i++] = "{service_hostname}\t{txt_rfo}\t{service_port}\t\n";
+    ippfind_argv[i++] = "\n{service_hostname}\t{txt_rfo}\t{service_port}\t";
   else
-    ippfind_argv[i++] = "{service_hostname}\t{txt_rp}\t{service_port}\t\n";
+    ippfind_argv[i++] = "\n{service_hostname}\t{txt_rp}\t{service_port}\t";
+  ippfind_argv[i++] = ";";
+  ippfind_argv[i++] = "--local";          /* Rest only if local service */
+  ippfind_argv[i++] = "-x";
+  ippfind_argv[i++] = "echo";             /* Output an 'L' at the end of the */
+  ippfind_argv[i++] = "-en";              /* line */
+  ippfind_argv[i++] = "L";
   ippfind_argv[i++] = ";";
   ippfind_argv[i++] = NULL;
 
-   /*
+ /*
   * Create a pipe for passing the ippfind output to post-processing
   */
-  
-  if (pipe(post_proc_pipe)){
+
+  if (pipe(post_proc_pipe)) {
     perror("ERROR: Unable to create pipe to post-processing");
-    exit_status = 1;
     goto error;
   }
 
-  if ((ippfind_pid = fork()) == 0){
+  if ((ippfind_pid = fork()) == 0) {
    /*
     * Child comes here...
     */
@@ -519,13 +540,12 @@ ippfind_based_uri_converter (const char *uri ,int is_fax){
 
     exit(1);
   }
-  else if (ippfind_pid < 0){
+  else if (ippfind_pid < 0) {
    /*
     * Unable to fork!
     */
 
     perror("ERROR: Unable to execute ippfind utility");
-    exit_status = 1;
     goto error;
   }
 
@@ -539,56 +559,67 @@ ippfind_based_uri_converter (const char *uri ,int is_fax){
 
   fp = cupsFileStdin();
 
-  while ((bytes = cupsFileGetLine(fp, buffer, sizeof(buffer))) > 0){
-    if(is_fax)
-      output_of_fax_uri = 1; /* fax-uri requested is from fax-capable device */
+  while ((bytes = cupsFileGetLine(fp, buffer, sizeof(buffer))) > 0) {
     /* Mark all the fields of the output of ippfind */
     ptr = buffer;
     /* First, build the DNS-SD-service-name-based URI ... */
-      while (ptr && !isalnum(*ptr & 255)) ptr ++;
-      
+    while (ptr && !isalnum(*ptr & 255)) ptr ++;
+
     service_hostname = ptr; 
     ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
-    
+
     resource_field = ptr;
     ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
-   
+
     ptr_to_port = ptr;
     ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
-   
+
+    /* Do we have a local service so that we have to set the host name to
+       "localhost"? */
+    is_local = (*ptr == 'L');
+
+    ptr = strchr(reg_type, '.');
+    if (!ptr) goto read_error;
+    *ptr = '\0';
+
     port = convert_to_port(ptr_to_port);
-    
+
     httpAssembleURIf(HTTP_URI_CODING_ALL, resolved_uri,
-      2047,scheme, NULL,service_hostname, port, "/%s",resource_field);
-   
+		     2047, reg_type + 1, NULL,
+		     (is_local ? "localhost" : service_hostname), port, "/%s",
+		     resource_field);
+
+    if (is_fax)
+      output_of_fax_uri = 1; /* fax-uri requested from fax-capable device */
+
   read_error:
-      continue;
+    continue;
   }
 
-/*
+ /*
   * Wait for the child processes to exit...
   */
 
   wait_children = 1;
 
-  while (wait_children > 0){
+  while (wait_children > 0) {
    /*
     * Wait until we get a valid process ID or the job is canceled...
     */
 
-    while ((wait_pid = wait(&wait_status)) < 0 && errno == EINTR){
-      if (job_canceled){
+    while ((wait_pid = wait(&wait_status)) < 0 && errno == EINTR) {
+      if (job_canceled) {
       	kill(ippfind_pid, SIGTERM);
-	      job_canceled = 0;
+	job_canceled = 0;
       }
     }
 
@@ -596,58 +627,60 @@ ippfind_based_uri_converter (const char *uri ,int is_fax){
       break;
 
     wait_children --;
+
    /*
     * Report child status...
     */
 
-    if (wait_status){
-      if (WIFEXITED(wait_status)){
-	      exit_status = WEXITSTATUS(wait_status);
+    if (wait_status) {
+      if (WIFEXITED(wait_status)) {
+	exit_status = WEXITSTATUS(wait_status);
 
         if (debug)
           fprintf(stderr, "DEBUG: PID %d (%s) stopped with status %d!\n",
-          wait_pid,(wait_pid == ippfind_pid ? "ippfind" :"Unknown process"),exit_status);
-       
+		  wait_pid,
+		  (wait_pid == ippfind_pid ? "ippfind" : "Unknown process"),
+		  exit_status);
+
         if (wait_pid == ippfind_pid && exit_status <= 2)
           exit_status = 0;	  
-      }
-      else if (WTERMSIG(wait_status) == SIGTERM){
-        if(debug)
-          fprintf(stderr,"DEBUG: PID %d (%s) was terminated normally with signal %d!\n",
-            wait_pid,(wait_pid == ippfind_pid ? "ippfind" :"Unknown process"),exit_status);
-      }
-      else{
-	      exit_status = WTERMSIG(wait_status);
+      } else if (WTERMSIG(wait_status) == SIGTERM) {
         if (debug)
-          fprintf(stderr, "DEBUG: PID %d (%s) crashed on signal %d!\n",wait_pid,
-            (wait_pid == ippfind_pid ? "ippfind":"Unknown process"),exit_status);
+          fprintf(stderr,
+		  "DEBUG: PID %d (%s) was terminated normally with signal %d!\n",
+		  wait_pid,
+		  (wait_pid == ippfind_pid ? "ippfind" : "Unknown process"),
+		  exit_status);
+      } else {
+	exit_status = WTERMSIG(wait_status);
+        if (debug)
+          fprintf(stderr, "DEBUG: PID %d (%s) crashed on signal %d!\n",
+		  wait_pid,
+		  (wait_pid == ippfind_pid ? "ippfind" : "Unknown process"),
+		  exit_status);
       }
-    }
-    else{
+    } else {
       if (debug)
-	      fprintf(stderr, "DEBUG: PID %d (%s) exited with no errors.\n",wait_pid,
-		    (wait_pid == ippfind_pid ? "ippfind" :"Unknown process"));
+	fprintf(stderr, "DEBUG: PID %d (%s) exited with no errors.\n",wait_pid,
+		(wait_pid == ippfind_pid ? "ippfind" :"Unknown process"));
     }
   }
-  if(is_fax && !output_of_fax_uri){
-    fprintf(stderr,"fax URI requested from not fax-capable device\n");
-    exit(1);
+  if (is_fax && !output_of_fax_uri) {
+    fprintf(stderr, "fax URI requested from not fax-capable device\n");
+    goto error;
   }
 
-  
   return (resolved_uri);
-  
 
  /*
   * Exit...
   */
 
-  error:
-    fprintf(stderr,"ERROR :ippfind_based_uri_converter() stopped with status %d \n",exit_status);
-    return (NULL);
-  }
+ error:
+  return (NULL);
+}
   
-  /*
+/*
  * 'cancel_job()' - Flag the job as canceled.
  */
 
