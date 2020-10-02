@@ -1,3 +1,12 @@
+cups-filters (1.28.3-1) unstable; urgency=medium
+
+  * New 1.28.3 upstream release
+    - Bug fix release to solve problems caused by an inconsistency between the
+      resolvers for DNS-SD-based URIs (Upstream issue #308)
+  * d/rules: Drop unused get-orig-source target
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 02 Oct 2020 10:29:42 +0200
+
 cups-filters (1.28.2-1) unstable; urgency=medium
 
   * New 1.28.2 upstream release
