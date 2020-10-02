@@ -67,7 +67,7 @@ log_printf(char *log,
   va_end(arglist);
 }
 
-const char *
+char *
 resolve_uri(const char *raw_uri)
 {
   char *pseudo_argv[2];
@@ -91,7 +91,7 @@ resolve_uri(const char *raw_uri)
   dup2(fd1, 2);
   close(fd1);
 
-  return uri;
+  return (uri ? strdup(uri) : NULL);
 }
 
 #ifdef HAVE_CUPS_1_6
@@ -189,7 +189,7 @@ get_printer_attributes5(http_t *http_printer,
 			int* driverless_info,
 			int resolve_uri_type )
 {
-  const char *uri;
+  char *uri;
   int have_http, uri_status, host_port, i = 0, total_attrs = 0, fallback,
     cap = 0;
   char scheme[10], userpass[1024], host_name[1024], resource[1024];
@@ -249,6 +249,13 @@ get_printer_attributes5(http_t *http_printer,
   else
     uri = ippfind_based_uri_converter(raw_uri, resolve_uri_type);
 
+  if (uri == NULL)
+  {
+    log_printf(get_printer_attributes_log,
+        "get-printer-attibutes: Cannot resolve URI: %s\n", raw_uri);
+    return NULL;
+  }
+
   /* Extract URI componants needed for the IPP request */
   uri_status = httpSeparateURI(HTTP_URI_CODING_ALL, uri,
 			       scheme, sizeof(scheme),
@@ -261,6 +268,7 @@ get_printer_attributes5(http_t *http_printer,
     log_printf(get_printer_attributes_log,
 	       "get-printer-attributes: Cannot parse the printer URI: %s\n",
 	       uri);
+    if (uri) free(uri);
     return NULL;
   }
 
@@ -273,6 +281,7 @@ get_printer_attributes5(http_t *http_printer,
       log_printf(get_printer_attributes_log,
 		 "get-printer-attributes: Cannot connect to printer with URI %s.\n",
 		 uri);
+      if (uri) free(uri);
       return NULL;
     }
   } else
@@ -370,6 +379,7 @@ get_printer_attributes5(http_t *http_printer,
       } else {
 	/* Suitable response, we are done */
 	if (have_http == 0) httpClose(http_printer);
+	if (uri) free(uri);
 	return response;
       }
     } else {
@@ -398,10 +408,11 @@ get_printer_attributes5(http_t *http_printer,
   }
 
   if (have_http == 0) httpClose(http_printer);
+  if (uri) free(uri);
   return NULL;
 }
 
-const char*
+char*
 ippfind_based_uri_converter (const char *uri, int is_fax)
 {
   int  ippfind_pid = 0,	        /* Process ID of ippfind for IPP */
@@ -418,7 +429,7 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
   char *ippfind_argv[100],	/* Arguments for ippfind */
        *ptr_to_port = NULL,
        *reg_type,
-       *resolved_uri,		/*  Buffer for resolved URI */
+       *resolved_uri = NULL,		/*  Buffer for resolved URI */
        *resource_field = NULL,
        *service_hostname = NULL,
        /* URI components... */
@@ -426,12 +437,10 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
        userpass[256],
        hostname[1024],
        resource[1024],
-       buffer[8192],		/* Copy buffer */
+       *buffer = NULL,		/* Copy buffer */
        *ptr;			/* Pointer into string */;
   cups_file_t *fp;		/* Post-processing input file */
   int  status;			/* Status of GET request */
-
-  resolved_uri = (char *)malloc(2048 * (sizeof(char)));
 
   status = httpSeparateURI(HTTP_URI_CODING_ALL, uri, scheme, sizeof(scheme),
 			   userpass, sizeof(userpass),
@@ -445,9 +454,15 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
 
   /* URI is not DNS-SD-based, so do not resolve */
   if ((reg_type = strstr(hostname, "._tcp")) == NULL) {
-    free(resolved_uri);
     return strdup(uri);
   }
+
+  resolved_uri = (char *)malloc(MAX_URI_LEN * (sizeof(char)));
+  if (resolved_uri == NULL) {
+    fprintf(stderr, "resolved_uri malloc: Out of memory\n");
+    goto error;
+  }
+  memset(resolved_uri, 0, MAX_URI_LEN);
 
   reg_type --;
   while (reg_type >= hostname && *reg_type != '.')
@@ -523,26 +538,38 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
 
   fp = cupsFileStdin();
 
-  while ((bytes = cupsFileGetLine(fp, buffer, sizeof(buffer))) > 0) {
+  buffer = (char*)malloc(MAX_OUTPUT_LEN * sizeof(char));
+  if (buffer == NULL) {
+    fprintf(stderr, "buffer malloc: Out of memory.\n");
+    goto error;
+  }
+  memset(buffer, 0, MAX_OUTPUT_LEN);
+
+  while ((bytes = cupsFileGetLine(fp, buffer, MAX_OUTPUT_LEN)) > 0) {
     /* Mark all the fields of the output of ippfind */
     ptr = buffer;
+
+    /* ignore new lines */
+    if (bytes < 3)
+      goto read_error;
+
     /* First, build the DNS-SD-service-name-based URI ... */
     while (ptr && !isalnum(*ptr & 255)) ptr ++;
 
     service_hostname = ptr; 
-    ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
+    ptr = memchr(ptr, '\t', MAX_OUTPUT_LEN - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
 
     resource_field = ptr;
-    ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
+    ptr = memchr(ptr, '\t', MAX_OUTPUT_LEN - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
 
     ptr_to_port = ptr;
-    ptr = memchr(ptr, '\t', sizeof(buffer) - (ptr - buffer));
+    ptr = memchr(ptr, '\t', MAX_OUTPUT_LEN - (ptr - buffer));
     if (!ptr) goto read_error;
     *ptr = '\0';
     ptr ++;
@@ -566,8 +593,11 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
       output_of_fax_uri = 1; /* fax-uri requested from fax-capable device */
 
   read_error:
-    continue;
+    memset(buffer, 0, MAX_OUTPUT_LEN);
   }
+
+  if (buffer != NULL)
+    free(buffer);
 
  /*
   * Wait for the child processes to exit...
@@ -615,6 +645,8 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
   */
 
  error:
+  if (resolved_uri != NULL)
+    free(resolved_uri);
   return (NULL);
 }
 
