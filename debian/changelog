@@ -1,3 +1,11 @@
+cups-filters (1.28.4-0ubuntu1) groovy; urgency=medium
+
+  * New 1.28.4 upstream release
+    - Bug fix release, mainly to solve CUPS performance problems caused by
+      the new IPP fax support of the "driverless" utility
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Fri, 09 Oct 2020 18:38:39 +0200
+
 cups-filters (1.28.3-0ubuntu1) groovy; urgency=medium
 
   * New 1.28.3 upstream release
