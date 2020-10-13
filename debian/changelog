@@ -1,3 +1,11 @@
+cups-filters (1.28.5-0ubuntu1) groovy; urgency=medium
+
+  * New 1.28.5 upstream release
+    - Bug fix release for a quick, potential crasher correction in cups-browsed
+      (Red Hat bug #1881365, Upstream pull request #311).
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Tue, 13 Oct 2020 13:20:52 +0200
+
 cups-filters (1.28.4-0ubuntu1) groovy; urgency=medium
 
   * New 1.28.4 upstream release
