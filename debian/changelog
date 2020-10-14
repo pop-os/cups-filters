@@ -1,3 +1,9 @@
+cups-filters (1.28.5-1) unstable; urgency=medium
+
+  * 1.28.5 upstream release
+
+ -- Didier Raboud <odyx@debian.org>  Wed, 14 Oct 2020 18:33:24 +0200
+
 cups-filters (1.28.4-1) unstable; urgency=medium
 
   * New 1.28.4 upstream release
