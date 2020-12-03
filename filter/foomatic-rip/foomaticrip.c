@@ -560,7 +560,7 @@ int print_file(const char *filename, int convert)
 {
     FILE *file;
     char buf[8192];
-    char tmpfilename[PATH_MAX];
+    char tmpfilename[PATH_MAX] = "";
     int type;
     int startpos;
     int pagecount;
@@ -688,6 +688,10 @@ int print_file(const char *filename, int convert)
                   fclose(in);
                 if (out != NULL)
                   fclose(out);
+
+                // Delete temp file if we created one
+                if ( *tmpfilename )
+                    unlink(tmpfilename);
 
                 return ret;
             }
@@ -1157,7 +1161,18 @@ int main(int argc, char** argv)
                when there is no postpipe) */
             _log("Raw printing, executing \"cat %%s\"\n\n");
             snprintf(tmp, 1024, "cat %s", postpipe->data);
+            if (strcasecmp(filename, "<STDIN>")) {
+              FILE *fh = fopen(filename, "r");
+              if (!fh) {
+                _log("Failed to open \"%s\".\n", filename);
+                fclose(stdin);
+              } else {
+                dup2(fileno(fh), 0);
+                fclose(fh);
+              }
+            }
             run_system_process("raw-printer", tmp);
+            filename = strtok_r(NULL, " ", &p);
             continue;
         }
 
