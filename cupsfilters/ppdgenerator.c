@@ -1059,9 +1059,11 @@ ippResolutionListToArray(ipp_attribute_t *attr)
       res_array = resolutionArrayNew();
       if (res_array) {
 	for (i = 0; i < count; i ++)
-	  if ((res = ippResolutionToRes(attr, i)) != NULL &&
-	      cupsArrayFind(res_array, res) == NULL)
-	    cupsArrayAdd(res_array, res);
+	  if ((res = ippResolutionToRes(attr, i)) != NULL) {
+	    if (cupsArrayFind(res_array, res) == NULL)
+	      cupsArrayAdd(res_array, res);
+	    free_resolution(res, NULL);
+	  }
       }
       if (cupsArrayCount(res_array) == 0) {
 	cupsArrayDelete(res_array);
@@ -2347,8 +2349,6 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 		     twidth, tlength);
     }
 
-    cupsArrayDelete(sizes);
-
    /*
     * Custom size support...
     */
@@ -2387,7 +2387,6 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       cupsFilePuts(fp, "*CustomPageSize True: \"pop pop pop <</PageSize[5 -2 roll]/ImagingBBox null>>setpagedevice\"\n");
     }
   } else {
-    cupsArrayDelete(sizes);
     cupsFilePrintf(fp,
 		   "*%% Printer did not supply page size info via IPP, using defaults\n"
 		   "*OpenUI *PageSize/Media Size: PickOne\n"
@@ -2454,6 +2453,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 		   "*PaperDimension EnvMonarch/Envelope Monarch: \"279 540\"\n");
   }
 
+  cupsArrayDelete(printer_sizes);
+
  /*
   * InputSlot...
   */
@@ -2462,11 +2463,13 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 			       IPP_TAG_KEYWORD)) != NULL)
     pwg_ppdize_name(ippGetString(attr, 0, NULL), ppdname, sizeof(ppdname));
   else
-    strlcpy(ppdname, "Unknown", sizeof(ppdname));
+    ppdname[0] = '\0';
 
   if ((attr = ippFindAttribute(response, "media-source-supported",
 			       IPP_TAG_KEYWORD)) != NULL &&
       (count = ippGetCount(attr)) > 1) {
+    int have_default = ppdname[0] != '\0';
+					/* Do we have a default InputSlot? */
     static const char * const sources[][2] =
     {					/* "media-source" strings */
       { "Auto", _("Automatic") },
@@ -2524,14 +2527,17 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
     human_readable = lookup_option("media-source", opt_strings_catalog,
 				   printer_opt_strings_catalog);
     cupsFilePrintf(fp, "*OpenUI *InputSlot/%s: PickOne\n"
-		   "*OrderDependency: 10 AnySetup *InputSlot\n"
-		   "*DefaultInputSlot: %s\n",
-		   (human_readable ? human_readable : "Media Source"),
-		   ppdname);
+		   "*OrderDependency: 10 AnySetup *InputSlot\n",
+		   (human_readable ? human_readable : "Media Source"));
+    if (have_default)
+      cupsFilePrintf(fp, "*DefaultInputSlot: %s\n", ppdname);
     for (i = 0, count = ippGetCount(attr); i < count; i ++) {
       keyword = ippGetString(attr, i, NULL);
 
       pwg_ppdize_name(keyword, ppdname, sizeof(ppdname));
+
+      if (i == 0 && !have_default)
+	cupsFilePrintf(fp, "*DefaultInputSlot: %s\n", ppdname);
 
       human_readable = lookup_choice((char *)keyword, "media-source",
 				     opt_strings_catalog,
@@ -2864,6 +2870,18 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 			_cupsLangString(lang, _("Color"))));
 
 	default_color = "RGB";
+
+	if (ippGetCount(attr) == 1 ||
+	    (!ippContainsString(attr, "sgray_8") &&
+	     !ippContainsString(attr, "black_1") &&
+	     !ippContainsString(attr, "black_8"))) {
+	  human_readable2 = lookup_choice("monochrome", "print-color-mode",
+					  opt_strings_catalog,
+					  printer_opt_strings_catalog);
+	  cupsFilePrintf(fp, "*ColorModel Gray/%s: \"<</cupsColorSpace 18/cupsBitsPerColor 8/cupsColorOrder 0/cupsCompression 0>>setpagedevice\"\n",
+			 (human_readable2 ? human_readable2 :
+			  _cupsLangString(lang, _("Grayscale"))));
+	}
       } else if (!strcasecmp(keyword, "adobe-rgb_16") ||
 		 !strncmp(keyword, "ADOBERGB48", 10) ||
 		 !strncmp(keyword, "ADOBERGB24-48", 13)) {
@@ -3086,7 +3104,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
   if ((attr = ippFindAttribute(response, "output-bin-supported",
 			       IPP_TAG_ZERO)) != NULL &&
-      (count = ippGetCount(attr)) > 1) {
+      (count = ippGetCount(attr)) > 0) {
     static const char * const output_bins[][2] =
     {					/* "output-bin" strings */
       { "auto", _("Automatic") },
