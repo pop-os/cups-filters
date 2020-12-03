@@ -1,3 +1,11 @@
+cups-filters (1.28.6-1) unstable; urgency=medium
+
+  * 1.28.6 upstream release
+  * Update watch file format version to 4.
+  * Bump S-V to 4.5.1 without changes needed
+
+ -- Didier Raboud <odyx@debian.org>  Thu, 03 Dec 2020 12:04:36 +0100
+
 cups-filters (1.28.5-1) unstable; urgency=medium
 
   * 1.28.5 upstream release
