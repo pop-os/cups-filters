@@ -193,6 +193,7 @@ typedef struct remote_printer_s {
   char *host;
   char *ip;
   int port;
+  char *resource;
   char *service_name;
   char *type;
   char *domain;
@@ -1415,8 +1416,8 @@ void add_mimetype_attributes(char* cluster_name, ipp_t **merged_attributes)
       for (q = (char *)cupsArrayFirst(list),i=0;
 	   q;
 	   q = (char *)cupsArrayNext(list),i++) {
-        values[i]=malloc(sizeof(char)*strlen(q)+1);
-        strncpy(values[i], q, sizeof(values[i]) - 1);
+        values[i]=malloc(sizeof(char) * (strlen(q) + 1));
+        snprintf(values[i], strlen(q) + 1, "%s", q);
       }
       ippAddStrings(*merged_attributes, IPP_TAG_PRINTER,IPP_TAG_MIMETYPE,
 		    attributes[attr_no], num_value, NULL,
@@ -1487,12 +1488,12 @@ void add_tagzero_attributes(char* cluster_name, ipp_t **merged_attributes)
       /* Transferring attributes value from cups Array to char* array*/
       for (q = (char *)cupsArrayFirst(list), i = 0; q;
            q = (char *)cupsArrayNext(list), i ++) {
-        values[i] = malloc(sizeof(char) * strlen(q) + 1);
-        strncpy(values[i], q, sizeof(values[i]) - 1);
+        values[i] = malloc(sizeof(char) * (strlen(q) + 1));
+        snprintf(values[i], strlen(q) + 1, "%s", q);
       }
       ippAddStrings(*merged_attributes, IPP_TAG_PRINTER,
-		    IPP_CONST_TAG(IPP_TAG_KEYWORD),
-                    attributes[attr_no], num_value, NULL,
+                    IPP_TAG_KEYWORD, attributes[attr_no],
+                    num_value, NULL,
                     (const char * const *)values);
 
       for (int k = 0; k < i; k++) {
@@ -1558,8 +1559,8 @@ void add_keyword_attributes(char* cluster_name, ipp_t **merged_attributes)
       for (q = (char *)cupsArrayFirst(list), i=0;
 	   q;
 	   q = (char *)cupsArrayNext(list), i ++) {
-        values[i] = malloc(sizeof(char) * strlen(q) + 1);
-        strncpy(values[i], q, sizeof(values[i]) - 1);
+        values[i] = malloc(sizeof(char) * (strlen(q) + 1));
+        snprintf(values[i], strlen(q) + 1, "%s", q);
       }
       ippAddStrings(*merged_attributes, IPP_TAG_PRINTER, IPP_TAG_KEYWORD,
 		    attributes[attr_no], num_value, NULL,
@@ -1733,12 +1734,14 @@ void add_resolution_attributes(char* cluster_name, ipp_t **merged_attributes)
       if ((attr = ippFindAttribute(p->prattrs, attributes[attr_no],
 				   IPP_TAG_RESOLUTION)) != NULL) {
         for (i = 0, count = ippGetCount(attr); i < count; i ++) {
-          if ((res = ippResolutionToRes(attr, i)) != NULL &&
-	      cupsArrayFind(res_array, res) == NULL) {
-            cupsArrayAdd(res_array, res);
-            num_resolution ++;
-	  }
-        }
+          if ((res = ippResolutionToRes(attr, i)) != NULL) {
+	          if (cupsArrayFind(res_array, res) == NULL) {
+	            cupsArrayAdd(res_array, res);
+	            num_resolution ++;
+	          }
+	          free_resolution(res, NULL);
+	        }
+	      }
       }
     }
     if (num_resolution) {
@@ -1768,7 +1771,7 @@ void add_mediasize_attributes(char* cluster_name, ipp_t **merged_attributes)
   ipp_t                *media_size;
   cups_array_t         *sizes, *size_ranges;
   media_size_t         *temp, *media_s;
-  pagesize_range_t     *temp_range;
+  pagesize_range_t     *temp_range = NULL, *range = NULL;
   char* attributes[] = {
                          "media-size-supported",
                        };
@@ -1841,12 +1844,12 @@ void add_mediasize_attributes(char* cluster_name, ipp_t **merged_attributes)
       }
     }
     if (num_ranges) {
-      for (temp_range = cupsArrayFirst(size_ranges); temp_range;
-	   i++, temp_range = cupsArrayNext(size_ranges)) {
-        ipp_t *size_range = create_media_range(temp_range->x_dim_min,
-					       temp_range->x_dim_max,
-					       temp_range->y_dim_min,
-					       temp_range->y_dim_max);
+      for (range = cupsArrayFirst(size_ranges); range;
+	   i++, range = cupsArrayNext(size_ranges)) {
+        ipp_t *size_range = create_media_range(range->x_dim_min,
+					       range->x_dim_max,
+					       range->y_dim_min,
+					       range->y_dim_max);
         ippSetCollection(*merged_attributes, &media_size_supported, i,
 			 size_range);
         ippDelete(size_range);
@@ -2677,7 +2680,6 @@ cups_array_t* get_cluster_sizes(char* cluster_name)
   cups_array_t         *cluster_sizes = NULL,
                        *sizes_ppdname;
   cups_size_t          *size;
-  pagesize_count_t     *temp;
   remote_printer_t     *p;
   ipp_attribute_t      *defattr;
   char                 ppdname[41], pagesize[128];
@@ -2685,7 +2687,6 @@ cups_array_t* get_cluster_sizes(char* cluster_name)
   int                  min_length, min_width, max_length, max_width,
                        bottom, left, right, top;
 
-  temp = (pagesize_count_t *)malloc(sizeof(pagesize_count_t));
   cluster_sizes = cupsArrayNew3((cups_array_func_t)pwg_compare_sizes,
 				NULL, NULL, 0,
 				(cups_acopy_func_t)pwg_copy_size,
@@ -2711,8 +2712,6 @@ cups_array_t* get_cluster_sizes(char* cluster_name)
       sizes = generate_sizes(p->prattrs, &defattr, &min_length, &min_width,
 			     &max_length, &max_width,
 			     &bottom, &left, &right, &top, ppdname);
-      temp->pagesize = ppdname;
-      temp->count = 1;
       for (size = (cups_size_t *)cupsArrayFirst(sizes);
 	   size; size = (cups_size_t *)cupsArrayNext(sizes)) {
 	if (!cupsArrayFind(cluster_sizes, size)) {
@@ -3088,7 +3087,10 @@ void get_cluster_default_attributes(ipp_t** merged_attributes,
 				     temp->media_source, temp->media_type);
     ippSetCollection(*merged_attributes, &media_col_default, 0, current_media);
 
+    free(temp->media_source);
+    free(temp->media_type);
     free(temp);
+    ippDelete(current_media);
   }
 
   /*Finding the default colormodel for the cluster*/
@@ -3219,6 +3221,7 @@ void get_cluster_default_attributes(ipp_t** merged_attributes,
 		       "printer-resolution-default",
 		       IPP_RES_PER_INCH, xres, yres);
       debug_printf("Default Resolution : %dx%d\n", xres, yres);
+      free_resolution(res, NULL);
     }
   }
 
@@ -3235,15 +3238,15 @@ int supports_job_attributes_requested(const gchar* printer, int printer_index,
   ipp_attribute_t       *attr, *attr1;
   ipp_t                 *request, *response = NULL;
   const char            *str, *side, *resource;
-  cups_array_t          *job_sheet_supported,
-                        *multiple_doc_supported, *print_qualities,
-                        *media_type_supported, *staplelocation_supported,
-                        *foldtype_supported, *punchmedia_supported,
-                        *color_supported;
+  cups_array_t          *job_sheet_supported = NULL,
+                        *multiple_doc_supported = NULL, *print_qualities = NULL,
+                        *media_type_supported = NULL, *staplelocation_supported = NULL,
+                        *foldtype_supported = NULL, *punchmedia_supported = NULL,
+                        *color_supported = NULL;
   remote_printer_t      *p;
   int                   i, count, side_found, orien_req, orien,
                         orien_found;
-  cups_array_t          *sizes;
+  cups_array_t          *sizes = NULL;
   int                   ret = 1;
 
   p = (remote_printer_t *)cupsArrayIndex(remote_printers, printer_index);
@@ -3513,7 +3516,26 @@ int supports_job_attributes_requested(const gchar* printer, int printer_index,
   }
 
   cleanup:
-    ippDelete(response);
+    if (response != NULL)
+      ippDelete(response);
+    if (job_sheet_supported != NULL)
+      cupsArrayDelete(job_sheet_supported);
+    if (multiple_doc_supported)
+      cupsArrayDelete(multiple_doc_supported);
+    if (media_type_supported != NULL)
+      cupsArrayDelete(media_type_supported);
+    if (staplelocation_supported != NULL)
+      cupsArrayDelete(staplelocation_supported);
+    if (foldtype_supported != NULL)
+      cupsArrayDelete(foldtype_supported);
+    if (punchmedia_supported != NULL)
+      cupsArrayDelete(punchmedia_supported);
+    if (color_supported != NULL)
+      cupsArrayDelete(color_supported);
+    if (print_qualities != NULL)
+      cupsArrayDelete(print_qualities);
+    if (sizes != NULL)
+      cupsArrayDelete(sizes);
 
   return ret;
 }
@@ -3621,7 +3643,7 @@ new_local_printer (const char *device_uri,
 {
   local_printer_t *printer = g_malloc (sizeof (local_printer_t));
   printer->device_uri = strdup (device_uri);
-  printer->uuid = uuid;
+  printer->uuid = (char*)uuid;
   printer->cups_browsed_controlled = cups_browsed_controlled;
   return printer;
 }
@@ -3637,68 +3659,62 @@ free_local_printer (gpointer data)
 }
 
 static gboolean
-local_printer_has_uri (gpointer key,
-		       gpointer value,
-		       gpointer user_data)
+local_printer_is_same_device (gpointer key,
+			      gpointer value,
+			      gpointer user_data)
 {
-  local_printer_t *printer = value;
-  char    *device_uri = user_data;
+  local_printer_t *lprinter = value;
+  remote_printer_t *p = user_data;
   char    lhost[HTTP_MAX_URI],     /* Local printer: Hostname */
           lresource[HTTP_MAX_URI], /* Local printer: Resource path */
           lscheme[32],             /* Local printer: URI's scheme */
           lusername[64],           /* Local printer: URI's username */
-          dhost[HTTP_MAX_URI],     /* Discovered printer: Hostname */
-          dresource[HTTP_MAX_URI], /* Discovered printer: Resource path */
-          dscheme[32],             /* Discovered printer: URI's scheme */
-          dusername[64];           /* Discovered printer: URI's username */
-  int     lport = 0,               /* Local printer: URI's port number */
-          dport = 0;               /* Discovered printer: URI's port number */
-  char    *resolved_uri;
+          *ltype = NULL,           /* Local printer: If URI DNS-SD-based */
+          *ldomain = NULL;         /* pointers into lhost for components*/ 
+  int     lport = 0;               /* Local printer: URI's port number */
 
-  debug_printf("local_printer_has_uri() in THREAD %ld\n", pthread_self());
-  /* Separate the two URIs to be compared into their components */
+  debug_printf("local_printer_is_same_device() in THREAD %ld\n",
+	       pthread_self());
+  if (!lprinter || !lprinter->device_uri || !p)
+    return (0);
+  /* Separate the local printer's URI into their components */
   memset(lscheme, 0, sizeof(lscheme));
   memset(lusername, 0, sizeof(lusername));
   memset(lhost, 0, sizeof(lhost));
   memset(lresource, 0, sizeof(lresource));
-  memset(dscheme, 0, sizeof(dscheme));
-  memset(dusername, 0, sizeof(dusername));
-  memset(dhost, 0, sizeof(dhost));
-  memset(dresource, 0, sizeof(dresource));
-  if (printer && printer->device_uri &&
-      (resolved_uri = resolve_uri(printer->device_uri)) != NULL) {
-    httpSeparateURI (HTTP_URI_CODING_ALL, resolved_uri,
-		     lscheme, sizeof(lscheme) - 1,
-		     lusername, sizeof(lusername) - 1,
-		     lhost, sizeof(lhost) - 1,
-		     &lport,
-		     lresource, sizeof(lresource) - 1);
-    free(resolved_uri);
-  }
-  if (device_uri &&
-      (resolved_uri = resolve_uri(device_uri)) != NULL) {
-    httpSeparateURI (HTTP_URI_CODING_ALL, resolved_uri,
-		     dscheme, sizeof(dscheme) - 1,
-		     dusername, sizeof(dusername) - 1,
-		     dhost, sizeof(dhost) - 1,
-		     &dport,
-		     dresource, sizeof(dresource) - 1);
-    free(resolved_uri);
+  httpSeparateURI(HTTP_URI_CODING_ALL, lprinter->device_uri,
+		  lscheme, sizeof(lscheme) - 1,
+		  lusername, sizeof(lusername) - 1,
+		  lhost, sizeof(lhost) - 1,
+		  &lport,
+		  lresource, sizeof(lresource) - 1);
+  if ((ltype = strstr(lhost, "._ipp._tcp.")) != NULL ||
+      (ltype = strstr(lhost, "._ipps._tcp.")) != NULL) {
+    *ltype = '\0';
+    ltype ++;
+    ldomain = strchr(ltype + 9, '.');
+    *ldomain = '\0';
+    ldomain ++;
+    if (*ldomain && ldomain[strlen(ldomain) - 1] == '.')
+      ldomain[strlen(ldomain) - 1] = '\0';
   }
   /* Consider not only absolutely equal URIs as equal
      but alo URIs which differ only by use of IPP or
      IPPS and/or have the IPP standard port 631
      replaced by the HTTPS standard port 443, as this
      is common on network printers */
-  return ((g_str_equal(lscheme, dscheme) ||
-	   (g_str_equal(lscheme, "ipp") && g_str_equal(dscheme, "ipps")) ||
-	   (g_str_equal(dscheme, "ipp") && g_str_equal(lscheme, "ipps"))) &&
-	  g_str_equal(lusername, dusername) &&
-	  g_str_equal(lhost, dhost) &&
-	  (lport == dport ||
-	   (lport == 631 && dport == 443) ||
-	   (dport == 631 && lport == 443)) &&
-	  g_str_equal(lresource, dresource));
+  return ((ltype && p->service_name && p->domain &&
+	   g_str_equal(lhost, p->service_name) &&
+	   !strncmp(ldomain, p->domain, strlen(ldomain))) ||
+	  (!ltype && p->host && p->resource &&
+	   (g_str_equal(lscheme, "ipp") || g_str_equal(lscheme, "ipps")) &&
+	   !lusername[0] &&
+	   g_str_equal(lhost, p->host) &&
+	   ((!p->port && (lport == 631 || lport == 443)) ||
+	    lport == p->port ||
+	    (lport == 631 && p->port == 443) ||
+	    (lport == 443 && p->port == 631)) &&
+	   g_str_equal(lresource, p->resource)));
 }
 
 static gboolean
@@ -6153,11 +6169,11 @@ on_job_state (CupsNotifier *object,
   cups_option_t *options;
   int num_of_printers;
   char* document_format;
-  int  print_quality;
+  int  print_quality = 0;
   const char *pdl = NULL;
   cups_array_t *pdl_list;
   char         resolution[32];
-  res_t        *max_res = NULL, *min_res = NULL, *res;
+  res_t        *max_res = NULL, *min_res = NULL, *res = NULL;
   int          xres, yres;
   int          got_printer_info;
   static const char *pattrs[] =
@@ -6415,13 +6431,14 @@ on_job_state (CupsNotifier *object,
 	      }
 	      break;
 	    }
+
+	    ippDelete(response);
+	    response = NULL;
+
 	    if (pstate == IPP_PRINTER_IDLE && paccept) {
 	      q->last_printer = i;
 	      break;
 	    }
-
-	    ippDelete(response);
-            response = NULL;
 	  } else
 	    debug_printf("IPP request to %s:%d failed.\n", p->host,
 			 p->port);
@@ -6504,6 +6521,10 @@ on_job_state (CupsNotifier *object,
 
       /* Deciding the resolution to be sent with the job */
       /* Finding the minimum and maximum resolution supported by the printer */
+
+      max_res = resolutionNew(0, 0);
+      min_res = resolutionNew(0, 0);
+
       if (s &&
 	  ((attr = ippFindAttribute(s->prattrs, "printer-resolution-supported",
 				    IPP_TAG_RESOLUTION)) != NULL)) {
@@ -6511,14 +6532,22 @@ on_job_state (CupsNotifier *object,
 	  if ((res = ippResolutionToRes(attr, i)) != NULL) {
 	    debug_printf("%d %d\n",res->x,res->y);
 	    if (i == 0) {
-	      max_res = res;
-	      min_res = res;
+	      max_res->x = res->x;
+	      max_res->y = res->y;
+	      min_res->x = res->x;
+	      min_res->y = res->y;
 	    } else {
-	      if(compare_resolutions((void *)res,(void *)max_res,NULL) > 0)
-		max_res = res;
-	      if(compare_resolutions((void *)res,(void *)min_res,NULL) < 0)
-		min_res = res;
+	      if(compare_resolutions((void *)res,(void *)max_res,NULL) > 0) {
+		max_res->x = res->x;
+		max_res->y = res->y;
+	      }
+	      if(compare_resolutions((void *)res,(void *)min_res,NULL) < 0) {
+		min_res->x = res->x;
+		min_res->y = res->y;
+	      }
 	    }
+	    free_resolution(res, NULL);
+	    res = NULL;
 	  }
 	}
       }
@@ -6555,9 +6584,13 @@ on_job_state (CupsNotifier *object,
 	      snprintf(resolution, sizeof(resolution), "%ddpi", xres);
 	    else
 	      snprintf(resolution, sizeof(resolution), "%dx%ddpi", xres, yres);
+	    free_resolution(res, NULL);
 	  }
 	}
       }
+
+      free_resolution(max_res, NULL);
+      free_resolution(min_res, NULL);
 
       request = ippNewRequest(CUPS_ADD_MODIFY_PRINTER);
       httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
@@ -6588,7 +6621,10 @@ on_job_state (CupsNotifier *object,
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_OPERATION);
       cupsEncodeOptions2(request, num_options, options, IPP_TAG_PRINTER);
       ippDelete(cupsDoRequest(conn, request, "/admin/"));
+
       cupsFreeOptions(num_options, options);
+      free(document_format);
+
       if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
 	debug_printf("ERROR: Unable to set \"" CUPS_BROWSED_DEST_PRINTER
 		     "-default\" option to communicate the destination server for this job (%s)!\n",
@@ -6895,17 +6931,15 @@ on_printer_modified (CupsNotifier *object,
 	re_create = 1;
 	/* Is there a local queue with the same URI as the remote queue? */
 	if (g_hash_table_find (local_printers,
-			       local_printer_has_uri,
-			       p->uri)) {
+			       local_printer_is_same_device, p)) {
 	  /* Found a local queue with the same URI as our discovered printer
 	     would get, so ignore this remote printer */
 	  debug_printf("Printer with URI %s (or IPP/IPPS equivalent) already exists, no replacement queue to be created.\n",
 		       p->uri);
 	  re_create = 0;
-	} else if ((resolved_uri = resolve_uri(p->uri)) == NULL ||
-		   (new_queue_name = /* Try to find a new queue name */
+	} else if ((new_queue_name = /* Try to find a new queue name */
 		    get_local_queue_name(p->service_name, p->make_model,
-					 resolved_uri, p->host,
+					 p->resource, p->host,
 					 &is_cups_queue,
 					 p->queue_name)) == NULL) {
 	  /* Not able to find a new name for the queue */
@@ -7068,6 +7102,7 @@ create_remote_printer_entry (const char *queue_name,
 			     const char *host,
 			     const char *ip,
 			     int port,
+			     const char *resource,
 			     const char *service_name,
 			     const char *type,
 			     const char *domain,
@@ -7092,8 +7127,8 @@ create_remote_printer_entry (const char *queue_name,
   int is_pdf = 0;
 #endif /* HAVE_CUPS_1_6 */
 
-  if (!queue_name || !location || !info || !uri || !host || !service_name ||
-      !type || !domain) {
+  if (!queue_name || !location || !info || !uri || !host || !resource ||
+      !service_name || !type || !domain) {
     debug_printf("ERROR: create_remote_printer_entry(): Input value missing!\n");
     return NULL;
   }
@@ -7153,6 +7188,10 @@ create_remote_printer_entry (const char *queue_name,
 
   p->port = (port != 0 ? port : 631);
 
+  p->resource = strdup (resource);
+  if (!p->resource)
+    goto fail;
+
   p->service_name = strdup (service_name);
   if (!p->service_name)
     goto fail;
@@ -7198,6 +7237,10 @@ create_remote_printer_entry (const char *queue_name,
      in a row during creation of this printer's queue */
   p->timeouted = 0;
 
+  /* Initialize nickname array for *Nickname directive from PPD
+   * - either from CUPS server or from our PPD generator */
+  p->nickname = NULL;
+
   /* Remote CUPS printer or local queue remaining from previous cups-browsed
      session */
   /* is_cups_queue: -1: Unknown, 0: IPP printer, 1: Remote CUPS queue,
@@ -7213,7 +7256,6 @@ create_remote_printer_entry (const char *queue_name,
        remote CUPS server gets used. So we will not generate a PPD file
        or interface script at this point. */
     p->netprinter = 0;
-    p->nickname = NULL;
     if (p->uri[0] != '\0') {
       p->prattrs = get_printer_attributes(p->uri, NULL, 0, NULL, 0, 1);
       debug_log_out(get_printer_attributes_log);
@@ -7538,6 +7580,7 @@ create_remote_printer_entry (const char *queue_name,
   if (p->type) free (p->type);
   if (p->service_name) free (p->service_name);
   if (p->host) free (p->host);
+  if (p->resource) free (p->resource);
   if (p->domain) free (p->domain);
   cupsArrayDelete(p->ipp_discoveries);
   if (p->ip) free (p->ip);
@@ -7618,7 +7661,7 @@ gboolean update_cups_queues(gpointer unused) {
   time_t        current_time;
   int           i, ap_remote_queue_id_line_inserted,
                 want_raw, num_cluster_printers = 0;
-  char          *disabled_str, *ptr;
+  char          *disabled_str;
   char          *ppdfile, *ifscript;
   int           fd = 0;  /* Script file descriptor */
   char          tempfile[1024];  /* Temporary file */
@@ -7867,6 +7910,7 @@ gboolean update_cups_queues(gpointer unused) {
       cupsFreeOptions(p->num_options, p->options);
       if (p->host) free (p->host);
       if (p->ip) free (p->ip);
+      if (p->resource) free (p->resource);
       if (p->service_name) free (p->service_name);
       if (p->type) free (p->type);
       if (p->domain) free (p->domain);
@@ -8156,6 +8200,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    sizes = NULL;
 	  } else {
 	    make_model = (char*)malloc(sizeof(char) * 256);
+	    printer_attributes = get_cluster_attributes(p->queue_name);
 	    if ((attr = ippFindAttribute(printer_attributes,
 					 "printer-make-and-model",
 					 IPP_TAG_TEXT)) != NULL)
@@ -8173,7 +8218,6 @@ gboolean update_cups_queues(gpointer unused) {
 	      }
 	    }
 	    default_pagesize = (char *)malloc(sizeof(char)*32);
-	    printer_attributes = get_cluster_attributes(p->queue_name);
 	    debug_printf("Generated Merged Attributes for local queue %s\n",
 			 p->queue_name);
 	    conflicts = generate_cluster_conflicts(p->queue_name,
@@ -8187,7 +8231,6 @@ gboolean update_cups_queues(gpointer unused) {
 	    debug_printf("Generated Default Attributes for local queue %s\n",
 			 p->queue_name);
 	  }
-	  p->nickname = NULL;
 	  if (ppdfile == NULL) {
 	    /* If we do not want CUPS-generated PPDs or we cannot obtain a
 	       CUPS-generated PPD, for example if CUPS does not create a 
@@ -8474,7 +8517,6 @@ gboolean update_cups_queues(gpointer unused) {
 			 p->queue_name, p->uri);
 	    goto cannot_create;
 	  }
-	  p->nickname = NULL;
 	  num_cluster_printers = 0;
 	  for (s = (remote_printer_t *)cupsArrayFirst(remote_printers);
 	       s; s = (remote_printer_t *)cupsArrayNext(remote_printers)) {
@@ -8498,6 +8540,7 @@ gboolean update_cups_queues(gpointer unused) {
 	    sizes = NULL;
 	  } else {
 	    make_model = (char*)malloc(sizeof(char)*256);
+	    printer_attributes = get_cluster_attributes(p->queue_name);
 	    if((attr = ippFindAttribute(printer_attributes,
 					"printer-make-and-model",
 					IPP_TAG_TEXT)) != NULL)
@@ -8515,7 +8558,6 @@ gboolean update_cups_queues(gpointer unused) {
 	      }
 	    }
 	    default_pagesize = (char *)malloc(sizeof(char)*32);
-	    printer_attributes = get_cluster_attributes(p->queue_name);
 	    debug_printf("Generated Merged Attributes for local queue %s\n",
 			 p->queue_name);
 	    conflicts = generate_cluster_conflicts(p->queue_name,
@@ -8681,14 +8723,48 @@ gboolean update_cups_queues(gpointer unused) {
 	     manipulations of the print queue have replaced the PPD.
 	     Check whether nickname is defined too */
 	  if (!strncmp(line, "*NickName:", 10) && p->nickname == NULL) {
+	    char *ptr = NULL;
+	    char *end_ptr = NULL;
+	    int nickname_len = 0;
+
 	    ptr = strchr(line, '"');
-	    if (ptr) {
-	      ptr ++;
-	      p->nickname = strdup(ptr);
-	      ptr = strchr(p->nickname, '"');
-	      if (ptr)
-		*ptr = '\0';
+
+	    if (ptr == NULL)
+	    {
+	      debug_printf("Malformed *Nickname directive in PPD - no double quote in line.\n");
+	      continue;
 	    }
+
+	    ptr ++;
+	    end_ptr = strchr(ptr, '"');
+
+	    if (end_ptr == NULL)
+	    {
+	      debug_printf("Malformed *Nickname directive in PPD - no ending double quote\n");
+	      continue;
+	    }
+
+	    /* both pointers are null terminated, because cupsFileGets() puts
+	     * a null terminator into returned buffer with one line
+	     * here as 'line' array) and those two pointers points on two places
+	     * in the 'line' array.
+	     */
+	    nickname_len = strlen(ptr) - strlen(end_ptr);
+
+	    if (nickname_len == 0)
+	    {
+	      debug_printf("Malformed *Nickname directive in PPD - empty nickname.\n");
+	      continue;
+	    }
+
+	    /* alloc one more space for null terminator, calloc() will initialize
+	     * it to null automatically, so then we only copy a string with 'nickname_len'
+	     * length to get a proper null terminated p->nickname.
+	     */
+	    p->nickname = (char*)calloc(nickname_len + 1, sizeof(char));
+
+	    if (p->nickname != NULL)
+	      strncpy(p->nickname, ptr, nickname_len);
 	  }
 	}
 	cupsFilePrintf(out,"*cupsFilter2: \"application/vnd.cups-pdf application/pdf 0 -\"\n");
@@ -8719,9 +8795,6 @@ gboolean update_cups_queues(gpointer unused) {
 		    IPP_PRINTER_IDLE);
       /* ... and accepting jobs */
       ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
-      /* Location */
-      ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT,
-		   "printer-location", NULL, p->location);
       num_options = 0;
       options = NULL;
       /* Device URI: ipp(s)://<remote host>:631/printers/<remote queue>
@@ -8731,10 +8804,6 @@ gboolean update_cups_queues(gpointer unused) {
       /* Option cups-browsed=true, marking that we have created this queue */
       num_options = cupsAddOption(CUPS_BROWSED_MARK "-default", "true",
 				  num_options, &options);
-      /* Description */
-      num_options = cupsAddOption("printer-info", p->info,
-				  num_options, &options);
-
       /* Default option settings from printer entry */
       for (i = 0; i < p->num_options; i ++)
 	if (strcasecmp(p->options[i].name, "printer-is-shared"))
@@ -8948,6 +9017,21 @@ gboolean update_cups_queues(gpointer unused) {
 	p->timeout = current_time + pause_between_cups_queue_updates;
 
  cannot_create:
+  if (printer_attributes != NULL && num_cluster_printers != 1)
+    ippDelete(printer_attributes);
+
+  if (default_pagesize != NULL && num_cluster_printers != 1)
+    free(default_pagesize);
+
+  if (conflicts != NULL && num_cluster_printers != 1)
+    cupsArrayDelete(conflicts);
+
+  if (make_model != NULL && num_cluster_printers != 1)
+    free(make_model);
+
+  if (sizes != NULL && num_cluster_printers != 1)
+    cupsArrayDelete(sizes);
+
   if (p && !in_shutdown)
     remove_printer_entry(p);
 
@@ -9413,7 +9497,7 @@ examine_discovered_printer_record(const char *host,
   char *note_value = NULL;
   char service_host_name[1024];
 #endif /* HAVE_AVAHI */
-  remote_printer_t *p = NULL;
+  remote_printer_t *p = NULL, key_rec;
   char *local_queue_name = NULL;
   int is_cups_queue;
   int raw_queue = 0;
@@ -9643,17 +9727,32 @@ examine_discovered_printer_record(const char *host,
       break;
 
   /* Is there a local queue with the same URI as the remote queue? */
-  if (!p && g_hash_table_find (local_printers,
-			       local_printer_has_uri,
-			       uri)) {
-    /* Found a local queue with the same URI as our discovered printer
-       would get, so ignore this remote printer */
-    debug_printf("Printer with URI %s (or IPP/IPPS equivalent) already exists, printer ignored.\n",
-		 uri);
-    goto fail;
-  }
+  if (!p) {
+    memset(&key_rec, 0, sizeof(key_rec));
+    key_rec.uri = uri;
+    key_rec.host = remote_host;
+    key_rec.port = port;
+    key_rec.resource = resource;
+    key_rec.service_name = (char *)service_name;
+    key_rec.type = (char *)type;
+    key_rec.domain = (char *)domain;
+    if (g_hash_table_find (local_printers,
+			   local_printer_is_same_device, &key_rec)) {
+      /* Found a local queue with the same URI as our discovered printer
+	 would get, so ignore this remote printer */
+      debug_printf("Printer with URI %s (or IPP/IPPS equivalent) already exists, printer ignored.\n",
+		   uri);
+      goto fail;
+    }
 
-  if (p) {
+    /* We need to create a local queue pointing to the
+       discovered printer */
+    p = create_remote_printer_entry (local_queue_name, location, info, uri,
+				     remote_host, ip, port, resource,
+				     service_name ? service_name : "", type,
+				     domain, interface, family, pdl, color,
+				     duplex, make_model, is_cups_queue);
+  } else {
     debug_printf("Entry for %s (URI: %s) already exists.\n",
 		 p->queue_name, p->uri);
     /* We have already created a local queue, check whether the
@@ -9746,6 +9845,7 @@ examine_discovered_printer_record(const char *host,
       free(p->uri);
       free(p->host);
       free(p->ip);
+      free(p->resource);
       free(p->service_name);
       free(p->type);
       free(p->domain);
@@ -9762,6 +9862,7 @@ examine_discovered_printer_record(const char *host,
       p->host = strdup(remote_host);
       p->ip = (ip != NULL ? strdup(ip) : NULL);
       p->port = port;
+      p->resource = strdup(resource);
       p->service_name = strdup(service_name);
       p->type = strdup(type);
       p->domain = strdup(domain);
@@ -9829,6 +9930,10 @@ examine_discovered_printer_record(const char *host,
       free (p->service_name);
       p->service_name = strdup(service_name);
     }
+    if (p->resource[0] == '\0') {
+      free (p->resource);
+      p->resource = strdup(resource);
+    }
     if (p->type[0] == '\0' && type) {
       free (p->type);
       p->type = strdup(type);
@@ -9841,15 +9946,6 @@ examine_discovered_printer_record(const char *host,
 	type != NULL && type[0] != '\0')
       ipp_discoveries_add(p->ipp_discoveries, interface, type, family);
     p->netprinter = is_cups_queue ? 0 : 1;
-  } else {
-
-    /* We need to create a local queue pointing to the
-       discovered printer */
-    p = create_remote_printer_entry (local_queue_name, location, info, uri,
-				     remote_host, ip, port,
-				     service_name ? service_name : "", type,
-				     domain, interface, family, pdl, color,
-				     duplex, make_model, is_cups_queue);
   }
 
  fail:
@@ -12119,7 +12215,7 @@ find_previous_queue (gpointer key,
   if (printer->cups_browsed_controlled) {
     /* Queue found, add to our list */
     p = create_remote_printer_entry (name, "", "", "", "", "",
-				     0, "", "", "", "", 0, NULL, 0, 0, NULL,
+				     0, "", "", "", "", "", 0, NULL, 0, 0, NULL,
 				     -1);
     if (p) {
       /* Mark as unconfirmed, if no Avahi report of this queue appears
