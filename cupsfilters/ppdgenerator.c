@@ -1951,7 +1951,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
     formatfound = 1;
     is_pdf = 1;
   } else if (cupsArrayFind(pdl_list, "application/pdf")) {
-    cupsFilePuts(fp, "*cupsFilter2: \"application/vnd.cups-pdf application/pdf 0 -\"\n");
+    cupsFilePuts(fp, "*cupsFilter2: \"application/vnd.cups-pdf application/pdf 100 -\"\n");
     manual_copies = 0;
     formatfound = 1;
     is_pdf = 1;
@@ -1992,7 +1992,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 	  if (cupsArrayCount(current_res) > 0 &&
 	      joinResolutionArrays(&common_res, &current_res, &common_def,
 				   &current_def)) {
-	    cupsFilePuts(fp, "*cupsFilter2: \"image/urf image/urf 100 -\"\n");
+	    cupsFilePuts(fp, "*cupsFilter2: \"image/urf image/urf 0 -\"\n");
 	    if (formatfound == 0) manual_copies = 1;
 	    formatfound = 1;
 	    is_apple = 1;
@@ -2010,7 +2010,7 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       if ((current_res = ippResolutionListToArray(attr)) != NULL &&
 	  joinResolutionArrays(&common_res, &current_res, &common_def,
 			       &current_def)) {
-	cupsFilePuts(fp, "*cupsFilter2: \"image/pwg-raster image/pwg-raster 0 -\"\n");
+	cupsFilePuts(fp, "*cupsFilter2: \"image/pwg-raster image/pwg-raster 10 -\"\n");
 	if (formatfound == 0) manual_copies = 1;
 	formatfound = 1;
 	is_pwg = 1;
@@ -2226,7 +2226,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
     if (all_borderless) {
       suffix = strcasestr(ppdname, ".Borderless");
-      *suffix = '\0';
+      if (suffix)
+	*suffix = '\0';
     }
 
     cupsFilePrintf(fp, "*OpenUI *PageSize/%s: PickOne\n"
@@ -2260,7 +2261,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
       if (all_borderless) {
 	suffix = strcasestr(ppdsizename, ".Borderless");
-	*suffix = '\0';
+	if (suffix)
+	  *suffix = '\0';
       }
 
       cupsFilePrintf(fp, "*PageSize %s%s%s%s: \"<</PageSize[%s %s]>>setpagedevice\"\n",
@@ -2304,7 +2306,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
       if (all_borderless) {
 	suffix = strcasestr(ppdsizename, ".Borderless");
-	*suffix = '\0';
+	if (suffix)
+	  *suffix = '\0';
       }
 
       cupsFilePrintf(fp, "*PageRegion %s%s%s%s: \"<</PageSize[%s %s]>>setpagedevice\"\n",
@@ -2340,7 +2343,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
       if (all_borderless) {
 	suffix = strcasestr(ppdsizename, ".Borderless");
-	*suffix = '\0';
+	if (suffix)
+	  *suffix = '\0';
       }
 
       cupsFilePrintf(fp, "*ImageableArea %s: \"%s %s %s %s\"\n", ppdsizename,
@@ -2769,6 +2773,8 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
       have_bi_level = 0,
       have_mono = 0;
 
+    cupsFilePrintf(fp, "*%% ColorModel from %s\n", ippGetName(attr));
+
     for (i = 0, count = ippGetCount(attr); i < count; i ++) {
       keyword = ippGetString(attr, i, NULL); /* Keyword for color/bit depth */
 
@@ -2871,10 +2877,13 @@ ppdCreateFromIPP2(char         *buffer,          /* I - Filename buffer */
 
 	default_color = "RGB";
 
-	if (ippGetCount(attr) == 1 ||
-	    (!ippContainsString(attr, "sgray_8") &&
-	     !ippContainsString(attr, "black_1") &&
-	     !ippContainsString(attr, "black_8"))) {
+	/* Apparently some printers only advertise color support, so make sure
+           we also do grayscale for these printers... */
+	if (!ippContainsString(attr, "sgray_8") &&
+	    !ippContainsString(attr, "black_1") &&
+	    !ippContainsString(attr, "black_8") &&
+	    !ippContainsString(attr, "W8") &&
+	    !ippContainsString(attr, "W8-16")) {
 	  human_readable2 = lookup_choice("monochrome", "print-color-mode",
 					  opt_strings_catalog,
 					  printer_opt_strings_catalog);
