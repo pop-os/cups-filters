@@ -1,3 +1,14 @@
+cups-filters (1.28.7-1) unstable; urgency=medium
+
+  * 1.28.7 upstream release
+    - driverless: Removed the support quality check from Pull request #235 as
+      it takes significant time for each printer being listed, making
+      cups-driverd (`lpinfo -m`) timing out when there are many printers
+      (OpenPrinting CUPS issue #65, Closes: #979177)
+  * Drop the driverless_support_strs symbol wrongly exported since 1.27.5
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 08 Jan 2021 10:40:57 +0100
+
 cups-filters (1.28.6-1) unstable; urgency=medium
 
   * 1.28.6 upstream release
