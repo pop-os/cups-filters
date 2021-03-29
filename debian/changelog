@@ -1,3 +1,10 @@
+cups-filters (1.28.8-0ubuntu1) hirsute; urgency=medium
+
+  * New upstream release
+    - Several bug fixes from upstream issue reports.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Mon, 29 Mar 2021 09:51:00 +0200
+
 cups-filters (1.28.7-1) unstable; urgency=medium
 
   * 1.28.7 upstream release
