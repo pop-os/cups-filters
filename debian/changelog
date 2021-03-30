@@ -1,3 +1,9 @@
+cups-filters (1.28.8-1) UNRELEASED; urgency=medium
+
+  * Update to new upstream version 1.28.8.
+
+ -- Didier Raboud <odyx@debian.org>  Tue, 30 Mar 2021 19:12:01 +0200
+
 cups-filters (1.28.7-1) unstable; urgency=medium
 
   * 1.28.7 upstream release
