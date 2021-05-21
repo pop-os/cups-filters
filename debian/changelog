@@ -1,3 +1,10 @@
+cups-filters (1.28.8-3) experimental; urgency=medium
+
+  [ Mike Gabriel ]
+  * Apparmor: allow read-access to /usr/share/{,cups/}locale (Closes: #988764)
+
+ -- Didier Raboud <odyx@debian.org>  Fri, 21 May 2021 15:54:38 +0200
+
 cups-filters (1.28.8-2) experimental; urgency=low
 
   [ Sergio Durigan Junior ]
