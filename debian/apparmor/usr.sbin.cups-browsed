@@ -10,6 +10,8 @@
   /etc/cups/cups-browsed.conf r,
   /etc/cups/lpoptions r,
   /etc/cups/ppd/* r,
+  /usr/share/cups/locale/ r,
+  /usr/share/locale/ r,
   /{var/,}run/cups/certs/* r,
   /var/cache/cups/* rw,
   /var/log/cups/* rw,
