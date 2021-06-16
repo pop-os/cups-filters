@@ -422,39 +422,8 @@ RCSTART="$rcstart"
 RCSTOP="$rcstop"
 
 if test x$rcdir = x; then
-	case "`uname`" in
-		FreeBSD* | OpenBSD* | MirBSD* | ekkoBSD*)
-			# FreeBSD and OpenBSD
-			;;
-
-		Linux | GNU | GNU/k*BSD*)
-			# Linux/HURD seems to choose an init.d directory at random...
-			if test -d /sbin/init.d; then
-				# SuSE
-				INITDIR="/sbin/init.d"
-			else
-				if test -d /etc/init.d; then
-					# Others
-					INITDIR="/etc"
-				else
-					# RedHat
-					INITDIR="/etc/rc.d"
-				fi
-			fi
-			RCSTART="82"
-			RCSTOP="35"
-			;;
-
-		NetBSD*)
-			# NetBSD
-			INITDDIR="/etc/rc.d"
-			;;
-
-		*)
-			INITDIR="/etc"
-			;;
-
-	esac
+	# Debian
+	INITDIR=/etc
 elif test "x$rcdir" != xno; then
 	if test "x$rclevels" = x; then
 		INITDDIR="$rcdir"
