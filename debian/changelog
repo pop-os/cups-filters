@@ -1,8 +1,10 @@
-cups-filters (1.28.9-1) UNRELEASED; urgency=medium
+cups-filters (1.28.9-1) experimental; urgency=medium
 
-  * Update to new upstream version 1.28.9.
+  * New 1.28.9 upstream version
+  * Only install /etc/modules-load.d/cups-filters.conf on
+    amd64 i386 mips64el mipsel alpha hppa ia64 sparc64 (Closes: #989306)
 
- -- Didier Raboud <odyx@debian.org>  Wed, 16 Jun 2021 22:11:37 +0200
+ -- Didier Raboud <odyx@debian.org>  Wed, 16 Jun 2021 22:12:00 +0200
 
 cups-filters (1.28.8-3) experimental; urgency=medium
 
