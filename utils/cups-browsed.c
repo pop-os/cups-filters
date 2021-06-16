@@ -91,7 +91,7 @@ char    *BrowseLDAPCACertFile = NULL;
 
 #ifdef HAVE_LDAP
 #define LDAP_BROWSE_FILTER "(objectclass=cupsPrinter)"
-static LDAP *ldap_connect(void);
+static LDAP *ldap_new_connection(void);
 static LDAP *ldap_reconnect(void);
 static void ldap_disconnect(LDAP *ld);
 static int  ldap_search_rec(LDAP *ld, char *base, int scope,
@@ -4349,11 +4349,11 @@ ldap_rebind_proc(LDAP *RebindLDAPHandle,   /* I - LDAP handle */
 
 #ifdef HAVE_LDAP
 /*
- * 'ldap_connect()' - Start new LDAP connection
+ * 'ldap_new_connection()' - Start new LDAP connection
  */
 
 static LDAP *       /* O - LDAP handle */
-ldap_connect(void)
+ldap_new_connection(void)
 {
   int   rc;                       /* LDAP API status */
   int   version = 3;              /* LDAP version */
@@ -4373,7 +4373,7 @@ ldap_connect(void)
   */
 
   if (BrowseLDAPCACertFile) {
-    debug_printf("ldap_connect: Setting CA certificate file \"%s\"\n",
+    debug_printf("ldap_new_connection: Setting CA certificate file \"%s\"\n",
 		 BrowseLDAPCACertFile);
 
     if ((rc = ldap_set_option(NULL, LDAP_OPT_X_TLS_CACERTFILE,
@@ -4434,7 +4434,7 @@ ldap_connect(void)
       ldap_port = LDAP_PORT;
   }
 
-  debug_printf("ldap_connect: PROT:%s HOST:%s PORT:%d\n",
+  debug_printf("ldap_new_connection: PROT:%s HOST:%s PORT:%d\n",
 	       ldap_protocol, ldap_host, ldap_port);
 
  /*
@@ -4602,7 +4602,7 @@ ldap_reconnect(void)
 
   debug_printf("Try LDAP reconnect...\n");
 
-  TempBrowseLDAPHandle = ldap_connect();
+  TempBrowseLDAPHandle = ldap_new_connection();
 
   if (TempBrowseLDAPHandle != NULL) {
     if (BrowseLDAPHandle != NULL)
@@ -5648,9 +5648,7 @@ record_printer_options(const char *printer) {
 	       strcasecmp(key + strlen(key) - strlen(*ptr) + 1, *ptr + 1) == 0))
 	    break;
 	if (*ptr != NULL) {
-	  if (strcasecmp(key, CUPS_BROWSED_DEST_PRINTER "-default") != 0 &&
-	      (ppdname == NULL ||
-	       strncasecmp(key + strlen(key) - 8, "-default", 8))) {
+	  if (strcasecmp(key, CUPS_BROWSED_DEST_PRINTER "-default") != 0) {
 	    ippAttributeString(attr, buf, sizeof(buf));
 	    buf[sizeof(buf) - 1] = '\0';
 	    c = buf;
@@ -11390,7 +11388,7 @@ browse_ldap_poll (gpointer data)
        * Open LDAP handle...
        */
 
-      BrowseLDAPHandle = ldap_connect();
+      BrowseLDAPHandle = ldap_new_connection();
     }
 
     cupsdUpdateLDAPBrowse();
