@@ -1,3 +1,9 @@
+cups-filters (1.28.8-3build1) impish; urgency=medium
+
+  * No-change rebuild due to OpenLDAP soname bump.
+
+ -- Sergio Durigan Junior <sergio.durigan@canonical.com>  Mon, 21 Jun 2021 17:45:53 -0400
+
 cups-filters (1.28.8-3) experimental; urgency=medium
 
   [ Mike Gabriel ]
