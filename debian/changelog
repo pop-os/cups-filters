@@ -1,3 +1,13 @@
+cups-filters (1.28.10-0ubuntu1) impish; urgency=medium
+
+  * New 1.28.10 upstream version
+  * Do not install /usr/bin/ttfread any more, as this unneeded executable
+    got removed upstream (Upstream issue #386).
+  * Do not build-depend on fonts-dejavu-core any more, was only needed
+    for ttfread.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 18 Aug 2021 20:47:00 +0200
+
 cups-filters (1.28.9-1) experimental; urgency=medium
 
   * New 1.28.9 upstream version
