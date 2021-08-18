@@ -1,3 +1,10 @@
+cups-filters (1.28.10-0ubuntu2) impish; urgency=medium
+
+  * Re-introduce build-depend on fonts-dejavu-core, is still needed by the
+    test suite.
+
+ -- Till Kamppeter <till.kamppeter@gmail.com>  Wed, 18 Aug 2021 21:12:00 +0200
+
 cups-filters (1.28.10-0ubuntu1) impish; urgency=medium
 
   * New 1.28.10 upstream version
