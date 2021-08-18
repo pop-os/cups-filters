@@ -29,7 +29,8 @@ Build-Depends: autoconf,
                libavahi-client-dev,
                libavahi-glib-dev,
                librsvg2-bin,
-               liblouis-dev
+               liblouis-dev,
+	       fonts-dejavu-core
 Standards-Version: 4.5.1
 Vcs-Browser: https://salsa.debian.org/printing-team/cups-filters
 Vcs-Git: https://salsa.debian.org/printing-team/cups-filters.git
