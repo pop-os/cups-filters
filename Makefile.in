@@ -109,7 +109,6 @@ TESTS = testdither$(EXEEXT) test_analyze$(EXEEXT) test_pdf$(EXEEXT) \
 @ENABLE_GHOSTSCRIPT_TRUE@am__append_7 = $(gsmimefiles)
 @ENABLE_MUTOOL_TRUE@am__append_8 = $(mutoolmimefiles)
 @ENABLE_BRAILLE_TRUE@am__append_9 = $(brlmimefiles)
-bin_PROGRAMS = ttfread$(EXEEXT)
 pkgfilter_PROGRAMS = pdftopdf$(EXEEXT) commandtoescpx$(EXEEXT) \
 	commandtopclx$(EXEEXT) sys5ippprinter$(EXEEXT) \
 	texttotext$(EXEEXT) pdftops$(EXEEXT) rastertoescpx$(EXEEXT) \
@@ -184,7 +183,8 @@ CONFIG_CLEAN_FILES = libcupsfilters.pc libfontembed.pc \
 	filter/braille/filters/liblouis1.defs.gen \
 	mime/cupsfilters.convs
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
+@ENABLE_BRAILLE_TRUE@am__EXEEXT_1 = cups-brf$(EXEEXT)
+am__installdirs = "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" \
 	"$(DESTDIR)$(sbindir)" "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(initrcdir)" \
@@ -201,7 +201,6 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 	"$(DESTDIR)$(pkgfontembedincludedir)" \
 	"$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" \
 	"$(DESTDIR)$(ppddir)"
-@ENABLE_BRAILLE_TRUE@am__EXEEXT_1 = cups-brf$(EXEEXT)
 @ENABLE_URFTOPDF_TRUE@am__EXEEXT_2 = urftopdf$(EXEEXT)
 @ENABLE_POPPLER_TRUE@am__EXEEXT_3 = pdftoraster$(EXEEXT)
 @ENABLE_GHOSTSCRIPT_TRUE@am__EXEEXT_4 = gstoraster$(EXEEXT)
@@ -209,8 +208,8 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" \
 @ENABLE_FOOMATIC_TRUE@am__EXEEXT_6 = foomatic-rip$(EXEEXT)
 @ENABLE_IMAGEFILTERS_TRUE@am__EXEEXT_7 = imagetopdf$(EXEEXT) \
 @ENABLE_IMAGEFILTERS_TRUE@	imagetoraster$(EXEEXT)
-PROGRAMS = $(bin_PROGRAMS) $(pkgbackend_PROGRAMS) \
-	$(pkgfilter_PROGRAMS) $(pkgppdgen_PROGRAMS) $(sbin_PROGRAMS)
+PROGRAMS = $(pkgbackend_PROGRAMS) $(pkgfilter_PROGRAMS) \
+	$(pkgppdgen_PROGRAMS) $(sbin_PROGRAMS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -536,9 +535,6 @@ texttotext_OBJECTS = $(am_texttotext_OBJECTS)
 texttotext_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(texttotext_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_ttfread_OBJECTS = fontembed/main.$(OBJEXT)
-ttfread_OBJECTS = $(am_ttfread_OBJECTS)
-ttfread_DEPENDENCIES = libfontembed.la
 am_urftopdf_OBJECTS = filter/urftopdf-urftopdf.$(OBJEXT)
 urftopdf_OBJECTS = $(am_urftopdf_OBJECTS)
 urftopdf_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -663,8 +659,7 @@ am__depfiles_remade = ./$(DEPDIR)/cups_browsed-cups-notifier.Po \
 	fontembed/$(DEPDIR)/embed_pdf.Plo \
 	fontembed/$(DEPDIR)/embed_sfnt.Plo \
 	fontembed/$(DEPDIR)/fontfile.Plo \
-	fontembed/$(DEPDIR)/frequent.Plo fontembed/$(DEPDIR)/main.Po \
-	fontembed/$(DEPDIR)/sfnt.Plo \
+	fontembed/$(DEPDIR)/frequent.Plo fontembed/$(DEPDIR)/sfnt.Plo \
 	fontembed/$(DEPDIR)/sfnt_subset.Plo \
 	fontembed/$(DEPDIR)/test_analyze.Po \
 	fontembed/$(DEPDIR)/test_pdf.Po fontembed/$(DEPDIR)/test_ps.Po \
@@ -727,7 +722,7 @@ SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
 	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
 	$(texttotext_SOURCES) $(EXTRA_texttotext_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(urftopdf_SOURCES)
 DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(libphpcups_la_SOURCES) $(bannertopdf_SOURCES) \
 	$(EXTRA_bannertopdf_SOURCES) $(beh_SOURCES) \
@@ -747,7 +742,7 @@ DIST_SOURCES = $(libcupsfilters_la_SOURCES) $(libfontembed_la_SOURCES) \
 	$(test_ps_SOURCES) $(testcmyk_SOURCES) $(testdither_SOURCES) \
 	$(testimage_SOURCES) $(testrgb_SOURCES) $(texttopdf_SOURCES) \
 	$(texttotext_SOURCES) $(EXTRA_texttotext_SOURCES) \
-	$(ttfread_SOURCES) $(urftopdf_SOURCES)
+	$(urftopdf_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -1631,8 +1626,6 @@ libfontembed_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1
 
-ttfread_SOURCES = fontembed/main.c
-ttfread_LDADD = libfontembed.la
 test_analyze_SOURCES = fontembed/test_analyze.c
 test_analyze_LDADD = libfontembed.la
 test_pdf_SOURCES = fontembed/test_pdf.c
@@ -2184,55 +2177,6 @@ filter/braille/filters/liblouis1.defs.gen: $(top_builddir)/config.status $(top_s
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 mime/cupsfilters.convs: $(top_builddir)/config.status $(top_srcdir)/mime/cupsfilters.convs.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
-	fi; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p \
-	 || test -f $$p1 \
-	  ; then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' \
-	    -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	    } \
-	; done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' \
-	`; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
-
-clean-binPROGRAMS:
-	@list='$(bin_PROGRAMS)'; test -n "$$list" || exit 0; \
-	echo " rm -f" $$list; \
-	rm -f $$list || exit $$?; \
-	test -n "$(EXEEXT)" || exit 0; \
-	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
-	echo " rm -f" $$list; \
-	rm -f $$list
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -2959,12 +2903,6 @@ filter/texttotext-strcasestr.$(OBJEXT): filter/$(am__dirstamp) \
 texttotext$(EXEEXT): $(texttotext_OBJECTS) $(texttotext_DEPENDENCIES) $(EXTRA_texttotext_DEPENDENCIES) 
 	@rm -f texttotext$(EXEEXT)
 	$(AM_V_CCLD)$(texttotext_LINK) $(texttotext_OBJECTS) $(texttotext_LDADD) $(LIBS)
-fontembed/main.$(OBJEXT): fontembed/$(am__dirstamp) \
-	fontembed/$(DEPDIR)/$(am__dirstamp)
-
-ttfread$(EXEEXT): $(ttfread_OBJECTS) $(ttfread_DEPENDENCIES) $(EXTRA_ttfread_DEPENDENCIES) 
-	@rm -f ttfread$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(ttfread_OBJECTS) $(ttfread_LDADD) $(LIBS)
 filter/urftopdf-urftopdf.$(OBJEXT): filter/$(am__dirstamp) \
 	filter/$(DEPDIR)/$(am__dirstamp)
 
@@ -3267,7 +3205,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/embed_sfnt.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/fontfile.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/frequent.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/sfnt.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/sfnt_subset.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@fontembed/$(DEPDIR)/test_analyze.Po@am__quote@ # am--include-marker
@@ -5412,11 +5349,9 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile $(PROGRAMS) $(LTLIBRARIES) $(SCRIPTS) $(MANS) $(DATA) \
 		config.h
-install-binPROGRAMS: install-libLTLIBRARIES
-
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
+	for dir in "$(DESTDIR)$(pkgbackenddir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(libdir)" "$(DESTDIR)$(phpextensiondir)" "$(DESTDIR)$(initrcdir)" "$(DESTDIR)$(pkgbrailledir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgfilterdir)" "$(DESTDIR)$(pkgppdgendir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)" "$(DESTDIR)$(man8dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(pkgbannerdir)" "$(DESTDIR)$(pkgcharsetdir)" "$(DESTDIR)$(pkgconfdir)" "$(DESTDIR)$(pkgcupsdatadir)" "$(DESTDIR)$(pkgcupsserverrootdir)" "$(DESTDIR)$(pkgdriverdir)" "$(DESTDIR)$(pkgfiltersincludedir)" "$(DESTDIR)$(pkgfontembedincludedir)" "$(DESTDIR)$(pkgmimedir)" "$(DESTDIR)$(pkgppdcdir)" "$(DESTDIR)$(ppddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -5474,11 +5409,10 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool \
-	clean-phpextensionLTLIBRARIES clean-pkgbackendPROGRAMS \
-	clean-pkgfilterPROGRAMS clean-pkgppdgenPROGRAMS \
-	clean-sbinPROGRAMS mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool clean-phpextensionLTLIBRARIES \
+	clean-pkgbackendPROGRAMS clean-pkgfilterPROGRAMS \
+	clean-pkgppdgenPROGRAMS clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -5585,7 +5519,6 @@ distclean: distclean-recursive
 	-rm -f fontembed/$(DEPDIR)/embed_sfnt.Plo
 	-rm -f fontembed/$(DEPDIR)/fontfile.Plo
 	-rm -f fontembed/$(DEPDIR)/frequent.Plo
-	-rm -f fontembed/$(DEPDIR)/main.Po
 	-rm -f fontembed/$(DEPDIR)/sfnt.Plo
 	-rm -f fontembed/$(DEPDIR)/sfnt_subset.Plo
 	-rm -f fontembed/$(DEPDIR)/test_analyze.Po
@@ -5628,8 +5561,7 @@ install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS install-libLTLIBRARIES \
-	install-sbinPROGRAMS
+install-exec-am: install-libLTLIBRARIES install-sbinPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-recursive
@@ -5758,7 +5690,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f fontembed/$(DEPDIR)/embed_sfnt.Plo
 	-rm -f fontembed/$(DEPDIR)/fontfile.Plo
 	-rm -f fontembed/$(DEPDIR)/frequent.Plo
-	-rm -f fontembed/$(DEPDIR)/main.Po
 	-rm -f fontembed/$(DEPDIR)/sfnt.Plo
 	-rm -f fontembed/$(DEPDIR)/sfnt_subset.Plo
 	-rm -f fontembed/$(DEPDIR)/test_analyze.Po
@@ -5783,8 +5714,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
-	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
+uninstall-am: uninstall-docDATA uninstall-initrcSCRIPTS \
+	uninstall-libLTLIBRARIES uninstall-man \
 	uninstall-nodist_pkgbrailleSCRIPTS \
 	uninstall-nodist_pkgfilterSCRIPTS uninstall-nodist_pkgppdcDATA \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
@@ -5807,8 +5738,8 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--depfiles am--refresh check check-TESTS check-am clean \
-	clean-binPROGRAMS clean-checkPROGRAMS clean-cscope \
-	clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-checkPROGRAMS clean-cscope clean-generic \
+	clean-libLTLIBRARIES clean-libtool \
 	clean-phpextensionLTLIBRARIES clean-pkgbackendPROGRAMS \
 	clean-pkgfilterPROGRAMS clean-pkgppdgenPROGRAMS \
 	clean-sbinPROGRAMS cscope cscopelist-am ctags ctags-am dist \
@@ -5817,12 +5748,12 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	distclean-compile distclean-generic distclean-hdr \
 	distclean-libtool distclean-local distclean-tags \
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-binPROGRAMS \
-	install-data install-data-am install-data-hook install-docDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-exec-hook install-html install-html-am install-info \
-	install-info-am install-initrcSCRIPTS install-libLTLIBRARIES \
-	install-man install-man1 install-man5 install-man8 \
+	html-am info info-am install install-am install-data \
+	install-data-am install-data-hook install-docDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-initrcSCRIPTS install-libLTLIBRARIES install-man \
+	install-man1 install-man5 install-man8 \
 	install-nodist_pkgbrailleSCRIPTS \
 	install-nodist_pkgfilterSCRIPTS install-nodist_pkgppdcDATA \
 	install-pdf install-pdf-am install-phpextensionLTLIBRARIES \
@@ -5838,10 +5769,10 @@ uninstall-man: uninstall-man1 uninstall-man5 uninstall-man8
 	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	recheck tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-docDATA uninstall-hook \
-	uninstall-initrcSCRIPTS uninstall-libLTLIBRARIES uninstall-man \
-	uninstall-man1 uninstall-man5 uninstall-man8 \
+	recheck tags tags-am uninstall uninstall-am uninstall-docDATA \
+	uninstall-hook uninstall-initrcSCRIPTS \
+	uninstall-libLTLIBRARIES uninstall-man uninstall-man1 \
+	uninstall-man5 uninstall-man8 \
 	uninstall-nodist_pkgbrailleSCRIPTS \
 	uninstall-nodist_pkgfilterSCRIPTS uninstall-nodist_pkgppdcDATA \
 	uninstall-phpextensionLTLIBRARIES uninstall-pkgbackendPROGRAMS \
