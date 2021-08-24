@@ -59,9 +59,17 @@ endif
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
 
 get-orig-source:
-	set -ex;\
-	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest;\
-	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/##'` ;\
-	ucommit=`git rev-parse --verify upstream/latest`;\
-	git debrebase new-upstream $$utag ;\
+	set -ex; \
+	dbranch=`git branch --show-current`; \
+	gbp import-orig --pristine-tar --uscan --no-merge --upstream-branch=upstream/latest --upstream-tag="upstream/vcs-%(version)s"; \
+	utag=`git describe --exact-match heads/upstream/latest | sed -e 's#^upstream/vcs-##'`; \
+	ucommit=`git rev-parse --verify upstream/latest`; \
+	git checkout -f upstream/latest-tarballs; \
+	git merge -Xtheirs -m "Merge $$utag from upstream's VCS" upstream/vcs-$$utag; \
+	tar --strip-components=1 -xavf ../cups-filters_$$utag.orig.tar.xz; \
+	git add -A .; \
+	git commit -m "$$utag tarball artifacts" || :; \
+	git tag -s -m "$$utag tarball from upstream" upstream/$$utag; \
+	git checkout $$dbranch; \
+	git debrebase new-upstream $$utag upstream/$$utag; \
 	git debrebase conclude
