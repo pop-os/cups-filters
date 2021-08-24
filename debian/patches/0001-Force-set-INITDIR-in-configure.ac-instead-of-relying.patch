@@ -8,7 +8,7 @@ Subject: Force-set INITDIR in configure.ac instead of relying on 'test -d
  1 file changed, 2 insertions(+), 33 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 13433ec..525aab8 100644
+index 3973db6..0077c09 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -422,39 +422,8 @@ RCSTART="$rcstart"
