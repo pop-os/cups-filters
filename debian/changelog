@@ -1,8 +1,13 @@
-cups-filters (1.28.10-1) UNRELEASED; urgency=medium
+cups-filters (1.28.10-1) unstable; urgency=low
 
-  * Update to new upstream version 1.28.10.
+  * New 1.28.10 upstream version
+    - Stop installing ttfread, not built anymore
+  * Packaging cleanup:
+    - Redo get-orig-source d/rules target
+    - Run wrap-and-sort -baskt
+    - Upgrade to S-V 4.6.0 without changes needed
 
- -- Didier Raboud <odyx@debian.org>  Tue, 24 Aug 2021 14:46:08 +0200
+ -- Didier Raboud <odyx@debian.org>  Tue, 24 Aug 2021 15:25:58 +0200
 
 cups-filters (1.28.9-1) experimental; urgency=medium
 
