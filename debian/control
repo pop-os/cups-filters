@@ -2,7 +2,6 @@ Source: cups-filters
 Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
 Uploaders:
  Till Kamppeter <till.kamppeter@gmail.com>,
- Didier Raboud <odyx@debian.org>,
 Section: net
 Priority: optional
 Build-Depends:
