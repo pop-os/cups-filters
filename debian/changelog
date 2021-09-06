@@ -1,3 +1,9 @@
+cups-filters (1.28.10-2) unstable; urgency=medium
+
+  * Remove myself from Uploaders
+
+ -- Didier Raboud <odyx@debian.org>  Mon, 06 Sep 2021 12:12:22 +0200
+
 cups-filters (1.28.10-1) unstable; urgency=low
 
   * New 1.28.10 upstream version
