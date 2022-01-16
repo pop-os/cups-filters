@@ -1,3 +1,9 @@
+cups-filters (1.28.11-1) UNRELEASED; urgency=medium
+
+  * Update to new upstream version 1.28.11.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Sun, 16 Jan 2022 10:59:19 +0000
+
 cups-filters (1.28.10-2) unstable; urgency=medium
 
   * Remove myself from Uploaders
