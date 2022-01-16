@@ -98,6 +98,7 @@ Depends:
 Recommends:
  colord,
  liblouisutdml-bin | liblouis-bin,
+ lynx,
 Suggests:
  antiword,
  docx2txt,
