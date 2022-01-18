@@ -44,7 +44,7 @@ ifeq ($(derives_from_ubuntu),yes)
 	#  - Install Apport hook
 	#  - Replace standard test page template by Ubuntu-branded one
 	install -D -m 644 debian/local/apport-hook.py debian/cups-filters/usr/share/apport/package-hooks/source_cups-filters.py
-	install -D -m 644 debian/local/default-testpage-ubuntu.pdf debian/cups-filters/usr/share/cups/data/default-testpage.pdf
+	install -D -m 644 debian/local/default-testpage-pop.pdf debian/cups-filters/usr/share/cups/data/default-testpage.pdf
 else
 	mkdir -p debian/cups-filters/usr/share/cups/data/
 	rsvg-convert debian/local/default-testpage-debian.svg -f pdf > debian/cups-filters/usr/share/cups/data/default-testpage.pdf
