@@ -1,0 +1,15 @@
+10c9705073e55470cb6a81778d308cb6  usr/include/cupsfilters/colord.h
+26452a052746c5cf8fa68aa304e3cfaa  usr/include/cupsfilters/colormanager.h
+58f47a9547fbfc3c9f467a827ee7591b  usr/include/cupsfilters/driver.h
+f73e2443d25d86b58d627c31f28a3cee  usr/include/cupsfilters/image.h
+d9984144254fd51dca3eed812181b792  usr/include/cupsfilters/ipp.h
+ea0fcc6fdbbe4fa2717300c2fe970199  usr/include/cupsfilters/pdftoippprinter.h
+32847fb66af88557af90cd377d537ecd  usr/include/cupsfilters/ppdgenerator.h
+8b8f50647426f61c9b515efb2a650a47  usr/include/cupsfilters/raster.h
+2d44aa776dcc9ace586e5b21ea21a3d8  usr/lib/x86_64-linux-gnu/libcupsfilters.a
+f68bd1dafcc5c86a2b4f54b41f510bc0  usr/lib/x86_64-linux-gnu/pkgconfig/libcupsfilters.pc
+000b95fafd91500eb5ab137853a1aeea  usr/share/doc/libcupsfilters-dev/AUTHORS
+b1a018df121e01790992eff56ad4e273  usr/share/doc/libcupsfilters-dev/NEWS.Debian.gz
+14f63cb15d0fecbb04c99914974f292a  usr/share/doc/libcupsfilters-dev/README.gz
+04136d654a9fd10c7b647bf83b46ad6e  usr/share/doc/libcupsfilters-dev/changelog.Debian.gz
+58f045dacf83b1f8382f8aa156885911  usr/share/doc/libcupsfilters-dev/copyright

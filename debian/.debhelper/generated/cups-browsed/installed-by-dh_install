@@ -1,0 +1,7 @@
+debian/tmp/../../utils/cups-browsed.service
+debian/tmp/../apparmor/usr.sbin.cups-browsed
+debian/tmp/etc/cups/cups-browsed.conf
+debian/tmp/usr/lib/cups/backend/implicitclass
+debian/tmp/usr/sbin/cups-browsed
+debian/tmp/usr/share/man/man5/cups-browsed.conf.5
+debian/tmp/usr/share/man/man8/cups-browsed.8

@@ -1,0 +1,13 @@
+Package: cups-browsed-dbgsym
+Package-Type: ddeb
+Source: cups-filters
+Version: 1.28.11-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 282
+Depends: cups-browsed (= 1.28.11-1)
+Section: debug
+Priority: optional
+Description: debug symbols for cups-browsed
+Build-Ids: 745f882b8f0f0051d77dd280dd318b2677c84437 90c868b65ddd0b242569a2c90688f4309e173f72

@@ -1,0 +1,12 @@
+8d4068d5ebb836193f8be7c18c9ddd47  usr/include/fontembed/bitset.h
+6f5941db7efcaa99586c76e92b56cae0  usr/include/fontembed/embed.h
+19faec63cbaa41b452bac5d8257837cf  usr/include/fontembed/fontfile.h
+f908ae018a40e923fd3751e2754b1551  usr/include/fontembed/iofn.h
+079f911f101d013ac229d1c2038562a2  usr/include/fontembed/sfnt.h
+e49527d5e20b24d49834ebd28ca55253  usr/lib/x86_64-linux-gnu/libfontembed.a
+8000da864f364c44fc33ccdd19c63ce7  usr/lib/x86_64-linux-gnu/pkgconfig/libfontembed.pc
+000b95fafd91500eb5ab137853a1aeea  usr/share/doc/libfontembed-dev/AUTHORS
+b1a018df121e01790992eff56ad4e273  usr/share/doc/libfontembed-dev/NEWS.Debian.gz
+14f63cb15d0fecbb04c99914974f292a  usr/share/doc/libfontembed-dev/README.gz
+04136d654a9fd10c7b647bf83b46ad6e  usr/share/doc/libfontembed-dev/changelog.Debian.gz
+58f045dacf83b1f8382f8aa156885911  usr/share/doc/libfontembed-dev/copyright

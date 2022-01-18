@@ -1,0 +1,11 @@
+debian/tmp/usr/include/cupsfilters/colord.h
+debian/tmp/usr/include/cupsfilters/colormanager.h
+debian/tmp/usr/include/cupsfilters/driver.h
+debian/tmp/usr/include/cupsfilters/image.h
+debian/tmp/usr/include/cupsfilters/ipp.h
+debian/tmp/usr/include/cupsfilters/pdftoippprinter.h
+debian/tmp/usr/include/cupsfilters/ppdgenerator.h
+debian/tmp/usr/include/cupsfilters/raster.h
+debian/tmp/usr/lib/x86_64-linux-gnu/libcupsfilters.a
+debian/tmp/usr/lib/x86_64-linux-gnu/libcupsfilters.so
+debian/tmp/usr/lib/x86_64-linux-gnu/pkgconfig/libcupsfilters.pc

@@ -1,0 +1,14 @@
+Package: libfontembed1
+Source: cups-filters
+Version: 1.28.11-1
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 126
+Depends: libc6 (>= 2.14)
+Section: libs
+Priority: optional
+Multi-Arch: same
+Homepage: http://www.openprinting.org/
+Description: OpenPrinting CUPS Filters - Font Embed Shared library
+ This library contains functions for font embedding in PDF files, commonly
+ used by CUPS filters.

@@ -1,0 +1,21 @@
+Package: cups-filters
+Version: 1.28.11-1
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 1840
+Depends: bc, cups-filters-core-drivers (>= 1.28.11-1), ghostscript, poppler-utils, libc6 (>= 2.34), libcups2 (>= 2.3~b6), libcupsfilters1 (>= 1.22.2), libfontconfig1 (>= 2.12.6), libfontembed1 (>= 1.0.31), libgcc-s1 (>= 3.3.1), libqpdf28 (>> 10.3~), libstdc++6 (>= 11)
+Recommends: colord, liblouisutdml-bin | liblouis-bin, lynx
+Suggests: antiword, docx2txt, foomatic-db-compressed-ppds | foomatic-db, imagemagick
+Conflicts: foomatic-filters, foomatic-filters-beh, ghostscript-cups
+Replaces: foomatic-filters, foomatic-filters-beh, ghostscript-cups
+Provides: foomatic-filters, foomatic-filters-beh, ghostscript-cups
+Section: net
+Priority: optional
+Homepage: http://www.openprinting.org/
+Description: OpenPrinting CUPS Filters - Main Package
+ This package provides additional CUPS filters which are not provided
+ by the CUPS project itself. This includes filters for a PDF based
+ printing workflow.
+ .
+ This package contains the filters for printing with drivers/PPDs and
+ for converting non-PDF input files to PDF.

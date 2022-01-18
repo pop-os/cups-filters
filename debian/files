@@ -1,0 +1,13 @@
+cups-browsed-dbgsym_1.28.11-1_amd64.ddeb debug optional automatic=yes
+cups-browsed_1.28.11-1_amd64.deb net optional
+cups-filters-core-drivers-dbgsym_1.28.11-1_amd64.ddeb debug optional automatic=yes
+cups-filters-core-drivers_1.28.11-1_amd64.deb net optional
+cups-filters-dbgsym_1.28.11-1_amd64.ddeb debug optional automatic=yes
+cups-filters_1.28.11-1_amd64.buildinfo net optional
+cups-filters_1.28.11-1_amd64.deb net optional
+libcupsfilters-dev_1.28.11-1_amd64.deb libdevel optional
+libcupsfilters1-dbgsym_1.28.11-1_amd64.ddeb debug optional automatic=yes
+libcupsfilters1_1.28.11-1_amd64.deb libs optional
+libfontembed-dev_1.28.11-1_amd64.deb libdevel optional
+libfontembed1-dbgsym_1.28.11-1_amd64.ddeb debug optional automatic=yes
+libfontembed1_1.28.11-1_amd64.deb libs optional

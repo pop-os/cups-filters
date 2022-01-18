@@ -1,0 +1,19 @@
+Package: libcupsfilters-dev
+Source: cups-filters
+Version: 1.28.11-1
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 542
+Depends: libcupsfilters1 (= 1.28.11-1)
+Section: libdevel
+Priority: optional
+Multi-Arch: same
+Homepage: http://www.openprinting.org/
+Description: OpenPrinting CUPS Filters - Development files for the library
+ This library contains functions commonly used by the CUPS filters
+ in the OpenPrinting CUPS filters package, currently functions to read
+ several different image formats and to convert bitmaps between different
+ color spaces.
+ .
+ This package contains the header files to develop applications (CUPS
+ filters, printer drivers) using libcupsfilters.

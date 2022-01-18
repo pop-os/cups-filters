@@ -1,0 +1,8 @@
+debian/tmp/usr/include/fontembed/bitset.h
+debian/tmp/usr/include/fontembed/embed.h
+debian/tmp/usr/include/fontembed/fontfile.h
+debian/tmp/usr/include/fontembed/iofn.h
+debian/tmp/usr/include/fontembed/sfnt.h
+debian/tmp/usr/lib/x86_64-linux-gnu/libfontembed.a
+debian/tmp/usr/lib/x86_64-linux-gnu/libfontembed.so
+debian/tmp/usr/lib/x86_64-linux-gnu/pkgconfig/libfontembed.pc

@@ -1,0 +1,14 @@
+Package: libfontembed1-dbgsym
+Package-Type: ddeb
+Source: cups-filters
+Version: 1.28.11-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 86
+Depends: libfontembed1 (= 1.28.11-1)
+Section: debug
+Priority: optional
+Multi-Arch: same
+Description: debug symbols for libfontembed1
+Build-Ids: ee0ee7a3c12574a4f96e63fc7803366ced009d61

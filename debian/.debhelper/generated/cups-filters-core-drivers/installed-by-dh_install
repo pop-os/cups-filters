@@ -1,0 +1,17 @@
+debian/tmp/usr/bin/driverless
+debian/tmp/usr/lib/cups/backend/driverless
+debian/tmp/usr/lib/cups/driver/driverless
+debian/tmp/usr/lib/cups/filter/imagetopdf
+debian/tmp/usr/lib/cups/filter/pdftopdf
+debian/tmp/usr/lib/cups/filter/pdftops
+debian/tmp/usr/lib/cups/filter/pdftoraster
+debian/tmp/usr/lib/cups/filter/rastertopclm
+debian/tmp/usr/lib/cups/filter/rastertopclx
+debian/tmp/usr/lib/cups/filter/rastertopdf
+debian/tmp/usr/lib/cups/filter/rastertops
+debian/tmp/usr/lib/cups/filter/sys5ippprinter
+debian/tmp/usr/share/cups/mime/cupsfilters-ghostscript.convs
+debian/tmp/usr/share/cups/mime/cupsfilters-poppler.convs
+debian/tmp/usr/share/cups/mime/cupsfilters.convs
+debian/tmp/usr/share/cups/mime/cupsfilters.types
+debian/tmp/usr/share/man/man1/driverless.1

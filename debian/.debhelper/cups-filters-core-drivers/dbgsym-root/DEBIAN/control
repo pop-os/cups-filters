@@ -1,0 +1,13 @@
+Package: cups-filters-core-drivers-dbgsym
+Package-Type: ddeb
+Source: cups-filters
+Version: 1.28.11-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 1725
+Depends: cups-filters-core-drivers (= 1.28.11-1)
+Section: debug
+Priority: optional
+Description: debug symbols for cups-filters-core-drivers
+Build-Ids: 35fb196e05908101a851e37f1b6c3bbdce796c5d 6e9e696c5feff63b08b3620fce8a4b82e791e39b 7a1ed8472d7916c552ebb3ee8edc957abc7554c5 7d6b1de61578ccba242f906e7263d45266738a60 8d0e7a05d36e09ab650ca592ddc4458f0d362e47 b55d9183b1b3d6eecbbe9985b3a35a024990e246 bf735261b1eac259311ca22e8b9912373479e3a4 cab15a84ffed66522077e98b77fb9399dcf4b2d7 f1111da4f513d036773dc2e6a4c2e7936ba01830

@@ -1,0 +1,14 @@
+Package: libcupsfilters1-dbgsym
+Package-Type: ddeb
+Source: cups-filters
+Version: 1.28.11-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Debian Printing Team <debian-printing@lists.debian.org>
+Installed-Size: 280
+Depends: libcupsfilters1 (= 1.28.11-1)
+Section: debug
+Priority: optional
+Multi-Arch: same
+Description: debug symbols for libcupsfilters1
+Build-Ids: 47322fd1cbe02062949af9693f19bbe5ec6b79f9

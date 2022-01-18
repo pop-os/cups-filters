@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+                                                                       
+Name: libcupsfilters
+Description: Library for reading and writing cups filters
+Version: 1.28.11
+
+Libs: -L${libdir} -lcupsfilters
+Libs.private: -lcups -ltiff -lpng16 -lz 
+Cflags: -I${includedir}/cupsfilters
