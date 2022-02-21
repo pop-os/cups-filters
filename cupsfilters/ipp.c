@@ -75,6 +75,7 @@ resolve_uri(const char *raw_uri)
   char *pseudo_argv[2];
   const char *uri;
   int fd1, fd2;
+  char *save_device_uri_var;
 
   /* Eliminate any output to stderr, to get rid of the CUPS-backend-specific
      output of the cupsBackendDeviceURI() function */
@@ -83,11 +84,27 @@ resolve_uri(const char *raw_uri)
   dup2(fd2, 2);
   close(fd2);
 
+  /* If set, save the DEVICE_URI environment and then unset it, so that
+     if we are running under CUPS (as filter or backend) our raw_uri gets
+     resolved and not whatever URI is set in DEVICE_URI */
+  if ((save_device_uri_var = getenv("DEVICE_URI")) != NULL)
+  {
+    save_device_uri_var = strdup(save_device_uri_var);
+    unsetenv("DEVICE_URI");
+  }
+
   /* Use the URI resolver of libcups to support DNS-SD-service-name-based
      URIs. The function returns the corresponding host-name-based URI */
   pseudo_argv[0] = (char *)raw_uri;
   pseudo_argv[1] = NULL;
   uri = cupsBackendDeviceURI(pseudo_argv);
+
+  /* Restore DEVICE_URI envidonment variable if we had unset it */
+  if (save_device_uri_var)
+  {
+    setenv("DEVICE_URI", save_device_uri_var, 1);
+    free(save_device_uri_var);
+  }
 
   /* Re-activate stderr output */
   dup2(fd1, 2);
@@ -195,6 +212,7 @@ get_printer_attributes5(http_t *http_printer,
   int have_http, uri_status, host_port, i = 0, total_attrs = 0, fallback,
     cap = 0;
   char scheme[10], userpass[1024], host_name[1024], resource[1024];
+  http_encryption_t encryption;
   ipp_t *request, *response = NULL;
   ipp_attribute_t *attr;
   char valuebuffer[65536];
@@ -274,12 +292,17 @@ get_printer_attributes5(http_t *http_printer,
     return NULL;
   }
 
+  if (!strcmp(scheme, "ipps"))
+    encryption = HTTP_ENCRYPTION_ALWAYS;
+  else
+    encryption = HTTP_ENCRYPTION_IF_REQUESTED;
+
   /* Connect to the server if not already done */
   if (http_printer == NULL) {
     have_http = 0;
     if ((http_printer =
 	 httpConnect2 (host_name, host_port, NULL, AF_UNSPEC, 
-		       HTTP_ENCRYPT_IF_REQUESTED, 1, 3000, NULL)) == NULL) {
+		       encryption, 1, 3000, NULL)) == NULL) {
       log_printf(get_printer_attributes_log,
 		 "get-printer-attributes: Cannot connect to printer with URI %s.\n",
 		 uri);
@@ -534,11 +557,9 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
     goto error;
   }
 
-  dup2(post_proc_pipe[0], 0);
-  close(post_proc_pipe[0]);
   close(post_proc_pipe[1]);
 
-  fp = cupsFileStdin();
+  fp = cupsFileOpenFd(post_proc_pipe[0], "r");
 
   buffer = (char*)malloc(MAX_OUTPUT_LEN * sizeof(char));
   if (buffer == NULL) {
@@ -597,6 +618,8 @@ ippfind_based_uri_converter (const char *uri, int is_fax)
   read_error:
     memset(buffer, 0, MAX_OUTPUT_LEN);
   }
+
+  cupsFileClose(fp);
 
   if (buffer != NULL)
     free(buffer);
