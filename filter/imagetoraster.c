@@ -665,10 +665,8 @@ main(int  argc,				/* I - Number of command-line arguments */
     pw = ph;
     ph = tmp;
   }
-  if(w>pw||h>ph)
-  {
+  if (w * 72.0 / img->xppi > pw || h * 72.0 / img->yppi > ph)
     document_large = 1;
-  }
 
   if((val = cupsGetOption("print-scaling",num_options,options)) != NULL)
   {
@@ -734,8 +732,10 @@ main(int  argc,				/* I - Number of command-line arguments */
     {
       float w = (float)cupsImageGetWidth(img);
       float h = (float)cupsImageGetHeight(img);
-      float pw = PageRight-PageLeft;
-      float ph = PageTop-PageBottom;
+      /* For cropfit do the math without the unprintable margins to get correct
+	 centering, for fillprint, fill the printable area */
+      float pw = (cropfit ? PageWidth : PageRight-PageLeft);
+      float ph = (cropfit ? PageLength : PageTop-PageBottom);
       const char *val;
       int tempOrientation = Orientation;
       int flag =3;
@@ -790,45 +790,88 @@ main(int  argc,				/* I - Number of command-line arguments */
         cupsImageClose(img);
         img = img2;
       }
-      else {
+      else
+      {
         float final_w=w,final_h=h;
-        if(w>pw)
-        {
-          final_w = pw;
-        }
-        if(h>ph)
-        {
-          final_h = ph;
-        }
-        if((fabs(final_w-w)>0.5*w)||(fabs(final_h-h)>0.5*h))
-        {
-          fprintf(stderr,"[DEBUG]: Ignoring crop-to-fit option!\n");
-          cropfit=0;
-        }
-        else{
-          float posw=(w-final_w)/2,posh=(h-final_h)/2;
-          posw = (1+XPosition)*posw;
-          posh = (1-YPosition)*posh;
-          cups_image_t *img2 = cupsImageCrop(img,posw,posh,final_w,final_h);
-          cupsImageClose(img);
-          img = img2;
-          if(flag==4)
-          {
-            PageBottom+=(PageTop-PageBottom-final_w)/2;
-            PageTop = PageBottom+final_w;
-            PageLeft +=(PageRight-PageLeft-final_h)/2;
-            PageRight = PageLeft+final_h;
-          }
-          else{
-            PageBottom+=(PageTop-PageBottom-final_h)/2;
-            PageTop = PageBottom+final_h;
-            PageLeft +=(PageRight-PageLeft-final_w)/2;
-            PageRight = PageLeft+final_w;
-          }
-          if(PageBottom<0) PageBottom = 0;
-          if(PageLeft<0) PageLeft = 0;
-        }
-      }	
+        if (w > pw * img->xppi / 72.0)
+          final_w = pw * img->xppi / 72.0;
+        if (h > ph * img->yppi / 72.0)
+          final_h = ph * img->yppi / 72.0;
+	float posw=(w-final_w)/2,posh=(h-final_h)/2;
+        posw = (1+XPosition)*posw;
+	posh = (1-YPosition)*posh;
+	/* Check whether the unprintable margins hide away a part of the image,
+	   if so, correct the image cut */
+	if(flag==4)
+	{
+	  float margin, cutoff;
+	  margin = (PageLength - final_w * 72.0 / img->xppi) / 2;
+	  if (margin >= PageBottom)
+	    PageBottom = margin;
+	  else
+	  {
+	    cutoff = (PageBottom - margin) * img->xppi / 72.0;
+	    final_w -= cutoff;
+	    posw += cutoff;
+	  }
+	  margin = PageBottom + final_w * 72.0 / img->xppi;
+	  if (margin <= PageTop)
+	    PageTop = margin;
+	  else
+	    final_w -= (margin - PageTop) * img->xppi / 72.0;
+	  margin = (PageWidth - final_h * 72.0 / img->yppi) / 2;
+	  if (margin >= PageLeft)
+	    PageLeft = margin;
+	  else
+	  {
+	    cutoff = (PageLeft - margin) * img->yppi / 72.0;
+	    final_h -= cutoff;
+	    posh += cutoff;
+	  }
+	  margin = PageLeft + final_h * 72.0 / img->yppi;
+	  if (margin <= PageRight)
+	    PageRight = margin;
+	  else
+	    final_h -= (margin - PageRight) * img->yppi / 72.0;
+	}
+	else
+	{
+	  float margin, cutoff;
+	  margin = (PageLength - final_h * 72.0 / img->yppi) / 2;
+	  if (margin >= PageBottom)
+	    PageBottom = margin;
+	  else
+	  {
+	    cutoff = (PageBottom - margin) * img->yppi / 72.0;
+	    final_h -= cutoff;
+	    posh += cutoff;
+	  }
+	  margin = PageBottom + final_h * 72.0 / img->yppi;
+	  if (margin <= PageTop)
+	    PageTop = margin;
+	  else
+	    final_h -= (margin - PageTop) * img->yppi / 72.0;
+	  margin = (PageWidth - final_w * 72.0 / img->xppi) / 2;
+	  if (margin >= PageLeft)
+	    PageLeft = margin;
+	  else
+	  {
+	    cutoff = (PageLeft - margin) * img->xppi / 72.0;
+	    final_w -= cutoff;
+	    posw += cutoff;
+	  }
+	  margin = PageLeft + final_w * 72.0 / img->xppi;
+	  if (margin <= PageRight)
+	    PageRight = margin;
+	  else
+	    final_w -= (margin - PageRight) * img->xppi / 72.0;
+	}
+	if(PageBottom<0) PageBottom = 0;
+	if(PageLeft<0) PageLeft = 0;
+	cups_image_t *img2 = cupsImageCrop(img,posw,posh,final_w,final_h);
+	cupsImageClose(img);
+	img = img2;
+      }
     }
   }
   if (argc == 6)

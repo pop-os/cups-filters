@@ -1,3 +1,12 @@
+cups-filters (1.28.12-1) unstable; urgency=medium
+
+  * Update to new upstream version 1.28.12.
+  * debian/apparmor/usr.sbin.cups-browsed: Allow reading from Debian Edu's
+    cups-browsed config file (/etc/cups/cups-browsed-debian-edu.conf).
+    (Closes: #1006183). (patch provided by Mike Gabriel)
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Mon, 21 Feb 2022 19:42:22 +0100
+
 cups-filters (1.28.11-2) unstable; urgency=medium
 
   * debian/control: lynx has to be handled different in Debian and Ubuntu
