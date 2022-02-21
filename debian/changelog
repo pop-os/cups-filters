@@ -1,3 +1,9 @@
+cups-filters (1.28.12-1) UNRELEASED; urgency=medium
+
+  * Update to new upstream version 1.28.12.
+
+ -- Thorsten Alteholz <debian@alteholz.de>  Mon, 21 Feb 2022 19:42:22 +0100
+
 cups-filters (1.28.11-2) unstable; urgency=medium
 
   * debian/control: lynx has to be handled different in Debian and Ubuntu
