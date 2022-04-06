@@ -40,7 +40,7 @@ Homepage: http://www.openprinting.org/
 Rules-Requires-Root: no
 
 Package: libcupsfilters1
-Architecture: any
+Architecture: linux-any
 Multi-Arch: same
 Section: libs
 Depends:
@@ -55,7 +55,7 @@ Description: OpenPrinting CUPS Filters - Shared library
  color spaces.
 
 Package: cups-browsed
-Architecture: any
+Architecture: linux-any
 Depends:
  cups-daemon,
  lsb-base,
@@ -87,7 +87,7 @@ Description: OpenPrinting CUPS Filters - cups-browsed
  protocol in BrowseLocalProtocols).
 
 Package: cups-filters
-Architecture: any
+Architecture: linux-any
 Depends:
  bc,
  cups-filters-core-drivers (>= ${binary:Version}),
@@ -126,7 +126,7 @@ Description: OpenPrinting CUPS Filters - Main Package
  for converting non-PDF input files to PDF.
 
 Package: cups-filters-core-drivers
-Architecture: any
+Architecture: linux-any
 Depends:
  bc,
  cups-ipp-utils,
@@ -147,7 +147,7 @@ Description: OpenPrinting CUPS Filters - Driverless printing
  PostScript, PWG Raster, Apple Raster, PCL).
 
 Package: libcupsfilters-dev
-Architecture: any
+Architecture: linux-any
 Multi-Arch: same
 Section: libdevel
 Depends:
@@ -164,7 +164,7 @@ Description: OpenPrinting CUPS Filters - Development files for the library
  filters, printer drivers) using libcupsfilters.
 
 Package: libfontembed-dev
-Architecture: any
+Architecture: linux-any
 Multi-Arch: same
 Section: libdevel
 Depends:
@@ -179,7 +179,7 @@ Description: OpenPrinting CUPS Filters - Development files for font embed librar
  libfontembed.
 
 Package: libfontembed1
-Architecture: any
+Architecture: linux-any
 Multi-Arch: same
 Section: libs
 Depends:
