@@ -98,12 +98,13 @@ Depends:
 Recommends:
  colord,
  liblouisutdml-bin | liblouis-bin,
- lynx,
+ ${cf:Recommends},
 Suggests:
  antiword,
  docx2txt,
  foomatic-db-compressed-ppds | foomatic-db,
  imagemagick,
+ ${cf:Suggests},
 Conflicts:
  foomatic-filters,
  foomatic-filters-beh,

@@ -3,6 +3,12 @@
 include /usr/share/dpkg/architecture.mk
 
 derives_from_ubuntu := $(shell (dpkg-vendor --derives-from Ubuntu && echo "yes") || echo "no")
+# Some cups-filters packages are in Ubuntu universe so only suggest them in dh_gencontrol
+ifeq ($(derives_from_ubuntu),yes)
+	SUBSTVARS = -Vcf:Suggests="lynx"
+else
+	SUBSTVARS = -Vcf:Recommends="lynx"
+endif
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -57,6 +63,10 @@ ifneq ($(filter $(DEB_HOST_ARCH),amd64 i386 mips64el mipsel alpha hppa ia64 spar
 endif
 
 	dh_apparmor -pcups-browsed --profile-name=usr.sbin.cups-browsed
+
+# Some cups-filters packages are in Ubuntu universe so only suggest them there
+override_dh_gencontrol:
+	dh_gencontrol -- $(SUBSTVARS)
 
 get-orig-source:
 	set -ex; \

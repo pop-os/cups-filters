@@ -179,6 +179,7 @@ void QPDF_PDFTOPDF_PageHandle::add_border_rect(const PageRect &_rect,BorderType 
 Rotation QPDF_PDFTOPDF_PageHandle::crop(const PageRect &cropRect,Rotation orientation,Position xpos,Position ypos,bool scale)
 {
   page.assertInitialized();
+  Rotation save_rotate = getRotate(page);
   if(orientation==ROT_0||orientation==ROT_180)
     page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_90));
   else
@@ -192,7 +193,8 @@ Rotation QPDF_PDFTOPDF_PageHandle::crop(const PageRect &cropRect,Rotation orient
   double final_w,final_h;   //Width and height of cropped image.
 
   Rotation pageRot = getRotate(page);
-  if(pageRot==ROT_0||pageRot==ROT_180)
+  if (((pageRot == ROT_0 || pageRot == ROT_180) && pageWidth <= pageHeight) ||
+      ((pageRot == ROT_90 || pageRot == ROT_270) && pageWidth > pageHeight))
   {
     std::swap(pageHeight,pageWidth);
   }
@@ -209,8 +211,8 @@ Rotation QPDF_PDFTOPDF_PageHandle::crop(const PageRect &cropRect,Rotation orient
     }
   }
   else{
-    final_w = std::min(width,pageWidth);
-    final_h = std::min(height,pageHeight);
+    final_w = pageWidth;
+    final_h = pageHeight;
   }
   fprintf(stderr,"After Cropping: %lf %lf %lf %lf\n",width,height,final_w,final_h);
   double posw = (width-final_w)/2,
@@ -235,13 +237,14 @@ Rotation QPDF_PDFTOPDF_PageHandle::crop(const PageRect &cropRect,Rotation orient
   //Cropping.
   // TODO: Borders are covered by the image. buffer space?
   page.replaceKey("/TrimBox",makeBox(currpage.left,currpage.bottom,currpage.right,currpage.top));
-  page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_0));
+  page.replaceOrRemoveKey("/Rotate",makeRotate(save_rotate));
   return getRotate(page);
 }
 
 bool QPDF_PDFTOPDF_PageHandle::is_landscape(Rotation orientation)
 {
   page.assertInitialized();
+  Rotation save_rotate = getRotate(page);
   if(orientation==ROT_0||orientation==ROT_180)
     page.replaceOrRemoveKey("/Rotate",makeRotate(ROT_90));
   else
@@ -250,6 +253,7 @@ bool QPDF_PDFTOPDF_PageHandle::is_landscape(Rotation orientation)
   PageRect currpage= getBoxAsRect(getTrimBox(page));
   double width = currpage.right-currpage.left;
   double height = currpage.top-currpage.bottom;
+  page.replaceOrRemoveKey("/Rotate",makeRotate(save_rotate));
   if(width>height)
     return true;
   return false;
