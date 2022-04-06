@@ -1,5 +1,20 @@
-NEWS - OpenPrinting CUPS Filters v1.28.13 - 2022-03-27
+NEWS - OpenPrinting CUPS Filters v1.28.14 - 2022-04-04
 ------------------------------------------------------
+
+CHANGES IN V1.28.14
+
+	- pdftopdf: Correct the output when suppressing auto-rotation
+	  (option "nopdfAutoRotate"). Depending on the situation pages
+	  got cropped in the wrong orientation or de-centered.
+	- pdftopdf: Correct the output when the
+	  "orientation-requested" or the "landscape" option is
+	  supplied. Output could be de-centered (Issue #456),
+	  portrait-oriented pages be wrongly cropped and division of
+	  the output page into cells for N-up done in the wrong
+	  orientation.
+	- rastertopdf: In PCLm output mode the filter failed to
+	  generate PCLm if the printer has no
+	  "pclm-source-resolution-default" IPP attribute.
 
 CHANGES IN V1.28.13
 
