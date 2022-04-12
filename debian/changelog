@@ -1,4 +1,4 @@
-cups-filters (1.28.15-1) UNRELEASED; urgency=medium
+cups-filters (1.28.15-1) unstable; urgency=medium
 
   * Update to new upstream version 1.28.15.
 
