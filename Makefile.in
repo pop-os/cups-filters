@@ -242,7 +242,7 @@ am__DEPENDENCIES_1 =
 @BUILD_DBUS_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 libcupsfilters_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 am_libcupsfilters_la_OBJECTS = cupsfilters/libcupsfilters_la-attr.lo \
@@ -1092,6 +1092,8 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+EXIF_CFLAGS = @EXIF_CFLAGS@
+EXIF_LIBS = @EXIF_LIBS@
 FGREP = @FGREP@
 FONTCONFIG_CFLAGS = @FONTCONFIG_CFLAGS@
 FONTCONFIG_LIBS = @FONTCONFIG_LIBS@
@@ -1432,10 +1434,10 @@ libcupsfilters_la_SOURCES = \
 	cupsfilters/srgb.c \
 	$(pkgfiltersinclude_DATA)
 
-libcupsfilters_la_LIBADD = $(CUPS_LIBS) $(LIBJPEG_LIBS) $(LIBPNG_LIBS) \
-	$(TIFF_LIBS) -lm $(am__append_3)
+libcupsfilters_la_LIBADD = $(CUPS_LIBS) $(LIBJPEG_LIBS) $(EXIF_LIBS) \
+	$(LIBPNG_LIBS) $(TIFF_LIBS) -lm $(am__append_3)
 libcupsfilters_la_CFLAGS = $(CUPS_CFLAGS) $(LIBJPEG_CFLAGS) \
-	$(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_2)
+	$(EXIF_CFLAGS) $(LIBPNG_CFLAGS) $(TIFF_CFLAGS) $(am__append_2)
 libcupsfilters_la_LDFLAGS = \
 	-no-undefined \
 	-version-info 1

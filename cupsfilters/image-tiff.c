@@ -41,8 +41,8 @@ _cupsImageReadTIFF(
     const cups_ib_t *lut)		/* I - Lookup table for gamma/brightness */
 {
   TIFF		*tif;			/* TIFF file */
-  uint32	width, height;		/* Size of image */
-  uint16	photometric,		/* Colorspace */
+  uint32_t	width, height;		/* Size of image */
+  uint16_t	photometric,		/* Colorspace */
 		compression,		/* Type of compression */
 		orientation,		/* Orientation */
 		resunit,		/* Units for resolution */
@@ -52,7 +52,7 @@ _cupsImageReadTIFF(
 		numinks;		/* Number of inks in set */
   float		xres,			/* Horizontal resolution */
 		yres;			/* Vertical resolution */
-  uint16	*redcmap,		/* Red colormap information */
+  uint16_t	*redcmap,		/* Red colormap information */
 		*greencmap,		/* Green colormap information */
 		*bluecmap;		/* Blue colormap information */
   int		c,			/* Color index */
@@ -139,8 +139,21 @@ _cupsImageReadTIFF(
  /*
   * Get the image resolution...
   */
+  
+  int temp = -1;
 
-  if (TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres) &&
+#ifdef HAVE_EXIF
+   /*
+    scan image file for exif data
+    */
+
+  temp = _cupsImageReadEXIF(img, fp);
+#endif
+  /* 
+    check headers only if EXIF contains no info about ppi
+    */
+
+  if (temp != 1 && TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres) &&
       TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres) &&
       TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit))
   {
@@ -171,6 +184,7 @@ _cupsImageReadTIFF(
     fprintf(stderr, "DEBUG: Stored resolution = %dx%d PPI\n",
             img->xppi, img->yppi);
   }
+
 
  /*
   * See if the image has an alpha channel...
