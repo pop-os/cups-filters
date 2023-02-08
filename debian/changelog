@@ -1,3 +1,9 @@
+cups-filters (1.28.15-0ubuntu1pop1) jammy; urgency=medium
+
+  * Pop!_OS Updates
+
+ -- Brock <brock@pop-os.localdomain>  Wed, 08 Feb 2023 16:47:09 -0700
+
 cups-filters (1.28.15-0ubuntu1) jammy; urgency=medium
 
   * New upstream bug fix release.
